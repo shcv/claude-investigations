@@ -1,0 +1,44 @@
+#+TITLE: Example Experiment
+
+* Experiment: Testing Structured Prompts for Error Recovery
+
+** What I'm Testing
+Does providing a structured error format help Claude recover from syntax errors more effectively?
+
+** Setup
+- Model: claude-4-opus
+- Challenge: [[../challenges/error-patterns/syntax-recovery]]
+- Method: [[../methods/prompting-strategies/structured-error-format]]
+
+** How I Tested It
+I gave Claude 5 different Python files with syntax errors and compared:
+1. Basic prompt: "Fix the syntax error"
+2. Structured prompt with error format template
+
+** Results
+
+*** What Worked
+- Structured format led to 80% first-try fixes (vs 40% baseline)
+- Claude correctly identified error location in all cases
+- Fix explanations were clearer
+
+*** What Didn't Work
+- Still struggled with nested quote errors
+- Sometimes over-explained simple fixes
+
+*** Measurements
+| Metric | Baseline | Structured |
+|--------+----------+------------|
+| First-try success | 40% | 80% |
+| Avg attempts | 2.3 | 1.2 |
+| Time to fix | 45s | 32s |
+
+** Key Takeaway
+Structured error prompts significantly improve syntax error recovery. Recommend adding this to our standard practices for debugging tasks.
+
+** Session Files
+Claude Code saves sessions automatically to: =~/.claude/projects/[project-path-with-hyphens]/UUID.jsonl=
+(For this project: =~/.claude/projects/-home-shcv-projects-agent-experiments/UUID.jsonl=)
+
+- Baseline test: a7f3d2e1-9b5c-4a8d-b6f2-1234567890ab
+- Structured test: c9e8b7a6-3f2d-4e1a-9c5b-0987654321fe

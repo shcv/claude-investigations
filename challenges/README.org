@@ -1,0 +1,82 @@
+#+TITLE: Challenges Directory
+
+* Overview
+
+This directory contains documented challenges and issues we've encountered with LLM agents, particularly Claude Code. Each subdirectory represents a category of challenges, with specific reproducible test cases.
+
+* Challenge Categories
+
+** direction-following/
+Challenges where Claude doesn't follow explicit instructions correctly.
+- Ignoring constraints
+- Partial task completion  
+- Misinterpreting requirements
+
+** error-patterns/
+Common error patterns and failure modes.
+- Syntax errors in generated code
+- Logic errors
+- Import/dependency issues
+
+** complex-refactoring/
+Challenges with multi-file, architectural changes.
+- Maintaining consistency across files
+- Understanding project structure
+- Preserving functionality during refactoring
+
+** context-management/
+Issues related to context window and memory.
+- Forgetting earlier instructions
+- Context overflow behavior
+- Information prioritization
+
+** tool-usage/
+Problems with Claude's tool use.
+- Inefficient tool selection
+- Incorrect parameter usage
+- Tool chaining issues
+
+** multi-step-tasks/
+Challenges with tasks requiring multiple steps.
+- Step skipping
+- Order dependencies
+- State management between steps
+
+* Challenge Format
+
+Each challenge should include:
+
+** README.org
+- Clear problem description
+- Reproduction steps
+- Success criteria
+- Failure indicators
+- Related research/issues
+
+** examples/
+- Concrete instances of the challenge
+- Minimal reproducible examples
+- Both failing and successful cases (if any)
+
+** metrics.org  
+- How to measure this challenge
+- Baseline performance data
+- Improvement tracking
+
+* Contributing a Challenge
+
+1. Create a new directory in the appropriate category
+2. Follow the challenge format above
+3. Include at least one reproducible example
+4. Document any workarounds discovered
+5. Link to related experiments
+
+* Using Challenges
+
+Challenges serve as:
+- Test cases for new methods
+- Benchmarks for improvements
+- Documentation of known issues
+- Starting points for experiments
+
+See [[../docs/best-practices.org][Best Practices]] for guidance on working with challenges.

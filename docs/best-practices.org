@@ -1,0 +1,465 @@
+#+TITLE: Best Practices for Agent Experiments
+
+* Introduction
+
+This guide captures lessons learned from our experiments with Claude Code and other LLM agents. These practices help ensure reproducible, valuable experiments that advance our collective understanding.
+
+* Experimental Design Best Practices
+
+** Start with Clear Hypotheses
+
+*** Good Hypothesis Examples
+- "Using explicit step-by-step instructions will reduce Claude's tendency to skip error checking"
+- "Providing example code patterns before a refactoring task will improve consistency"
+- "Breaking complex tasks into smaller chunks will reduce context confusion"
+
+*** Poor Hypothesis Examples
+- "Claude will work better" (too vague)
+- "This prompt is good" (not testable)
+- "AI agents are improving" (too broad)
+
+** Control Your Variables
+
+*** Essential Controls
+1. *Model Version*: Always record the exact model version
+2. *System Prompts*: Document any custom system prompts or CLAUDE.md
+3. *Context State*: Note what files were already open/read
+4. *Time of Day*: Some report variance by time (though unconfirmed)
+
+*** Variable Isolation
+- Change ONE thing at a time
+- Run enough trials to account for variance
+- Use the same testbed for related experiments
+
+** Design for Reproducibility
+
+*** Session Recording
+Claude Code automatically saves sessions to:
+- =~/.claude/projects/[project-path-with-hyphens]/UUID.jsonl=
+- Project paths have slashes converted to hyphens
+- Example: =/home/user/repos/project= → =~/.claude/projects/-home-user-repos-project/=
+- On some systems: =XDG_CONFIG_DIR/claude/projects= is used instead of =~/.claude=
+- Use =/status= command during a session to get the UUID
+
+For manual recording as backup:
+#+begin_src bash
+# Copy all terminal output
+script -f session-$(date +%s).txt
+#+end_src
+
+*** Environment Documentation
+Create a setup script that captures:
+#+begin_src bash
+#!/usr/bin/env bash
+echo "Claude Code Version: $(claude-code --version)"
+echo "Date: $(date -I)"
+echo "OS: $(uname -a)"
+echo "Working Directory: $(pwd)"
+echo "Git Hash: $(git rev-parse HEAD)"
+#+end_src
+
+* Effective Prompting Strategies
+
+** Structure and Clarity
+
+*** Use Hierarchical Organization
+#+begin_example
+TASK: Refactor the authentication module
+
+CONTEXT:
+- Current implementation uses callbacks
+- Need to migrate to async/await
+- Must maintain backward compatibility
+
+STEPS:
+1. First, analyze the current implementation
+2. Create a compatibility layer
+3. Migrate core functions
+4. Update tests
+5. Verify backward compatibility
+
+CONSTRAINTS:
+- Do not modify the public API
+- All tests must pass
+- Performance should not degrade
+#+end_example
+
+*** Avoid Ambiguity
+❌ "Make the code better"
+✅ "Refactor this function to use early returns instead of nested if statements"
+
+❌ "Fix the bug"
+✅ "The function returns undefined when the array is empty. Make it return an empty array instead"
+
+** Context Management
+
+*** Provide Relevant Context First
+1. *Project Structure*: Show the file tree if needed
+2. *Key Conventions*: Highlight coding standards
+3. *Related Code*: Show similar implementations
+4. *Dependencies*: List available libraries
+
+*** Avoid Context Overload
+- Don't paste entire codebases
+- Focus on the specific area of work
+- Use references rather than copying when possible
+
+** Task Decomposition
+
+*** Break Complex Tasks
+Instead of: "Implement a full authentication system"
+
+Try:
+1. "Create the user model with these fields..."
+2. "Implement password hashing using bcrypt..."
+3. "Create login endpoint that validates..."
+4. "Add session management with..."
+
+*** Use Checkpoints
+#+begin_example
+After each step, verify:
+- [ ] Code compiles without errors
+- [ ] Tests pass
+- [ ] No linting warnings
+- [ ] Feature works as expected
+#+end_example
+
+* Common Patterns and Anti-patterns
+
+** Patterns for Success
+
+*** The "Example First" Pattern
+Show Claude an example of what you want:
+#+begin_example
+Here's how we currently handle errors:
+[show current code]
+
+Here's how we want to handle errors:
+[show desired pattern]
+
+Please refactor the authentication module to follow this pattern.
+#+end_example
+
+*** The "Constraint Sandwich"
+1. State constraints upfront
+2. Describe the task
+3. Restate critical constraints
+
+*** The "Incremental Verification"
+- Ask Claude to explain the plan first
+- Verify understanding before implementation
+- Check work at each step
+
+** Anti-patterns to Avoid
+
+*** The "Mind Reader"
+❌ "You know what I want, just do it"
+❌ "Fix it like we discussed" (without context)
+
+*** The "Kitchen Sink"
+❌ Providing 10+ files of context for a simple change
+❌ Including unrelated project history
+
+*** The "Moving Target"
+❌ Changing requirements mid-task without acknowledgment
+❌ Adding new constraints after work has started
+
+* Error Recovery Strategies
+
+** When Claude Makes Mistakes
+
+*** Quick Recovery
+1. *Rollback*: Use version control to revert
+2. *Clarify*: Explain what went wrong specifically
+3. *Redirect*: Provide a clear path forward
+
+*** Learning from Errors
+Document the error pattern:
+- What was the trigger?
+- How did it manifest?
+- What correction worked?
+
+** Preventing Common Errors
+
+*** The "Overeager Refactor"
+Claude sometimes refactors beyond the ask:
+- Be explicit about scope
+- Use phrases like "ONLY change..." 
+- List what NOT to modify
+
+*** The "Lost Context"
+When Claude forgets earlier instructions:
+- Restate key constraints
+- Use structured formats
+- Create a checklist Claude can follow
+
+*** The "Hallucinated Import"
+Claude may import non-existent modules:
+- Specify available dependencies upfront
+- Show package.json or requirements.txt
+- Ask Claude to verify imports exist
+
+* Evaluation Guidelines
+
+** Metrics That Matter
+
+*** Quantitative Metrics
+1. *Task Completion Rate*: Did it finish the requested task?
+2. *Error Rate*: How many mistakes per task?
+3. *Iteration Count*: How many prompts to get it right?
+4. *Time to Solution*: How long did the task take?
+
+*** Qualitative Metrics
+1. *Code Quality*: Is the code idiomatic and clean?
+2. *Understanding*: Did Claude grasp the intent?
+3. *Creativity*: Were the solutions appropriate?
+4. *Maintainability*: Is the result easy to work with?
+
+** Creating Rubrics
+
+*** Example Rubric for Code Generation
+| Criterion | 0 Points | 1 Point | 2 Points | 3 Points |
+|-----------+----------+---------+----------+----------|
+| Correctness | Doesn't work | Partially works | Works with issues | Perfect |
+| Style | Inconsistent | Some consistency | Mostly consistent | Fully consistent |
+| Performance | Major issues | Some inefficiency | Good | Optimal |
+| Tests | No tests | Some tests | Good coverage | Comprehensive |
+
+** Statistical Rigor
+
+*** Sample Size Guidelines
+- Minimum 5 trials for initial insights
+- 10-20 trials for reliable patterns  
+- 30+ trials for statistical claims
+
+*** Variance Considerations
+- Run trials at different times
+- Use different starting contexts
+- Vary the specific examples
+
+* Testbed Development
+
+** Characteristics of Good Testbeds
+
+*** Realistic but Focused
+- Real-world patterns and problems
+- Focused scope to isolate behaviors
+- Progressive complexity levels
+
+*** Self-Contained
+- Minimal external dependencies
+- Clear setup instructions
+- Resetable to known state
+
+*** Measurable
+- Clear success criteria
+- Built-in verification methods
+- Automated testing where possible
+
+** Example Testbed Structure
+#+begin_src
+testbed-web-app/
+├── README.org          # Setup and purpose
+├── reset.sh           # Reset to initial state  
+├── verify.sh          # Check current state
+├── challenges/        # Specific tasks
+│   ├── easy/
+│   ├── medium/
+│   └── hard/
+├── solutions/         # Reference implementations
+└── metrics/          # Evaluation scripts
+#+end_src
+
+* Method Development
+
+** Creating Effective Methods
+
+*** Start with Observations
+1. Notice a pattern in failures/successes
+2. Form a hypothesis about why
+3. Design a method to test it
+4. Validate across multiple scenarios
+
+*** Document Thoroughly
+Every method should include:
+- Rationale and theory
+- Step-by-step instructions
+- Example applications
+- Known limitations
+- Performance characteristics
+
+*** Iterate Based on Results
+- Start simple
+- Test edge cases
+- Refine based on failures
+- Document evolution
+
+** Method Categories
+
+*** Prompting Methods
+- Structured formats
+- Chain-of-thought variations
+- Role-playing approaches
+- Constraint specifications
+
+*** Context Methods
+- Information ordering
+- Context windowing
+- Reference strategies
+- Memory management
+
+*** Workflow Methods
+- Task decomposition
+- Verification steps
+- Error recovery
+- Iterative refinement
+
+* Team Collaboration
+
+** Communication Standards
+
+*** Issue Templates
+Use consistent formats for:
+- Challenge reports
+- Experiment proposals  
+- Method suggestions
+- Results summaries
+
+*** Code Review for Experiments
+Even though it's research:
+- Review experiment design
+- Verify reproducibility
+- Check statistical methods
+- Validate conclusions
+
+** Knowledge Sharing
+
+*** Weekly Patterns
+Share weekly:
+- Surprising findings
+- Failed approaches (valuable!)
+- Method improvements
+- Open questions
+
+*** Cross-Pollination
+- Try others' methods
+- Replicate surprising results
+- Combine approaches
+- Challenge assumptions
+
+* Tool-Specific Guidelines
+
+** Claude Code Specific
+
+*** Effective Use of Commands
+#+begin_example
+# Clear task definition
+/task Implement user authentication with JWT
+
+# Provide context
+/context Show the current auth implementation
+
+# Set constraints  
+/constrain Use existing database schema
+
+# Verify understanding
+/plan Show me your implementation plan
+#+end_example
+
+*** Managing Long Sessions
+- Save checkpoints frequently
+- Clear context when switching tasks
+- Restart for major context switches
+- Session UUIDs can be used to reference previous conversations
+
+** Version Control Integration
+
+*** Commit Practices for Experiments
+#+begin_src bash
+# Clear commit messages
+git commit -m "Experiment: Test structured prompting on refactoring task
+
+- Hypothesis: Structured format reduces errors
+- Method: Template-based prompting
+- Result: 30% fewer syntax errors
+- Session: ./sessions/2024-01-05-structured-prompting.txt"
+#+end_src
+
+*** Branch Organization
+- One branch per experiment
+- Clear naming: =experiments/username/description=
+- Tag successful methods
+- Archive failed attempts (still valuable!)
+
+* Continuous Improvement
+
+** Regular Reviews
+
+*** Monthly Retrospectives
+Review:
+1. What methods are proving effective?
+2. What challenges remain unsolved?
+3. Where are we seeing improvements?
+4. What new patterns emerged?
+
+*** Update Practices
+- Refine this guide based on findings
+- Deprecate ineffective methods
+- Promote successful patterns
+- Document new challenge types
+
+** Staying Current
+
+*** Track Claude Updates
+- Monitor model version changes
+- Test existing methods on new versions
+- Document behavioral changes
+- Update baselines
+
+*** Community Learning
+- Share findings publicly when possible
+- Learn from others' experiments
+- Contribute to collective knowledge
+- Build on proven methods
+
+* Quick Reference Checklist
+
+** Before Starting an Experiment
+- [ ] Clear hypothesis defined
+- [ ] Success criteria established
+- [ ] Testbed prepared and verified
+- [ ] Baseline measurements taken
+- [ ] Recording method tested
+
+** During the Experiment  
+- [ ] Following experimental design
+- [ ] Recording all sessions
+- [ ] Taking detailed notes
+- [ ] Controlling variables
+- [ ] Verifying each step
+
+** After the Experiment
+- [ ] All data collected and organized
+- [ ] Results analyzed objectively
+- [ ] Limitations documented
+- [ ] Findings shared with team
+- [ ] Next steps identified
+
+* Resources and References
+
+** Internal Resources
+- [[../experiments/][Previous Experiments]]
+- [[../methods/][Proven Methods]]
+- [[../challenges/][Known Challenges]]
+- [[./experiment-template.org][Experiment Template]]
+
+** External Resources
+- [[https://docs.anthropic.com/claude/docs][Claude Documentation]]
+- [[https://github.com/anthropics/claude-code][Claude Code Repository]]
+- [[https://arxiv.org/search/?query=llm+prompting&searchtype=all][Recent LLM Research]]
+
+** Community
+- GitHub Discussions
+- Discord/Slack channels
+- Research papers
+- Blog posts and tutorials

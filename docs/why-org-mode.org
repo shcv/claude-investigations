@@ -1,0 +1,192 @@
+#+TITLE: Org-mode Features for Agent Experiments
+
+* Overview
+
+This document highlights a few org-mode features that can be particularly helpful for experiment tracking and documentation in our LLM agent research.
+
+* Key Features
+
+** 1. Task States and Progress Tracking
+
+Org-mode lets us track experiment status with built-in TODO states:
+
+#+begin_example org
+  * TODO Run baseline test [0/3]
+    - [ ] Set up environment
+    - [ ] Execute test suite
+    - [ ] Record metrics
+#+end_example
+
+Simple states like TODO, IN-PROGRESS, and DONE help track what's been completed.
+
+** 2. Properties for Metadata
+
+Properties provide a clean way to attach metadata to experiments:
+
+#+begin_src org
+  * Experiment: Context Window Optimization
+    :PROPERTIES:
+    :Experiment-ID: EXP-2025-001
+    :Author:        Alice
+    :Status:        In Progress
+    :Baseline:      72% success
+    :Current:       85% success
+    :END:
+#+end_src
+
+This keeps important information organized and searchable.
+
+** 3. Tables with Formulas
+
+Org tables support basic spreadsheet functionality:
+
+| Experiment | Baseline | Current | Improvement |
+|------------+----------+---------+-------------|
+| EXP-001    |      72% |     85% |         13% |
+| EXP-002    |      65% |     78% |         13% |
+| EXP-003    |      80% |     82% |          2% |
+#+TBLFM: $4=$3-$2
+
+** 4. File and Heading Links
+
+Easy linking between related documents:
+
+#+begin_src org
+  See [[file:../experiments/2025-07-05-context/results.org::*Failure Analysis][failure analysis]] for details.
+  Related to [[id:baseline-001][baseline test]].
+#+end_src
+
+Links work across files and can target specific sections.
+
+** 5. Code Blocks with Syntax Highlighting
+
+#+begin_src python
+def analyze_results(data):
+    """Analyze experiment results."""
+    success_rate = sum(data.successes) / len(data.trials)
+    return success_rate
+#+end_src
+
+Multiple languages supported with proper highlighting.
+
+** 6. Literate Programming for Analysis
+
+Org-mode can execute code blocks and capture their output, creating reproducible analysis documents:
+
+*** Basic Execution
+#+begin_src python :results output
+import json
+with open('results.json') as f:
+    data = json.load(f)
+print(f"Success rate: {data['success_rate']}%")
+print(f"Average time: {data['avg_time']}s")
+#+end_src
+
+#+RESULTS:
+: Success rate: 82%
+: Average time: 4.3s
+
+*** Working with Data
+#+begin_src python :results value :exports both
+experiments = [
+    {"name": "baseline", "success": 72, "time": 5.2},
+    {"name": "with-hints", "success": 85, "time": 3.8},
+    {"name": "structured", "success": 91, "time": 4.1}
+]
+
+# Find best performing method
+best = max(experiments, key=lambda x: x['success'])
+return f"Best method: {best['name']} ({best['success']}% success)"
+#+end_src
+
+#+RESULTS:
+: Best method: structured (91% success)
+
+*** Chaining Results
+You can use output from one block as input to another:
+
+#+name: get-data
+#+begin_src python :results output silent
+print("72,85,91,78,88")
+#+end_src
+
+#+begin_src python :var data=get-data :results output
+numbers = [int(x) for x in data.strip().split(',')]
+avg = sum(numbers) / len(numbers)
+print(f"Average success rate: {avg:.1f}%")
+#+end_src
+
+#+RESULTS:
+: Average success rate: 82.8%
+
+*** Export Control
+- Use =:exports code= to show only code
+- Use =:exports results= to show only output  
+- Use =:exports both= to show code and results
+- Use =:exports none= to hide from exports
+
+This makes it easy to create clean reports from analysis notebooks.
+
+** 7. Export Options
+
+- Export to HTML for sharing results
+- Export to Markdown for GitHub
+- Export to PDF for reports
+
+** 8. Folding for Organization
+
+Org's hierarchical structure with folding helps manage large documents:
+- Collapse sections you're not working on
+- Get overview or detailed view as needed
+- Natural organization for complex experiments
+
+* Practical Examples for Our Use
+
+** Experiment Tracking
+#+begin_src org
+  * Experiments
+  ** DONE Test prompting strategy A
+     CLOSED: [2025-07-04]
+     - Result: 72% success rate
+  ** IN-PROGRESS Test prompting strategy B
+     - [ ] Run on testbed 1
+     - [X] Run on testbed 2
+     - [ ] Analyze results
+#+end_src
+
+** Session Documentation
+#+begin_src org
+  * Session Log
+    :PROPERTIES:
+    :Model: claude-4-opus
+    :Start: [2025-07-05 14:30]
+    :END:
+    
+  ** Prompt
+  [Prompt content here]
+  
+  ** Response
+  [Response content here]
+  
+  ** Notes
+  - Observed behavior X
+  - Failed on edge case Y
+#+end_src
+
+* Getting Started
+
+1. Most features work with any text editor
+2. Basic syntax is similar to Markdown
+3. Advanced features available in Emacs, VS Code (with extensions), and other editors
+4. Can always export to other formats when needed
+
+* Summary
+
+These org-mode features help us:
+- Track experiment progress
+- Organize metadata
+- Link related information
+- Document sessions clearly
+- Export results in various formats
+
+The format is particularly suited for scientific documentation where we need structure, metadata, and cross-references.

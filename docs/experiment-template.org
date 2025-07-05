@@ -1,0 +1,45 @@
+#+TITLE: Experiment Template
+
+* Experiment: [Brief Title]
+
+** What I'm Testing
+[1-2 sentences describing what you want to find out]
+
+** Setup
+- Model: [e.g., claude-4-opus, claude-4-sonnet]
+- Challenge: [[link to challenge if applicable]]
+- Method: [[link to method if applicable]]
+
+** How I Tested It
+[Brief description of your approach]
+
+** Results
+
+*** What Worked
+- [Key success 1]
+- [Key success 2]
+
+*** What Didn't Work
+- [Issue 1]
+- [Issue 2]
+
+*** Measurements (if applicable)
+| Metric | Value |
+|--------+-------|
+| [e.g., Success rate] | [e.g., 85%] |
+| [e.g., Time taken] | [e.g., 3.2s] |
+
+** Key Takeaway
+[1-2 sentences: What did you learn? What would you recommend?]
+
+** Session Files
+Claude Code saves sessions automatically to: =~/.claude/projects/[project-path-with-hyphens]/UUID.jsonl=
+- Project paths have slashes converted to hyphens (e.g., =/home/user/repos/agent-experiments= becomes =~/.claude/projects/-home-user-repos-agent-experiments/=)
+- On some systems, =XDG_CONFIG_DIR/claude/projects= is used instead of =~/.claude=
+- Use =/status= during a session to get the UUID
+
+- Session 1 UUID: [paste UUID here]
+- Session 2 UUID: [paste UUID here]
+
+---
+*Note: For complex experiments needing more structure, see [[./experiment-template-detailed.org][detailed template]].*

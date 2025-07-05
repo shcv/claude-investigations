@@ -1,0 +1,110 @@
+#+TITLE: Methods Directory
+
+* Overview
+
+This directory contains documented methods and approaches for improving LLM agent performance. Each method is thoroughly tested and includes implementation details, use cases, and performance characteristics.
+
+* Method Categories
+
+** prompting-strategies/
+Techniques for structuring prompts effectively.
+- Structured formats
+- Chain-of-thought variations
+- Few-shot examples
+- Role-based prompting
+
+** context-management/
+Approaches for managing context window and information.
+- Context prioritization
+- Information chunking
+- Reference strategies
+- Memory techniques
+
+** iterative-refinement/
+Methods for improving results through iteration.
+- Error correction loops
+- Progressive enhancement
+- Verification steps
+- Quality gates
+
+** workflow-patterns/
+Proven workflows for common tasks.
+- Code review patterns
+- Refactoring workflows
+- Debugging approaches
+- Testing strategies
+
+** error-handling/
+Strategies for recovering from errors.
+- Error detection
+- Rollback procedures
+- Correction techniques
+- Prevention strategies
+
+* Method Documentation Format
+
+Each method should include:
+
+** Overview
+- Brief description
+- Problem it solves
+- When to use it
+
+** Theory
+- Why it works
+- Underlying principles
+- Related research
+
+** Implementation
+- Step-by-step guide
+- Code examples
+- Templates
+
+** Validation
+- Test results
+- Success metrics
+- Failure modes
+
+** Examples
+- Real-world applications
+- Before/after comparisons
+- Edge cases
+
+* Method Development Process
+
+1. *Observation*: Notice a pattern
+2. *Hypothesis*: Form a theory
+3. *Design*: Create the method
+4. *Test*: Validate across scenarios
+5. *Refine*: Improve based on results
+6. *Document*: Share with team
+
+* Using Methods
+
+** Selection Criteria
+- Match method to challenge type
+- Consider complexity vs. benefit
+- Check prerequisites
+- Review performance data
+
+** Combination
+Methods can often be combined:
+- Structured prompting + iterative refinement
+- Context management + error handling
+- Workflow patterns + verification
+
+** Adaptation
+- Methods are starting points
+- Adapt to specific use cases
+- Document variations
+- Share improvements
+
+* Contributing a Method
+
+1. Test on multiple challenges
+2. Document thoroughly
+3. Include failure cases
+4. Provide templates/examples
+5. Link to validating experiments
+
+See [[../CONTRIBUTING.org][Contributing Guide]] for details.
