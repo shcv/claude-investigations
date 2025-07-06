@@ -4,41 +4,12 @@
 
 These evaluation methods are designed to systematically compare LLM agents (particularly Opus vs Sonnet) and identify optimal prompting/guidance strategies for Claude Code. Each method provides different insights into agent capabilities and improvement strategies.
 
-* Method 1: A/B Race
+* Method 1: Race
 
 ** Concept
 Run parallel sessions with identical goals but different parameters. Measure both efficiency and quality of solutions.
 
-** Implementation
-:PROPERTIES:
-:Method-ID: AB-RACE
-:END:
-
-*** Setup Phase
-#+begin_src org
-  * Race Configuration
-  :PROPERTIES:
-  :Goal: [Specific task to complete]
-  :Success-Criteria: [Clear completion criteria]
-  :Time-Limit: [Optional maximum duration]
-  :END:
-  
-  ** Agent A (e.g., Opus)
-  :PROPERTIES:
-  :Model: claude-4-opus
-  :Temperature: 0.7
-  :Custom-Instructions: [Any specific prompting]
-  :END:
-  
-  ** Agent B (e.g., Sonnet)
-  :PROPERTIES:
-  :Model: claude-4-sonnet
-  :Temperature: 0.7
-  :Custom-Instructions: [Same or different prompting]
-  :END:
-#+end_src
-
-*** Execution Protocol
+** Process
 1. Start both sessions simultaneously
 2. Provide identical initial context
 3. Allow natural progression (minimal intervention)
@@ -48,7 +19,11 @@ Run parallel sessions with identical goals but different parameters. Measure bot
    - Explicitly asks for clarification
 5. Record all interventions with timestamps
 
-*** Scoring Formula
+** Scoring
+Basic idea is to score based on number of interventions and clock time to achieve success.
+Hence the 'race' title.
+
+Claude also suggested a formula:
 #+begin_src python
 def calculate_race_score(turns, clock_time, interventions, quality_score):
     """
@@ -68,57 +43,14 @@ def calculate_race_score(turns, clock_time, interventions, quality_score):
 - **Recovery**: How well agents self-correct
 - **Strategy**: Different approaches taken
 
-*** Recording Template
-#+begin_src org
-  * A/B Race: [Task Name]
-  :PROPERTIES:
-  :Date: [Date]
-  :Evaluator: [Name]
-  :END:
-
-  ** Results Summary
-  | Metric        | Agent A (Opus) | Agent B (Sonnet) |
-  |---------------+----------------+------------------|
-  | Turns         |             12 |               18 |
-  | Time (min)    |            8.5 |             11.2 |
-  | Interventions |              1 |                3 |
-  | Quality Score |            95% |              85% |
-  | Final Score   |          127.5 |            234.0 |
-
-  ** Error Analysis
-  *** Agent A Errors
-  1. [Error type]: [Description]
-
-  *** Agent B Errors
-  1. [Error type]: [Description]
-
-  ** Key Insights
-  - [Insight about model differences]
-  - [Insight about approach differences]
-#+end_src
 
 * Method 2: Iterative Refinement (Retries)
 
 ** Concept
 Systematically improve task specifications based on failure analysis until achieving one-shot success.
 
-** Implementation
-:PROPERTIES:
-:Method-ID: ITERATIVE-REFINEMENT
-:END:
 
-*** Initial Setup
-#+begin_src org
-  * Task Specification v1
-  :PROPERTIES:
-  :Version: 1
-  :Created: [Date]
-  :END:
-  
-  [Initial task description]
-#+end_src
-
-*** Iteration Protocol
+** Process
 1. **Attempt**: Run agent with current specification
 2. **Record**: Document exact failures/mistakes
 3. **Analyze**: Identify root causes
@@ -140,31 +72,6 @@ Analyze what went wrong and suggest specific additions/clarifications to the spe
 4. Assumed context that wasn't provided
 #+end_example
 
-*** Specification Evolution Tracking
-#+begin_src org
-  * Specification History
-  ** v1 (Initial)
-  - Basic task description
-  - Minimal constraints
-  
-  ** v2 (After Attempt 1)
-  Added:
-  - Explicit file locations
-  - Error handling requirements
-  Failed because: Didn't specify output format
-  
-  ** v3 (After Attempt 2)  
-  Added:
-  - Output format specification
-  - Example of desired result
-  Failed because: Didn't mention performance requirements
-  
-  ** v4 (Final - Success)
-  Added:
-  - Performance constraints
-  - Memory usage limits
-  Result: One-shot success achieved
-#+end_src
 
 *** Metrics
 - **Convergence Rate**: Iterations to success
@@ -177,54 +84,13 @@ Analyze what went wrong and suggest specific additions/clarifications to the spe
 ** Concept
 Use a second agent or pattern matching to provide minimal hints when the primary agent encounters known issues.
 
-** Implementation
-:PROPERTIES:
-:Method-ID: HINT-INTERVENTION
-:END:
+The second agent is either smarter, has a working example to compare against, or collects problem/answer pairs from human operator.
 
-*** System Architecture
-#+begin_src python
-class InterventionSystem:
-    def __init__(self):
-        self.known_problems = {}  # pattern -> hint
-        self.confidence_threshold = 0.8
-        
-    def analyze_state(self, current_output, goal):
-        # Check for known problem patterns
-        for pattern, hint in self.known_problems.items():
-            if self.matches_pattern(current_output, pattern):
-                return hint, confidence
-        
-        # Ask analyzer agent if no match
-        return self.ask_analyzer(current_output, goal)
-        
-    def add_intervention(self, problem, solution):
-        self.known_problems[problem] = solution
-#+end_src
-
-*** Intervention Database Schema
-#+begin_src org
-  * Known Interventions
-  ** Import Error: Module Not Found
-  :PROPERTIES:
-  :Pattern: "ModuleNotFoundError|ImportError.*No module"
-  :Confidence: 0.95
-  :END:
-  Hint: Check if the module is installed. Use 'pip list' to see available packages. If missing, check requirements.txt or package.json.
-  
-  ** Test Failure: Assertion Error
-  :PROPERTIES:
-  :Pattern: "AssertionError.*expected.*but got"
-  :Confidence: 0.85
-  :END:
-  Hint: The test expects a different output. Check the test to understand the expected behavior, then modify your implementation to match.
-#+end_src
-
-*** Execution Flow
+** Process
 1. Primary agent attempts task
 2. Monitor for stuck states or errors
 3. Intervention system analyzes current state
-4. If confident match: provide hint automatically
+4. If confident or has a match: provide hint automatically
 5. If uncertain: escalate to human for new pattern
 6. Continue until task complete
 
@@ -234,167 +100,10 @@ class InterventionSystem:
 - **Hint Effectiveness**: Success rate after hints
 - **Learning Curve**: Reduction in interventions over time
 
-*** Analysis Template
-#+begin_src org
-  * Intervention Analysis: [Task Category]
-  ** Summary Statistics
-  - Total Runs: 20
-  - Avg Interventions: 2.3
-  - Pattern Coverage: 78%
-  
-  ** Common Intervention Patterns
-  | Pattern | Frequency | Auto-Handled | Effectiveness |
-  |---------+-----------+--------------+---------------|
-  | Import errors | 15 | Yes | 93% |
-  | Type mismatches | 8 | Yes | 87% |
-  | Missing context | 12 | No | 65% |
-  
-  ** New Patterns Discovered
-  1. [Pattern]: [Recommended hint]
-#+end_src
 
 * Method 4: Comprehensive Partial Credit
 
 ** Concept
 Evaluate attempts against detailed rubrics even if the task isn't fully completed, providing nuanced performance metrics.
 
-** Implementation
-:PROPERTIES:
-:Method-ID: PARTIAL-CREDIT
-:END:
-
-*** Problem Set Structure
-#+begin_src org
-  * Problem: Implement REST API
-  ** Requirements (100 points total)
-  *** Core Functionality (40 points)
-  - [ ] GET /users endpoint (10)
-  - [ ] POST /users endpoint (10)
-  - [ ] PUT /users/:id endpoint (10)
-  - [ ] DELETE /users/:id endpoint (10)
-  
-  *** Data Validation (20 points)
-  - [ ] Input validation on POST (10)
-  - [ ] Input validation on PUT (10)
-  
-  *** Error Handling (15 points)
-  - [ ] 404 for missing resources (5)
-  - [ ] 400 for invalid input (5)
-  - [ ] 500 error handling (5)
-  
-  *** Testing (15 points)
-  - [ ] Unit tests for models (5)
-  - [ ] Integration tests for endpoints (10)
-  
-  *** Code Quality (10 points)
-  - [ ] Consistent style (3)
-  - [ ] Good naming (3)
-  - [ ] DRY principle (4)
-#+end_src
-
-*** Automated Scoring Script
-#+begin_src python
-def grade_submission(submission_dir):
-    score = 0
-    report = []
-    
-    # Check endpoints
-    endpoints = check_endpoints(submission_dir)
-    score += endpoints.score
-    report.append(f"Endpoints: {endpoints.details}")
-    
-    # Run tests
-    test_results = run_test_suite(submission_dir)
-    score += calculate_test_score(test_results)
-    
-    # Static analysis
-    quality = analyze_code_quality(submission_dir)
-    score += quality.score
-    
-    return score, report
-#+end_src
-
-*** Grading Rubric Details
-Each requirement has:
-- **Binary checks**: Feature exists/works
-- **Quality grades**: How well implemented
-- **Partial credit**: Attempted but incomplete
-
-*** Comparative Analysis
-#+begin_src org
-  * Partial Credit Results: REST API Implementation
-  ** Model Comparison
-  | Model | Avg Score | Std Dev | Common Strengths | Common Weaknesses |
-  |-------+-----------+---------+------------------+-------------------|
-  | Opus | 82.5 | 8.3 | Error handling, Clean code | Test coverage |
-  | Sonnet | 76.2 | 11.2 | Fast implementation | Edge cases |
-  
-  ** Feature Completion Rates
-  | Feature | Opus | Sonnet |
-  |---------+------+--------|
-  | Core endpoints | 95% | 92% |
-  | Validation | 78% | 65% |
-  | Error handling | 88% | 72% |
-  | Testing | 45% | 38% |
-#+end_src
-
-* Meta-Evaluation Framework
-
-** Combining Methods
-Different methods provide complementary insights:
-
-*** Insight Matrix
-| Method | Best For | Limitations |
-|--------+----------+-------------|
-| A/B Race | Speed/efficiency comparison | May favor hasty solutions |
-| Iterative Refinement | Specification improvement | Time-intensive |
-| Hint Interventions | Identifying common failures | Requires pattern building |
-| Partial Credit | Comprehensive capability assessment | Complex rubric creation |
-
-** Experiment Design Guidelines
-
-*** For Model Comparison (Opus vs Sonnet)
-1. Use A/B Race for efficiency comparison
-2. Use Partial Credit for capability breadth
-3. Track which performs better on which task types
-
-*** For Prompt Engineering
-1. Use Iterative Refinement to find optimal specifications
-2. Use Hint Interventions to identify what context helps most
-3. A/B test different prompting strategies
-
-*** For Workflow Optimization
-1. Use Hint Interventions to build assistance patterns
-2. Use Partial Credit to identify consistent weak areas
-3. Design methods to address weaknesses
-
-* Implementation Checklist
-
-** Setting Up Evaluation
-- [ ] Choose appropriate method(s) for research question
-- [ ] Prepare test problems/scenarios
-- [ ] Set up measurement infrastructure
-- [ ] Define success criteria
-- [ ] Create recording templates
-
-** Running Experiments
-- [ ] Follow consistent protocols
-- [ ] Record all data points
-- [ ] Note unexpected behaviors
-- [ ] Maintain experimental controls
-- [ ] Document environmental factors
-
-** Analysis Phase
-- [ ] Calculate quantitative metrics
-- [ ] Identify qualitative patterns
-- [ ] Compare across conditions
-- [ ] Draw actionable conclusions
-- [ ] Plan follow-up experiments
-
-* Next Steps
-
-1. **Pilot Studies**: Run small-scale tests of each method
-2. **Tooling**: Build automation for common operations
-3. **Baseline**: Establish performance baselines
-4. **Refinement**: Iterate on methods based on results
-5. **Scaling**: Expand to broader problem sets
+The rubric could be evaluated by a second agent, and could potentially be derived from the spec directly if detailed enough. E.g. functional requirements or test cases.
