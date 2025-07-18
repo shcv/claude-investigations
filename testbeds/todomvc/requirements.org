@@ -1,0 +1,36 @@
+* TodoMVC Functional Requirements
+
+** Core Todo Management
+- Add new todo items with text description
+- View all todo items in a list
+- Mark individual todos as complete/incomplete
+- Edit existing todo text inline
+- Delete individual todo items
+
+** Bulk Operations
+- Mark all todos as complete with single action
+- Clear all completed todos at once
+
+** Filtering and Views
+- Display all todos (default view)
+- Display only active (incomplete) todos
+- Display only completed todos
+- Show count of active items remaining
+
+** Data Persistence
+- Persist todos between page reloads
+- Maintain todo state (text, completion status, order)
+
+** User Interface
+- Input field for new todos at top of interface
+- Individual todo items show checkbox and text
+- Strike-through styling for completed items
+- Show/hide toggle for completed items editing
+- Double-click todo text to edit
+- Press Enter to save edits
+- Press Escape to cancel edits without saving
+
+** Item Counter
+- Display count in format "X item(s) left"
+- Use singular "item" for count of 1
+- Use plural "items" for all other counts
