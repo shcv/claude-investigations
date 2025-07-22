@@ -1,0 +1,24 @@
+#+title: TodoMVC Race
+
+* Overview
+This is just a first attempt at making *something* like an experiment.
+Once we actually do something, we can start improving.
+
+* Concept
+This is a 'race' style experiment, as described in [[../../docs/evaluation-methods.org][Evaluation Methods]].
+
+The goal is to complete the spec in the least amount of time.
+
+This could be run as a single experiment, where the methods are tried in parallel, but it could also be done as a time trial competition with a leaderboard, where competitors can submit their session logs.
+
+* Resources
+- TodoMVC spec
+- submission script?
+- automated tests?
+- tool for computing results from session logs?
+
+* Instructions
+1. Run claude code in ~workspace~
+2. Implement the spec in testbeds/todomvc
+3. Add session log file from ~/.claude/projects to logs directory
+4. Profit?
