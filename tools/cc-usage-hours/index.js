@@ -588,27 +588,89 @@ async function analyzeUsage(options = {}) {
       console.log(chalk.bold(`Daily usage in hours (${modelText}):`));
       console.log();
       
-      // Interpolate data to make the chart wider (double the width)
-      const interpolatedHours = [];
-      for (let i = 0; i < dailyHours.length - 1; i++) {
-        interpolatedHours.push(dailyHours[i]);
-        // Add interpolated point between each pair of days
-        interpolatedHours.push((dailyHours[i] + dailyHours[i + 1]) / 2);
-      }
-      interpolatedHours.push(dailyHours[dailyHours.length - 1]);
+      // Note: asciichart has rendering issues with interpolated data at peaks
+      // The library uses corner characters (╰╭╮╯) that can appear disconnected
+      // when there are rapid value changes. Solution: intelligently repeat data
+      // points instead of interpolating between them.
       
-      // Configure chart options
+      // Create a wider chart by intelligently expanding data points
+      // This avoids interpolation artifacts at peaks while providing smooth transitions
+      const chartWidth = 90; // Target width for the chart
+      const dataPoints = dailyHours.length;
+      const expansionFactor = Math.max(1, Math.floor(chartWidth / dataPoints));
+      
+      const expandedHours = [];
+      for (let i = 0; i < dailyHours.length; i++) {
+        const current = dailyHours[i];
+        const prev = i > 0 ? dailyHours[i - 1] : current;
+        const next = i < dailyHours.length - 1 ? dailyHours[i + 1] : current;
+        
+        // Detect if this is a peak, valley, or plateau
+        const isPeak = current > prev && current > next;
+        const isValley = current < prev && current < next;
+        const isLocalExtreme = isPeak || isValley;
+        
+        if (isLocalExtreme || current === 0) {
+          // For peaks, valleys, and zero values, repeat the exact value
+          // This prevents rendering artifacts at sharp transitions
+          for (let j = 0; j < expansionFactor; j++) {
+            expandedHours.push(current);
+          }
+        } else {
+          // For gradual transitions, add intermediate values
+          expandedHours.push(current);
+          if (i < dailyHours.length - 1 && next !== current) {
+            const step = (next - current) / expansionFactor;
+            for (let j = 1; j < expansionFactor; j++) {
+              expandedHours.push(current + step * j);
+            }
+          } else {
+            // If next value is the same, just repeat
+            for (let j = 1; j < expansionFactor; j++) {
+              expandedHours.push(current);
+            }
+          }
+        }
+      }
+      
+      // Configure chart options - remove colors from config
       const chartConfig = {
         offset: 2,
         padding: '       ',
         height: 14,
-        colors: [asciichart.cyan],
-        format: function (x, i) { return (' ' + x.toFixed(1) + 'h').slice(-6); }
+        format: function (x, i) { 
+          // Ensure consistent width - pad to 6 characters total
+          const formatted = x.toFixed(1) + 'h';
+          return formatted.padStart(6, ' ');
+        }
       };
       
-      // Create the chart
-      const chart = asciichart.plot(interpolatedHours, chartConfig);
-      console.log(chalk.cyan(chart));
+      // Create the chart without colors
+      const chart = asciichart.plot(expandedHours, chartConfig);
+      
+      // Now add colors to the plain text output
+      const lines = chart.split('\n');
+      const coloredLines = lines.map((line, index) => {
+        // Skip empty lines
+        if (!line.trim()) return line;
+        
+        // Calculate relative height for this line
+        const relativeHeight = 1 - (index / (lines.length - 1));
+        
+        // Choose color based on height
+        let lineColor;
+        if (relativeHeight > 0.85) lineColor = chalk.redBright;
+        else if (relativeHeight > 0.7) lineColor = chalk.red;
+        else if (relativeHeight > 0.55) lineColor = chalk.yellow;
+        else if (relativeHeight > 0.4) lineColor = chalk.green;
+        else if (relativeHeight > 0.25) lineColor = chalk.cyan;
+        else lineColor = chalk.blue;
+        
+        // Apply the color to the entire line
+        return lineColor(line);
+      });
+      
+      console.log(coloredLines.join('\n'));
       console.log();
       
       // Show date range
