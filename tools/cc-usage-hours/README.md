@@ -13,7 +13,7 @@ npm install -g cc-usage-hours
 ```bash
 cc-usage-hours                # Auto-detect subscription
 cc-usage-hours -s pro         # Specify subscription
-cc-usage-hours -t active      # Use active time for limits
+cc-usage-hours -t active      # Use active time metric for limits
 cc-usage-hours -w             # Show weekly breakdown
 cc-usage-hours -m             # Show model breakdown
 cc-usage-hours -m opus        # Show only Opus usage
@@ -23,7 +23,7 @@ cc-usage-hours -m opus        # Show only Opus usage
 
 - `-g, --gap <minutes>` - Inactivity before new session (default: 5)
 - `-s, --subscription` - Subscription: pro, max5x, max20x (default: auto)
-- `-t, --tier <metric>` - Limit comparison: hours, active, parallel (default: parallel)
+- `-t, --metric <type>` - Limit comparison: hours, active, parallel (default: parallel)
 - `-w, --weekly` - Show weekly breakdown
 - `-m, --models [type]` - Show model usage (optional: opus/sonnet)
 - `-d, --detailed` - Show all details

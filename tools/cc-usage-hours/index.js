@@ -55,7 +55,7 @@ async function parseSessionFile(filePath) {
 async function analyzeUsage(options = {}) {
   const gapThresholdMinutes = options.gapThresholdMinutes || 5;
   const subscription = options.subscription || null;
-  const usageTier = options.usageTier || 'parallel';
+  const usageMetric = options.usageMetric || 'parallel';
   const showWeekly = options.showWeekly || false;
   const showModels = options.showModels || false;
   const modelFilter = options.modelFilter || null;
@@ -397,19 +397,19 @@ async function analyzeUsage(options = {}) {
     parallel: weeklyLinear
   };
   
-  const selectedMetric = tierMetrics[usageTier];
-  const tierLabel = {
+  const selectedMetric = tierMetrics[usageMetric];
+  const metricLabel = {
     hours: 'Hours with Activity',
     active: 'Active Conversation Time',
     parallel: 'Parallel Session Total'
-  }[usageTier];
+  }[usageMetric];
   
-  console.log(`Using ${tierLabel} for limit comparison\n`);
+  console.log(`Using ${metricLabel} for limit comparison\n`);
   
   // Calculate model usage for the selected tier
   const modelUsageByTier = {};
   
-  if (usageTier === 'parallel') {
+  if (usageMetric === 'parallel') {
     // For parallel tier, use the existing modelUsage (based on linear time)
     Object.assign(modelUsageByTier, modelUsage);
   } else {
@@ -550,9 +550,9 @@ async function analyzeUsage(options = {}) {
     hours: { week: worstWorkingHoursWeek, hours: worstWorkingHours },
     active: { week: worstWallClockWeek, hours: worstWallClockHours },
     parallel: { week: worstLinearWeek, hours: worstLinearHours }
-  }[usageTier];
+  }[usageMetric];
   
-  console.log(`\n📊 Selected tier (${tierLabel}): ${worstSelectedMetric.week} with ${worstSelectedMetric.hours.toFixed(1)}h`);
+  console.log(`\n📊 Selected metric (${metricLabel}): ${worstSelectedMetric.week} with ${worstSelectedMetric.hours.toFixed(1)}h`);
 }
 
 module.exports = analyzeUsage;

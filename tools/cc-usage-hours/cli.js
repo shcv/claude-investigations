@@ -15,7 +15,7 @@ Usage:
 Options:
   -g, --gap <minutes>     Minutes of inactivity before new session (default: 5)
   -s, --subscription      Subscription type: pro, max5x, or max20x (optional)
-  -t, --tier <metric>     Usage tier for limits: hours, active, or parallel (default: parallel)
+  -t, --metric <type>     Usage metric for limits: hours, active, or parallel (default: parallel)
   -w, --weekly            Show detailed weekly breakdown
   -m, --models [type]     Show model usage (optional: opus or sonnet to filter)
   -d, --detailed          Show all detailed information (weekly + models)
@@ -70,15 +70,15 @@ if (subIndex !== -1 && args[subIndex + 1]) {
   }
 }
 
-// Parse usage tier
-let usageTier = 'parallel';
-const tierIndex = args.findIndex(arg => arg === '-t' || arg === '--tier');
-if (tierIndex !== -1 && args[tierIndex + 1]) {
-  const tier = args[tierIndex + 1].toLowerCase();
-  if (['hours', 'active', 'parallel'].includes(tier)) {
-    usageTier = tier;
+// Parse usage metric
+let usageMetric = 'parallel';
+const metricIndex = args.findIndex(arg => arg === '-t' || arg === '--metric');
+if (metricIndex !== -1 && args[metricIndex + 1]) {
+  const metric = args[metricIndex + 1].toLowerCase();
+  if (['hours', 'active', 'parallel'].includes(metric)) {
+    usageMetric = metric;
   } else {
-    console.error('Error: Usage tier must be one of: hours, active, parallel');
+    console.error('Error: Usage metric must be one of: hours, active, parallel');
     process.exit(1);
   }
 }
@@ -106,7 +106,7 @@ if (modelIndex !== -1) {
 analyzeUsage({ 
   gapThresholdMinutes: gapThreshold, 
   subscription,
-  usageTier,
+  usageMetric,
   showWeekly: showWeekly || showDetailed,
   showModels: showModels || showDetailed,
   modelFilter
