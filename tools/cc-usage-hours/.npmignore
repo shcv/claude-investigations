@@ -1,0 +1,5 @@
+analyze_usage_hours.js
+sessions.json
+*.log
+.git/
+.gitignore

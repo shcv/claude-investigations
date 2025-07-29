@@ -1,0 +1,33 @@
+{
+  "name": "cc-usage-hours",
+  "version": "1.1.1",
+  "description": "Analyze Claude Code usage hours from session data",
+  "main": "index.js",
+  "bin": {
+    "cc-usage-hours": "./cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "usage",
+    "analytics",
+    "hours",
+    "tracking"
+  ],
+  "author": "",
+  "license": "CC0-1.0",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/cc-usage-hours.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/cc-usage-hours/issues"
+  },
+  "homepage": "https://github.com/yourusername/cc-usage-hours#readme"
+}
