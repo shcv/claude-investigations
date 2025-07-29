@@ -16,6 +16,21 @@ function formatDuration(minutes) {
   return `${hours}h ${mins}m`;
 }
 
+function getSubscriptionFromCredentials() {
+  try {
+    const credentialsPath = path.join(process.env.HOME, '.claude', '.credentials.json');
+    if (fs.existsSync(credentialsPath)) {
+      const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+      if (credentials.claudeAiOauth && credentials.claudeAiOauth.subscriptionType) {
+        return credentials.claudeAiOauth.subscriptionType.toLowerCase();
+      }
+    }
+  } catch (error) {
+    // Silently fail if we can't read credentials
+  }
+  return null;
+}
+
 async function parseSessionFile(filePath) {
   const fileStream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
@@ -54,6 +69,24 @@ async function parseSessionFile(filePath) {
 
 async function analyzeUsage(options = {}) {
   const gapThresholdMinutes = options.gapThresholdMinutes || 5;
+  let subscription = options.subscription;
+  
+  // Auto-detect subscription if not specified
+  if (!subscription) {
+    const detectedSub = getSubscriptionFromCredentials();
+    if (detectedSub) {
+      subscription = detectedSub;
+      console.log(`Detected subscription type: ${subscription.toUpperCase()}\n`);
+    } else {
+      subscription = 'pro'; // Default to pro if no credentials found
+      console.log(`No subscription detected, defaulting to PRO\n`);
+    }
+  }
+  
+  const usageTier = options.usageTier || 'parallel';
+  const showWeekly = options.showWeekly || false;
+  const showModels = options.showModels || false;
+  const modelFilter = options.modelFilter || null;
   const projectsDir = path.join(process.env.HOME, '.claude', 'projects');
   
   if (!fs.existsSync(projectsDir)) {
@@ -251,13 +284,11 @@ async function analyzeUsage(options = {}) {
   // Display results
   const weeks = [...new Set([...Object.keys(weeklyWallClock), ...Object.keys(weeklyLinear)])].sort();
 
-  console.log('=== WEEKLY USAGE ANALYSIS ===\n');
-  console.log(`Gap threshold: ${gapThresholdMinutes} minutes\n`);
-
   let totalWallClock = 0;
   let totalLinear = 0;
   let totalWorkingHours = 0;
 
+  // Calculate totals
   for (const week of weeks) {
     const wallClock = weeklyWallClock[week] || 0;
     const linear = weeklyLinear[week] || 0;
@@ -265,12 +296,24 @@ async function analyzeUsage(options = {}) {
     totalWallClock += wallClock;
     totalLinear += linear;
     totalWorkingHours += workingHours;
+  }
 
-    console.log(`Week ${week}:`);
-    console.log(`  Hours with Activity:      ${formatDuration(workingHours)} (${(workingHours / 60).toFixed(1)}h)`);
-    console.log(`  Active Conversation Time: ${formatDuration(wallClock)} (${(wallClock / 60).toFixed(1)}h)`);
-    console.log(`  Parallel Session Total:   ${formatDuration(linear)} (${(linear / 60).toFixed(1)}h)`);
-    console.log(`  Parallel factor:          ${linear > 0 ? (linear / wallClock).toFixed(2) : 'N/A'}x\n`);
+  // Show weekly breakdown if requested
+  if (showWeekly) {
+    console.log('=== WEEKLY USAGE ANALYSIS ===\n');
+    console.log(`Gap threshold: ${gapThresholdMinutes} minutes\n`);
+
+    for (const week of weeks) {
+      const wallClock = weeklyWallClock[week] || 0;
+      const linear = weeklyLinear[week] || 0;
+      const workingHours = weeklyWorkingHours[week] || 0;
+
+      console.log(`Week ${week}:`);
+      console.log(`  Hours with Activity:      ${formatDuration(workingHours)} (${(workingHours / 60).toFixed(1)}h)`);
+      console.log(`  Active Conversation Time: ${formatDuration(wallClock)} (${(wallClock / 60).toFixed(1)}h)`);
+      console.log(`  Parallel Session Total:   ${formatDuration(linear)} (${(linear / 60).toFixed(1)}h)`);
+      console.log(`  Parallel factor:          ${linear > 0 ? (linear / wallClock).toFixed(2) : 'N/A'}x\n`);
+    }
   }
 
   console.log('=== OVERALL SUMMARY ===\n');
@@ -286,64 +329,290 @@ async function analyzeUsage(options = {}) {
   console.log(`  Hours with Activity → Active Conversation: ${(totalWallClock / totalWorkingHours * 100).toFixed(1)}% of active hours had conversations`);
   console.log(`  Active Conversation → Parallel Total: ${(totalLinear / totalWallClock).toFixed(2)}x parallel sessions`);
 
-  // Model breakdown
-  console.log('\n=== MODEL USAGE BREAKDOWN ===\n');
-  
-  const sortedModels = Object.entries(modelUsage)
-    .sort((a, b) => b[1].totalMinutes - a[1].totalMinutes);
-  
-  for (const [model, usage] of sortedModels) {
-    const hours = usage.totalMinutes / 60;
-    console.log(`${model}:`);
-    console.log(`  Total: ${formatDuration(usage.totalMinutes)} (${hours.toFixed(1)}h)`);
-    console.log(`  Average per week: ${formatDuration(usage.totalMinutes / weeks.length)} (${(hours / weeks.length).toFixed(1)}h)`);
+  // Model breakdown if requested
+  if (showModels) {
+    console.log('\n=== MODEL USAGE BREAKDOWN ===\n');
     
-    // Show weekly breakdown for this model
-    const modelWeeks = Object.keys(usage.weekly).sort();
-    if (modelWeeks.length > 1) {
-      console.log(`  Weekly breakdown:`);
-      for (const week of modelWeeks) {
-        const weekMinutes = usage.weekly[week];
-        console.log(`    ${week}: ${formatDuration(weekMinutes)} (${(weekMinutes / 60).toFixed(1)}h)`);
+    let sortedModels = Object.entries(modelUsage)
+      .sort((a, b) => b[1].totalMinutes - a[1].totalMinutes);
+    
+    // Apply model filter if specified
+    if (modelFilter) {
+      sortedModels = sortedModels.filter(([model]) => 
+        model.toLowerCase().includes(modelFilter)
+      );
+      
+      if (sortedModels.length === 0) {
+        console.log(`No usage found for ${modelFilter} models.\n`);
+        return;
       }
+      
+      console.log(`Showing only ${modelFilter.charAt(0).toUpperCase() + modelFilter.slice(1)} models:\n`);
     }
-    console.log();
+    
+    for (const [model, usage] of sortedModels) {
+      const hours = usage.totalMinutes / 60;
+      console.log(`${model}:`);
+      console.log(`  Total: ${formatDuration(usage.totalMinutes)} (${hours.toFixed(1)}h)`);
+      console.log(`  Average per week: ${formatDuration(usage.totalMinutes / weeks.length)} (${(hours / weeks.length).toFixed(1)}h)`);
+      
+      // Show weekly breakdown for this model
+      const modelWeeks = Object.keys(usage.weekly).sort();
+      if (modelWeeks.length > 1) {
+        console.log(`  Weekly breakdown:`);
+        for (const week of modelWeeks) {
+          const weekMinutes = usage.weekly[week];
+          console.log(`    ${week}: ${formatDuration(weekMinutes)} (${(weekMinutes / 60).toFixed(1)}h)`);
+        }
+      }
+      console.log();
+    }
+    
+    // Show time metric comparisons
+    console.log('=== TIME METRIC COMPARISON ===\n');
+    console.log('Different ways to measure usage time:');
+    console.log('1. Hours with Activity: Count of unique hours where Claude was used');
+    console.log('2. Active Conversation Time: Actual time spent in conversation (gap-based)');
+    console.log('3. Parallel Session Total: Sum of all session times (parallel sessions add up)');
+    console.log('\nFormulas:');
+    console.log('- Utilization Rate = Active Conversation Time / Hours with Activity');
+    console.log('- Parallel Factor = Parallel Session Total / Active Conversation Time');
+    console.log('- Effective Usage = Hours with Activity × Utilization Rate × Parallel Factor');
   }
 
   // Estimate for Anthropic's limits
-  console.log('=== ANTHROPIC LIMIT COMPARISON ===\n');
-  const avgWallClockPerWeek = totalWallClock / 60 / weeks.length;
-  const avgLinearPerWeek = totalLinear / 60 / weeks.length;
+  console.log('=== ANTHROPIC LIMIT COMPARISON (WORST CASE) ===\n');
+  
+  // Define subscription limits
+  const limits = {
+    pro: { opus4: { min: 0, max: 0 }, sonnet4: { min: 40, max: 80 } },
+    max5x: { opus4: { min: 15, max: 35 }, sonnet4: { min: 140, max: 280 } },
+    max20x: { opus4: { min: 24, max: 40 }, sonnet4: { min: 240, max: 480 } }
+  };
+  
+  // For 'max' subscription, intelligently choose between 5x and 20x based on usage
+  let effectiveSubscription = subscription;
+  if (subscription === 'max') {
+    // We'll determine this after calculating worst-case usage
+    effectiveSubscription = null;
+  }
+  
+  let subKey = effectiveSubscription === 'max' ? 'max5x' : effectiveSubscription;
+  let subLimits = subKey ? limits[subKey] : null;
+  
+  // Find worst week for each metric
+  let worstLinearWeek = null;
+  let worstLinearHours = 0;
+  let worstWorkingHoursWeek = null;
+  let worstWorkingHours = 0;
+  let worstWallClockWeek = null;
+  let worstWallClockHours = 0;
+  
+  for (const week of weeks) {
+    const linear = (weeklyLinear[week] || 0) / 60;
+    const workingHours = (weeklyWorkingHours[week] || 0) / 60;
+    const wallClock = (weeklyWallClock[week] || 0) / 60;
+    
+    if (linear > worstLinearHours) {
+      worstLinearHours = linear;
+      worstLinearWeek = week;
+    }
+    if (workingHours > worstWorkingHours) {
+      worstWorkingHours = workingHours;
+      worstWorkingHoursWeek = week;
+    }
+    if (wallClock > worstWallClockHours) {
+      worstWallClockHours = wallClock;
+      worstWallClockWeek = week;
+    }
+  }
+  
+  // Calculate model usage based on selected tier
+  const tierMetrics = {
+    hours: weeklyWorkingHours,
+    active: weeklyWallClock,
+    parallel: weeklyLinear
+  };
+  
+  const selectedMetric = tierMetrics[usageTier];
+  const tierLabel = {
+    hours: 'Hours with Activity',
+    active: 'Active Conversation Time',
+    parallel: 'Parallel Session Total'
+  }[usageTier];
+  
+  console.log(`Using ${tierLabel} for limit comparison\n`);
+  
+  // Calculate model usage for the selected tier
+  const modelUsageByTier = {};
+  
+  if (usageTier === 'parallel') {
+    // For parallel tier, use the existing modelUsage (based on linear time)
+    Object.assign(modelUsageByTier, modelUsage);
+  } else {
+    // For hours or active tier, we need to recalculate based on the appropriate metric
+    // This is a simplified approach - in reality, we'd need to track model usage per metric
+    // For now, we'll scale the model usage proportionally
+    const scaleFactor = Object.values(selectedMetric).reduce((a, b) => a + b, 0) / 
+                       Object.values(weeklyLinear).reduce((a, b) => a + b, 0);
+    
+    for (const [model, usage] of Object.entries(modelUsage)) {
+      modelUsageByTier[model] = {
+        totalMinutes: usage.totalMinutes * scaleFactor,
+        weekly: {}
+      };
+      
+      for (const [week, minutes] of Object.entries(usage.weekly)) {
+        modelUsageByTier[model].weekly[week] = minutes * scaleFactor;
+      }
+    }
+  }
   
   // Check for Opus 4 and Sonnet 4 models
-  const opus4 = modelUsage['claude-opus-4-20250514'];
-  const sonnet4 = modelUsage['claude-sonnet-4-20250514'];
+  const opus4 = modelUsageByTier['claude-opus-4-20250514'];
+  const sonnet4 = modelUsageByTier['claude-sonnet-4-20250514'];
+  
+  // Calculate worst-case usage for intelligent tier selection
+  let worstOpus4Hours = 0;
+  let worstSonnet4Hours = 0;
   
   if (opus4) {
-    const opus4PerWeek = opus4.totalMinutes / 60 / weeks.length;
-    console.log(`Opus 4 usage: ${opus4PerWeek.toFixed(1)}h per week average`);
-    if (opus4PerWeek < 24) {
-      console.log(`✓ Within the expected 24-40h Opus 4 limit`);
-    } else if (opus4PerWeek < 40) {
-      console.log(`⚠ In the upper range of the 24-40h Opus 4 limit`);
-    } else {
-      console.log(`✗ Exceeds the typical 24-40h Opus 4 limit`);
+    for (const week in opus4.weekly) {
+      const hours = opus4.weekly[week] / 60;
+      if (hours > worstOpus4Hours) {
+        worstOpus4Hours = hours;
+      }
     }
   }
   
   if (sonnet4) {
-    const sonnet4PerWeek = sonnet4.totalMinutes / 60 / weeks.length;
-    console.log(`\nSonnet 4 usage: ${sonnet4PerWeek.toFixed(1)}h per week average`);
-    if (sonnet4PerWeek < 240) {
-      console.log(`✓ Within the expected 240-480h Sonnet 4 limit`);
-    } else if (sonnet4PerWeek < 480) {
-      console.log(`⚠ In the upper range of the 240-480h Sonnet 4 limit`);
-    } else {
-      console.log(`✗ Exceeds the typical 240-480h Sonnet 4 limit`);
+    for (const week in sonnet4.weekly) {
+      const hours = sonnet4.weekly[week] / 60;
+      if (hours > worstSonnet4Hours) {
+        worstSonnet4Hours = hours;
+      }
     }
   }
   
-  console.log(`\nTotal Parallel Session hours per week: ${avgLinearPerWeek.toFixed(1)}h`);
+  // Intelligent tier selection for 'max' subscription
+  if (subscription === 'max') {
+    // Check if usage fits within max5x limits
+    const fitsInMax5x = worstOpus4Hours <= limits.max5x.opus4.max && 
+                        worstSonnet4Hours <= limits.max5x.sonnet4.max;
+    
+    if (fitsInMax5x) {
+      effectiveSubscription = 'max5x';
+      console.log(`Detected MAX subscription. Your usage fits within MAX 5x limits.\n`);
+    } else {
+      effectiveSubscription = 'max20x';
+      console.log(`Detected MAX subscription. Your usage requires MAX 20x tier.\n`);
+    }
+    
+    subKey = effectiveSubscription;
+    subLimits = limits[subKey];
+  } else {
+    console.log(`Subscription type: ${subscription.toUpperCase()}\n`);
+  }
+  
+  if (opus4) {
+    // Find worst week for Opus 4 (already calculated hours above)
+    let worstOpus4Week = null;
+    
+    for (const week in opus4.weekly) {
+      const hours = opus4.weekly[week] / 60;
+      if (hours === worstOpus4Hours) {
+        worstOpus4Week = week;
+        break;
+      }
+    }
+    
+    console.log(`Opus 4 worst week: ${worstOpus4Week} with ${worstOpus4Hours.toFixed(1)}h`);
+    if (subLimits.opus4.max === 0) {
+      console.log(`✗ Opus 4 is not available on ${(effectiveSubscription || subscription).toUpperCase()} subscription`);
+    } else if (worstOpus4Hours < subLimits.opus4.min) {
+      console.log(`✓ Within the expected ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+    } else if (worstOpus4Hours < subLimits.opus4.max) {
+      console.log(`⚠ In the upper range of the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+    } else {
+      console.log(`✗ Exceeds the typical ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+    }
+  }
+  
+  if (sonnet4) {
+    // Find worst week for Sonnet 4 (already calculated hours above)
+    let worstSonnet4Week = null;
+    
+    for (const week in sonnet4.weekly) {
+      const hours = sonnet4.weekly[week] / 60;
+      if (hours === worstSonnet4Hours) {
+        worstSonnet4Week = week;
+        break;
+      }
+    }
+    
+    console.log(`\nSonnet 4 worst week: ${worstSonnet4Week} with ${worstSonnet4Hours.toFixed(1)}h`);
+    if (subLimits.sonnet4.max === 0) {
+      console.log(`✗ Sonnet 4 is not available on ${(effectiveSubscription || subscription).toUpperCase()} subscription`);
+    } else if (worstSonnet4Hours < subLimits.sonnet4.min) {
+      console.log(`✓ Within the expected ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+    } else if (worstSonnet4Hours < subLimits.sonnet4.max) {
+      console.log(`⚠ In the upper range of the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+    } else {
+      console.log(`✗ Exceeds the typical ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+    }
+  }
+  
+  console.log(`\nWorst week metrics across all models:`);
+  console.log(`  Highest Hours with Activity: ${worstWorkingHoursWeek} with ${worstWorkingHours.toFixed(1)}h`);
+  console.log(`  Highest Active Conversation Time: ${worstWallClockWeek} with ${worstWallClockHours.toFixed(1)}h`);
+  console.log(`  Highest Parallel Session Total: ${worstLinearWeek} with ${worstLinearHours.toFixed(1)}h`);
+  
+  // Show the selected metric's worst week
+  const worstSelectedMetric = {
+    hours: { week: worstWorkingHoursWeek, hours: worstWorkingHours },
+    active: { week: worstWallClockWeek, hours: worstWallClockHours },
+    parallel: { week: worstLinearWeek, hours: worstLinearHours }
+  }[usageTier];
+  
+  console.log(`\n📊 Selected tier (${tierLabel}): ${worstSelectedMetric.week} with ${worstSelectedMetric.hours.toFixed(1)}h`);
+  
+  // Recommend appropriate subscription tier
+  console.log('\n=== RECOMMENDED SUBSCRIPTION TIER ===\n');
+  
+  // Check if user has any usage at all
+  const hasUsage = Object.keys(modelUsage).length > 0;
+  
+  const tierFits = {
+    pro: worstOpus4Hours === 0 && (worstSonnet4Hours <= limits.pro.sonnet4.max || !hasUsage),
+    max5x: worstOpus4Hours <= limits.max5x.opus4.max && worstSonnet4Hours <= limits.max5x.sonnet4.max,
+    max20x: worstOpus4Hours <= limits.max20x.opus4.max && worstSonnet4Hours <= limits.max20x.sonnet4.max
+  };
+  
+  let recommendedTier = null;
+  for (const tier of ['pro', 'max5x', 'max20x']) {
+    if (tierFits[tier]) {
+      recommendedTier = tier;
+      break;
+    }
+  }
+  
+  if (recommendedTier) {
+    console.log(`Your usage fits within: ${recommendedTier.toUpperCase()}`);
+    
+    const currentTier = effectiveSubscription || subscription;
+    if (currentTier !== recommendedTier) {
+      if (currentTier === 'pro' && ['max5x', 'max20x'].includes(recommendedTier)) {
+        console.log(`⚠️  You may need to upgrade to ${recommendedTier.toUpperCase()} to avoid hitting limits.`);
+      } else if ((currentTier === 'max5x' && recommendedTier === 'pro') || 
+                 (currentTier === 'max20x' && ['pro', 'max5x'].includes(recommendedTier))) {
+        console.log(`💰 You could downgrade to ${recommendedTier.toUpperCase()} and save money.`);
+      }
+    } else {
+      console.log(`✅ Your current subscription is appropriate for your usage.`);
+    }
+  } else {
+    console.log(`❌ Your usage exceeds all available subscription tiers!`);
+  }
 }
 
 module.exports = analyzeUsage;

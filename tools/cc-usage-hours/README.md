@@ -1,8 +1,8 @@
 # cc-usage-hours
 
-Analyze your Claude Code usage hours from session data stored in `~/.claude/projects`.
+Analyze Claude Code usage from session data in `~/.claude/projects`.
 
-## Installation
+## Install
 
 ```bash
 npm install -g cc-usage-hours
@@ -11,47 +11,28 @@ npm install -g cc-usage-hours
 ## Usage
 
 ```bash
-# Use default 5-minute gap threshold
-cc-usage-hours
-
-# Use custom gap threshold (in minutes)
-cc-usage-hours --gap 10
+cc-usage-hours                # Auto-detect subscription
+cc-usage-hours -s pro         # Specify subscription
+cc-usage-hours -t active      # Use active time for limits
+cc-usage-hours -w             # Show weekly breakdown
+cc-usage-hours -m             # Show model breakdown
+cc-usage-hours -m opus        # Show only Opus usage
 ```
 
-## What it calculates
+## Options
 
-The tool provides three levels of time measurement:
+- `-g, --gap <minutes>` - Inactivity before new session (default: 5)
+- `-s, --subscription` - Subscription: pro, max5x, max20x (default: auto)
+- `-t, --tier <metric>` - Limit comparison: hours, active, parallel (default: parallel)
+- `-w, --weekly` - Show weekly breakdown
+- `-m, --models [type]` - Show model usage (optional: opus/sonnet)
+- `-d, --detailed` - Show all details
 
-1. **Hours with Activity**: Number of unique hours in which Claude was used
-   - Counts each hour where you had any interaction with Claude
-   - Example: Messages at 9:15am and 9:45am = 1 hour of activity
+## Metrics
 
-2. **Active Conversation Time**: Actual time spent actively using Claude
-   - Uses a gap threshold (default 5 minutes) to separate conversation sessions
-   - Time from first to last message in each continuous conversation
-
-3. **Parallel Session Total**: Sum of all session times
-   - Adds up all parallel sessions (if you have multiple Claude instances open)
-   - Will be higher than Active Conversation Time if you use parallel sessions
-
-## Output
-
-The tool provides:
-- Weekly breakdown of all three metrics
-- Overall summary with averages
-- Usage intensity percentages
-- Model usage breakdown (Opus 4, Sonnet 4, etc.)
-- Comparison against Anthropic's estimated weekly limits
-
-## Example Output
-
-```
-Week 2025-W30:
-  Hours with Activity:      66h 0m (66.0h)
-  Active Conversation Time: 24h 33m (24.6h)
-  Parallel Session Total:   33h 35m (33.6h)
-  Parallel factor:          1.37x
-```
+- **Hours with Activity**: Unique hours with Claude usage
+- **Active Conversation Time**: Actual conversation time (gap-based)
+- **Parallel Session Total**: Sum of all sessions
 
 ## Requirements
 
