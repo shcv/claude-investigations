@@ -553,42 +553,6 @@ async function analyzeUsage(options = {}) {
   }[usageTier];
   
   console.log(`\n📊 Selected tier (${tierLabel}): ${worstSelectedMetric.week} with ${worstSelectedMetric.hours.toFixed(1)}h`);
-  
-  // Recommend appropriate subscription tier
-  console.log('\n=== RECOMMENDED SUBSCRIPTION TIER ===\n');
-  
-  // Check if user has any usage at all
-  const hasUsage = Object.keys(modelUsage).length > 0;
-  
-  const tierFits = {
-    pro: worstOpus4Hours === 0 && (worstSonnet4Hours <= limits.pro.sonnet4.max || !hasUsage),
-    max5x: worstOpus4Hours <= limits.max5x.opus4.max && worstSonnet4Hours <= limits.max5x.sonnet4.max,
-    max20x: worstOpus4Hours <= limits.max20x.opus4.max && worstSonnet4Hours <= limits.max20x.sonnet4.max
-  };
-  
-  let recommendedTier = null;
-  for (const tier of ['pro', 'max5x', 'max20x']) {
-    if (tierFits[tier]) {
-      recommendedTier = tier;
-      break;
-    }
-  }
-  
-  if (recommendedTier) {
-    console.log(`Your usage fits within: ${recommendedTier.toUpperCase()}`);
-    
-    const currentTier = effectiveSubscription || subscription;
-    if (currentTier !== recommendedTier) {
-      if ((currentTier === 'pro' && ['max5x', 'max20x'].includes(recommendedTier)) ||
-          (currentTier === 'max5x' && recommendedTier === 'max20x')) {
-        console.log(`⚠️  You may need to upgrade to ${recommendedTier.toUpperCase()} to avoid hitting limits.`);
-      }
-    } else {
-      console.log(`✅ Your current subscription is appropriate for your usage.`);
-    }
-  } else {
-    console.log(`❌ Your usage exceeds all available subscription tiers!`);
-  }
 }
 
 module.exports = analyzeUsage;
