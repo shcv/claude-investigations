@@ -14,6 +14,8 @@ To that end, it computes 3 different ways of measuring your usage in 'hours':
 
 Note that the parallel session total seems lower than expected, and so is probably only accounting for parallel *sessions*, not fully accounting for subagents.
 
+![Screenshot of cc-usage-hours](./images/cc-usage-hours-screenshot.png)
+
 ## Install
 
 ```bash
