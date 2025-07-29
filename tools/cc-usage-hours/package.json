@@ -24,12 +24,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/cc-usage-hours.git"
+    "url": "https://github.com/shcv/claude-experiments"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/cc-usage-hours/issues"
+    "url": "https://github.com/shcv/claude-experiments/issues"
   },
-  "homepage": "https://github.com/yourusername/cc-usage-hours#readme",
+  "homepage": "https://github.com/shcv/claude-experiments/tree/main/tools/cc-usage-hours",
   "dependencies": {
     "asciichart": "^1.5.25",
     "chalk": "^4.1.2"
