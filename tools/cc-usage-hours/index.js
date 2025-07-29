@@ -362,15 +362,6 @@ async function analyzeUsage(options = {}) {
     max20x: { opus4: { min: 24, max: 40 }, sonnet4: { min: 240, max: 480 } }
   };
   
-  // For 'max' subscription, intelligently choose between 5x and 20x based on usage
-  let effectiveSubscription = subscription;
-  if (subscription === 'max') {
-    // We'll determine this after calculating worst-case usage
-    effectiveSubscription = null;
-  }
-  
-  let subKey = effectiveSubscription === 'max' ? 'max5x' : effectiveSubscription;
-  let subLimits = subKey ? limits[subKey] : null;
   
   // Find worst week for each metric
   let worstLinearWeek = null;
