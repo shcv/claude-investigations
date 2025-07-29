@@ -544,15 +544,6 @@ async function analyzeUsage(options = {}) {
   console.log(`  Highest Hours with Activity: ${worstWorkingHoursWeek} with ${worstWorkingHours.toFixed(1)}h`);
   console.log(`  Highest Active Conversation Time: ${worstWallClockWeek} with ${worstWallClockHours.toFixed(1)}h`);
   console.log(`  Highest Parallel Session Total: ${worstLinearWeek} with ${worstLinearHours.toFixed(1)}h`);
-  
-  // Show the selected metric's worst week
-  const worstSelectedMetric = {
-    hours: { week: worstWorkingHoursWeek, hours: worstWorkingHours },
-    active: { week: worstWallClockWeek, hours: worstWallClockHours },
-    parallel: { week: worstLinearWeek, hours: worstLinearHours }
-  }[usageMetric];
-  
-  console.log(`\n📊 Selected metric (${metricLabel}): ${worstSelectedMetric.week} with ${worstSelectedMetric.hours.toFixed(1)}h`);
 }
 
 module.exports = analyzeUsage;
