@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const asciichart = require('asciichart');
+const chalk = require('chalk');
 
 // Helper functions
 function getWeekNumber(date) {
@@ -14,6 +16,14 @@ function formatDuration(minutes) {
   const hours = Math.floor(minutes / 60);
   const mins = Math.round(minutes % 60);
   return `${hours}h ${mins}m`;
+}
+
+function getDateKey(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 async function parseSessionFile(filePath) {
@@ -58,6 +68,7 @@ async function analyzeUsage(options = {}) {
   const usageMetric = options.usageMetric || 'parallel';
   const showWeekly = options.showWeekly || false;
   const showModels = options.showModels || false;
+  const showCharts = options.showCharts || false;
   const modelFilter = options.modelFilter || null;
   const projectsDir = path.join(process.env.HOME, '.claude', 'projects');
   
@@ -81,7 +92,7 @@ async function analyzeUsage(options = {}) {
     }
   }
 
-  console.log(`Found ${sessionFiles.length} session files to analyze...\n`);
+  console.log(chalk.gray(`Found ${chalk.cyan(sessionFiles.length)} session files to analyze...\n`));
 
   // Parse all sessions
   const allMessages = [];
@@ -115,6 +126,7 @@ async function analyzeUsage(options = {}) {
   const weeklyWallClock = {};  // Actual elapsed time (parallel sessions merged)
   const weeklyWorkingHours = {}; // Working hours (1hr gap threshold)
   const modelUsage = {};  // Track usage by model
+  const dailyUsage = {};  // Track daily usage for sparkline charts
 
   for (const [sessionId, session] of Object.entries(sessions)) {
     const messages = session.messages;
@@ -172,6 +184,16 @@ async function analyzeUsage(options = {}) {
       }
       weeklyLinear[segment.week] += segment.duration;
       
+      // Track daily usage
+      const dateKey = getDateKey(segment.start);
+      if (!dailyUsage[dateKey]) {
+        dailyUsage[dateKey] = {
+          totalMinutes: 0,
+          models: {}
+        };
+      }
+      dailyUsage[dateKey].totalMinutes += segment.duration;
+      
       // Track model usage
       const modelName = segment.model || 'unknown';
       if (!modelUsage[modelName]) {
@@ -186,6 +208,12 @@ async function analyzeUsage(options = {}) {
         modelUsage[modelName].weekly[segment.week] = 0;
       }
       modelUsage[modelName].weekly[segment.week] += segment.duration;
+      
+      // Track daily model usage
+      if (!dailyUsage[dateKey].models[modelName]) {
+        dailyUsage[dateKey].models[modelName] = 0;
+      }
+      dailyUsage[dateKey].models[modelName] += segment.duration;
     }
   }
 
@@ -272,38 +300,49 @@ async function analyzeUsage(options = {}) {
 
   // Show weekly breakdown if requested
   if (showWeekly) {
-    console.log('=== WEEKLY USAGE ANALYSIS ===\n');
-    console.log(`Gap threshold: ${gapThresholdMinutes} minutes\n`);
+    console.log(chalk.bold.cyan('=== WEEKLY USAGE ANALYSIS ===\n'));
+    console.log(chalk.gray(`Gap threshold: ${chalk.yellow(gapThresholdMinutes)} minutes\n`));
 
     for (const week of weeks) {
       const wallClock = weeklyWallClock[week] || 0;
       const linear = weeklyLinear[week] || 0;
       const workingHours = weeklyWorkingHours[week] || 0;
 
-      console.log(`Week ${week}:`);
-      console.log(`  Hours with Activity:      ${formatDuration(workingHours)} (${(workingHours / 60).toFixed(1)}h)`);
-      console.log(`  Active Conversation Time: ${formatDuration(wallClock)} (${(wallClock / 60).toFixed(1)}h)`);
-      console.log(`  Parallel Session Total:   ${formatDuration(linear)} (${(linear / 60).toFixed(1)}h)`);
-      console.log(`  Parallel factor:          ${linear > 0 ? (linear / wallClock).toFixed(2) : 'N/A'}x\n`);
+      console.log(chalk.bold.white(`Week ${week}:`));
+      console.log(`  ${chalk.magenta('Hours with Activity:')}      ${chalk.magenta(formatDuration(workingHours))} ${chalk.gray(`(${(workingHours / 60).toFixed(1)}h)`)}`);
+      console.log(`  ${chalk.blue('Active Conversation Time:')} ${chalk.blue(formatDuration(wallClock))} ${chalk.gray(`(${(wallClock / 60).toFixed(1)}h)`)}`);
+      console.log(`  ${chalk.green('Parallel Session Total:')}   ${chalk.green(formatDuration(linear))} ${chalk.gray(`(${(linear / 60).toFixed(1)}h)`)}`);
+      const parallelFactor = linear > 0 ? (linear / wallClock).toFixed(2) : 'N/A';
+      const factorColor = parallelFactor === 'N/A' ? chalk.gray : 
+                         parseFloat(parallelFactor) > 2 ? chalk.yellow :
+                         parseFloat(parallelFactor) > 1.5 ? chalk.yellowBright : chalk.white;
+      console.log(`  ${chalk.gray('Parallel factor:')}          ${factorColor(parallelFactor + 'x')}\n`);
     }
   }
 
-  console.log('=== OVERALL SUMMARY ===\n');
-  console.log(`Total weeks analyzed: ${weeks.length}`);
-  console.log(`Total Hours with Activity: ${formatDuration(totalWorkingHours)} (${(totalWorkingHours / 60).toFixed(1)}h)`);
-  console.log(`Total Active Conversation Time: ${formatDuration(totalWallClock)} (${(totalWallClock / 60).toFixed(1)}h)`);
-  console.log(`Total Parallel Session Total: ${formatDuration(totalLinear)} (${(totalLinear / 60).toFixed(1)}h)`);
-  console.log(`Average Hours with Activity per week: ${formatDuration(totalWorkingHours / weeks.length)} (${(totalWorkingHours / 60 / weeks.length).toFixed(1)}h)`);
-  console.log(`Average Active Conversation Time per week: ${formatDuration(totalWallClock / weeks.length)} (${(totalWallClock / 60 / weeks.length).toFixed(1)}h)`);
-  console.log(`Average Parallel Session Total per week: ${formatDuration(totalLinear / weeks.length)} (${(totalLinear / 60 / weeks.length).toFixed(1)}h)`);
-  console.log(`Overall parallel factor: ${totalLinear > 0 ? (totalLinear / totalWallClock).toFixed(2) : 'N/A'}x`);
-  console.log(`\nUsage intensity:`);
-  console.log(`  Hours with Activity → Active Conversation: ${(totalWallClock / totalWorkingHours * 100).toFixed(1)}% of active hours had conversations`);
-  console.log(`  Active Conversation → Parallel Total: ${(totalLinear / totalWallClock).toFixed(2)}x parallel sessions`);
+  console.log(chalk.bold.cyan('=== OVERALL SUMMARY ===\n'));
+  console.log(`${chalk.gray('Total weeks analyzed:')} ${chalk.cyan.bold(weeks.length)}`);
+  console.log(`${chalk.magenta('Total Hours with Activity:')} ${chalk.magenta.bold(formatDuration(totalWorkingHours))} ${chalk.gray(`(${(totalWorkingHours / 60).toFixed(1)}h)`)}`);
+  console.log(`${chalk.blue('Total Active Conversation Time:')} ${chalk.blue.bold(formatDuration(totalWallClock))} ${chalk.gray(`(${(totalWallClock / 60).toFixed(1)}h)`)}`);
+  console.log(`${chalk.green('Total Parallel Session Total:')} ${chalk.green.bold(formatDuration(totalLinear))} ${chalk.gray(`(${(totalLinear / 60).toFixed(1)}h)`)}`);
+  console.log(`${chalk.magenta('Average Hours with Activity per week:')} ${chalk.magenta(formatDuration(totalWorkingHours / weeks.length))} ${chalk.gray(`(${(totalWorkingHours / 60 / weeks.length).toFixed(1)}h)`)}`);
+  console.log(`${chalk.blue('Average Active Conversation Time per week:')} ${chalk.blue(formatDuration(totalWallClock / weeks.length))} ${chalk.gray(`(${(totalWallClock / 60 / weeks.length).toFixed(1)}h)`)}`);
+  console.log(`${chalk.green('Average Parallel Session Total per week:')} ${chalk.green(formatDuration(totalLinear / weeks.length))} ${chalk.gray(`(${(totalLinear / 60 / weeks.length).toFixed(1)}h)`)}`);
+  const overallParallelFactor = totalLinear > 0 ? (totalLinear / totalWallClock).toFixed(2) : 'N/A';
+  const factorColor = overallParallelFactor === 'N/A' ? chalk.gray : 
+                     parseFloat(overallParallelFactor) > 2 ? chalk.yellow :
+                     parseFloat(overallParallelFactor) > 1.5 ? chalk.yellowBright : chalk.white;
+  console.log(`${chalk.gray('Overall parallel factor:')} ${factorColor(overallParallelFactor + 'x')}`);
+  console.log(`\n${chalk.bold('Usage intensity:')}`);
+  const utilizationRate = (totalWallClock / totalWorkingHours * 100).toFixed(1);
+  const utilizationColor = parseFloat(utilizationRate) > 80 ? chalk.green : 
+                          parseFloat(utilizationRate) > 60 ? chalk.yellow : chalk.red;
+  console.log(`  ${chalk.gray('Hours with Activity → Active Conversation:')} ${utilizationColor(utilizationRate + '%')} ${chalk.gray('of active hours had conversations')}`);
+  console.log(`  ${chalk.gray('Active Conversation → Parallel Total:')} ${factorColor((totalLinear / totalWallClock).toFixed(2) + 'x')} ${chalk.gray('parallel sessions')}`)
 
   // Model breakdown if requested
   if (showModels) {
-    console.log('\n=== MODEL USAGE BREAKDOWN ===\n');
+    console.log(chalk.bold.cyan('\n=== MODEL USAGE BREAKDOWN ===\n'));
     
     let sortedModels = Object.entries(modelUsage)
       .sort((a, b) => b[1].totalMinutes - a[1].totalMinutes);
@@ -315,45 +354,150 @@ async function analyzeUsage(options = {}) {
       );
       
       if (sortedModels.length === 0) {
-        console.log(`No usage found for ${modelFilter} models.\n`);
-        return;
-      }
+        console.log(chalk.yellow(`No usage found for ${modelFilter} models.\n`));
+        // Don't return early, continue with limit comparison
+      } else {
       
-      console.log(`Showing only ${modelFilter.charAt(0).toUpperCase() + modelFilter.slice(1)} models:\n`);
+      console.log(chalk.gray(`Showing only ${modelFilter.charAt(0).toUpperCase() + modelFilter.slice(1)} models:\n`));
     }
     
     for (const [model, usage] of sortedModels) {
       const hours = usage.totalMinutes / 60;
-      console.log(`${model}:`);
-      console.log(`  Total: ${formatDuration(usage.totalMinutes)} (${hours.toFixed(1)}h)`);
-      console.log(`  Average per week: ${formatDuration(usage.totalMinutes / weeks.length)} (${(hours / weeks.length).toFixed(1)}h)`);
+      // Color model names based on type
+      const modelColor = model.includes('opus') ? chalk.hex('#9333EA') : // Purple for Opus
+                        model.includes('sonnet') ? chalk.hex('#0EA5E9') : // Sky blue for Sonnet
+                        model.includes('haiku') ? chalk.hex('#10B981') : // Green for Haiku
+                        chalk.white;
+      console.log(modelColor.bold(`${model}:`));
+      console.log(`  ${chalk.gray('Total:')} ${modelColor(formatDuration(usage.totalMinutes))} ${chalk.gray(`(${hours.toFixed(1)}h)`)}`);
+      console.log(`  ${chalk.gray('Average per week:')} ${modelColor(formatDuration(usage.totalMinutes / weeks.length))} ${chalk.gray(`(${(hours / weeks.length).toFixed(1)}h)`)}`);
       
       // Show weekly breakdown for this model
       const modelWeeks = Object.keys(usage.weekly).sort();
       if (modelWeeks.length > 1) {
-        console.log(`  Weekly breakdown:`);
+        console.log(`  ${chalk.gray('Weekly breakdown:')}`);
         for (const week of modelWeeks) {
           const weekMinutes = usage.weekly[week];
-          console.log(`    ${week}: ${formatDuration(weekMinutes)} (${(weekMinutes / 60).toFixed(1)}h)`);
+          console.log(`    ${chalk.white(week)}: ${modelColor(formatDuration(weekMinutes))} ${chalk.gray(`(${(weekMinutes / 60).toFixed(1)}h)`)}`);
         }
       }
       console.log();
     }
+  }
     
     // Show time metric comparisons
-    console.log('=== TIME METRIC COMPARISON ===\n');
-    console.log('Different ways to measure usage time:');
-    console.log('1. Hours with Activity: Count of unique hours where Claude was used');
-    console.log('2. Active Conversation Time: Actual time spent in conversation (gap-based)');
-    console.log('3. Parallel Session Total: Sum of all session times (parallel sessions add up)');
-    console.log('\nFormulas:');
-    console.log('- Utilization Rate = Active Conversation Time / Hours with Activity');
-    console.log('- Parallel Factor = Parallel Session Total / Active Conversation Time');
-    console.log('- Effective Usage = Hours with Activity × Utilization Rate × Parallel Factor');
+    console.log(chalk.bold.cyan('=== TIME METRIC COMPARISON ===\n'));
+    console.log(chalk.bold('Different ways to measure usage time:'));
+    console.log(`${chalk.magenta('1. Hours with Activity:')} ${chalk.gray('Count of unique hours where Claude was used')}`);
+    console.log(`${chalk.blue('2. Active Conversation Time:')} ${chalk.gray('Actual time spent in conversation (gap-based)')}`);
+    console.log(`${chalk.green('3. Parallel Session Total:')} ${chalk.gray('Sum of all session times (parallel sessions add up)')}`);
+    console.log(`\n${chalk.bold('Formulas:')}`);
+    console.log(chalk.gray('- Utilization Rate = Active Conversation Time / Hours with Activity'));
+    console.log(chalk.gray('- Parallel Factor = Parallel Session Total / Active Conversation Time'));
+    console.log(chalk.gray('- Effective Usage = Hours with Activity × Utilization Rate × Parallel Factor'));
+  }
+
+  // Show sparkline charts if requested
+  if (showCharts) {
+    console.log(chalk.bold.cyan('\n=== DAILY USAGE SPARKLINE (PAST MONTH) ===\n'));
+    
+    // Get date range for past month
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    // Create array of dates for past 30 days
+    const dates = [];
+    const dateLabels = [];
+    for (let d = new Date(thirtyDaysAgo); d <= today; d.setDate(d.getDate() + 1)) {
+      dates.push(getDateKey(new Date(d)));
+      dateLabels.push(`${d.getMonth() + 1}/${d.getDate()}`);
+    }
+    
+    // Prepare data for sparkline
+    const dailyHours = dates.map(date => {
+      const usage = dailyUsage[date];
+      if (!usage) return 0;
+      
+      // Apply model filter if specified
+      if (modelFilter) {
+        let filteredMinutes = 0;
+        for (const [model, minutes] of Object.entries(usage.models)) {
+          if (model.toLowerCase().includes(modelFilter)) {
+            filteredMinutes += minutes;
+          }
+        }
+        return filteredMinutes / 60; // Convert to hours
+      }
+      
+      return usage.totalMinutes / 60; // Convert to hours
+    });
+    
+    // Calculate statistics
+    const maxHours = Math.max(...dailyHours);
+    const totalHours = dailyHours.reduce((a, b) => a + b, 0);
+    const avgHours = totalHours / dailyHours.length;
+    const daysWithUsage = dailyHours.filter(h => h > 0).length;
+    
+    // Create asciichart
+    if (maxHours > 0) {
+      const modelText = modelFilter ? 
+        (modelFilter === 'opus' ? chalk.hex('#9333EA')(modelFilter + ' models') : 
+         modelFilter === 'sonnet' ? chalk.hex('#0EA5E9')(modelFilter + ' models') : 
+         chalk.white(modelFilter + ' models')) : 
+        chalk.white('all models');
+      console.log(chalk.bold(`Daily usage in hours (${modelText}):`));
+      console.log();
+      
+      // Interpolate data to make the chart wider (double the width)
+      const interpolatedHours = [];
+      for (let i = 0; i < dailyHours.length - 1; i++) {
+        interpolatedHours.push(dailyHours[i]);
+        // Add interpolated point between each pair of days
+        interpolatedHours.push((dailyHours[i] + dailyHours[i + 1]) / 2);
+      }
+      interpolatedHours.push(dailyHours[dailyHours.length - 1]);
+      
+      // Configure chart options
+      const chartConfig = {
+        offset: 2,
+        padding: '       ',
+        height: 14,
+        colors: [asciichart.cyan],
+        format: function (x, i) { return (' ' + x.toFixed(1) + 'h').slice(-6); }
+      };
+      
+      // Create the chart
+      const chart = asciichart.plot(interpolatedHours, chartConfig);
+      console.log(chalk.cyan(chart));
+      console.log();
+      
+      // Show date range
+      console.log(`${chalk.gray('Period:')} ${chalk.white(dateLabels[0])} ${chalk.gray('to')} ${chalk.white(dateLabels[dateLabels.length - 1])}`);
+      const usageColor = daysWithUsage > dailyHours.length * 0.8 ? chalk.green :
+                        daysWithUsage > dailyHours.length * 0.5 ? chalk.yellow : chalk.red;
+      console.log(`${chalk.gray('Days with usage:')} ${usageColor(daysWithUsage)}${chalk.gray('/')}${chalk.white(dailyHours.length)} ${chalk.gray('days')}`);
+      console.log(`${chalk.gray('Average daily usage:')} ${chalk.cyan(avgHours.toFixed(1) + 'h')}`);
+      console.log(`${chalk.gray('Peak daily usage:')} ${chalk.bold.yellow(maxHours.toFixed(1) + 'h')}`);
+      
+      // Show which days had peak usage
+      const peakDays = [];
+      dailyHours.forEach((hours, index) => {
+        if (hours === maxHours) {
+          peakDays.push(dateLabels[index]);
+        }
+      });
+      if (peakDays.length > 0) {
+        console.log(`${chalk.gray('Peak usage on:')} ${chalk.yellow(peakDays.join(', '))}`);
+      }
+    } else {
+      console.log(chalk.yellow(`No usage found in the past 30 days${modelFilter ? ` for ${modelFilter} models` : ''}.`));
+    }
+    console.log();
   }
 
   // Estimate for Anthropic's limits
-  console.log('=== ANTHROPIC LIMIT COMPARISON (WORST CASE) ===\n');
+  console.log(chalk.bold.cyan('=== ANTHROPIC LIMIT COMPARISON (WORST CASE) ===\n'));
   
   // Define subscription limits
   const limits = {
@@ -404,7 +548,7 @@ async function analyzeUsage(options = {}) {
     parallel: 'Parallel Session Total'
   }[usageMetric];
   
-  console.log(`Using ${metricLabel} for limit comparison\n`);
+  console.log(chalk.gray(`Using ${chalk.bold(metricLabel)} for limit comparison\n`));
   
   // Calculate model usage for the selected tier
   const modelUsageByTier = {};
@@ -482,7 +626,10 @@ async function analyzeUsage(options = {}) {
   const subKey = effectiveSubscription;
   const subLimits = limits[subKey];
   
-  console.log(`Comparing against: ${effectiveSubscription.toUpperCase()} tier limits\n`);
+  const tierColor = effectiveSubscription === 'pro' ? chalk.blue :
+                   effectiveSubscription === 'max5x' ? chalk.yellow :
+                   effectiveSubscription === 'max20x' ? chalk.magenta : chalk.white;
+  console.log(`${chalk.gray('Comparing against:')} ${tierColor.bold(effectiveSubscription.toUpperCase())} ${chalk.gray('tier limits\n')}`);
   
   if (opus4) {
     // Find worst week for Opus 4 (already calculated hours above)
@@ -496,19 +643,19 @@ async function analyzeUsage(options = {}) {
       }
     }
     
-    console.log(`Opus 4 worst week: ${worstOpus4Week} with ${worstOpus4Hours.toFixed(1)}h`);
+    console.log(`${chalk.hex('#9333EA').bold('Opus 4')} worst week: ${chalk.white(worstOpus4Week)} with ${chalk.hex('#9333EA').bold(worstOpus4Hours.toFixed(1) + 'h')}`);
     if (subLimits.opus4.max === 0) {
-      console.log(`✗ Opus 4 is not available on ${effectiveSubscription.toUpperCase()} subscription`);
+      console.log(chalk.red(`✗ Opus 4 is not available on ${effectiveSubscription.toUpperCase()} subscription`));
     } else if (worstOpus4Hours < subLimits.opus4.min) {
-      console.log(`✓ Within the expected ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+      console.log(chalk.green(`✓ Within the expected ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`));
     } else if (worstOpus4Hours <= subLimits.opus4.max) {
       if (effectiveSubscription === 'max20x') {
-        console.log(`✓ Within the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+        console.log(chalk.green(`✓ Within the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`));
       } else {
-        console.log(`⚠ In the upper range of the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+        console.log(chalk.yellow(`⚠ In the upper range of the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`));
       }
     } else {
-      console.log(`✗ Exceeds the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+      console.log(chalk.red(`✗ Exceeds the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`));
     }
   }
   
@@ -524,26 +671,26 @@ async function analyzeUsage(options = {}) {
       }
     }
     
-    console.log(`\nSonnet 4 worst week: ${worstSonnet4Week} with ${worstSonnet4Hours.toFixed(1)}h`);
+    console.log(`\n${chalk.hex('#0EA5E9').bold('Sonnet 4')} worst week: ${chalk.white(worstSonnet4Week)} with ${chalk.hex('#0EA5E9').bold(worstSonnet4Hours.toFixed(1) + 'h')}`);
     if (subLimits.sonnet4.max === 0) {
-      console.log(`✗ Sonnet 4 is not available on ${effectiveSubscription.toUpperCase()} subscription`);
+      console.log(chalk.red(`✗ Sonnet 4 is not available on ${effectiveSubscription.toUpperCase()} subscription`));
     } else if (worstSonnet4Hours < subLimits.sonnet4.min) {
-      console.log(`✓ Within the expected ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+      console.log(chalk.green(`✓ Within the expected ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`));
     } else if (worstSonnet4Hours <= subLimits.sonnet4.max) {
       if (effectiveSubscription === 'max20x') {
-        console.log(`✓ Within the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+        console.log(chalk.green(`✓ Within the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`));
       } else {
-        console.log(`⚠ In the upper range of the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+        console.log(chalk.yellow(`⚠ In the upper range of the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`));
       }
     } else {
-      console.log(`✗ Exceeds the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+      console.log(chalk.red(`✗ Exceeds the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`));
     }
   }
   
-  console.log(`\nWorst week metrics across all models:`);
-  console.log(`  Highest Hours with Activity: ${worstWorkingHoursWeek} with ${worstWorkingHours.toFixed(1)}h`);
-  console.log(`  Highest Active Conversation Time: ${worstWallClockWeek} with ${worstWallClockHours.toFixed(1)}h`);
-  console.log(`  Highest Parallel Session Total: ${worstLinearWeek} with ${worstLinearHours.toFixed(1)}h`);
+  console.log(`\n${chalk.bold('Worst week metrics across all models:')}`);
+  console.log(`  ${chalk.magenta('Highest Hours with Activity:')} ${chalk.white(worstWorkingHoursWeek)} with ${chalk.magenta.bold(worstWorkingHours.toFixed(1) + 'h')}`);
+  console.log(`  ${chalk.blue('Highest Active Conversation Time:')} ${chalk.white(worstWallClockWeek)} with ${chalk.blue.bold(worstWallClockHours.toFixed(1) + 'h')}`);
+  console.log(`  ${chalk.green('Highest Parallel Session Total:')} ${chalk.white(worstLinearWeek)} with ${chalk.green.bold(worstLinearHours.toFixed(1) + 'h')}`);
 }
 
 module.exports = analyzeUsage;

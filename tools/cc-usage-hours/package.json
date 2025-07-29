@@ -1,6 +1,6 @@
 {
   "name": "cc-usage-hours",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Analyze Claude Code usage hours from session data",
   "main": "index.js",
   "bin": {
@@ -29,5 +29,9 @@
   "bugs": {
     "url": "https://github.com/yourusername/cc-usage-hours/issues"
   },
-  "homepage": "https://github.com/yourusername/cc-usage-hours#readme"
+  "homepage": "https://github.com/yourusername/cc-usage-hours#readme",
+  "dependencies": {
+    "asciichart": "^1.5.25",
+    "chalk": "^4.1.2"
+  }
 }
