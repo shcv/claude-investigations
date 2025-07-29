@@ -2,10 +2,27 @@
 
 Analyze Claude Code usage from session data in `~/.claude/projects`.
 
+Anthropic announced the new weekly limits with vague assurances about how many hours of usage an 'average user' would get.
+This tool is designed to help you estimate your usage in 'hours', and figure out how likely you are to run into limits.
+
+To that end, it computes 3 different ways of measuring your usage in 'hours':
+
+### Metrics
+- **Hours with Activity**: Hours in which you used Claude Code at least once
+- **Active Conversation Time**: Duration of time during which you were interacting with Claude Code
+- **Parallel Session Total**: Sum of durations of all sessions, accounting somewhat for parallel usage.
+
+Note that the parallel session total seems lower than expected, and so is probably only accounting for parallel *sessions*, not fully accounting for subagents.
+
 ## Install
 
 ```bash
 npm install -g cc-usage-hours
+```
+
+## Or run directly via npx
+```bash
+npx cc-usage-hours
 ```
 
 ## Usage
@@ -27,12 +44,6 @@ cc-usage-hours -m opus        # Show only Opus usage
 - `-w, --weekly` - Show weekly breakdown
 - `-m, --models [type]` - Show model usage (optional: opus/sonnet)
 - `-d, --detailed` - Show all details
-
-## Metrics
-
-- **Hours with Activity**: Unique hours with Claude usage
-- **Active Conversation Time**: Actual conversation time (gap-based)
-- **Parallel Session Total**: Sum of all sessions
 
 ## Requirements
 
