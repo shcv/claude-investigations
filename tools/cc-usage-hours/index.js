@@ -16,21 +16,6 @@ function formatDuration(minutes) {
   return `${hours}h ${mins}m`;
 }
 
-function getSubscriptionFromCredentials() {
-  try {
-    const credentialsPath = path.join(process.env.HOME, '.claude', '.credentials.json');
-    if (fs.existsSync(credentialsPath)) {
-      const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-      if (credentials.claudeAiOauth && credentials.claudeAiOauth.subscriptionType) {
-        return credentials.claudeAiOauth.subscriptionType.toLowerCase();
-      }
-    }
-  } catch (error) {
-    // Silently fail if we can't read credentials
-  }
-  return null;
-}
-
 async function parseSessionFile(filePath) {
   const fileStream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
@@ -69,20 +54,7 @@ async function parseSessionFile(filePath) {
 
 async function analyzeUsage(options = {}) {
   const gapThresholdMinutes = options.gapThresholdMinutes || 5;
-  let subscription = options.subscription;
-  
-  // Auto-detect subscription if not specified
-  if (!subscription) {
-    const detectedSub = getSubscriptionFromCredentials();
-    if (detectedSub) {
-      subscription = detectedSub;
-      console.log(`Detected subscription type: ${subscription.toUpperCase()}\n`);
-    } else {
-      subscription = 'pro'; // Default to pro if no credentials found
-      console.log(`No subscription detected, defaulting to PRO\n`);
-    }
-  }
-  
+  const subscription = options.subscription || null;
   const usageTier = options.usageTier || 'parallel';
   const showWeekly = options.showWeekly || false;
   const showModels = options.showModels || false;
@@ -494,25 +466,32 @@ async function analyzeUsage(options = {}) {
     }
   }
   
-  // Intelligent tier selection for 'max' subscription
-  if (subscription === 'max') {
-    // Check if usage fits within max5x limits
-    const fitsInMax5x = worstOpus4Hours <= limits.max5x.opus4.max && 
-                        worstSonnet4Hours <= limits.max5x.sonnet4.max;
-    
-    if (fitsInMax5x) {
-      effectiveSubscription = 'max5x';
-      console.log(`Detected MAX subscription. Your usage fits within MAX 5x limits.\n`);
+  // Automatically determine appropriate tier based on usage
+  let detectedTier = null;
+  
+  // Check usage against lower limits to determine tier
+  if (worstOpus4Hours > 0 || worstSonnet4Hours > limits.pro.sonnet4.max) {
+    // Need at least Max tier if using Opus or exceeding Pro Sonnet limits
+    if (worstOpus4Hours >= limits.max20x.opus4.min || worstSonnet4Hours >= limits.max20x.sonnet4.min) {
+      detectedTier = 'max20x';
+    } else if (worstOpus4Hours >= limits.max5x.opus4.min || worstSonnet4Hours >= limits.max5x.sonnet4.min) {
+      detectedTier = 'max5x';
+    } else if (worstOpus4Hours > 0) {
+      // Any Opus usage requires at least max5x
+      detectedTier = 'max5x';
     } else {
-      effectiveSubscription = 'max20x';
-      console.log(`Detected MAX subscription. Your usage requires MAX 20x tier.\n`);
+      detectedTier = 'pro';
     }
-    
-    subKey = effectiveSubscription;
-    subLimits = limits[subKey];
   } else {
-    console.log(`Subscription type: ${subscription.toUpperCase()}\n`);
+    detectedTier = 'pro';
   }
+  
+  // Use manual subscription if provided, otherwise use detected tier
+  const effectiveSubscription = subscription || detectedTier;
+  const subKey = effectiveSubscription;
+  const subLimits = limits[subKey];
+  
+  console.log(`Comparing against: ${effectiveSubscription.toUpperCase()} tier limits\n`);
   
   if (opus4) {
     // Find worst week for Opus 4 (already calculated hours above)
@@ -528,13 +507,17 @@ async function analyzeUsage(options = {}) {
     
     console.log(`Opus 4 worst week: ${worstOpus4Week} with ${worstOpus4Hours.toFixed(1)}h`);
     if (subLimits.opus4.max === 0) {
-      console.log(`✗ Opus 4 is not available on ${(effectiveSubscription || subscription).toUpperCase()} subscription`);
+      console.log(`✗ Opus 4 is not available on ${effectiveSubscription.toUpperCase()} subscription`);
     } else if (worstOpus4Hours < subLimits.opus4.min) {
       console.log(`✓ Within the expected ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
-    } else if (worstOpus4Hours < subLimits.opus4.max) {
-      console.log(`⚠ In the upper range of the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+    } else if (worstOpus4Hours <= subLimits.opus4.max) {
+      if (effectiveSubscription === 'max20x') {
+        console.log(`✓ Within the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+      } else {
+        console.log(`⚠ In the upper range of the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+      }
     } else {
-      console.log(`✗ Exceeds the typical ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
+      console.log(`✗ Exceeds the ${subLimits.opus4.min}-${subLimits.opus4.max}h Opus 4 limit`);
     }
   }
   
@@ -552,13 +535,17 @@ async function analyzeUsage(options = {}) {
     
     console.log(`\nSonnet 4 worst week: ${worstSonnet4Week} with ${worstSonnet4Hours.toFixed(1)}h`);
     if (subLimits.sonnet4.max === 0) {
-      console.log(`✗ Sonnet 4 is not available on ${(effectiveSubscription || subscription).toUpperCase()} subscription`);
+      console.log(`✗ Sonnet 4 is not available on ${effectiveSubscription.toUpperCase()} subscription`);
     } else if (worstSonnet4Hours < subLimits.sonnet4.min) {
       console.log(`✓ Within the expected ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
-    } else if (worstSonnet4Hours < subLimits.sonnet4.max) {
-      console.log(`⚠ In the upper range of the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+    } else if (worstSonnet4Hours <= subLimits.sonnet4.max) {
+      if (effectiveSubscription === 'max20x') {
+        console.log(`✓ Within the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+      } else {
+        console.log(`⚠ In the upper range of the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+      }
     } else {
-      console.log(`✗ Exceeds the typical ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
+      console.log(`✗ Exceeds the ${subLimits.sonnet4.min}-${subLimits.sonnet4.max}h Sonnet 4 limit`);
     }
   }
   
@@ -601,11 +588,9 @@ async function analyzeUsage(options = {}) {
     
     const currentTier = effectiveSubscription || subscription;
     if (currentTier !== recommendedTier) {
-      if (currentTier === 'pro' && ['max5x', 'max20x'].includes(recommendedTier)) {
+      if ((currentTier === 'pro' && ['max5x', 'max20x'].includes(recommendedTier)) ||
+          (currentTier === 'max5x' && recommendedTier === 'max20x')) {
         console.log(`⚠️  You may need to upgrade to ${recommendedTier.toUpperCase()} to avoid hitting limits.`);
-      } else if ((currentTier === 'max5x' && recommendedTier === 'pro') || 
-                 (currentTier === 'max20x' && ['pro', 'max5x'].includes(recommendedTier))) {
-        console.log(`💰 You could downgrade to ${recommendedTier.toUpperCase()} and save money.`);
       }
     } else {
       console.log(`✅ Your current subscription is appropriate for your usage.`);

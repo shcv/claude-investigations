@@ -14,7 +14,7 @@ Usage:
 
 Options:
   -g, --gap <minutes>     Minutes of inactivity before new session (default: 5)
-  -s, --subscription      Subscription type: pro, max5x, or max20x (default: auto-detect)
+  -s, --subscription      Subscription type: pro, max5x, or max20x (optional)
   -t, --tier <metric>     Usage tier for limits: hours, active, or parallel (default: parallel)
   -w, --weekly            Show detailed weekly breakdown
   -m, --models [type]     Show model usage (optional: opus or sonnet to filter)
@@ -28,10 +28,10 @@ This tool analyzes ~/.claude/projects session data and calculates:
 - Parallel Session Total: Sum of all session times (parallel sessions add up)
 
 Example:
-  cc-usage-hours              # Auto-detect subscription, 5-minute gap
+  cc-usage-hours              # Auto-select tier based on usage
   cc-usage-hours --gap 10     # Use 10-minute gap for sessions
-  cc-usage-hours -s pro       # Use Pro subscription limits
-  cc-usage-hours -s max5x     # Use Max 5x subscription limits
+  cc-usage-hours -s pro       # Force Pro subscription limits
+  cc-usage-hours -s max5x     # Force Max 5x subscription limits
   cc-usage-hours -m opus      # Show only Opus model usage
   cc-usage-hours -m sonnet    # Show only Sonnet model usage
 `);
