@@ -18,7 +18,8 @@ Options:
   -t, --metric <type>     Usage metric for limits: hours, active, or parallel (default: parallel)
   -w, --weekly            Show detailed weekly breakdown
   -m, --models [type]     Show model usage (optional: opus or sonnet to filter)
-  -d, --detailed          Show all detailed information (weekly + models)
+  -a, --subagents         Show subagent usage breakdown
+  -d, --detailed          Show all detailed information (weekly + models + subagents)
   -h, --help              Show this help message
   -v, --version           Show version number
 
@@ -85,6 +86,7 @@ if (metricIndex !== -1 && args[metricIndex + 1]) {
 
 // Parse display options
 const showWeekly = args.includes('-w') || args.includes('--weekly');
+const showSubagents = args.includes('-a') || args.includes('--subagents');
 const showDetailed = args.includes('-d') || args.includes('--detailed');
 
 // Parse model filter
@@ -109,6 +111,7 @@ analyzeUsage({
   usageMetric,
   showWeekly: showWeekly || showDetailed,
   showModels: showModels || showDetailed,
+  showSubagents: showSubagents || showDetailed,
   modelFilter
 })
   .then(() => process.exit(0))
