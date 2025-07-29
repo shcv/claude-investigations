@@ -1,40 +1,42 @@
 #!/usr/bin/env node
 
 const analyzeUsage = require('./index.js');
+const chalk = require('chalk');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
-cc-usage-hours - Analyze Claude Code usage hours from session data
+${chalk.bold.cyan('cc-usage-hours')} - ${chalk.gray('Analyze Claude Code usage hours from session data')}
 
-Usage: 
-  cc-usage-hours [options]
+${chalk.bold('Usage:')} 
+  ${chalk.green('cc-usage-hours')} ${chalk.gray('[options]')}
 
-Options:
-  -g, --gap <minutes>     Minutes of inactivity before new session (default: 5)
-  -s, --subscription      Subscription type: pro, max5x, or max20x (optional)
-  -t, --metric <type>     Usage metric for limits: hours, active, or parallel (default: parallel)
-  -w, --weekly            Show detailed weekly breakdown
-  -m, --models [type]     Show model usage (optional: opus or sonnet to filter)
-  -a, --subagents         Show subagent usage breakdown
-  -d, --detailed          Show all detailed information (weekly + models + subagents)
-  -h, --help              Show this help message
-  -v, --version           Show version number
+${chalk.bold('Options:')}
+  ${chalk.yellow('-g, --gap')} ${chalk.gray('<minutes>')}     ${chalk.gray('Minutes of inactivity before new session (default: 5)')}
+  ${chalk.yellow('-s, --subscription')}      ${chalk.gray('Subscription type: pro, max5x, or max20x (optional)')}
+  ${chalk.yellow('-t, --metric')} ${chalk.gray('<type>')}     ${chalk.gray('Usage metric for limits: hours, active, or parallel (default: parallel)')}
+  ${chalk.yellow('-w, --weekly')}            ${chalk.gray('Show detailed weekly breakdown')}
+  ${chalk.yellow('-m, --models')} ${chalk.gray('[type]')}     ${chalk.gray('Show model usage (optional: opus or sonnet to filter)')}
+  ${chalk.yellow('-c, --charts')}            ${chalk.gray('Show sparkline charts of daily usage over past month')}
+  ${chalk.yellow('-a, --subagents')}         ${chalk.gray('Show subagent usage breakdown')}
+  ${chalk.yellow('-d, --detailed')}          ${chalk.gray('Show all detailed information (weekly + models + subagents + charts)')}
+  ${chalk.yellow('-h, --help')}              ${chalk.gray('Show this help message')}
+  ${chalk.yellow('-v, --version')}           ${chalk.gray('Show version number')}
 
-This tool analyzes ~/.claude/projects session data and calculates:
-- Hours with Activity: Number of unique hours in which Claude was used
-- Active Conversation Time: Actual time spent actively using Claude
-- Parallel Session Total: Sum of all session times (parallel sessions add up)
+${chalk.bold('This tool analyzes')} ${chalk.cyan('~/.claude/projects')} ${chalk.bold('session data and calculates:')}
+${chalk.magenta('• Hours with Activity:')} ${chalk.gray('Number of unique hours in which Claude was used')}
+${chalk.blue('• Active Conversation Time:')} ${chalk.gray('Actual time spent actively using Claude')}
+${chalk.green('• Parallel Session Total:')} ${chalk.gray('Sum of all session times (parallel sessions add up)')}
 
-Example:
-  cc-usage-hours              # Auto-select tier based on usage
-  cc-usage-hours --gap 10     # Use 10-minute gap for sessions
-  cc-usage-hours -s pro       # Force Pro subscription limits
-  cc-usage-hours -s max5x     # Force Max 5x subscription limits
-  cc-usage-hours -m opus      # Show only Opus model usage
-  cc-usage-hours -m sonnet    # Show only Sonnet model usage
+${chalk.bold('Example:')}
+  ${chalk.green('cc-usage-hours')}              ${chalk.gray('# Auto-select tier based on usage')}
+  ${chalk.green('cc-usage-hours')} ${chalk.yellow('--gap 10')}     ${chalk.gray('# Use 10-minute gap for sessions')}
+  ${chalk.green('cc-usage-hours')} ${chalk.yellow('-s pro')}       ${chalk.gray('# Force Pro subscription limits')}
+  ${chalk.green('cc-usage-hours')} ${chalk.yellow('-s max5x')}     ${chalk.gray('# Force Max 5x subscription limits')}
+  ${chalk.green('cc-usage-hours')} ${chalk.yellow('-m opus')}      ${chalk.gray('# Show only Opus model usage')}
+  ${chalk.green('cc-usage-hours')} ${chalk.yellow('-m sonnet')}    ${chalk.gray('# Show only Sonnet model usage')}
 `);
   process.exit(0);
 }
@@ -53,7 +55,7 @@ if (gapIndex !== -1 && args[gapIndex + 1]) {
   if (!isNaN(gap) && gap > 0) {
     gapThreshold = gap;
   } else {
-    console.error('Error: Gap threshold must be a positive number');
+    console.error(chalk.red('Error: Gap threshold must be a positive number'));
     process.exit(1);
   }
 }
@@ -66,7 +68,7 @@ if (subIndex !== -1 && args[subIndex + 1]) {
   if (['pro', 'max', 'max5x', 'max20x'].includes(sub)) {
     subscription = sub;
   } else {
-    console.error('Error: Subscription must be one of: pro, max5x, max20x');
+    console.error(chalk.red('Error: Subscription must be one of: pro, max5x, max20x'));
     process.exit(1);
   }
 }
@@ -79,7 +81,7 @@ if (metricIndex !== -1 && args[metricIndex + 1]) {
   if (['hours', 'active', 'parallel'].includes(metric)) {
     usageMetric = metric;
   } else {
-    console.error('Error: Usage metric must be one of: hours, active, parallel');
+    console.error(chalk.red('Error: Usage metric must be one of: hours, active, parallel'));
     process.exit(1);
   }
 }
@@ -88,6 +90,7 @@ if (metricIndex !== -1 && args[metricIndex + 1]) {
 const showWeekly = args.includes('-w') || args.includes('--weekly');
 const showSubagents = args.includes('-a') || args.includes('--subagents');
 const showDetailed = args.includes('-d') || args.includes('--detailed');
+const showCharts = args.includes('-c') || args.includes('--charts');
 
 // Parse model filter
 let showModels = false;
@@ -111,11 +114,12 @@ analyzeUsage({
   usageMetric,
   showWeekly: showWeekly || showDetailed,
   showModels: showModels || showDetailed,
+  showCharts: showCharts || showDetailed,
   showSubagents: showSubagents || showDetailed,
   modelFilter
 })
   .then(() => process.exit(0))
   .catch(error => {
-    console.error('Error:', error.message);
+    console.error(chalk.red('Error:'), chalk.red(error.message));
     process.exit(1);
   });
