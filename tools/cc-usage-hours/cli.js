@@ -20,7 +20,8 @@ ${chalk.bold('Options:')}
   ${chalk.yellow('-w, --weekly')}            ${chalk.gray('Show detailed weekly breakdown')}
   ${chalk.yellow('-m, --models')} ${chalk.gray('[type]')}     ${chalk.gray('Show model usage (optional: opus or sonnet to filter)')}
   ${chalk.yellow('-c, --charts')}            ${chalk.gray('Show sparkline charts of daily usage over past month')}
-  ${chalk.yellow('-d, --detailed')}          ${chalk.gray('Show all detailed information (weekly + models)')}
+  ${chalk.yellow('-a, --subagents')}         ${chalk.gray('Show subagent usage breakdown')}
+  ${chalk.yellow('-d, --detailed')}          ${chalk.gray('Show all detailed information (weekly + models + subagents + charts)')}
   ${chalk.yellow('-h, --help')}              ${chalk.gray('Show this help message')}
   ${chalk.yellow('-v, --version')}           ${chalk.gray('Show version number')}
 
@@ -87,6 +88,7 @@ if (metricIndex !== -1 && args[metricIndex + 1]) {
 
 // Parse display options
 const showWeekly = args.includes('-w') || args.includes('--weekly');
+const showSubagents = args.includes('-a') || args.includes('--subagents');
 const showDetailed = args.includes('-d') || args.includes('--detailed');
 const showCharts = args.includes('-c') || args.includes('--charts');
 
@@ -113,6 +115,7 @@ analyzeUsage({
   showWeekly: showWeekly || showDetailed,
   showModels: showModels || showDetailed,
   showCharts: showCharts || showDetailed,
+  showSubagents: showSubagents || showDetailed,
   modelFilter
 })
   .then(() => process.exit(0))

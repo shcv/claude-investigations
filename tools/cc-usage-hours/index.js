@@ -46,11 +46,19 @@ async function parseSessionFile(filePath) {
             lastModel = entry.message.model;
           }
           
+          // Check if this message contains Task tool usage (indicating subagent)
+          let hasTaskTool = false;
+          if (entry.type === 'assistant' && entry.message?.content) {
+            hasTaskTool = entry.message.content.some(c => c.type === 'tool_use' && c.name === 'Task');
+          }
+          
           messages.push({
             timestamp: new Date(entry.timestamp),
             type: entry.type,
             sessionId: entry.sessionId,
-            model: entry.type === 'assistant' ? entry.message?.model : lastModel
+            model: entry.type === 'assistant' ? entry.message?.model : lastModel,
+            hasTaskTool,
+            uuid: entry.uuid
           });
         }
       } catch (e) {
@@ -69,6 +77,7 @@ async function analyzeUsage(options = {}) {
   const showWeekly = options.showWeekly || false;
   const showModels = options.showModels || false;
   const showCharts = options.showCharts || false;
+  const showSubagents = options.showSubagents || false;
   const modelFilter = options.modelFilter || null;
   const projectsDir = path.join(process.env.HOME, '.claude', 'projects');
   
@@ -114,11 +123,20 @@ async function analyzeUsage(options = {}) {
     if (!sessions[sessionId]) {
       sessions[sessionId] = {
         messages: [],
-        segments: []
+        segments: [],
+        taskInvocations: []
       };
     }
     
     sessions[sessionId].messages.push(msg);
+    
+    // Track Task tool invocations (subagents)
+    if (msg.hasTaskTool) {
+      sessions[sessionId].taskInvocations.push({
+        timestamp: msg.timestamp,
+        uuid: msg.uuid
+      });
+    }
   }
 
   // Analyze each session for segments
@@ -127,10 +145,85 @@ async function analyzeUsage(options = {}) {
   const weeklyWorkingHours = {}; // Working hours (1hr gap threshold)
   const modelUsage = {};  // Track usage by model
   const dailyUsage = {};  // Track daily usage for sparkline charts
+  const subagentStats = {  // Track subagent usage
+    totalInvocations: 0,
+    sessionsWithSubagents: 0,
+    maxParallelSubagents: 0,
+    weeklyInvocations: {},
+    estimatedSubagentMinutes: 0,
+    weeklySubagentMinutes: {}
+  };
 
   for (const [sessionId, session] of Object.entries(sessions)) {
     const messages = session.messages;
     if (messages.length === 0) continue;
+    
+    // Track subagent statistics
+    if (session.taskInvocations.length > 0) {
+      subagentStats.sessionsWithSubagents++;
+      subagentStats.totalInvocations += session.taskInvocations.length;
+      
+      // Estimate subagent execution time
+      // We'll assume each subagent runs for 2 minutes on average (conservative estimate)
+      const estimatedMinutesPerTask = 2;
+      
+      // Count parallel subagents within small time windows (30 seconds)
+      const subagentWindow = 30000; // 30 seconds
+      let maxParallel = 0;
+      const parallelGroups = [];
+      
+      // Group tasks that are invoked close together
+      for (let i = 0; i < session.taskInvocations.length; i++) {
+        let foundGroup = false;
+        const currentTime = session.taskInvocations[i].timestamp;
+        
+        for (const group of parallelGroups) {
+          // Check if this task belongs to an existing group
+          const timeDiff = Math.abs(currentTime - group.startTime);
+          if (timeDiff <= subagentWindow) {
+            group.tasks.push(session.taskInvocations[i]);
+            group.endTime = Math.max(group.endTime, currentTime);
+            foundGroup = true;
+            break;
+          }
+        }
+        
+        if (!foundGroup) {
+          parallelGroups.push({
+            startTime: currentTime,
+            endTime: currentTime,
+            tasks: [session.taskInvocations[i]]
+          });
+        }
+      }
+      
+      // Calculate max parallel tasks and estimated time
+      for (const group of parallelGroups) {
+        maxParallel = Math.max(maxParallel, group.tasks.length);
+        
+        // For parallel tasks, add the time for all tasks
+        const groupMinutes = group.tasks.length * estimatedMinutesPerTask;
+        subagentStats.estimatedSubagentMinutes += groupMinutes;
+        
+        // Track weekly subagent time
+        const week = getWeekNumber(group.startTime);
+        if (!subagentStats.weeklySubagentMinutes[week]) {
+          subagentStats.weeklySubagentMinutes[week] = 0;
+        }
+        subagentStats.weeklySubagentMinutes[week] += groupMinutes;
+      }
+      
+      subagentStats.maxParallelSubagents = Math.max(subagentStats.maxParallelSubagents, maxParallel);
+      
+      // Track weekly invocations
+      for (const invocation of session.taskInvocations) {
+        const week = getWeekNumber(invocation.timestamp);
+        if (!subagentStats.weeklyInvocations[week]) {
+          subagentStats.weeklyInvocations[week] = 0;
+        }
+        subagentStats.weeklyInvocations[week]++;
+      }
+    }
 
     let segmentStart = messages[0].timestamp;
     let lastTimestamp = messages[0].timestamp;
@@ -216,6 +309,14 @@ async function analyzeUsage(options = {}) {
       dailyUsage[dateKey].models[modelName] += segment.duration;
     }
   }
+  
+  // Add subagent time to the parallel totals
+  for (const [week, minutes] of Object.entries(subagentStats.weeklySubagentMinutes)) {
+    if (!weeklyLinear[week]) {
+      weeklyLinear[week] = 0;
+    }
+    weeklyLinear[week] += minutes;
+  }
 
   // Calculate wall-clock hours (merge overlapping sessions)
   const allSegments = [];
@@ -287,15 +388,18 @@ async function analyzeUsage(options = {}) {
   let totalWallClock = 0;
   let totalLinear = 0;
   let totalWorkingHours = 0;
+  let totalLinearWithoutSubagents = 0;
 
   // Calculate totals
   for (const week of weeks) {
     const wallClock = weeklyWallClock[week] || 0;
     const linear = weeklyLinear[week] || 0;
     const workingHours = weeklyWorkingHours[week] || 0;
+    const subagentMinutes = subagentStats.weeklySubagentMinutes[week] || 0;
     totalWallClock += wallClock;
     totalLinear += linear;
     totalWorkingHours += workingHours;
+    totalLinearWithoutSubagents += (linear - subagentMinutes);
   }
 
   // Show weekly breakdown if requested
@@ -325,6 +429,10 @@ async function analyzeUsage(options = {}) {
   console.log(`${chalk.magenta('Total Hours with Activity:')} ${chalk.magenta.bold(formatDuration(totalWorkingHours))} ${chalk.gray(`(${(totalWorkingHours / 60).toFixed(1)}h)`)}`);
   console.log(`${chalk.blue('Total Active Conversation Time:')} ${chalk.blue.bold(formatDuration(totalWallClock))} ${chalk.gray(`(${(totalWallClock / 60).toFixed(1)}h)`)}`);
   console.log(`${chalk.green('Total Parallel Session Total:')} ${chalk.green.bold(formatDuration(totalLinear))} ${chalk.gray(`(${(totalLinear / 60).toFixed(1)}h)`)}`);
+  console.log(`  ${chalk.gray('- Session time:')} ${chalk.white(formatDuration(totalLinearWithoutSubagents))} ${chalk.gray(`(${(totalLinearWithoutSubagents / 60).toFixed(1)}h)`)}`);
+  console.log(`  ${chalk.gray('- Estimated subagent time:')} ${chalk.white(formatDuration(subagentStats.estimatedSubagentMinutes))} ${chalk.gray(`(${(subagentStats.estimatedSubagentMinutes / 60).toFixed(1)}h)`)}`);
+  
+  console.log();
   console.log(`${chalk.magenta('Average Hours with Activity per week:')} ${chalk.magenta(formatDuration(totalWorkingHours / weeks.length))} ${chalk.gray(`(${(totalWorkingHours / 60 / weeks.length).toFixed(1)}h)`)}`);
   console.log(`${chalk.blue('Average Active Conversation Time per week:')} ${chalk.blue(formatDuration(totalWallClock / weeks.length))} ${chalk.gray(`(${(totalWallClock / 60 / weeks.length).toFixed(1)}h)`)}`);
   console.log(`${chalk.green('Average Parallel Session Total per week:')} ${chalk.green(formatDuration(totalLinear / weeks.length))} ${chalk.gray(`(${(totalLinear / 60 / weeks.length).toFixed(1)}h)`)}`);
@@ -338,7 +446,38 @@ async function analyzeUsage(options = {}) {
   const utilizationColor = parseFloat(utilizationRate) > 80 ? chalk.green : 
                           parseFloat(utilizationRate) > 60 ? chalk.yellow : chalk.red;
   console.log(`  ${chalk.gray('Hours with Activity → Active Conversation:')} ${utilizationColor(utilizationRate + '%')} ${chalk.gray('of active hours had conversations')}`);
-  console.log(`  ${chalk.gray('Active Conversation → Parallel Total:')} ${factorColor((totalLinear / totalWallClock).toFixed(2) + 'x')} ${chalk.gray('parallel sessions')}`)
+  console.log(`  ${chalk.gray('Active Conversation → Parallel Total:')} ${factorColor((totalLinear / totalWallClock).toFixed(2) + 'x')} ${chalk.gray('parallel sessions')}`);
+  
+  // Show subagent statistics
+  console.log(`\n${chalk.bold('Subagent usage:')}`);
+  console.log(`  ${chalk.gray('Total Task invocations:')} ${chalk.cyan(subagentStats.totalInvocations)}`);
+  console.log(`  ${chalk.gray('Sessions with subagents:')} ${chalk.cyan(subagentStats.sessionsWithSubagents)}`);
+  console.log(`  ${chalk.gray('Max parallel subagents in a session:')} ${chalk.cyan(subagentStats.maxParallelSubagents)}`);
+  console.log(`  ${chalk.gray('Average Task invocations per week:')} ${chalk.cyan((subagentStats.totalInvocations / weeks.length).toFixed(1))}`);
+  
+  console.log();
+  
+  // Show detailed subagent breakdown if requested
+  if (showSubagents && subagentStats.totalInvocations > 0) {
+    console.log(chalk.bold.cyan('\n=== SUBAGENT USAGE BREAKDOWN ===\n'));
+    
+    // Show weekly breakdown
+    const subagentWeeks = Object.keys(subagentStats.weeklyInvocations).sort();
+    console.log(chalk.bold('Weekly Task invocations and estimated time:'));
+    for (const week of subagentWeeks) {
+      const count = subagentStats.weeklyInvocations[week];
+      const minutes = subagentStats.weeklySubagentMinutes[week] || 0;
+      console.log(`  ${chalk.gray(week + ':')} ${chalk.cyan(count)} invocations, ~${chalk.white(formatDuration(minutes))} estimated`);
+    }
+    
+    // Calculate subagent impact on parallel factor
+    console.log(chalk.bold('\nSubagent impact analysis:'));
+    console.log(`  ${chalk.gray('Sessions using subagents:')} ${chalk.cyan(((subagentStats.sessionsWithSubagents / Object.keys(sessions).length) * 100).toFixed(1) + '%')}`);
+    console.log(`  ${chalk.gray('Average Tasks per session with subagents:')} ${chalk.cyan((subagentStats.totalInvocations / subagentStats.sessionsWithSubagents).toFixed(1))}`);
+    console.log(chalk.gray('\nNote: The parallel session metric now accounts for both parallel sessions and'));
+    console.log(chalk.gray('parallel subagents within sessions, providing a more accurate measure of total'));
+    console.log(chalk.gray('computational resources used.'));
+  }
 
   // Model breakdown if requested
   if (showModels) {
