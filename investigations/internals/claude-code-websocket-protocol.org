@@ -1,0 +1,140 @@
+#+TITLE: Claude Code WebSocket MCP Protocol Specification
+#+AUTHOR: Ada
+#+DATE: May 30, 2025
+
+* WebSocket Connection Requirements
+
+** Subprotocol
+- *Required subprotocol*: ="mcp"= (exact string, case-sensitive)
+- *Usage*: =new WebSocket(url, ["mcp"])=
+- *Critical*: Connection will be rejected without this subprotocol
+
+** Connection URL
+- *Format*: =ws://127.0.0.1:<port>/=
+- *Binding*: Server only listens on localhost (127.0.0.1)
+- *Port*: Dynamic allocation (10000-65535 range)
+
+** Protocol Version
+- *WebSocket version*: 13 (RFC 6455 standard)
+- *Header*: =Sec-WebSocket-Version: 13=
+
+* Connection Handshake
+
+** Client Request Headers
+#+BEGIN_EXAMPLE
+GET / HTTP/1.1
+Host: 127.0.0.1:<port>
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: <base64-key>
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Protocol: mcp
+#+END_EXAMPLE
+
+** Server Response Headers
+#+BEGIN_EXAMPLE
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: <computed-accept>
+Sec-WebSocket-Protocol: mcp
+#+END_EXAMPLE
+
+* MCP Protocol Details
+
+** Message Format
+- *Protocol*: JSON-RPC 2.0
+- *Encoding*: UTF-8 text frames
+- *Structure*: Standard MCP messages wrapped in JSON-RPC
+
+** Transport Types
+- *Internal designation*: ="ws-ide"= (not sent over wire)
+- *Lock file transport*: ="ws"= (standard WebSocket)
+
+* Implementation Example (Node.js)
+
+#+BEGIN_SRC javascript
+// Client connection
+const WebSocket = require('ws');
+const ws = new WebSocket('ws://127.0.0.1:12345/', ['mcp']);
+
+ws.on('open', () => {
+  // Send MCP initialize request
+  ws.send(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: {
+      protocolVersion: '2024-11-05',
+      capabilities: {},
+      clientInfo: {
+        name: 'emacs-mcp',
+        version: '1.0.0'
+      }
+    }
+  }));
+});
+#+END_SRC
+
+* Implementation Example (Emacs)
+
+#+BEGIN_SRC elisp
+;; Using websocket.el library
+(require 'websocket)
+
+(defun claude-code-connect (port)
+  "Connect to Claude Code WebSocket server."
+  (websocket-open
+   (format "ws://127.0.0.1:%d/" port)
+   :protocols '("mcp")
+   :on-message #'claude-code-handle-message
+   :on-open #'claude-code-handle-open
+   :on-close #'claude-code-handle-close))
+
+(defun claude-code-handle-open (websocket)
+  "Handle WebSocket connection open."
+  (websocket-send-text
+   websocket
+   (json-encode
+    '((jsonrpc . "2.0")
+      (id . 1)
+      (method . "initialize")
+      (params . ((protocolVersion . "2024-11-05")
+                 (capabilities . ())
+                 (clientInfo . ((name . "emacs-mcp")
+                               (version . "1.0.0")))))))))
+#+END_SRC
+
+* Key Points for Emacs Implementation
+
+1. *Must specify subprotocol*: The =["mcp"]= subprotocol array is mandatory
+2. *Localhost only*: Server binds to 127.0.0.1, not 0.0.0.0
+3. *Port from lock file*: Read port from =~/.claude/ide/*.lock=
+4. *JSON-RPC messages*: All communication uses JSON-RPC 2.0 format
+5. *MCP protocol version*: Currently ="2024-11-05"=
+
+* Common Pitfalls
+
+** Missing Subprotocol
+- *Error*: Connection rejected with 400 status
+- *Fix*: Always include =["mcp"]= in WebSocket constructor
+
+** Wrong URL Format
+- *Error*: Connection refused
+- *Fix*: Use =ws://127.0.0.1:<port>/= exactly
+
+** Protocol Mismatch
+- *Error*: Server closes connection after handshake
+- *Fix*: Ensure MCP protocol version matches
+
+* Testing Connection
+
+#+BEGIN_SRC bash
+# Test with wscat
+wscat -c ws://127.0.0.1:12345/ -s mcp
+
+# Send initialize request
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+#+END_SRC
+
+This specification provides all necessary details for implementing a Claude Code-compatible WebSocket MCP server in Emacs or any other environment.

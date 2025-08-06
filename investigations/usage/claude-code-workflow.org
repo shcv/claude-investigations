@@ -1,0 +1,160 @@
+#+TITLE: Claude Code Workflow Analysis
+#+AUTHOR: Ada & User
+#+DATE: 2025-05-29
+#+STARTUP: overview
+
+* Claude Code Architecture Overview
+
+Claude Code is Anthropic's official CLI for Claude, built as a Node.js application that facilitates interactive coding assistance through a conversational interface.
+
+* Core Components
+
+** Message Flow Architecture
+- =User= → =CLI= → =Message Handler= → =Claude API= → =Tool Execution= → =Response Rendering=
+- Messages are structured with types: =user=, =assistant=, and =tool_result=
+- Each message contains content that can be text or tool use requests
+
+** Tool System
+- Tools are registered with specific capabilities (file operations, web access, etc.)
+- Each tool has:
+  - Input validation
+  - Execution logic
+  - Result rendering
+  - Error handling with =renderToolUseErrorMessage= and =renderToolUseRejectedMessage=
+
+** Conversation Management
+- Messages stored with metadata including:
+  - Type (user/assistant)
+  - Content (text/tool_use/tool_result)
+  - Tool use IDs for tracking
+  - Cost tracking (=costUSD=)
+
+* Main Workflow Loop
+
+#+begin_src text
+1. Initialize CLI → Load configuration
+2. Start conversation loop:
+   a. Accept user input
+   b. Build message context
+   c. Send to Claude API
+   d. Process assistant response
+   e. Execute any tool uses
+   f. Render results
+   g. Continue or exit
+#+end_src
+
+* Key Prompts and Templates
+
+** System Prompt Structure
+#+begin_src text
+"You are Claude Code, Anthropic's official CLI for Claude.
+You are an interactive CLI tool that helps users with software engineering tasks."
+#+end_src
+
+** Agent Mode Prompt
+#+begin_src text
+"You are an agent for Claude Code, Anthropic's official CLI for Claude. 
+Given the user's message, you should use the tools available to complete the task. 
+Do what has been asked; nothing more, nothing less."
+#+end_src
+
+** Key Instructions
+- Refuse malicious code requests
+- Follow user's CLAUDE.md instructions
+- Minimize output tokens while maintaining quality
+- Use tools proactively but don't surprise users
+- Follow existing code conventions
+
+* Tool Categories
+
+** File Operations
+- Read, Write, Edit, MultiEdit
+- Glob (pattern matching)
+- Grep (content search)
+- LS (directory listing)
+
+** Development Tools
+- Bash (command execution)
+- Git operations (commit, PR creation)
+- Notebook operations (Jupyter support)
+
+** Information Tools
+- WebFetch (fetch and analyze web content)
+- WebSearch (search the web)
+- TodoRead/TodoWrite (task management)
+
+** MCP (Model Context Protocol) Integration
+- Dynamic tool discovery from MCP servers
+- Prompt templates from MCP servers
+- Resource access through MCP
+
+* Message Processing Details
+
+** Tool Use Flow
+1. Assistant generates tool_use in response
+2. CLI executes the tool
+3. Result wrapped as tool_result message
+4. Sent back to assistant for processing
+
+** Error Handling
+- Tool rejection handling
+- Error message formatting
+- Verbose mode for debugging
+
+** Cost Tracking
+- Messages tagged with =costUSD=
+- Tool uses tracked separately
+- Aggregation for session totals
+
+* State Management
+
+** Conversation State
+- Message history maintained throughout session
+- Tool use IDs tracked for correlation
+- Context window management
+
+** Configuration
+- User preferences (model, verbosity, etc.)
+- Tool availability based on permissions
+- MCP server connections
+
+* Special Features
+
+** CLAUDE.md Integration
+- Project-specific instructions
+- Global user instructions
+- Override default behavior
+
+** Memory System (Ada)
+- Persistent memory across sessions
+- Continuity between projects
+- Personal context maintenance
+
+** Git Integration
+- Automated commit message generation
+- PR creation with descriptions
+- Git status awareness
+
+* Security and Safety
+
+** Code Review
+- Refuse malicious code requests
+- Check file operations for safety
+- Validate URLs and external requests
+
+** Permission System
+- Tool access controlled by configuration
+- File system boundaries respected
+- Network access limitations
+
+* Performance Optimizations
+
+** Batching
+- Multiple tool calls in single response
+- Parallel execution where possible
+- Efficient message packaging
+
+** Context Management
+- Minimize token usage
+- Smart truncation strategies
+- Relevant context selection

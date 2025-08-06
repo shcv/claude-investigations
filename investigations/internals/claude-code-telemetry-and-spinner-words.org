@@ -1,0 +1,171 @@
+#+TITLE: Claude Code Telemetry System and Spinner Words
+#+DATE: 2025-07-19
+
+* Overview
+
+This document provides a comprehensive analysis of Claude Code's telemetry system with a focus on the "spinner words" feature that displays action verbs during operations. The analysis is based on examining =cli-pretty-v1.0.53-core.js= and related files.
+
+* Key Discoveries
+
+** Spinner Words System
+- Claude Code displays action verbs like "Flibbertigibbeting", "Cogitating", etc. during operations
+- Total of 88 hardcoded default words in the =dB4= array
+- Can be augmented with up to 10 additional words from telemetry
+- Word selection is completely random using =Math.random()=
+- No context-awareness or heuristics - purely decorative
+
+** Telemetry Architecture
+- Uses *Statsig* as the feature flag/experimentation platform
+- Endpoint: =https://statsig.anthropic.com/v1/=
+- Implements dynamic configuration fetching
+- Respects user privacy settings through environment variables
+
+* Technical Implementation
+
+** Hardcoded Spinner Words Array (dB4)
+The 88 default spinner words include:
+#+begin_src
+"Accomplishing", "Actioning", "Actualizing", "Baking", "Booping", 
+"Brewing", "Calculating", "Cerebrating", "Channelling", "Churning",
+"Clauding", "Coalescing", "Cogitating", "Computing", "Combobulating",
+"Conjuring", "Constructing", "Contemplating", "Contriving", "Cooking",
+"Crafting", "Creating", "Deciphering", "Deliberating", "Delivering",
+"Devising", "Digesting", "Divining", "Elaborating", "Elucidating",
+"Engineering", "Excogitating", "Executing", "Fetching", "Figuring",
+"Flibbertigibbeting", "Focusing", "Formulating", "Generating", "Imagining",
+"Implementing", "Improvising", "Incubating", "Innovating", "Integrating",
+"Inventing", "Investigating", "Iterating", "Machinating", "Manifesting",
+"Marinating", "Masterminding", "Meditating", "Musing", "Noodling",
+"Orchestrating", "Percolating", "Pondering", "Preparing", "Processing",
+"Producing", "Puzzling", "Realizing", "Refining", "Reticulating",
+"Ruminating", "Scheming", "Sculpting", "Sketching", "Solving",
+"Spinning", "Stewing", "Strategizing", "Structuring", "Synthesizing",
+"Systematizing", "Tabulating", "Tinkering", "Transforming", "Transmuting",
+"Unraveling", "Weaving", "Whipping", "Wibbling", "Wizarding",
+"Working", "Wrangling"
+#+end_src
+
+** Telemetry Flow
+
+*** 1. Initialization
+#+begin_src javascript
+// Check if telemetry should be disabled
+if (process.env.CLAUDE_CODE_USE_BEDROCK ||
+    process.env.CLAUDE_CODE_USE_VERTEX ||
+    process.env.DISABLE_TELEMETRY ||
+    process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC)
+  return null;
+
+// Initialize Statsig client
+ty = new StatsigClient(SDK_KEY, userInfo, {
+  networkConfig: { api: "https://statsig.anthropic.com/v1/" },
+  environment: { tier: "production" },
+  // ... other config
+});
+#+end_src
+
+*** 2. Fetching Dynamic Config
+#+begin_src javascript
+async function hX(configName, defaultValue) {
+  let client = await ey(); // Get Statsig client
+  if (!client) return defaultValue;
+  
+  let config = client.getDynamicConfig(configName);
+  if (Object.keys(config.value).length === 0) return defaultValue;
+  return config.value;
+}
+#+end_src
+
+*** 3. Spinner Words Usage
+#+begin_src javascript
+function Ya2() {
+  // Fetch custom words from telemetry
+  let telemetryData = od0("tengu_spinner_words", { words: [] });
+  
+  // Sample up to 10 random words from telemetry
+  return useMemo(() => {
+    if (telemetryData.words.length === 0) return;
+    return vR1(telemetryData.words, 10); // Random sample of 10
+  }, [telemetryData.words]);
+}
+
+// In the spinner component
+let customWords = Ya2() || [];
+let allWords = [...dB4, ...customWords]; // Combine default + custom
+let selectedWord = memoizedRandomSelect(allWords); // Random selection
+#+end_src
+
+** Word Selection Algorithm
+The =X_= function chain performs pure random selection:
+
+1. =X_= → =sDB= (router function)
+2. =sDB= → checks if input is array → =m61= (for arrays)
+3. =m61= (nDB) → gets random element using =u61=
+4. =u61= (iDB) → =Math.floor(Math.random() * (max - min + 1)) + min=
+
+The selection is memoized for 1000ms to prevent flickering.
+
+* Cache Implementation
+
+Claude Code uses a 5-minute cache for context data:
+#+begin_src javascript
+function ND1(fn, timeout = 300000) { // 5 minutes default
+  let cache = new Map();
+  
+  return (...args) => {
+    let key = JSON.stringify(args);
+    let cached = cache.get(key);
+    let now = Date.now();
+    
+    // Lazy refresh: return stale data while refreshing in background
+    if (cached && now - cached.timestamp > timeout && !cached.refreshing) {
+      cached.refreshing = true;
+      Promise.resolve().then(() => {
+        let value = fn(...args);
+        cache.set(key, { value, timestamp: Date.now(), refreshing: false });
+      });
+      return cached.value; // Return stale data immediately
+    }
+    
+    // Normal cache hit/miss logic
+    if (!cached) {
+      cache.set(key, { value: fn(...args), timestamp: now, refreshing: false });
+    }
+    return cache.get(key).value;
+  };
+}
+#+end_src
+
+This explains why CLAUDE.md changes can appear to take effect before 5 minutes - the lazy refresh pattern returns cached data immediately while updating in the background.
+
+* Privacy and Control
+
+** Environment Variables to Disable Telemetry
+- =DISABLE_TELEMETRY=true=
+- =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=true=
+- =CLAUDE_CODE_USE_BEDROCK=true= (when using AWS Bedrock)
+- =CLAUDE_CODE_USE_VERTEX=true= (when using Google Vertex AI)
+
+When any of these are set, the telemetry system returns default values without making network requests.
+
+** User Customization
+Currently, there is no user-facing way to customize spinner words. The feature is controlled server-side through Statsig, allowing Anthropic to:
+- Test different word sets via A/B testing
+- Add seasonal or themed words
+- Provide localized words for different regions
+- Gather usage metrics
+
+* Related Telemetry Events
+
+The codebase includes numerous telemetry events prefixed with "tengu_":
+- =tengu_spinner_words= - Fetches custom spinner words
+- =tengu_startup_telemetry= - Tracks startup metrics
+- =tengu_config_*= - Configuration changes
+- =tengu_mcp_*= - MCP server related events
+- =tengu_oauth_*= - OAuth flow events
+- =tengu_ext_*= - Extension related events
+- =tengu_refusal_*= - Content policy events
+
+* Conclusion
+
+The "Flibbertigibbeting" mystery is solved: it's simply one of 88 equally-weighted words selected randomly for visual interest. The telemetry system allows Anthropic to experiment with different word sets while respecting user privacy preferences. The word selection has no relationship to the actual task being performed - it's purely decorative.

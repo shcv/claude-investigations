@@ -1,0 +1,168 @@
+#+TITLE: Claude Code Thinking Keywords and Token Budgets Investigation
+#+DATE: 2025-07-26
+
+* Overview
+
+This document records the findings from investigating the thinking keywords and token budgets in the =cli-pretty-v1.0.61-core.js= file from Claude Code.
+
+* Token Budgets
+
+The thinking levels have the following token budgets defined in the =gb1= object:
+
+| Level   | Token Budget | Notes    |
+|---------+--------------+----------|
+| HIGHEST | 31999        |          |
+| MIDDLE  | 10000        | (1e4)    |
+| BASIC   | 4000         |          |
+| NONE    | 0            |          |
+
+* Thinking Keywords by Language
+
+The keywords are organized in the =HX8= object by language and thinking level. The =needsWordBoundary= property (when set to =!0= or =true=) indicates that the pattern requires word boundaries for matching.
+
+** English
+
+*** HIGHEST Level
+- think harder
+- think intensely
+- think longer
+- think really hard
+- think super hard
+- think very hard
+- ultrathink
+
+*** MIDDLE Level
+- think about it
+- think a lot
+- think deeply
+- think hard
+- think more
+- megathink
+
+*** BASIC Level
+- think
+
+** Japanese
+
+*** HIGHEST Level
+- 熟考
+- 深く考えて
+- しっかり考えて
+
+*** MIDDLE Level
+- もっと考えて
+- たくさん考えて
+- よく考えて
+- 長考
+
+*** BASIC Level
+- 考えて
+
+** Chinese
+
+*** HIGHEST Level
+- 多想一会
+- 深思
+- 仔细思考
+
+*** MIDDLE Level
+- 多想想
+- 好好想
+
+*** BASIC Level
+- 想
+- 思考
+
+** Spanish
+
+*** HIGHEST Level
+- piensa más
+- piensa mucho
+- piensa profundamente
+
+*** MIDDLE Level
+- piensa
+
+*** BASIC Level
+- pienso
+- pensando
+
+** French
+
+*** HIGHEST Level
+- réfléchis plus
+- réfléchis beaucoup
+- réfléchis profondément
+
+*** MIDDLE Level
+- réfléchis
+
+*** BASIC Level
+- pense
+- réfléchir
+
+** German
+
+*** HIGHEST Level
+- denk mehr
+- denk gründlich
+- denk tief
+
+*** MIDDLE Level
+- denk nach
+- denk
+
+*** BASIC Level
+- denke
+- nachdenken
+
+** Korean
+
+*** HIGHEST Level
+- 더 오래 생각
+- 깊이 생각
+- 심사숙고
+- 곰곰이 생각
+
+*** MIDDLE Level
+- 많이 생각
+- 더 생각
+- 잘 생각
+
+*** BASIC Level
+- 생각
+
+** Italian
+
+*** HIGHEST Level
+- pensa di più
+- pensa a lungo
+- pensa profondamente
+- rifletti a fondo
+
+*** MIDDLE Level
+- pensa
+- pensa molto
+- rifletti
+
+*** BASIC Level
+- penso
+- pensare
+- pensando
+- riflettere
+
+* Technical Notes
+
+1. All patterns with =needsWordBoundary: !0= require word boundary matching to prevent false positives within larger words.
+
+2. The NONE level exists for all languages but contains no keywords (empty array).
+
+3. The implementation appears to use these patterns to detect thinking requests in user input and allocate the appropriate token budget for the assistant's thinking process.
+
+4. Special keywords like "ultrathink" (HIGHEST) and "megathink" (MIDDLE) are unique compound words that trigger specific thinking levels in English.
+
+* File Reference
+
+Source: =/home/shcv/src/claude-code/analysis/cli-pretty-v1.0.61-core.js=
+- Token budgets definition: Line containing =var gb1 = { HIGHEST: 31999, MIDDLE: 1e4, BASIC: 4000, NONE: 0 }=
+- Keywords definition: =HX8= object containing language-specific patterns

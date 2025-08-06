@@ -1,0 +1,286 @@
+#+TITLE: UserPromptSubmit Hook - Deep Dive Analysis
+#+DATE: 2025-07-19
+
+* Overview
+
+The UserPromptSubmit hook fires when a user submits a prompt to Claude Code. Despite its name suggesting preprocessing capabilities, this hook has significant limitations that make it unsuitable for template expansion or prompt modification.
+
+* Key Finding: Cannot Modify Prompts
+
+**The UserPromptSubmit hook CANNOT modify, preprocess, or replace the user's prompt text.**
+
+The hook can only:
+1. Add supplementary information alongside the original prompt
+2. Block the prompt entirely
+3. Show error messages to the user
+
+* How UserPromptSubmit Works
+
+** Hook Input
+The hook receives JSON via stdin:
+#+begin_src json
+{
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "the user's original prompt text"
+}
+#+end_src
+
+** Hook Output Handling
+
+Based on exit codes:
+
+*** Exit Code 0: Add Context
+- Hook's stdout is wrapped in =<user-prompt-submit-hook>= tags
+- Added as a *separate message* after the user's prompt
+- Visible to Claude but hidden from user (=isVisibleInTranscriptOnly: true=)
+- Limited to 10,000 characters (truncated if longer)
+
+Example flow:
+1. User types: "Help me refactor this code"
+2. Hook outputs: "User prefers functional style"
+3. Claude sees:
+   #+begin_example
+   User: Help me refactor this code
+   <user-prompt-submit-hook>User prefers functional style</user-prompt-submit-hook>
+   #+end_example
+
+*** Exit Code 2: Block Prompt
+- Shows stderr to user
+- Prevents prompt from being sent to Claude
+- Original prompt is discarded
+- Message: "Operation stopped by hook: [reason]"
+
+*** Other Exit Codes: Error Only
+- Shows stderr to user
+- Original prompt continues unchanged
+- No modification or addition to Claude's context
+
+* What UserPromptSubmit Can Do
+
+** 1. Add Context or Instructions
+#+begin_src bash
+#!/bin/bash
+# Add project-specific context
+cat <<EOF
+Project conventions:
+- Use TypeScript strict mode
+- Prefer async/await over promises
+- Follow ESLint rules in .eslintrc
+EOF
+exit 0
+#+end_src
+
+** 2. Validate and Block Prompts
+#+begin_src python
+#!/usr/bin/env python3
+import json
+import sys
+
+data = json.loads(sys.stdin.read())
+prompt = data['prompt'].lower()
+
+# Block prompts containing sensitive information
+sensitive_patterns = ['password', 'api key', 'secret']
+for pattern in sensitive_patterns:
+    if pattern in prompt:
+        print(f"Blocked: prompt contains '{pattern}'", file=sys.stderr)
+        sys.exit(2)
+
+sys.exit(0)
+#+end_src
+
+** 3. Add Dynamic Information
+#+begin_src bash
+#!/bin/bash
+# Add current git status to context
+echo "Current git branch: $(git branch --show-current)"
+echo "Uncommitted changes: $(git status --porcelain | wc -l) files"
+exit 0
+#+end_src
+
+** 4. Log User Activity
+#+begin_src bash
+#!/bin/bash
+# Read prompt from stdin
+input=$(cat)
+prompt=$(echo "$input" | jq -r .prompt)
+
+# Log to file
+echo "$(date): $prompt" >> ~/claude-prompts.log
+
+# Don't add anything to Claude's context
+exit 0
+#+end_src
+
+* What UserPromptSubmit Cannot Do
+
+** Cannot: Template Expansion
+You cannot implement prompt templates like:
+#+begin_example
+User types: "!refactor"
+Hook expands to: "Please refactor this code following our style guide..."
+#+end_example
+
+This is impossible because the hook cannot modify the original prompt.
+
+** Cannot: Prompt Preprocessing
+You cannot transform prompts:
+#+begin_example
+User types: "fix the bug in @current-file"
+Hook replaces with: "fix the bug in src/main.py"
+#+end_example
+
+The =@current-file= would be sent to Claude as-is.
+
+** Cannot: Command Aliases
+You cannot create shortcuts:
+#+begin_example
+User types: "/test"
+Hook replaces with: "Run npm test and fix any failures"
+#+end_example
+
+** Cannot: Dynamic Prompt Building
+You cannot construct prompts from templates or external data.
+
+* Implementation Details
+
+** Code Flow
+1. User submits prompt
+2. Prompt is added to message array
+3. UserPromptSubmit hooks run
+4. Hook outputs are processed:
+   - Success: stdout becomes additional message
+   - Block: entire operation cancelled
+   - Error: stderr shown, continue normally
+5. Messages sent to Claude (original + any hook additions)
+
+** Key Code Sections
+From =czB= function:
+#+begin_src javascript
+// Hook receives prompt
+let D = { 
+  hook_event_name: "UserPromptSubmit", 
+  prompt: A 
+};
+#+end_src
+
+From prompt processing:
+#+begin_src javascript
+// Original prompt already added before hooks
+J.messages.push(pA({ content: B.prompt }));
+
+// Hook output added separately
+if (V.length > 0) {
+  q = `<user-prompt-submit-hook>${H}</user-prompt-submit-hook>`;
+  J.messages.push(pA({ 
+    content: q, 
+    isVisibleInTranscriptOnly: !0 
+  }));
+}
+#+end_src
+
+* Alternative Approaches for Template Expansion
+
+Since UserPromptSubmit cannot modify prompts, consider these alternatives:
+
+** 1. Shell Aliases or Functions
+Create shell functions that expand templates before calling Claude:
+#+begin_src bash
+function claude-refactor() {
+  claude -p "Please refactor the following code according to our style guide: ..."
+}
+#+end_src
+
+** 2. Wrapper Scripts
+#+begin_src python
+#!/usr/bin/env python3
+# claude-templates.py
+import sys
+import subprocess
+
+templates = {
+    "!refactor": "Please refactor this code following our style guide...",
+    "!test": "Run all tests and fix any failures...",
+}
+
+prompt = sys.argv[1]
+if prompt in templates:
+    prompt = templates[prompt]
+
+subprocess.run(["claude", "-p", prompt])
+#+end_src
+
+** 3. External Preprocessor
+Build a tool that preprocesses prompts before sending to Claude:
+#+begin_src bash
+# Process templates and pipe to Claude
+echo "!refactor" | my-template-expander | xargs -I {} claude -p "{}"
+#+end_src
+
+** 4. Use Claude's Built-in Features
+- Custom slash commands in =.claude/commands/=
+- CLAUDE.md for persistent instructions
+- Memory feature (start prompts with =#=)
+
+* Best Use Cases for UserPromptSubmit
+
+Despite its limitations, UserPromptSubmit is useful for:
+
+1. **Contextual Injection**: Add project state, git info, or system status
+2. **Security Validation**: Block prompts with sensitive data
+3. **Audit Logging**: Track all prompts for compliance
+4. **Dynamic Context**: Add time-sensitive information
+5. **Prompt Analysis**: Gather metrics on usage patterns
+6. **Warning Systems**: Alert on potentially dangerous requests
+
+* Example: Comprehensive Context Injection
+
+#+begin_src python
+#!/usr/bin/env python3
+import json
+import sys
+import subprocess
+import os
+from datetime import datetime
+
+# Read hook input
+data = json.loads(sys.stdin.read())
+
+# Gather context
+context = []
+
+# Git information
+try:
+    branch = subprocess.check_output(['git', 'branch', '--show-current'], text=True).strip()
+    context.append(f"Git branch: {branch}")
+    
+    status = subprocess.check_output(['git', 'status', '--porcelain'], text=True)
+    if status:
+        context.append(f"Uncommitted changes: {len(status.splitlines())} files")
+except:
+    pass
+
+# Current directory
+context.append(f"Working directory: {os.getcwd()}")
+
+# Time context
+context.append(f"Current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+# Project-specific rules
+if os.path.exists('.claude-rules.txt'):
+    with open('.claude-rules.txt', 'r') as f:
+        context.append(f"Project rules:\n{f.read()}")
+
+# Output context for Claude
+print('\n'.join(context))
+sys.exit(0)
+#+end_src
+
+* Conclusion
+
+The UserPromptSubmit hook is misnamed - it suggests preprocessing capabilities it doesn't have. It's better understood as a "prompt context injection" hook that can:
+- Add supplementary information visible only to Claude
+- Validate and potentially block prompts
+- Log user activity
+
+For true template expansion or prompt preprocessing, you'll need to implement solutions outside of Claude Code's hook system, such as wrapper scripts or shell functions that transform prompts before sending them to Claude Code.

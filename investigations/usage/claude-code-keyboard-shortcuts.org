@@ -1,0 +1,207 @@
+#+TITLE: Claude Code Keyboard Shortcuts and Mode Switching
+#+DATE: 2025-07-19
+
+* Overview
+
+Claude Code uses different keyboard shortcuts depending on the operating system. This document provides a comprehensive reference for all keyboard shortcuts, with special focus on mode switching functionality.
+
+* Platform-Specific Mode Switching
+
+** Key Combinations by Platform
+
+| Platform | Mode Switch Key | Key Check Logic |
+|----------+-----------------+-----------------|
+| Windows | =Alt+M= | =meta && (key === 'm' \vert\vert key === 'M')= |
+| macOS | =Shift+Tab= | =tab && shift= |
+| Linux | =Shift+Tab= | =tab && shift= |
+
+The platform detection is performed using:
+#+begin_src javascript
+var LA8 = process.platform === "windows",
+    DF = LA8
+      ? { displayText: "alt+m", check: (A, B) => B.meta && (A === "m" || A === "M") }
+      : { displayText: "shift+tab", check: (A, B) => B.tab && B.shift };
+#+end_src
+
+* Available Modes
+
+Claude Code supports four different modes that can be cycled through:
+
+** 1. Default Mode
+- Standard operation mode
+- All tool permissions follow configured rules
+- User is prompted for permissions as needed
+
+** 2. Accept Edits Mode
+- Automatically accepts file edit operations
+- Useful when making many changes to trusted files
+- Still respects deny rules and asks for other permissions
+
+** 3. Plan Mode
+- Claude presents a plan before executing changes
+- Uses the =exit_plan_mode= tool to transition out
+- Ideal for complex tasks requiring review
+- Shows "⏸ plan mode on" in the UI
+
+** 4. Bypass Permissions Mode
+- Temporarily bypasses permission prompts
+- Only available if not disabled in settings
+- Shows "Bypassing Permissions" status
+- Use with caution
+
+* Mode Cycling Logic
+
+The modes cycle in a specific order when pressing the mode switch key:
+
+#+begin_src
+Default → Accept Edits → Plan → (Bypass Permissions) → Default
+#+end_src
+
+Note: Bypass Permissions mode only appears if:
+- It's not disabled in settings (=disableBypassPermissionsMode= setting)
+- The user has appropriate permissions
+
+Implementation:
+#+begin_src javascript
+function tNB(A) {
+  switch (A.mode) {
+    case "default":
+      return "acceptEdits";
+    case "acceptEdits":
+      return "plan";
+    case "plan":
+      return A.isBypassPermissionsModeAvailable ? "bypassPermissions" : "default";
+    case "bypassPermissions":
+      return "default";
+  }
+}
+#+end_src
+
+* Other Keyboard Shortcuts
+
+** Universal Shortcuts
+
+| Key | Action | Context |
+|-----+--------+---------|
+| =Esc= | Cancel current operation | During prompts |
+| =Esc= | Open edit prompt | After Claude's response |
+| =Backspace= / =Delete= | Clear input | Empty prompt |
+| =Ctrl+C= | Exit Claude Code | Anytime |
+| =Ctrl+D= | Exit Claude Code | Empty prompt |
+
+** Terminal Integration
+
+*** Windows Terminal Setup
+For Windows users, Claude Code automatically detects Windows Terminal via the =WT_SESSION= environment variable.
+
+*** Apple Terminal Setup
+- Requires enabling "Use Option as Meta key"
+- =Option+Enter= inserts newline
+- Claude Code can configure this automatically via =/terminal-setup=
+
+*** Key Binding Installation
+Claude Code tracks whether key bindings are installed:
+- =shiftEnterKeyBindingInstalled= - For most terminals
+- =optionAsMetaKeyInstalled= - For Apple Terminal
+
+* Windows-Specific Considerations
+
+** Alt Key on Windows
+On Windows, the =Alt= key is treated as the =meta= key in terminal applications. This is why Windows uses =Alt+M= while other platforms use =Shift+Tab=.
+
+** Windows Terminal Detection
+Claude Code specifically detects Windows Terminal and other Windows environments:
+- Checks =process.platform === "win32"=
+- Detects Windows Terminal via =WT_SESSION= environment variable
+- Special handling for ConEmu, Cygwin, MSYS2
+
+** Path and Command Handling
+Windows requires special handling:
+- NPX commands need =cmd /c= wrapper
+- File paths use backslash separators
+- Special WSL (Windows Subsystem for Linux) detection
+
+* Mode Status Display
+
+The UI displays mode status with platform-specific hints:
+
+** Windows Display
+- Normal: No indicator
+- Plan Mode: "⏸ plan mode on (alt+m to cycle)"
+- Accept Edits: "✓ auto-accepting edits (alt+m to cycle)"
+- Bypass Permissions: "⚠️ bypassing permissions (alt+m to cycle)"
+
+** macOS/Linux Display
+Same as Windows but shows "(shift+tab to cycle)" instead
+
+* Configuring Default Mode
+
+You can set a default mode in settings files:
+#+begin_src json
+{
+  "defaultMode": "plan"  // Options: "default", "plan", "acceptEdits"
+}
+#+end_src
+
+Note: "bypassPermissions" cannot be set as a default mode for security reasons.
+
+* Bypass Permissions Mode Availability
+
+** Important: Bypass Permissions Mode Cannot Be Enabled After Startup
+
+The bypass permissions mode is *only* available if Claude Code is started with the =--dangerously-skip-permissions= flag. This is a security feature that prevents the mode from being activated during a session.
+
+** How It Works
+1. Starting with =--dangerously-skip-permissions= sets =isBypassPermissionsModeAvailable = true=
+2. This allows bypass permissions to appear in the mode cycle
+3. Without the flag, =isBypassPermissionsModeAvailable = false= and the mode is completely unavailable
+4. This cannot be changed after Claude Code starts
+
+** Mode Cycling Behavior
+- *With* =--dangerously-skip-permissions=: default → acceptEdits → plan → bypassPermissions → default
+- *Without* the flag: default → acceptEdits → plan → default (no bypass option)
+
+** Security Restrictions
+- Cannot be used with root/sudo privileges
+- Can be disabled via settings even if the flag is used
+- Must be explicitly enabled at startup - no runtime activation
+
+* Disabling Bypass Permissions Mode
+
+To disable the bypass permissions mode entirely (even with =--dangerously-skip-permissions=), add to settings:
+#+begin_src json
+{
+  "permissions": {
+    "disableBypassPermissionsMode": "disable"
+  }
+}
+#+end_src
+
+* Tips and Best Practices
+
+1. **Windows Users**: Remember =Alt+M= is your mode switching key, not =Shift+Tab=
+2. **Plan Mode**: Great for learning - see what Claude intends to do before execution
+3. **Accept Edits Mode**: Use when refactoring many files you trust
+4. **Mode Persistence**: Mode resets to default when starting a new session
+5. **Visual Feedback**: Always check the mode indicator in the UI
+
+* Troubleshooting
+
+** Alt+M Not Working on Windows
+1. Ensure you're using a compatible terminal (Windows Terminal recommended)
+2. Check if another application is intercepting Alt+M
+3. Try running Claude Code directly from Windows Terminal
+
+** Mode Not Switching
+1. Check if bypass permissions mode is disabled in settings
+2. Verify you're using the correct key combination for your platform
+3. Ensure Claude Code has focus in the terminal
+
+* Implementation Details
+
+The keyboard handling is implemented in the main input loop, where:
+1. Key presses are captured with their modifier states
+2. The =DF.check()= function validates if the mode switch combo was pressed
+3. =tNB()= function determines the next mode in the cycle
+4. Mode change is logged via telemetry: =E1("tengu_mode_cycle", { to: nextMode })=
+5. UI updates to reflect the new mode
