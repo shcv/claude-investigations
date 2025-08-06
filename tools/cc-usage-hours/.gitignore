@@ -1,5 +1,0 @@
-node_modules/
-*.log
-.DS_Store
-sessions.json
-analyze_usage_hours.js
