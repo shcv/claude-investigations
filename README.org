@@ -1,135 +1,122 @@
-#+TITLE: Agent Experiments
+#+TITLE: Claude Code Investigations
 
 * Overview
 
-This repository contains experiments, methodologies, and results focused on improving our use of LLM Agents, particularly Claude via Claude Code.
-We systematically collect challenges, develop hypotheses, and evaluate solutions to enhance AI-assisted development workflows.
+This repository documents in-depth investigations into how Claude Code works internally and how to use it effectively.
+We analyze Claude Code's source code, features, and capabilities to understand its architecture and provide comprehensive documentation for advanced usage.
 
 * Repository Structure
 
 #+begin_src
 .
-├── challenges/           # Specific problems and test cases
-│   ├── direction-following/
-│   ├── error-patterns/
-│   ├── complex-refactoring/
-│   └── ...
-├── testbeds/            # Reusable code bases for experiments
-│   ├── web-app/
-│   ├── cli-tool/
-│   ├── data-pipeline/
-│   └── ...
-├── methods/             # Approaches and techniques
-│   ├── prompting-strategies/
-│   ├── context-management/
-│   ├── iterative-refinement/
-│   └── ...
-├── experiments/         # Experimental runs and results
-│   ├── 2025-07-05-direction-following/
-│   ├── 2025-07-06-error-recovery/
-│   └── ...
-├── evaluation/          # Evaluation scripts and criteria
-│   ├── metrics/
-│   ├── scripts/
-│   └── rubrics/
-└── reports/            # Analysis and findings
-    ├── weekly/
-    └── insights/
+├── archive/             # Claude Code source versions
+│   └── changelog/       # Generated changelogs for each version
+├── tools/               # Archive management tools
+│   └── sync.py          # Automated sync tool for all operations
+├── features/            # User-facing features and capabilities
+│   ├── background-shells.org
+│   ├── github-actions.org
+│   ├── mcp.org
+│   ├── hooks.org
+│   ├── keyboard-shortcuts.org
+│   ├── notifications.org
+│   ├── queued-prompts.org
+│   ├── thinking.org
+│   ├── settings.org
+│   ├── environment-variables.org
+│   ├── spinner-words.org
+│   └── security-review.org
+├── internals/           # Technical internals and protocols
+│   ├── websocket-protocol.org
+│   ├── diff-spec.org
+│   ├── session-log-format.org
+│   ├── microcompaction.org
+│   ├── recursion-stack.org
+│   ├── caching.org
+│   ├── telemetry.org
+│   └── root-detection.org
+└── CLAUDE.md           # Instructions for Claude Code when working here
 #+end_src
 
-* Quick Start
+* Understanding Claude Code Features
 
-** For Contributors
+** User-Facing Features (=features/=)
+- [[./features/settings.org][Settings]] - Multi-layered configuration system
+- [[./features/mcp.org][MCP]] - Model Context Protocol for tool extensions
+- [[./features/github-actions.org][GitHub Actions]] - CI/CD integration
+- [[./features/background-shells.org][Background Shells]] - Long-running command execution
+- [[./features/hooks.org][Hooks]] - Custom command triggers
+- [[./features/security-review.org][Security Review]] - Advanced vulnerability detection
+- [[./features/thinking.org][Thinking]] - AI reasoning optimization
+- [[./features/keyboard-shortcuts.org][Keyboard Shortcuts]] - Interactive mode navigation
+- [[./features/notifications.org][Notifications]] - Desktop alerts
+- [[./features/queued-prompts.org][Queued Prompts]] - Batch prompt execution
+- [[./features/environment-variables.org][Environment Variables]] - Configuration options
+- [[./features/spinner-words.org][Spinner Words]] - CLI animation customization
 
-1. Check [[https://github.com/shcv/agent-experiments/issues][open issues]] for ongoing discussions and experiments
-2. Review the [[./CONTRIBUTING.org][contribution guidelines]]
-3. Pick a challenge or propose a new one
-4. Document your experiments following our [[./docs/experiment-template.org][experiment template]]
-
-** Running an Experiment
-
-1. Select or create a challenge in =challenges/=
-2. Choose an appropriate testbed from =testbeds/= or create a new one
-3. Apply a method from =methods/= or develop a new approach
-4. Document your experiment in =experiments/YYYY-MM-DD-descriptive-name/= (sessions are saved automatically by Claude Code)
-5. Evaluate results using tools in =evaluation/=
-6. Share findings via PR and/or issue discussion
-
-* Key Concepts
-
-** Challenges
-Specific, reproducible problems we've encountered with Claude Code. Each challenge includes:
-- Problem description (README.org)
-- Success criteria
-- Known failure modes
-- Related issues/discussions
-
-** Testbeds
-Reusable codebases that serve as consistent environments for experiments. These are intentionally kept separate from challenges to enable testing multiple approaches on the same codebase.
-
-** Methods
-Documented approaches for improving Claude's performance. Methods can be:
-- Prompting strategies
-- Context management techniques
-- Workflow patterns
-- Tool configurations
-
-** Experiments
-Individual experimental runs combining a challenge, testbed, and method. Each experiment directory contains:
-- =setup.org= - Configuration and parameters
-- =sessions/= - References to Claude Code session UUIDs (sessions are automatically saved to =~/.claude/projects/=)
-- =results.org= - Observations and metrics
-- =artifacts/= - Generated code or outputs
+** Technical Internals (=internals/=)
+- [[./internals/websocket-protocol.org][WebSocket Protocol]] - MCP communication layer
+- [[./internals/session-log-format.org][Session Log Format]] - Conversation persistence
+- [[./internals/telemetry.org][Telemetry]] - Usage tracking and privacy
+- [[./internals/diff-spec.org][Diff Spec]] - Code change visualization
+- [[./internals/caching.org][Caching]] - Performance optimization
+- [[./internals/microcompaction.org][Microcompaction]] - Context optimization
+- [[./internals/recursion-stack.org][Recursion Stack]] - Task management
+- [[./internals/root-detection.org][Root Detection]] - Security measures
 
 * Workflow
 
-** Issue-Driven Development
+** Analyzing New Versions
 
-We use GitHub Issues for:
-- **Experiment Proposals** (label: =experiment=)
-- **Challenge Documentation** (label: =challenge=)
-- **Method Discussions** (label: =method=)
-- **Results & Insights** (label: =findings=)
+The `tools/sync.py` script automates the entire process of downloading, prettifying, diffing, and generating changelogs for Claude Code versions.
 
-Issues remain open during active experimentation and link to relevant PRs and commits.
+*** Quick Commands
 
-** Branching Strategy
-
-Given our research-oriented workflow with 4-5 contributors:
-
-- =main= - Stable, reviewed content
-- =experiments/<username>/<description>= - Individual experiment branches
-- =develop= - Integration branch for collaborative work
-
-Example flow:
 #+begin_src bash
-git checkout -b experiments/alice/context-window-optimization
-# ... work on experiment ...
-git push origin experiments/alice/context-window-optimization
-# Create PR to develop for review
-# After team review, merge to main
+# Download and process all new versions
+python tools/sync.py --all
+
+# Process only the latest version
+python tools/sync.py --all --latest
+
+# Generate changelogs for versions since v1.0.70
+python tools/sync.py --changelog --since v1.0.70
+
+# Redo changelog for a specific version (creates iteration -2, -3, etc.)
+python tools/sync.py --redo 69 --changelog
+
+# Process versions in chronological order
+python tools/sync.py --all --oldest-first
 #+end_src
 
-* Contributing
+*** Full Process Steps
 
-See [[./CONTRIBUTING.org][CONTRIBUTING.org]] for detailed guidelines. Key points:
+1. **Download originals**: Fetches missing versions from npm
+2. **Prettify**: Formats files for readability using prettier
+3. **Generate diffs**: Creates diffs between consecutive versions (uses astdiff if available)
+4. **Generate changelogs**: Uses Claude SDK or CLI to analyze changes
 
-- Start discussions in issues before major experiments
-- Use consistent naming conventions
-- Document both successes and failures
-- Include session files for reproducibility
-- Tag relevant team members for review
+*** Manual Steps (if needed)
 
-* Current Focus Areas
+Individual phases can be run separately:
+#+begin_src bash
+python tools/sync.py                    # Download only
+python tools/sync.py --prettier         # Download and prettify
+python tools/sync.py --prettier --diff  # Also generate diffs
+python tools/sync.py --changelog        # Generate changelogs from existing diffs
+#+end_src
 
-1. **Direction Following** - Improving Claude's adherence to specific instructions
-2. **Error Recovery** - Handling and learning from Claude's mistakes
-3. **Context Management** - Optimizing information provided to Claude
-4. **Complex Refactoring** - Multi-file, architectural changes
+** Contributing Documentation
+
+1. Investigate a specific feature or internal mechanism
+2. Create or update documentation in appropriate =features/= or =internals/= directory
+3. Follow org-mode format for consistency
+4. Include code references with line numbers when applicable
+5. Submit PR with findings
 
 * Resources
 
-- [[./docs/best-practices.org][Best Practices Guide]]
-- [[./docs/experiment-template.org][Experiment Template]]
-- [[./evaluation/rubrics/][Evaluation Rubrics]]
-- [[https://docs.anthropic.com/en/docs/build-with-claude/claude-code][Claude Code Documentation]]
+- [[https://docs.anthropic.com/en/docs/claude-code][Official Claude Code Documentation]]
+- [[https://modelcontextprotocol.io/][Model Context Protocol Specification]]
+- [[https://github.com/anthropics/claude-code][Claude Code GitHub Repository]]
+- [[https://github.com/shcv/astdiff][astdiff]] - JavaScript-aware semantic diff tool (improves diff quality)
