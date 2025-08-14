@@ -1,0 +1,461 @@
+#+TITLE: Claude Code Plugin System Investigation
+#+DATE: 2025-08-14
+
+* Executive Summary
+
+Claude Code v1.0.81 includes a comprehensive plugin system that enables extending functionality through Git-based repositories. Plugins can provide custom commands, agents, and hooks without modifying the core codebase. The system is currently experimental and disabled by default, requiring the =ENABLE_PLUGINS= environment variable to activate.
+
+* Plugin Architecture
+
+** Directory Structure
+
+Plugins are installed at the user level only (not per-project) in the following directory hierarchy:
+
+#+begin_src
+~/.claude/plugins/
+├── config.json           # Repository tracking and metadata
+└── repos/               # Git repositories containing plugins
+    └── owner/
+        └── repo/
+            ├── plugin1/
+            │   ├── plugin.json     # Plugin manifest
+            │   ├── commands/       # Custom commands (*.md)
+            │   ├── agents/         # Custom agents (*.md)
+            │   └── hooks/
+            │       └── hooks.json  # Hook configurations
+            └── plugin2/
+                └── ...
+#+end_src
+
+** Key Components
+
+1. *Plugin Manifest* (=plugin.json=): Defines plugin metadata
+2. *Commands*: Markdown files with frontmatter defining custom commands
+3. *Agents*: Markdown files defining specialized AI agents
+4. *Hooks*: Event-driven extensions that execute shell commands
+
+* Plugin Configuration Files
+
+** Repository Configuration (=~/.claude/plugins/config.json=)
+
+This file tracks all installed plugin repositories and their metadata:
+
+#+begin_src json
+{
+  "repositories": {
+    "owner/repo": {
+      "lastUpdated": "2025-01-14T10:30:00Z",
+      "commitSha": "abc123def456...",
+      "plugins": ["plugin1", "plugin2"]
+    },
+    "anotherowner/anotherrepo": {
+      "lastUpdated": "2025-01-13T15:45:00Z",
+      "commitSha": "789ghi012jkl...",
+      "plugins": ["utility-plugin"]
+    }
+  }
+}
+#+end_src
+
+This configuration file:
+- Tracks installed Git repositories containing plugins
+- Stores last update timestamp and commit SHA for each repository
+- Lists discovered plugins within each repository
+- Automatically managed by Claude Code (not manually edited)
+
+** User Settings (=~/.claude/settings.json=)
+
+The main Claude Code user settings file controls which plugins are enabled:
+
+#+begin_src json
+{
+  "enabledPlugins": {
+    "owner/repo": ["plugin1", "plugin2"],
+    "anotherowner/anotherrepo": ["utility-plugin"]
+  },
+  // ... other user settings
+}
+#+end_src
+
+This allows granular control over which plugins from each repository are active.
+
+* Plugin Manifest Schema
+
+The =plugin.json= file uses this schema:
+
+#+begin_src json
+{
+  "name": "string (required)",
+  "version": "string (optional)",
+  "description": "string (optional)",
+  "author": {
+    "name": "string",
+    "email": "string (optional)",
+    "url": "string (optional)"
+  }
+}
+#+end_src
+
+* Plugin Components
+
+** Commands
+
+Commands are defined as markdown files in the =commands/= directory:
+
+*** Structure
+- Support nested directories for organization
+- Namespaced as =pluginName:subdir:commandName=
+- Use YAML frontmatter for configuration
+- Body contains the prompt template
+
+*** Frontmatter Schema
+#+begin_src yaml
+---
+description: Brief description of the command
+allowed-tools: [Read, Write, Edit, Bash]  # Optional tool restrictions
+argument-hint: "argument description"      # Optional hint for arguments
+model: claude-3-opus                      # Optional model selection
+---
+#+end_src
+
+*** Template Variables
+- =$ARGUMENTS= - User-provided arguments
+- =${CLAUDE_PLUGIN_ROOT}= - Path to plugin directory
+
+** Agents
+
+Agents are defined as markdown files in the =agents/= directory:
+
+*** Structure
+- Similar to commands with frontmatter + body
+- Body contains the system prompt for the agent
+- Namespaced like commands
+
+*** Frontmatter Schema
+#+begin_src yaml
+---
+name: Agent Display Name
+description: When to use this agent
+tools: [Read, Write, Edit, Grep]
+color: cyan  # Optional terminal color
+model: claude-3-opus  # Optional model
+---
+#+end_src
+
+** Hooks
+
+Hooks enable event-driven behavior through =hooks/hooks.json=:
+
+*** Hook Types
+- =PreToolUse= - Before tool execution
+- =PostToolUse= - After tool execution
+- =Notification= - System notifications
+- =UserPromptSubmit= - User input submission
+- =SessionStart= - Session initialization
+- =SessionEnd= - Session termination
+
+*** Hook Configuration
+#+begin_src json
+{
+  "hooks": [
+    {
+      "type": "PreToolUse",
+      "matcher": {
+        "toolName": "Bash",
+        "argumentPattern": "rm -rf"
+      },
+      "action": {
+        "command": "echo 'Dangerous command detected!'",
+        "timeout": 5000
+      }
+    }
+  ]
+}
+#+end_src
+
+* Plugin Management
+
+** Current State: Manual Management Required
+
+⚠️ **Important**: Claude Code v1.0.81 has **no built-in plugin management commands**. All plugin management must be done manually through file system operations and Git commands.
+
+** Manual Installation Process
+
+To install a plugin, you must manually:
+
+1. Clone the repository:
+   #+begin_src bash
+   cd ~/.claude/plugins/repos
+   mkdir -p owner
+   cd owner
+   git clone https://github.com/owner/repo.git
+   #+end_src
+
+2. **Create or update** =~/.claude/plugins/config.json= (⚠️ **REQUIRED** - will not auto-discover):
+   #+begin_src json
+   {
+     "repositories": {
+       "owner/repo": {}
+     }
+   }
+   #+end_src
+   
+   Note: The empty object ={}= is sufficient. Claude Code will populate =lastUpdated= and =commitSha= automatically on first startup.
+
+3. Enable specific plugins in =~/.claude/settings.json=:
+   #+begin_src json
+   {
+     "enabledPlugins": {
+       "owner/repo": ["plugin-name"]
+     }
+   }
+   #+end_src
+   
+   Note: You need to know the plugin names from within the repository. Check the subdirectories or =plugin.json= files.
+
+4. Start Claude Code with plugins enabled:
+   #+begin_src bash
+   export ENABLE_PLUGINS=1
+   claude
+   #+end_src
+
+** Manual Update Process
+
+To update plugins:
+
+1. Navigate to the repository:
+   #+begin_src bash
+   cd ~/.claude/plugins/repos/owner/repo
+   git pull
+   #+end_src
+
+2. Update the commit SHA in =config.json= if needed
+
+** What Happens Automatically vs Manually
+
+*** Automatic (on startup with =ENABLE_PLUGINS=1=)
+- Runs =git pull --ff-only= on repositories listed in =config.json=
+- Updates =lastUpdated= and =commitSha= fields in existing =config.json= entries
+- Discovers plugins within registered repositories
+- Loads enabled plugins from =enabledPlugins= setting
+
+*** Manual (user must do)
+- Clone Git repositories to =~/.claude/plugins/repos/owner/repo/=
+- Add repository entries to =~/.claude/plugins/config.json=
+- Add plugin names to =enabledPlugins= in =~/.claude/settings.json=
+- Remove repositories from filesystem and config files
+
+*** Not Implemented
+- Auto-discovery of cloned repositories not in =config.json=
+- Commands to install/remove/update plugins
+- UI for plugin management
+- Plugin search or marketplace
+
+** Enabling/Disabling
+
+- Edit =~/.claude/settings.json= to add/remove plugins from =enabledPlugins=
+- Changes take effect on next Claude Code restart
+- Disabled plugins remain installed but are not loaded
+
+** Removing Plugins
+
+To completely remove a plugin:
+
+1. Remove the repository directory:
+   #+begin_src bash
+   rm -rf ~/.claude/plugins/repos/owner/repo
+   #+end_src
+
+2. Remove from =~/.claude/plugins/config.json=
+3. Remove from =enabledPlugins= in =~/.claude/settings.json=
+
+* Example Plugin
+
+Here's a complete example plugin that demonstrates all capabilities:
+
+** Directory Structure
+#+begin_src
+example-plugin/
+├── plugin.json
+├── commands/
+│   ├── hello.md
+│   └── utils/
+│       └── timestamp.md
+├── agents/
+│   └── debugger.md
+└── hooks/
+    └── hooks.json
+#+end_src
+
+** plugin.json
+#+begin_src json
+{
+  "name": "example-utilities",
+  "version": "1.0.0",
+  "description": "Example plugin demonstrating all features",
+  "author": {
+    "name": "Example Author",
+    "email": "author@example.com"
+  }
+}
+#+end_src
+
+** commands/hello.md
+#+begin_src markdown
+---
+description: Greet the user with a personalized message
+argument-hint: "name to greet"
+allowed-tools: []
+---
+
+# Hello Command
+
+Generate a friendly greeting for $ARGUMENTS.
+
+Please create a warm, personalized greeting message that:
+1. Addresses $ARGUMENTS by name
+2. Mentions the current time of day appropriately
+3. Adds an encouraging message for their coding session
+#+end_src
+
+** commands/utils/timestamp.md
+#+begin_src markdown
+---
+description: Insert timestamps in various formats
+argument-hint: "format (iso, unix, human)"
+allowed-tools: [Write, Edit]
+---
+
+# Timestamp Utility
+
+Insert a timestamp in the requested format: $ARGUMENTS
+
+Available formats:
+- iso: ISO 8601 format
+- unix: Unix timestamp
+- human: Human-readable format
+
+Insert the timestamp at the cursor position or append to the current file.
+#+end_src
+
+** agents/debugger.md
+#+begin_src markdown
+---
+name: Debug Assistant
+description: Specialized agent for debugging code issues
+tools: [Read, Grep, Bash, Edit]
+color: red
+---
+
+You are a specialized debugging assistant. Your role is to:
+
+1. Systematically analyze code for bugs
+2. Use logging and print statements to trace execution
+3. Identify root causes of issues
+4. Suggest and implement fixes
+5. Verify fixes with tests
+
+Always start by understanding the symptom, then work backwards to find the cause.
+Use the Bash tool to run tests and verify behavior.
+#+end_src
+
+** hooks/hooks.json
+#+begin_src json
+{
+  "hooks": [
+    {
+      "type": "PreToolUse",
+      "matcher": {
+        "toolName": "Write",
+        "argumentPattern": "\\.md$"
+      },
+      "action": {
+        "command": "echo 'Creating markdown file...'",
+        "timeout": 1000
+      }
+    },
+    {
+      "type": "SessionStart",
+      "action": {
+        "command": "echo 'Example plugin loaded!'",
+        "timeout": 1000
+      }
+    },
+    {
+      "type": "UserPromptSubmit",
+      "matcher": {
+        "pattern": "debug"
+      },
+      "action": {
+        "command": "echo 'Debug mode detected - consider using debugger agent'",
+        "timeout": 1000
+      }
+    }
+  ]
+}
+#+end_src
+
+* Sharing and Distribution
+
+** Publishing a Plugin
+
+1. Create a Git repository with your plugin structure
+2. Push to GitHub, GitLab, or any Git hosting service
+3. Users install with: =ENABLE_PLUGINS=1 claude=
+4. Repository reference: =owner/repo=
+
+** Best Practices
+
+1. *Namespace Everything*: Use unique plugin names to avoid conflicts
+2. *Document Commands*: Provide clear descriptions and argument hints
+3. *Test Hooks*: Ensure hooks complete quickly (use timeouts)
+4. *Version Properly*: Use semantic versioning in plugin.json
+5. *Minimize Dependencies*: Plugins should be self-contained
+
+* Security Considerations
+
+** Current State
+- Plugin system is experimental and disabled by default
+- No explicit sandboxing for plugin execution
+- Plugins have access to same tools as main Claude Code
+- Hooks execute arbitrary shell commands
+
+** Recommendations
+1. Only install plugins from trusted sources
+2. Review plugin code before installation
+3. Monitor hook commands for suspicious behavior
+4. Use separate environments for testing untrusted plugins
+
+* Technical Implementation Details
+
+** Plugin Loading Process
+
+1. *Initialization* (Line 395062-395115):
+   - Check =ENABLE_PLUGINS= environment variable
+   - Create plugin directory structure if needed
+   - Load plugin configuration
+
+2. *Discovery* (Line 395062-395115):
+   - Scan repository directories for plugins
+   - Look for =plugin.json= or plugin structure
+   - Validate manifest schema
+
+3. *Component Loading* (Lines 419790-419840, 395158-395203):
+   - Parse markdown files for commands and agents
+   - Extract frontmatter and body content
+   - Apply namespacing to prevent conflicts
+
+4. *Integration* (Lines 395204-395279):
+   - Merge commands into command registry
+   - Add agents to agent selection system
+   - Register hooks with event system
+   - Mark all components with "plugin" source
+
+** Key Functions
+
+- =DJ8= - Main plugin discovery function
+- =YJ8= - Load plugin agents
+- =WJ8= - Process agent markdown files
+- =iL8= - Load plugin commands
+- =nL8= - Process command markdown files
+- =EkB= - Update plugin repositories
