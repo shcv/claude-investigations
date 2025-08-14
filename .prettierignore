@@ -1,0 +1,2 @@
+# Empty prettier ignore file to override .gitignore defaults
+# This allows prettier to format files in the archive directory
