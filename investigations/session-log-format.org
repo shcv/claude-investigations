@@ -1,0 +1,315 @@
+* Claude Code Session Log Format Analysis
+
+** File Structure
+Session logs are stored as JSONL (JSON Lines) files at:
+=~/.claude/projects/<project-hash>/<session-id>.jsonl=
+
+- Each line is a valid JSON object representing a single message
+- Session ID is a UUID v4 (e.g., =cefe5283-63a9-428a-beaa-b84bc9650655=)
+- Project hash is derived from the project path
+
+** Message Types and Schemas
+
+*** Core Message Types
+
+**** 1. User Message
+Represents user input to Claude.
+
+#+begin_src json
+{
+  "type": "user",
+  "message": {
+    "role": "user",
+    "content": "string | ContentBlock[]"
+  },
+  "uuid": "uuid-v4",
+  "sessionId": "session-uuid",
+  "timestamp": "ISO-8601",
+  "parentUuid": "parent-uuid | null",
+  "isSidechain": false,
+  "userType": "external",
+  "cwd": "/path/to/cwd",
+  "version": "1.0.77",
+  "gitBranch": "branch-name",
+  "isMeta": false,
+  "isVisibleInTranscriptOnly": false,
+  "toolUseResult": {} // optional
+}
+#+end_src
+
+**** 2. Assistant Message
+Represents Claude's responses.
+
+#+begin_src json
+{
+  "type": "assistant", 
+  "message": {
+    "id": "msg_xxx",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-opus-4-1-20250805",
+    "content": [
+      {
+        "type": "text",
+        "text": "response text"
+      },
+      {
+        "type": "tool_use",
+        "id": "tool-use-id",
+        "name": "tool-name",
+        "input": {}
+      }
+    ],
+    "stop_reason": "stop_sequence | max_tokens | tool_use | null",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 0,
+      "service_tier": "standard"
+    }
+  },
+  "uuid": "uuid-v4",
+  "requestId": "req_xxx",
+  "sessionId": "session-uuid",
+  "timestamp": "ISO-8601",
+  "parentUuid": "parent-uuid | null",
+  "isSidechain": false,
+  "isMeta": false
+}
+#+end_src
+
+**** 3. System Message
+Internal system events and hook outputs.
+
+#+begin_src json
+{
+  "type": "system",
+  "content": "string",
+  "isMeta": false,
+  "timestamp": "ISO-8601",
+  "uuid": "uuid-v4",
+  "sessionId": "session-uuid",
+  "parentUuid": "parent-uuid | null"
+}
+#+end_src
+
+System messages include:
+- Hook outputs (SessionStart, PreToolUse, PostToolUse)
+- Tool execution results
+- Error messages
+- Debug information
+
+**** 4. Summary Message
+Conversation summary stored at the beginning of the file.
+
+#+begin_src json
+{
+  "type": "summary",
+  "summary": "Brief conversation summary",
+  "leafUuid": "uuid-of-last-message"
+}
+#+end_src
+
+**** 5. Checkpoint Message
+Marks specific points in conversation for resumption.
+
+#+begin_src json
+{
+  "type": "checkpoint",
+  "sessionId": "session-uuid",
+  "commit": "commit-hash",
+  "timestamp": "ISO-8601",
+  "id": "checkpoint-id"
+}
+#+end_src
+
+**** 6. Bookmark Message
+Marks a conversation as bookmarked.
+
+#+begin_src json
+{
+  "type": "bookmark",
+  "sessionId": "session-uuid",
+  "timestamp": "ISO-8601",
+  "isBookmarked": true
+}
+#+end_src
+
+*** Control Flow Messages (WebSocket)
+
+These messages are used in the WebSocket protocol but not stored in session logs:
+
+**** Control Request
+#+begin_src json
+{
+  "type": "control_request",
+  "request_id": "unique-id",
+  "request": {
+    "subtype": "can_use_tool | initialize | interrupt",
+    "tool_name": "string", // for can_use_tool
+    "input": {}            // for can_use_tool
+  }
+}
+#+end_src
+
+**** Control Response
+#+begin_src json
+{
+  "type": "control_response",
+  "response": {
+    "subtype": "success | error",
+    "error": "error message", // for error subtype
+    "request_id": "matching-request-id"
+  }
+}
+#+end_src
+
+**** Result Message
+#+begin_src json
+{
+  "type": "result",
+  "subtype": "success | error_max_turns | error_during_execution",
+  "duration_ms": 0,
+  "duration_api_ms": 0,
+  "is_error": false,
+  "num_turns": 0,
+  "session_id": "session-uuid",
+  "total_cost_usd": 0.0,
+  "usage": {}
+}
+#+end_src
+
+** Message Flow State Machine
+
+#+begin_src mermaid
+stateDiagram-v2
+    [*] --> Summary: Optional
+    Summary --> SessionStart: First user message
+    [*] --> SessionStart: Direct start
+    
+    SessionStart --> User: Initial prompt
+    User --> Assistant: API call
+    
+    Assistant --> ToolUse: Contains tool_use
+    ToolUse --> System: Hook/execution
+    System --> ToolResult: Tool output
+    ToolResult --> Assistant: Continue
+    
+    Assistant --> User: Next turn
+    User --> Result: Max turns/error
+    Assistant --> Result: Completion
+    
+    state Checkpointing {
+        User --> Checkpoint: Save point
+        Assistant --> Checkpoint: Save point
+        Checkpoint --> User: Resume
+        Checkpoint --> Assistant: Resume
+    }
+    
+    state Bookmarking {
+        [*] --> Bookmark: Mark session
+        Bookmark --> [*]
+    }
+    
+    Result --> [*]: Session end
+#+end_src
+
+** Message Constraints and Rules
+
+*** Structural Constraints
+1. **UUID Chains**: Each message has a =uuid= and optional =parentUuid= forming a conversation tree
+2. **Session Consistency**: All messages in a file share the same =sessionId=
+3. **Timestamp Ordering**: Messages are appended chronologically (=timestamp= in ISO-8601)
+4. **First Message**: Usually a summary or user message with =parentUuid: null=
+
+*** Type Transition Rules
+1. **User → Assistant**: Normal conversation flow
+2. **Assistant → System**: Tool execution or hooks
+3. **System → Assistant**: Tool results processed
+4. **Assistant → User**: Awaiting next input
+5. **Any → Checkpoint**: Can checkpoint at any point
+6. **Any → Bookmark**: Can bookmark at any time
+
+*** Special Cases
+1. **Sidechains**: Messages with =isSidechain: true= represent parallel exploration paths
+2. **Meta Messages**: =isMeta: true= indicates internal/system information
+3. **Transcript Only**: =isVisibleInTranscriptOnly: true= for UI-only messages
+4. **Hook Messages**: System messages starting with hook names (SessionStart, PreToolUse, etc.)
+
+** File Operations
+
+*** Reading Session Logs
+#+begin_src javascript
+// Function from archive/pretty/pretty-v1.0.77.js:269961
+async function Sr1(A) {
+  let B = new Map(),  // messages
+      Q = new Map();  // summaries
+  // Read JSONL file line by line
+  // Parse each line as JSON
+  // Build message map and summaries
+  return { messages: B, summaries: Q };
+}
+#+end_src
+
+*** Writing Session Logs
+#+begin_src javascript
+// Function from archive/pretty/pretty-v1.0.77.js:269695
+async appendEntry(A) {
+  if (Y8Q() === "test" || OB()?.cleanupPeriodDays === 0) return;
+  let B = _1();  // fs module
+  if (this.sessionFile === null) {
+    // Create new session file
+    this.sessionFile = uIA(this.sessionId);
+  }
+  // Append JSON line to file
+  B.appendFileSync(this.sessionFile, JSON.stringify(A) + "\n");
+}
+#+end_src
+
+** Session Management
+
+*** Session ID Generation
+- Uses UUID v4 for session IDs
+- Stored globally in the application state
+- Can be overridden with =--session-id= flag
+
+*** Session File Paths
+#+begin_src javascript
+function uIA(A) {  // A = sessionId
+  let B = hN(g91);  // Get projects directory
+  return ji(B, `${A}.jsonl`);  // Join path
+}
+#+end_src
+
+*** Session Cleanup
+- Controlled by =cleanupPeriodDays= setting
+- Sessions older than threshold are automatically deleted
+- Setting to 0 disables logging entirely
+
+** Usage Tracking
+
+Messages include usage information for:
+- Token counts (input, output, cache)
+- Cost calculation (=total_cost_usd=)
+- Performance metrics (=duration_ms=, =duration_api_ms=)
+- Turn counting (=num_turns=)
+- Error tracking (=is_error=)
+
+** Security Considerations
+
+1. **File Permissions**: Session logs inherit directory permissions
+2. **Sensitive Data**: Full conversation content is stored
+3. **Path Hashing**: Project paths are hashed for privacy
+4. **No Encryption**: Files are stored as plaintext JSONL
+5. **Local Storage**: All data remains on user's machine
+
+** Implementation Notes
+
+1. Session logs are append-only during conversation
+2. Atomic writes prevent corruption
+3. Line-based format allows streaming reads
+4. No index files - direct file scanning for history
+5. Summaries stored at file start for quick preview
+6. Bookmarks and checkpoints stored inline with messages

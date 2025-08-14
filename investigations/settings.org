@@ -1,0 +1,127 @@
+#+TITLE: Claude Code Configuration and Settings System
+#+DATE: 2025-08-13
+
+* Configuration Overview
+
+Claude Code uses a multi-layered, rule-based configuration system that provides granular control over tool usage, permissions, and project settings.
+
+* Configuration Hierarchy
+
+Settings are merged in the following order (later overrides earlier):
+1. User Settings (global)
+2. Project Settings (committed to version control)
+3. Local Settings (personal, git-ignored)
+4. Policy Settings (system-wide, cannot be overridden)
+
+* Key Configuration Files
+
+** User Configuration
+- Location: =~/.claude/settings.json=
+- Global preferences across all projects
+- Example use: Default security rules, personal tool restrictions
+
+** Project Configuration
+- Location: =.claude/settings.json=
+- Project-specific settings
+- Committed to version control
+- Shared with team members
+
+** Local Configuration
+- Location: =.claude/settings.local.json=
+- Personal project overrides
+- Git-ignored
+- For individual developer preferences
+
+** Policy Configuration
+- Location: System-specific (varies by OS)
+- Managed/enterprise settings
+- Highest precedence
+- Cannot be overridden by users
+
+* Configuration File Structure
+
+** Rule-Based Permissions
+Configuration uses a flexible rule system to control tool and command usage:
+
+#+begin_src json
+{
+  "rules": [
+    {
+      "ruleType": "tool",
+      "toolName": "Write",
+      "paths": {
+        "allow": ["src/**/*.js", "tests/**/*.js"],
+        "deny": ["node_modules/**", ".env"]
+      }
+    },
+    {
+      "ruleType": "tool", 
+      "toolName": "Bash",
+      "commands": {
+        "allow": ["npm test", "npm run build"],
+        "deny": ["rm -rf", "sudo *"]
+      }
+    }
+  ]
+}
+#+end_src
+
+* Merge Strategy
+
+** Object Merging
+- Deep merge of nested objects
+- Later configurations override earlier ones
+- Policy settings always take precedence
+
+** Array Handling
+- Concatenated and deduplicated
+- Unique entries maintained across layers
+
+* Key Implementation Details
+
+** Configuration Directory
+- Determined by =CLAUDE_CONFIG_DIR= environment variable
+- Defaults to =~/.claude= if not set
+- NO XDG Base Directory specification support
+
+** Caching
+- Merged settings cached in memory
+- Cache invalidated when any settings file changes
+- Performance optimization through in-memory storage
+
+* Undocumented Insights
+
+** Settings Type Detection
+The internal system uses a predefined array for settings types:
+#+begin_src javascript
+var settingsTypes = ["userSettings", "projectSettings", "localSettings", "policySettings"]
+#+end_src
+
+** Configuration Invalidation
+Mechanisms exist to clear and reload settings:
+- =Ks9()= function clears settings cache
+- File watchers monitor configuration files
+
+* Future Potential and Limitations
+
+** Possible Enhancements
+1. Full XDG Base Directory support
+2. More granular permission controls
+3. Dynamic configuration reloading without restart
+4. Enhanced validation and error reporting
+
+** Current Limitations
+- No runtime configuration updates
+- Limited cross-platform configuration
+- Manual migration from legacy config formats
+- Policy settings are static
+
+* Conclusion
+
+Claude Code's configuration system prioritizes:
+- Layered configuration
+- Security through rules
+- Predictable merging behavior
+- Performance through caching
+
+The system provides a flexible, extensible approach to managing tool permissions and project settings across different contexts.

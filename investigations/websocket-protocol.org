@@ -1,0 +1,45 @@
+#+TITLE: Claude Code WebSocket MCP Protocol
+#+DATE: 2025-08-13
+
+* Overview
+
+The WebSocket MCP (Microcompaction Protocol) defines the communication mechanism for Claude Code's server interactions.
+
+* Connection Requirements
+
+** Protocol Specifications
+- Subprotocol: ="mcp"= (mandatory)
+- Localhost binding: =ws://127.0.0.1:<port>/=
+- JSON-RPC 2.0 message format
+- Current protocol version: ="2024-11-05"=
+
+** Security Considerations
+- Localhost-only connection
+- Strict subprotocol enforcement
+- JSON-RPC 2.0 standard compliance
+- Lightweight message format
+
+* Communication Patterns
+
+** Message Types
+- Configuration updates
+- Tool discovery
+- Resource management
+- State synchronization
+
+** Performance Characteristics
+- Low-latency communication
+- Minimal overhead
+- Stateful connection management
+- Efficient context transfer
+
+* Future Potential
+
+- Support for multiple backends
+- Enhanced security mechanisms
+- More granular resource management
+- Potential cloud/distributed support
+
+* Conclusion
+
+The WebSocket MCP protocol provides a robust, secure, and efficient communication mechanism for Claude Code's distributed system architecture.

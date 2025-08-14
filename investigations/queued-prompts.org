@@ -1,0 +1,62 @@
+#+TITLE: Claude Code Queued Prompts Mechanism
+#+DATE: 2025-08-13
+
+* Overview
+
+A recursive continuation loop that processes user messages during long-running assistant tasks, ensuring seamless conversation flow and context preservation.
+
+* Core Design
+
+** Key Innovations
+- Uses =yield*= for generator delegation
+- Avoids traditional stack overflow
+- Maintains conversation context
+- Handles queued messages at natural continuation points
+
+* Technical Architecture
+
+** Generator Delegation Strategy
+- Creates flat iteration chain
+- Prevents traditional stack growth
+- Allows logically deep "recursion" without performance penalty
+- Supports complex, multi-stage interactions
+
+* Conversation Continuation
+
+** Message Processing
+- Recursive turn processing
+- Tool use creates natural continuation points
+- Seamless message injection
+- Efficient memory management
+
+* Safety Mechanisms
+
+- =maxTurns= limit (default 10)
+- Counts only user messages
+- Prevents infinite loops
+- Maintains predictable conversation flow
+
+* Performance Characteristics
+
+- Low memory overhead
+- Minimal computational complexity
+- Adaptive context management
+- Smooth user interaction
+
+* Use Cases
+
+- Long-running tool investigations
+- Complex, multi-step problem solving
+- Maintaining conversation state during extensive computations
+- Handling interrupt-driven interactions
+
+* Future Potential
+
+- Machine learning-based turn optimization
+- More sophisticated continuation strategies
+- Advanced context preservation techniques
+- Dynamic turn limit adjustment
+
+* Conclusion
+
+The queued prompts mechanism represents an innovative approach to managing conversational complexity, ensuring responsive and context-aware interactions.

@@ -1,0 +1,42 @@
+#+TITLE: Claude Code Root Detection and Security
+#+DATE: 2025-08-13
+
+* Overview
+
+A comprehensive security mechanism designed to prevent unauthorized or potentially dangerous system interactions.
+
+* Root Privilege Check
+
+** Detection Mechanisms
+- Only checks on Unix-like systems
+- Prevents running with =--dangerously-skip-permissions= as root
+- Can be bypassed with =IS_SANDBOX=1=
+
+** Security Model
+- No client-side command restrictions
+- Server-side enforcement of sandbox mode
+- Multiple methods to disable or restrict tool usage
+
+* CLAUDE.md Instruction Hierarchy
+
+1. =CLAUDE.local.md= (highest priority, directory-specific)
+2. =CLAUDE.md= (project-wide)
+3. =~/.claude/CLAUDE.md= (global, lowest priority)
+
+* Security Principles
+
+- Protect against unintended system modifications
+- Provide clear, configurable security boundaries
+- Maintain user control while preventing risky operations
+- Transparent security mechanisms
+
+* Potential Improvements
+
+- More granular permission models
+- Enhanced logging for security events
+- Dynamic risk assessment
+- Context-aware security decisions
+
+* Conclusion
+
+The root detection system demonstrates Claude Code's commitment to providing a secure, responsible CLI environment that prioritizes user safety without compromising flexibility.

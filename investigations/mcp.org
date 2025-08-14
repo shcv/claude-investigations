@@ -1,0 +1,82 @@
+#+TITLE: Claude Code MCP (Model Context Protocol) Internals
+#+DATE: 2025-08-13
+
+* Overview
+
+Claude Code implements the Model Context Protocol (MCP) with a focus on manual, explicit resource and tool management. This document consolidates findings about MCP's implementation in v1.0.70.
+
+* Resource Handling
+
+** Key Characteristics
+- **Pull-based model**: Resources are discovered at startup but accessed on-demand
+- **No automatic updates**: Resources require explicit re-fetching
+- **Manual management**: Claude must actively request resource content
+
+** Resource Discovery
+- Prefetched from MCP servers at startup
+- Metadata stored in =mcpResources= object
+- Indexed by server name for efficient lookup
+
+** Key Tools
+1. =ListMcpResourcesTool=
+   - Lists available resources
+   - Optional server-based filtering
+   - Adds server context to resource metadata
+
+2. =ReadMcpResourceTool=
+   - Reads specific resource content
+   - Requires server name and resource URI
+   - Supports various content types (text, images, binary)
+
+** @Mention Support
+Users can reference resources using =@servername:resourceuri= syntax
+- Automatically fetches resource content
+- Includes resource in current context
+
+* Tool Management
+
+** Connection and Discovery
+- Tools fetched **once at connection time**
+- No dynamic updates during session
+- Restart required to see tool changes
+
+** Naming Convention
+- Tools namespaced as =mcp__<server_name>__<tool_name>=
+- Prevents naming conflicts between servers
+
+** Notification Handling
+- Protocol defines =tools/list_changed= notification
+- Current implementation **ignores** these notifications
+- No refresh or update mechanism exists
+
+* Limitations and Design Rationale
+
+** Why Static Approach?
+1. Simplicity in state management
+2. Conversation stability
+3. Predictable tool availability
+4. Performance optimization
+
+** User Implications
+- New tools require a full restart
+- Tool list remains constant during session
+- Removed tools may still appear (but fail when called)
+
+* Future Potential
+
+Possible enhancements:
+1. Implement resource subscriptions
+2. Auto-refresh on notifications
+3. Smart content caching
+4. Automatic context integration
+5. Resource change detection
+
+* Conclusion
+
+Claude Code v1.0.70's MCP implementation prioritizes:
+- Explicit control
+- Simplicity
+- Stability
+- Predictable behavior
+
+Manual resource and tool management ensures no unexpected mid-conversation changes while keeping the system straightforward and performant.

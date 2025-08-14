@@ -1,0 +1,64 @@
+#+TITLE: Claude Code Environment Variables System
+#+DATE: 2025-08-13
+
+* Overview
+
+A comprehensive configuration system providing multi-layered, fine-grained control over Claude Code's behavior.
+
+* Configuration Architecture
+
+** Key Characteristics
+- Multiple layers of configuration
+- Supports various cloud backends (Anthropic, Bedrock, Vertex)
+- Fine-grained feature control
+- Privacy and performance settings
+
+* Environment Variable Layers
+
+1. Global User Configuration
+   - =~/.claude/CLAUDE.md=
+   - Lowest priority
+   - User-wide default settings
+
+2. Project Configuration
+   - =CLAUDE.md=
+   - Project-level overrides
+   - Specific project requirements
+
+3. Local Directory Configuration
+   - =CLAUDE.local.md=
+   - Highest priority
+   - Granular, context-specific settings
+
+* Supported Backends
+
+- Anthropic Claude
+- AWS Bedrock
+- Google Vertex AI
+- Configurable via environment variables
+
+* Key Configuration Variables
+
+- =DISABLE_TELEMETRY=
+- =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=
+- =CLAUDE_CODE_USE_BEDROCK=
+- =CLAUDE_CODE_USE_VERTEX=
+- Performance and privacy toggles
+
+* Design Principles
+
+- Flexibility
+- User control
+- Privacy protection
+- Performance optimization
+
+* Future Potential
+
+- Dynamic configuration
+- Machine learning-based optimization
+- Enhanced backend detection
+- More granular control mechanisms
+
+* Conclusion
+
+The environment variables system provides a powerful, flexible mechanism for configuring Claude Code, prioritizing user choice and system adaptability.

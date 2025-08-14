@@ -1,0 +1,318 @@
+* Claude Code GitHub Actions Feature Analysis
+
+** Overview
+The GitHub Actions feature was introduced in v1.0.79 (with refinements in v1.0.80) to allow Claude Code to integrate directly with GitHub repositories via GitHub Actions workflows. This enables users to tag @claude in issues and PRs to get AI assistance, and set up automated code reviews.
+
+** Command: /install-github-app
+
+*** Purpose
+Sets up Claude Code GitHub Actions for a repository, allowing users to:
+1. Tag @claude in GitHub issues and PR comments for assistance
+2. Enable automated code reviews on new PRs
+3. Run Claude in CI/CD pipelines with custom tools
+
+*** Implementation Details
+Located in =archive/pretty/pretty-v1.0.80.js=:
+- Command handler: =zq8= object at line ~406700
+- React component: =Hq8= function
+- Setup function: =PgB= async function
+
+** Installation Workflow
+
+*** Prerequisites Check
+1. **GitHub CLI Installation**
+   #+begin_src javascript
+   ph1("gh --version", { stdio: "ignore" })
+   #+end_src
+   - Checks if =gh= CLI is installed
+   - Provides installation instructions if missing
+
+2. **GitHub Authentication**
+   #+begin_src javascript
+   ph1("gh auth status -a", { encoding: "utf8" })
+   #+end_src
+   - Verifies GitHub authentication
+   - Requires =repo= and =workflow= scopes
+
+3. **Repository Selection**
+   - Default: Uses current repository if it's a git repo
+   - Alternative: Manual repository selection via input
+
+*** Setup Steps
+
+1. **Check Existing Secrets**
+   - Searches for =ANTHROPIC_API_KEY= in repository secrets
+   - Offers options if secret exists:
+     - Use existing secret
+     - Create new secret with different name
+     - Replace existing secret
+
+2. **API Key Configuration**
+   - Sources (in priority order):
+     1. Existing =ANTHROPIC_API_KEY= environment variable
+     2. API key from settings (=apiKeyHelper=)
+     3. OAuth token from Claude.ai login
+     4. Manual input from user
+
+3. **Workflow Selection**
+   Two workflow types available:
+   - **claude**: Interactive assistant triggered by @claude mentions
+   - **claude-review**: Automated code review on PR creation/updates
+
+4. **File Creation**
+   Creates workflow files in =.github/workflows/=:
+   - =claude.yml= - Interactive assistant workflow
+   - =claude-code-review.yml= - Automated review workflow
+
+5. **Pull Request Creation**
+   - Creates new branch: =add-claude-code-github-workflow=
+   - Commits workflow files
+   - Opens PR with setup instructions
+
+** Workflow Templates
+
+*** Claude Interactive Assistant (claude.yml)
+#+begin_src yaml
+name: Claude Code
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+      actions: read  # Required for reading CI results
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+#+end_src
+
+*** Claude Code Review (claude-code-review.yml)
+#+begin_src yaml
+name: Claude Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+    # Optional: Only run on specific file changes
+    # paths:
+    #   - "src/**/*.ts"
+    #   - "src/**/*.tsx"
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Direct prompt for automated review
+          direct_prompt: |
+            Please review this pull request and provide feedback on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Security concerns
+            - Test coverage
+            
+            Be constructive and helpful in your feedback.
+#+end_src
+
+** Configuration Options
+
+*** Model Selection
+- Default: Claude Sonnet 4
+- Alternative: Claude Opus 4.1 (=claude-opus-4-1-20250805=)
+- Configured via =model= parameter
+
+*** Tool Permissions
+Additional tools can be allowed:
+#+begin_src yaml
+allowed_tools: Bash(npm install),Bash(npm run build),Bash(npm run lint),Bash(npm run test)
+#+end_src
+
+*** Custom Trigger Phrase
+Default trigger is =@claude=, customizable via:
+#+begin_src yaml
+trigger_phrase: "/claude"
+#+end_src
+
+*** Sticky Comments
+For code reviews, reuse same comment on subsequent pushes:
+#+begin_src yaml
+use_sticky_comment: true
+#+end_src
+
+*** Conditional Logic
+Can customize based on:
+- File types
+- Author association (FIRST_TIME_CONTRIBUTOR, etc.)
+- PR labels
+- Branch names
+
+** Prompt Engineering
+
+*** Interactive Assistant (@claude)
+No default prompt - responds to user's message containing @claude
+
+*** Automated Code Review
+Default prompt template:
+#+begin_src text
+Please review this pull request and provide feedback on:
+- Code quality and best practices
+- Potential bugs or issues
+- Performance considerations
+- Security concerns
+- Test coverage
+
+Be constructive and helpful in your feedback.
+#+end_src
+
+Customizable examples:
+1. **File-type specific**:
+   - TypeScript: Type safety and interface usage
+   - API endpoints: Security, validation, error handling
+   - React: Performance, accessibility, best practices
+   - Tests: Coverage, edge cases, quality
+
+2. **Author-based**:
+   - First-time contributors: Encouraging, detailed explanations
+   - Regular contributors: Focus on standards and best practices
+
+** Authentication Methods
+
+*** API Key (Recommended)
+- Stored as GitHub secret: =ANTHROPIC_API_KEY=
+- Can use custom secret name
+- Validated during setup
+
+*** OAuth Token
+- Alternative: =CLAUDE_CODE_OAUTH_TOKEN=
+- Uses Claude.ai authentication
+- Automatically substituted in workflow
+
+** Security Considerations
+
+1. **Secret Management**
+   - API keys stored as GitHub secrets
+   - Never exposed in logs or comments
+   - Scoped to repository
+
+2. **Permissions**
+   - Minimal required permissions
+   - Read-only by default
+   - Write permissions only for comments/PRs
+
+3. **Action Source**
+   - Uses official =anthropics/claude-code-action@beta=
+   - Pinned to specific version recommended
+
+** Telemetry and Analytics
+
+Tracks usage via events:
+- =tengu_setup_github_actions_started=
+- =tengu_setup_github_actions_completed=
+- =tengu_setup_github_actions_failed=
+
+Collected metrics:
+- Selected workflows (claude, claude-review)
+- API key source
+- Repository info (for GitHub Actions environment)
+- Setup success/failure reasons
+
+** Version History
+
+*** v1.0.79 (Initial Release)
+- Added =/install-github-app= command
+- Basic workflow templates
+- GitHub CLI integration
+- API key management
+
+*** v1.0.80 (Improvements)
+- Refined workflow templates
+- Better error handling
+- Enhanced prompts for code review
+- Additional configuration options
+
+** Usage Tips
+
+1. **Start Simple**: Begin with basic @claude mentions before adding automated reviews
+
+2. **Customize Prompts**: Tailor review prompts to your team's standards
+
+3. **Limit Scope**: Use path filters to avoid reviewing generated or vendor files
+
+4. **Tool Permissions**: Only allow necessary tools (tests, linting, etc.)
+
+5. **Monitor Usage**: Check GitHub Actions usage to manage API costs
+
+6. **Iterate**: Refine prompts based on review quality
+
+** Troubleshooting
+
+*** Common Issues
+
+1. **Permission Denied**
+   #+begin_src bash
+   gh auth refresh -h github.com -s repo,workflow
+   #+end_src
+
+2. **API Key Not Found**
+   - Verify secret name matches workflow
+   - Check secret is set at repository level
+
+3. **Workflow Not Triggering**
+   - Verify @claude is in comment
+   - Check workflow permissions
+   - Review if conditions
+
+4. **Rate Limiting**
+   - Use sticky comments for reviews
+   - Limit trigger events
+   - Consider path filters
+
+** External Resources
+
+- Setup Documentation: https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md
+- Action Repository: https://github.com/anthropics/claude-code-action
+- Example Workflows: https://github.com/anthropics/claude-code-action/tree/main/examples
+
+** Implementation Notes
+
+1. **React-based UI**: Interactive setup uses React components with Ink
+2. **GitHub CLI Dependency**: Requires =gh= CLI for API operations
+3. **Automatic PR Creation**: Creates PR with setup instructions
+4. **Stateful Wizard**: Multi-step setup with state management
+5. **Error Recovery**: Graceful handling of missing dependencies

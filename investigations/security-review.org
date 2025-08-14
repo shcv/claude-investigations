@@ -1,0 +1,67 @@
+#+TITLE: Claude Code Security Review Command
+#+DATE: 2025-08-13
+
+* Overview
+
+An advanced security analysis mechanism designed to provide comprehensive, contextual vulnerability detection across codebases.
+
+* Security Analysis Methodology
+
+** Key Stages
+1. Repository context research
+2. Comparative analysis
+3. Vulnerability assessment
+
+** Unique Capabilities
+- Feature flag controlled
+- Enhanced tool permissions
+- Multi-agent orchestration
+- Specialized security prompting
+
+* Vulnerability Detection
+
+** Analysis Techniques
+- Multi-stage vulnerability identification
+- Parallel false-positive filtering
+- Restricted tool environment
+- Read-only code analysis
+
+** Comprehensive Assessment
+- Contextual codebase understanding
+- Comparative security analysis
+- Confidence-based reporting
+- Systematic exclusion of low-confidence findings
+
+* Output Characteristics
+
+** Report Structure
+- Markdown format
+- File and line number references
+- Severity classification
+- Exploit scenarios
+- Remediation recommendations
+
+* Filtering Mechanisms
+
+- Explicit exclusion categories
+- Confidence scoring
+- Signal quality criteria
+- Adaptive detection thresholds
+
+* Security Principles
+
+- Minimal false positives
+- Transparent analysis process
+- Actionable insights
+- Comprehensive coverage
+
+* Future Potential
+
+- Machine learning-enhanced detection
+- Adaptive threat modeling
+- Cross-language vulnerability mapping
+- Predictive security analysis
+
+* Conclusion
+
+The security review command represents a sophisticated, multi-layered approach to code security analysis, prioritizing comprehensive, contextual vulnerability detection.

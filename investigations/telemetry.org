@@ -1,0 +1,46 @@
+#+TITLE: Claude Code Telemetry System
+#+DATE: 2025-08-13
+
+* Overview
+
+This document details the telemetry architecture of Claude Code, focusing on privacy-conscious tracking and system insights.
+
+* Telemetry Architecture
+
+** Provider
+- Platform: Statsig (feature flag and experimentation platform)
+- Endpoint: =https://statsig.anthropic.com/v1/=
+- Privacy-first design with multiple opt-out mechanisms
+
+** Telemetry Events
+
+Events are prefixed with "tengu_" for tracking various system aspects:
+- =tengu_spinner_words= - Custom spinner configuration
+- =tengu_startup_telemetry= - Startup metrics
+- =tengu_config_*= - Configuration changes
+- =tengu_mcp_*= - MCP server interactions
+- =tengu_oauth_*= - Authentication flows
+- =tengu_refusal_*= - Content policy events
+
+* Privacy Controls
+
+Telemetry can be disabled via:
+- =DISABLE_TELEMETRY=true=
+- =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=true=
+- =CLAUDE_CODE_USE_BEDROCK=true=
+- =CLAUDE_CODE_USE_VERTEX=true=
+
+* Key Insights
+
+1. Events are designed to be minimally invasive
+2. Multiple opt-out mechanisms
+3. Support for different cloud backends
+4. Transparent tracking with clear naming conventions
+
+* Conclusion
+
+Claude Code's telemetry system prioritizes:
+- User privacy
+- Minimal data collection
+- Comprehensive system insights
+- Flexible configuration options

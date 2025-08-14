@@ -1,0 +1,35 @@
+#+TITLE: Claude Code Spinner Words System
+#+DATE: 2025-08-13
+
+* Overview
+
+An amusing feature that displays random action verbs during operations, adding a playful touch to CLI interactions.
+
+* System Characteristics
+
+** Word Collection
+- 88 hardcoded default words
+- Can add up to 10 custom words via telemetry
+- Purely random selection using =Math.random()=
+- Memoized to prevent visual flickering
+
+** Design Considerations
+- Entertainment value
+- Visual feedback during long-running tasks
+- Lightweight implementation
+- Customization potential
+
+* Telemetry Integration
+
+Spinner words can be tracked via the =tengu_spinner_words= telemetry event, allowing for potential future analytics and user experience improvements.
+
+* Future Potential
+
+- Machine learning-based word selection
+- Cultural and language-aware spinner words
+- User-defined spinner word lists
+- Performance-based word selection
+
+* Conclusion
+
+The spinner words system demonstrates Claude Code's commitment to creating an engaging, human-centered CLI experience.
