@@ -1,0 +1,360 @@
+#+TITLE: Claude Code Output Styles Investigation
+#+DATE: 2025-08-15
+
+* Executive Summary
+
+Output styles in Claude Code v1.0.81 are a powerful feature that modifies Claude's conversational behavior and response patterns. They work by injecting additional system prompt content that augments or overrides default behavior. The system includes built-in styles ("Explanatory" and "Learning") and supports custom user-defined styles through markdown files with frontmatter.
+
+* How Output Styles Work
+
+** Architecture Overview
+
+Output styles modify Claude's behavior through a layered prompt system:
+
+1. *Base System Prompt*: Core instructions for Claude Code
+2. *Output Style Prompt*: Additional instructions that modify behavior
+3. *Final Merged Prompt*: Combination used for the conversation
+
+** Implementation Details
+
+The output style system (lines 365810-365955) works as follows:
+
+1. Styles are loaded from markdown files in specific directories
+2. The active style is determined from user settings (=outputStyle= field)
+3. The style's prompt content is injected into the system prompt
+4. Claude's behavior changes based on the additional instructions
+
+** Key Components
+
+- =NC0= function (line 365810): Loads custom output styles from markdown files
+- =HZ1= function (line 365935): Merges built-in and custom styles
+- =u8B= function (line 365952): Retrieves the currently active output style
+- =Sm= object (line 365840): Contains built-in style definitions
+
+* Built-in Output Styles
+
+** Default Style
+
+- *Name*: =default=
+- *Behavior*: Standard Claude Code behavior without modifications
+- *Implementation*: Returns =null= for prompt content (no additional instructions)
+
+** Explanatory Style
+
+- *Name*: =Explanatory=
+- *Purpose*: Claude explains implementation choices and codebase patterns
+- *Key Features*:
+  - Provides educational insights about the codebase
+  - Includes "★ Insight" boxes before and after code changes
+  - Balances task completion with educational content
+  - May exceed typical length constraints for educational value
+
+*Prompt Snippet*:
+#+begin_src
+You should be clear and educational, providing helpful explanations 
+while remaining focused on the task. Balance educational content with 
+task completion.
+#+end_src
+
+** Learning Style
+
+- *Name*: =Learning=
+- *Purpose*: Interactive learning through hands-on practice
+- *Key Features*:
+  - Asks users to write 2-10 line code pieces for key decisions
+  - Creates TODO(human) markers in code for user contributions
+  - Focuses on design decisions and business logic
+  - Provides guidance on trade-offs and constraints
+
+*Learn by Doing Format*:
+#+begin_src
+• **Learn by Doing**
+**Context:** [what's built and why this decision matters]
+**Your Task:** [specific function/section in file]
+**Guidance:** [trade-offs and constraints to consider]
+#+end_src
+
+* Custom Output Styles
+
+** File Structure
+
+Custom output styles are markdown files with YAML frontmatter:
+
+#+begin_src markdown
+---
+name: Style Display Name        # Optional, defaults to filename
+description: Brief description   # Optional
+---
+
+# Custom Style Instructions
+
+Your additional system prompt content goes here.
+This will be appended to Claude's base instructions.
+#+end_src
+
+** Storage Locations
+
+Output styles are loaded from three locations in priority order:
+
+1. *User Level*: =~/.claude/output-styles/*.md=
+2. *Project Level*: =.claude/output-styles/*.md=
+3. *Policy Level*: Managed by organization (if applicable)
+
+Priority: User styles override project styles, which override policy styles.
+
+** Loading Process
+
+1. The =Oe= function (line 365747) scans all output style directories
+2. Markdown files are parsed for frontmatter and content
+3. Styles are registered with their name, description, and prompt
+4. Duplicate names are resolved by priority (user > project > policy)
+
+* Creating Custom Output Styles
+
+** Using the output-style-setup Agent
+
+Claude Code includes a specialized agent (line 394900) for creating output styles:
+
+#+begin_src bash
+claude "create an output style that makes responses more concise"
+#+end_src
+
+The agent will:
+1. Understand your requirements
+2. Generate appropriate system prompt modifications
+3. Create a markdown file with proper frontmatter
+4. Save to =~/.claude/output-styles/= by default
+
+** Manual Creation
+
+1. Create a markdown file in =~/.claude/output-styles/=:
+   #+begin_src bash
+   mkdir -p ~/.claude/output-styles
+   touch ~/.claude/output-styles/concise.md
+   #+end_src
+
+2. Add frontmatter and instructions:
+   #+begin_src markdown
+   ---
+   name: Concise
+   description: Brief, focused responses without unnecessary detail
+   ---
+   
+   You are an interactive CLI tool that provides concise, focused responses.
+   
+   # Response Guidelines
+   - Keep explanations brief and to the point
+   - Avoid repetition and unnecessary preamble
+   - Focus on actionable information
+   - Use bullet points for clarity
+   - Limit code comments to essential information only
+   #+end_src
+
+3. Restart Claude Code or reload styles
+
+** Example Custom Styles
+
+*** Code Reviewer Style
+#+begin_src markdown
+---
+name: Code Reviewer
+description: Focuses on code quality, best practices, and potential issues
+---
+
+You are acting as a senior code reviewer. When examining code:
+
+- Point out potential bugs and edge cases
+- Suggest performance optimizations
+- Highlight security concerns
+- Recommend best practices and patterns
+- Explain the "why" behind suggestions
+#+end_src
+
+*** Debugging Assistant Style
+#+begin_src markdown
+---
+name: Debugging Assistant
+description: Systematic approach to finding and fixing bugs
+---
+
+You are a debugging specialist. For every issue:
+
+1. First understand the expected vs actual behavior
+2. Add strategic logging/debugging statements
+3. Trace execution flow systematically
+4. Identify root causes, not just symptoms
+5. Verify fixes with appropriate tests
+#+end_src
+
+*** Documentation Writer Style
+#+begin_src markdown
+---
+name: Documentation Writer
+description: Focuses on clear documentation and examples
+---
+
+You prioritize documentation and clarity:
+
+- Write comprehensive docstrings for all functions
+- Include usage examples in comments
+- Create README sections for new features
+- Explain complex logic with inline comments
+- Generate API documentation automatically
+#+end_src
+
+* Configuration and Management
+
+** Setting the Active Style
+
+The active output style is configured in user settings (=~/.claude/settings.json=):
+
+#+begin_src json
+{
+  "outputStyle": "Explanatory"
+}
+#+end_src
+
+** Changing Styles at Runtime
+
+Use the =/output-style= command to change styles during a session:
+
+#+begin_src
+/output-style
+#+end_src
+
+This will present a menu of available styles to choose from.
+
+** Listing Available Styles
+
+All available styles are discovered automatically from:
+- Built-in styles (=default=, =Explanatory=, =Learning=)
+- User custom styles in =~/.claude/output-styles/=
+- Project styles in =.claude/output-styles/=
+- Policy styles (if configured by organization)
+
+* Technical Implementation
+
+** Style Loading Flow
+
+1. *Initialization* (line 365810-365827):
+   - =NC0= function loads all markdown files from style directories
+   - Parses frontmatter for metadata
+   - Extracts prompt content from markdown body
+
+2. *Style Merging* (line 365935-365950):
+   - =HZ1= function creates style registry
+   - Starts with built-in styles from =Sm= object
+   - Overlays custom styles by priority order
+   - Returns complete style dictionary
+
+3. *Style Selection* (line 365952-365954):
+   - =u8B= function reads =outputStyle= from user settings
+   - Defaults to "default" if not specified
+   - Returns style object or =null= if not found
+
+4. *Prompt Integration* (line 412403-412406):
+   - Style prompt is retrieved during system prompt generation
+   - Appended to base system instructions
+   - Affects all subsequent Claude responses
+
+** File Format Schema
+
+While not explicitly defined, the implicit schema is:
+
+#+begin_src yaml
+# Frontmatter (optional)
+name: string          # Display name for the style
+description: string   # Brief description of the style's purpose
+
+# Body (required)
+# Markdown content that becomes the additional system prompt
+#+end_src
+
+** Cache Management
+
+- Styles are cached using the =EA= (memoization) wrapper
+- Cache is cleared when styles are modified
+- =h8B= function (line 365828) clears the style cache
+
+* Advanced Features
+
+** Style-Specific Tool Restrictions
+
+While not implemented in v1.0.81, the architecture supports potential features like:
+
+- Limiting available tools per style
+- Modifying tool behavior based on active style
+- Style-specific command availability
+
+** Conditional Style Content
+
+Styles can include conditional instructions based on:
+- Current project type
+- Available tools
+- User preferences
+- Task context
+
+** Style Composition
+
+Advanced users can create styles that reference common patterns:
+
+#+begin_src markdown
+---
+name: Composite Style
+---
+
+${existing_style_patterns}
+
+Additional custom instructions...
+#+end_src
+
+* Limitations and Considerations
+
+** Current Limitations
+
+1. *No Style Inheritance*: Styles cannot extend other styles
+2. *No Dynamic Variables*: Limited template variable support
+3. *Single Active Style*: Cannot combine multiple styles simultaneously
+4. *No Validation*: No schema validation for style content
+5. *Manual Reload*: Changes require session restart or manual reload
+
+** Best Practices
+
+1. *Keep Styles Focused*: Each style should have a clear, single purpose
+2. *Test Thoroughly*: Verify style behavior before relying on it
+3. *Document Intent*: Use clear descriptions in frontmatter
+4. *Avoid Conflicts*: Don't contradict base system instructions
+5. *Version Control*: Track custom styles in git for team sharing
+
+** Security Considerations
+
+- Styles can significantly alter Claude's behavior
+- Project-level styles affect all team members
+- No sandboxing or permission system for styles
+- Malicious styles could compromise output quality
+
+* Future Potential
+
+** Possible Enhancements
+
+1. *Style Marketplace*: Share and discover community styles
+2. *Style Inheritance*: Build styles that extend others
+3. *Dynamic Styles*: Context-aware style switching
+4. *Style Validation*: Schema validation and linting
+5. *Style Preview*: Test styles before activation
+6. *Multi-Style Support*: Combine multiple styles
+7. *Style Parameters*: Configurable style variables
+8. *IDE Integration*: VS Code style picker
+
+** Integration Opportunities
+
+- Integration with project templates
+- Automatic style selection based on file type
+- Style recommendations based on task
+- Team style standards and enforcement
+
+* Conclusion
+
+The output styles system in Claude Code v1.0.81 provides a powerful mechanism for customizing Claude's behavior without modifying core code. Through simple markdown files with frontmatter, users can create specialized interaction patterns tailored to specific workflows. While the current implementation has limitations, the foundation is solid for future enhancements that could make output styles a key differentiator for Claude Code as a development assistant.
+
+The system elegantly balances simplicity (markdown-based definitions) with power (complete behavior modification), making it accessible to users while providing deep customization capabilities for advanced use cases.
