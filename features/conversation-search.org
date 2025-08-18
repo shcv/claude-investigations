@@ -14,7 +14,7 @@ to conversation history.
 :PROPERTIES:
 :CUSTOM_ID: available-tools
 :END:
-*** 1. conversation_search
+*** 1. =conversation_search=
 :PROPERTIES:
 :CUSTOM_ID: conversation_search
 :END:
@@ -26,7 +26,7 @@ discussion") or when users reference previous conversations
 *Arguments*: - =query= (required): Keywords to search with -
 =max_results= (optional): Number of results (1-10, default: 5)
 
-*** 2. recent_chats
+*** 2. =recent_chats=
 :PROPERTIES:
 :CUSTOM_ID: recent_chats
 :END:
@@ -200,7 +200,7 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 :PROPERTIES:
 :CUSTOM_ID: complete-tool-schemas
 :END:
-*** conversation_search Schema
+*** =conversation_search= Schema
 :PROPERTIES:
 :CUSTOM_ID: conversation_search-schema
 :END:
@@ -231,7 +231,7 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 }
 #+end_example
 
-*** recent_chats Schema
+*** =recent_chats= Schema
 :PROPERTIES:
 :CUSTOM_ID: recent_chats-schema
 :END:
