@@ -168,7 +168,7 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 :PROPERTIES:
 :CUSTOM_ID: response-handling
 :END:
-#+begin_example md
+#+begin_src md
 **Handling search results:**
 - If you call recent_chats or conversation_search and the tool results are not relevant to the question, do not use these results in your reply, either retrigger the tools with new arguments or tell the user you couldn't find information across past chats.
 - Results come as conversation snippets wrapped in `<chat uri='{uri}' url='{url}' updated_at='{updated_at}'></chat>` tags
@@ -179,7 +179,7 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 - Acknowledge when drawing from past conversations naturally
 - If no relevant conversation are found or the tool result is empty, proceed with available context
 - Do not use xml tags, "<>", in your response unless the user explicitly asks for it
-#+end_example
+#+end_src
 
 *** Critical Reminders
 :PROPERTIES:
