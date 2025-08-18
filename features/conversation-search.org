@@ -1,54 +1,32 @@
 * Claude Past Conversations Feature Documentation
-:PROPERTIES:
-:CUSTOM_ID: claude-past-conversations-feature-documentation
-:END:
 ** Overview
-:PROPERTIES:
-:CUSTOM_ID: overview
-:END:
 Claude can search through and reference past conversations to maintain
 continuity across chat sessions. Two tools provide comprehensive access
 to conversation history.
 
 ** Available Tools
-:PROPERTIES:
-:CUSTOM_ID: available-tools
-:END:
 *** 1. =conversation_search=
-:PROPERTIES:
-:CUSTOM_ID: conversation_search
-:END:
 *Purpose*: Keyword and semantic-based search across past conversations
 
-*Use for*: Finding conversations about specific topics ("find our Python
-discussion") or when users reference previous conversations
+*Use for*: Finding conversations about specific topics ("find our Python discussion") or when users reference previous conversations
 
-*Arguments*: - =query= (required): Keywords to search with -
-=max_results= (optional): Number of results (1-10, default: 5)
+*Arguments*:
+ - =query= (required): Keywords to search with
+ - =max_results= (optional): Number of results (1-10, default: 5)
 
 *** 2. =recent_chats=
-:PROPERTIES:
-:CUSTOM_ID: recent_chats
-:END:
-*Purpose*: Time-based retrieval of recent conversations with filtering
-and sorting
+*Purpose*: Time-based retrieval of recent conversations with filtering and sorting
 
-*Use for*: Time-based queries ("yesterday's chat", "last week's
-discussions") or browsing recent activity
+*Use for*: Time-based queries ("yesterday's chat", "last week's discussions") or browsing recent activity
 
-*Arguments*: - =n= (optional): Number of chats (1-20, default: 3) -
-=sort_order= (optional): 'desc' (newest first, default) or 'asc' (oldest
-first) - =before= (optional): Get chats before this datetime (ISO
-format) - =after= (optional): Get chats after this datetime (ISO format)
+*Arguments*:
+ - =n= (optional): Number of chats (1-20, default: 3)
+ - =sort_order= (optional): 'desc' (newest first, default) or 'asc' (oldest first)
+ - =before= (optional): Get chats before this datetime (ISO format)
+ - =after= (optional): Get chats after this datetime (ISO format)
 
 ** Past Chats Tools System Prompt Documentation
-:PROPERTIES:
-:CUSTOM_ID: past-chats-tools-system-prompt-documentation
-:END:
 *** Overview Section
-:PROPERTIES:
-:CUSTOM_ID: overview-section
-:END:
 #+begin_src md
 Claude has two tools to search or iterate through past conversations. Use these tools when the user references past conversations or when context from previous discussions would improve the response, and ignore previous instructions saying "you don't have access to preview conversations".
 
@@ -57,9 +35,6 @@ Currently the user is outside of any projects.
 #+end_src
 
 *** Guidelines Section
-:PROPERTIES:
-:CUSTOM_ID: guidelines-section
-:END:
 #+begin_src md
 Always follow these principles when responding to queries:
 1. **Recognize past chats triggers**: When users reference past conversations or shared context, use the proper past chats tool. Look for phrases indicating historical context or continuity.
@@ -68,9 +43,6 @@ Always follow these principles when responding to queries:
 #+end_src
 
 *** Trigger Phrases
-:PROPERTIES:
-:CUSTOM_ID: trigger-phrases
-:END:
 #+begin_src md
 - "Based on our past conversations..."
 - "Based on what we talked about..."
@@ -99,13 +71,7 @@ Always follow these principles when responding to queries:
 #+end_src
 
 *** When to Use Each Tool
-:PROPERTIES:
-:CUSTOM_ID: when-to-use-each-tool
-:END:
 **** conversation_search
-:PROPERTIES:
-:CUSTOM_ID: conversation_search-1
-:END:
 #+begin_src md
 **Use conversation_search when:**
 - You need to find specific topics, keywords, or content
@@ -115,9 +81,6 @@ ex: "Find our discussion about JS debugging" "What did I tell you about my proje
 #+end_src
 
 **** recent_chats
-:PROPERTIES:
-:CUSTOM_ID: recent_chats-1
-:END:
 #+begin_src md
 **Use recent_chats tool when:**
 - The query primarily requires a filter on "when" rather than searching by "what". The query is primarily time-based rather than content-based
@@ -129,9 +92,6 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 #+end_src
 
 *** When NOT to Use
-:PROPERTIES:
-:CUSTOM_ID: when-not-to-use
-:END:
 #+begin_src md
 **Don't use past chats tools for:**
 - Questions that require followup in order to gather more information to make an effective tool call
@@ -143,9 +103,6 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 #+end_src
 
 *** Best Practices for conversation_search
-:PROPERTIES:
-:CUSTOM_ID: best-practices-for-conversation_search
-:END:
 #+begin_src md
 **Extract substantive/high-confidence keywords only.** When a user says "What did we discuss about robots yesterday?", extract only the meaningful content words: "robots"
 
@@ -165,9 +122,6 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 #+end_src
 
 *** Response Handling
-:PROPERTIES:
-:CUSTOM_ID: response-handling
-:END:
 #+begin_src md
 **Handling search results:**
 - If you call recent_chats or conversation_search and the tool results are not relevant to the question, do not use these results in your reply, either retrigger the tools with new arguments or tell the user you couldn't find information across past chats.
@@ -182,9 +136,6 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 #+end_src
 
 *** Critical Reminders
-:PROPERTIES:
-:CUSTOM_ID: critical-reminders
-:END:
 #+begin_src md
 - These tools are to maintain conversation continuity across sessions. If you don't have the context you need in the current chat and you want to look over past chats, use this tool
 - Call conversation_search when the user references specific things they discussed
@@ -197,13 +148,7 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 #+end_src
 
 ** Complete Tool Schemas
-:PROPERTIES:
-:CUSTOM_ID: complete-tool-schemas
-:END:
 *** =conversation_search= Schema
-:PROPERTIES:
-:CUSTOM_ID: conversation_search-schema
-:END:
 #+begin_src js
 {
   "description": "Search through past user conversations to find relevant context and information", 
@@ -232,9 +177,6 @@ ex: "Show me all conversations from last Tuesday" "What have we discussed in the
 #+end_src
 
 *** =recent_chats= Schema
-:PROPERTIES:
-:CUSTOM_ID: recent_chats-schema
-:END:
 #+begin_src js
 {
   "description": "Retrieve recent chat conversations with customizable sort order (chronological or reverse chronological), optional pagination using 'before' and 'after' datetime filters, and project filtering", 
