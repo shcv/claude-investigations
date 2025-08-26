@@ -1,64 +1,284 @@
-#+TITLE: Claude Code Environment Variables System
-#+DATE: 2025-08-13
+#+TITLE: Claude Code Environment Variables Reference
+#+DATE: 2025-08-26
 
 * Overview
 
-A comprehensive configuration system providing multi-layered, fine-grained control over Claude Code's behavior.
+Claude Code uses over 100 environment variables to control its behavior, providing comprehensive configuration across authentication, model selection, cloud providers, networking, debugging, and privacy settings. This reference documents all environment variables that influence Claude Code's operation.
 
-* Configuration Architecture
+* Claude Code Specific Variables (CLAUDE_CODE_*)
 
-** Key Characteristics
-- Multiple layers of configuration
-- Supports various cloud backends (Anthropic, Bedrock, Vertex)
-- Fine-grained feature control
-- Privacy and performance settings
+** Core Configuration
+- =CLAUDE_CONFIG_DIR= :: Sets custom configuration directory (default: ~/.claude)
+- =CLAUDE_CODE_SUBAGENT_MODEL= :: Override model for subagent tasks
+- =CLAUDE_CODE_MAX_OUTPUT_TOKENS= :: Maximum tokens in responses (default: 32000)
+- =CLAUDE_CODE_SHELL_PREFIX= :: Prepends commands to shell executions
+- =CLAUDE_CODE_EXTRA_BODY= :: Adds custom JSON to API requests
+- =CLAUDE_CODE_MAX_RETRIES= :: Sets maximum API retry attempts
 
-* Environment Variable Layers
+** Backend Selection
+- =CLAUDE_CODE_USE_BEDROCK= :: Enables AWS Bedrock backend
+- =CLAUDE_CODE_USE_VERTEX= :: Enables Google Vertex AI backend
+- =CLAUDE_CODE_SKIP_BEDROCK_AUTH= :: Skip Bedrock authentication
+- =CLAUDE_CODE_SKIP_VERTEX_AUTH= :: Skip Vertex authentication
 
-1. Global User Configuration
-   - =~/.claude/CLAUDE.md=
-   - Lowest priority
-   - User-wide default settings
+** Privacy and Performance
+- =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC= :: Disables telemetry/updates
+- =CLAUDE_CODE_DISABLE_FINE_GRAINED_TOOL_STREAMING= :: Disables fine-grained streaming
+- =CLAUDE_CODE_DISABLE_COMMAND_INJECTION_CHECK= :: Disables command safety checks
+- =CLAUDE_CODE_DISABLE_TERMINAL_TITLE= :: Prevents terminal title updates
+- =CLAUDE_CODE_DONT_INHERIT_ENV= :: Prevents environment inheritance in subprocesses
 
-2. Project Configuration
-   - =CLAUDE.md=
-   - Project-level overrides
-   - Specific project requirements
+** Windows Specific
+- =CLAUDE_CODE_GIT_BASH_PATH= :: Windows path to bash.exe
 
-3. Local Directory Configuration
-   - =CLAUDE.local.md=
-   - Highest priority
-   - Granular, context-specific settings
+** Authentication
+- =CLAUDE_CODE_OAUTH_TOKEN= :: OAuth token for authentication
+- =CLAUDE_CODE_SESSION_ACCESS_TOKEN= :: Session-based authentication
+- =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR= :: WebSocket auth via file descriptor
+- =CLAUDE_CODE_API_KEY_HELPER_TTL_MS= :: API key helper TTL configuration
 
-* Supported Backends
+** Mutual TLS (mTLS)
+- =CLAUDE_CODE_CLIENT_CERT= :: Path to client certificate file
+- =CLAUDE_CODE_CLIENT_KEY= :: Path to client key file
+- =CLAUDE_CODE_CLIENT_KEY_PASSPHRASE= :: Passphrase for client key
 
-- Anthropic Claude
-- AWS Bedrock
-- Google Vertex AI
-- Configurable via environment variables
+* Anthropic API Configuration (ANTHROPIC_*)
 
-* Key Configuration Variables
+** Authentication
+- =ANTHROPIC_API_KEY= :: Primary API key authentication
+- =ANTHROPIC_AUTH_TOKEN= :: Bearer token authentication
 
-- =DISABLE_TELEMETRY=
-- =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=
-- =CLAUDE_CODE_USE_BEDROCK=
-- =CLAUDE_CODE_USE_VERTEX=
-- Performance and privacy toggles
+** Model Selection
+- =ANTHROPIC_MODEL= :: Override the default model
+- =ANTHROPIC_SMALL_FAST_MODEL= :: Set the fast/small model
+- =ANTHROPIC_DEFAULT_SONNET_MODEL= :: Default Sonnet model override
+- =ANTHROPIC_DEFAULT_OPUS_MODEL= :: Default Opus model override
 
-* Design Principles
+** API Configuration
+- =ANTHROPIC_BASE_URL= :: Override API base URL
+- =ANTHROPIC_CUSTOM_HEADERS= :: Custom HTTP headers
+- =ANTHROPIC_LOG= :: API logging level
+- =ANTHROPIC_BETAS= :: Enable beta features (comma-separated)
 
-- Flexibility
-- User control
-- Privacy protection
-- Performance optimization
+** Region-Specific Model Configuration
+- =ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION= :: Region for fast model
+- =ANTHROPIC_VERTEX_PROJECT_ID= :: Vertex AI project ID
 
-* Future Potential
+* AWS Bedrock Configuration
 
-- Dynamic configuration
-- Machine learning-based optimization
-- Enhanced backend detection
-- More granular control mechanisms
+** Authentication
+- =AWS_ACCESS_KEY_ID= :: AWS access key
+- =AWS_SECRET_ACCESS_KEY= :: AWS secret key
+- =AWS_SESSION_TOKEN= :: AWS session token
+- =AWS_PROFILE= :: AWS profile selection
+- =AWS_BEARER_TOKEN_BEDROCK= :: Bearer token for Bedrock
+
+** Region Configuration
+- =AWS_REGION= :: Primary AWS region
+- =AWS_DEFAULT_REGION= :: Default AWS region fallback
+
+* Google Cloud Vertex AI Configuration
+
+** Authentication
+- =GOOGLE_APPLICATION_CREDENTIALS= :: GCP credentials file path
+- =google_application_credentials= :: Alternative credentials path
+
+** Project Configuration
+- =GCLOUD_PROJECT= :: GCP project ID
+- =GOOGLE_CLOUD_PROJECT= :: Alternative project ID variable
+- =GOOGLE_CLOUD_QUOTA_PROJECT= :: Quota project for billing
+- =CLOUD_ML_REGION= :: Vertex AI region (default: us-east5)
+
+** Model Regions
+- =VERTEX_REGION_CLAUDE_3_5_HAIKU= :: Region for Haiku model
+- =VERTEX_REGION_CLAUDE_3_5_SONNET= :: Region for Sonnet 3.5
+- =VERTEX_REGION_CLAUDE_3_7_SONNET= :: Region for Sonnet 3.7
+- =VERTEX_REGION_CLAUDE_4_1_OPUS= :: Region for Opus 4.1
+- =VERTEX_REGION_CLAUDE_4_0_OPUS= :: Region for Opus 4.0
+- =VERTEX_REGION_CLAUDE_4_0_SONNET= :: Region for Sonnet 4.0
+
+* Proxy and Network Configuration
+
+** HTTP Proxy Settings
+- =https_proxy= / =HTTPS_PROXY= :: HTTPS proxy server
+- =http_proxy= / =HTTP_PROXY= :: HTTP proxy server
+- =no_proxy= / =NO_PROXY= :: Proxy exclusion list
+- =grpc_proxy= :: gRPC specific proxy
+- =no_grpc_proxy= :: gRPC proxy exclusions
+
+** npm Proxy Configuration
+- =npm_config_proxy= :: npm-specific proxy configuration
+- =npm_config_https_proxy= :: npm-specific HTTPS proxy
+- =npm_config_no_proxy= :: npm-specific bypass list
+
+** Additional Network
+- =NODE_EXTRA_CA_CERTS= :: Additional CA certificates
+
+* Debugging and Development
+
+** Debug Configuration
+- =DEBUG= :: Debug logging configuration for various modules
+- =CLAUDE_DEBUG= :: Claude-specific debug mode
+- =NODE_DEBUG= :: Node.js internal debug output
+- =DEV= :: Development mode flag
+
+** Performance Monitoring
+- =NODE_V8_COVERAGE= :: Enable V8 code coverage collection
+
+* Terminal and IDE Detection
+
+** Terminal Identification
+- =TERM= :: Terminal type identification
+- =TERM_PROGRAM= :: Specific terminal program
+- =TERMINAL_EMULATOR= :: JetBrains IDE detection
+- =CURSOR_TRACE_ID= :: Cursor IDE detection
+- =VSCODE_GIT_ASKPASS_MAIN= :: VS Code/Cursor/Windsurf detection
+
+** Terminal Features
+- =FORCE_COLOR= :: Force color output (values: "true", "false", or 0-3 for color levels)
+- =NO_COLOR= :: Disable all color output when set
+- =COLORTERM= :: Color terminal indicator
+
+** Environment Detection
+- =WSL_DISTRO_NAME= :: WSL distribution name
+- =SSH_CONNECTION= / =SSH_CLIENT= / =SSH_TTY= :: SSH session detection
+- =CI= :: Continuous Integration environment detection
+
+* Shell and Command Configuration
+
+** Bash Configuration
+- =BASH_DEFAULT_TIMEOUT_MS= :: Default bash command timeout
+- =BASH_MAX_TIMEOUT_MS= :: Maximum bash command timeout
+- =BASH_MAX_OUTPUT_LENGTH= :: Maximum output length
+- =CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR= :: Maintain working directory
+
+** Shell Selection
+- =SHELL= :: Default shell selection
+- =PATH= :: System path variable
+- =ZDOTDIR= :: Zsh configuration directory
+
+* Privacy and Telemetry Controls
+
+** Master Switches
+- =DISABLE_TELEMETRY= :: Disable all telemetry
+- =DISABLE_ERROR_REPORTING= :: Disable error reporting
+- =DISABLE_AUTOUPDATER= :: Disable auto-updates
+- =DISABLE_COST_WARNINGS= :: Disable cost warnings
+
+** Sentry Error Tracking
+- =SENTRY_DSN= :: Data Source Name for Sentry error reporting
+- =SENTRY_ENVIRONMENT= :: Environment name (production, staging, etc.)
+- =SENTRY_RELEASE= :: Release version identifier
+- =SENTRY_TRACES_SAMPLE_RATE= :: Performance monitoring sample rate
+- =SENTRY_USE_ENVIRONMENT= :: Enable environment detection
+- =SENTRY_TRACE= :: Distributed tracing header
+- =SENTRY_BAGGAGE= :: Additional tracing metadata
+
+* Platform Integration
+
+** GitHub Actions
+- =GITHUB_ACTIONS= :: Detect GitHub Actions environment
+- =GITHUB_ACTOR= / =GITHUB_ACTOR_ID= :: GitHub user information
+- =GITHUB_REPOSITORY= / =GITHUB_REPOSITORY_ID= :: Repository information
+- =GITHUB_REPOSITORY_OWNER= / =GITHUB_REPOSITORY_OWNER_ID= :: Owner information
+- =GITHUB_EVENT_NAME= :: GitHub Actions event type
+- =GITHUB_ACTION_PATH= :: Action path
+- =RUNNER_ENVIRONMENT= / =RUNNER_OS= :: Runner information
+
+** SWE-Bench Integration
+- =SWE_BENCH_RUN_ID= :: SWE-Bench run identifier
+- =SWE_BENCH_INSTANCE_ID= :: Instance identifier
+- =SWE_BENCH_TASK_ID= :: Task identifier
+
+* Cloud Platform Detection
+
+** Major Cloud Providers
+- =AWS_EXECUTION_ENV= :: AWS execution environment
+- =GAE_SERVICE= :: Google App Engine service
+- =FUNCTION_NAME= :: Google Cloud Functions
+- =K_SERVICE= :: Knative service
+- =WEBSITE_SITE_NAME= :: Azure App Service
+- =REGION_NAME= :: Azure region
+
+** Platform Services
+- =VERCEL= / =VERCEL_REGION= :: Vercel deployment
+- =NETLIFY= :: Netlify deployment
+- =FLY_REGION= :: Fly.io region
+- =DYNO= :: Heroku dyno
+- =ALIYUN_REGION_ID= :: Alibaba Cloud region
+- =TENCENTCLOUD_REGION= :: Tencent Cloud region
+- =IBM_CLOUD_REGION= :: IBM Cloud region
+
+* Third-Party Library Configuration
+
+** WebSocket Library
+- =WS_NO_BUFFER_UTIL= :: Disable optional bufferutil dependency
+- =WS_NO_UTF_8_VALIDATE= :: Disable optional utf-8-validate dependency
+
+** Image Processing (Sharp)
+- =npm_package_config_libvips= :: Custom libvips location
+- =PKG_CONFIG_PATH= :: Package configuration path
+- =SHARP_IGNORE_GLOBAL_LIBVIPS= :: Ignore system libvips
+- =SHARP_FORCE_GLOBAL_LIBVIPS= :: Force use of system libvips
+
+** HTTP Client Configuration
+- =UNDICI_NO_FG= :: Undici HTTP client configuration
+
+** Testing and Development
+- =JEST_WORKER_ID= :: Jest test runner detection
+- =TEST_GRACEFUL_FS_GLOBAL_PATCH= :: Graceful-fs testing
+- =CIRCLECI= / =GITLAB_CI= :: Specific CI platforms
+- =TEAMCITY_VERSION= :: TeamCity CI detection
+
+* System Environment Variables
+
+** File System
+- =HOME= / =APPDATA= :: User home directory locations
+- =SYSTEMROOT= :: Windows system directory
+- =PATHEXT= :: Windows executable extensions
+
+** System Detection
+- =OSTYPE= :: Operating system type detection
+- =comspec= :: Windows command interpreter
+
+** Version Control
+- =GITHUB_SHA= / =COMMIT_REF= :: Git commit identifiers
+- =CF_PAGES_COMMIT_SHA= :: Cloudflare Pages commit
+
+* Best Practices
+
+** Security Considerations
+- Use mTLS variables for enterprise security
+- Enable command injection protection (default enabled)
+- Configure proxy settings for corporate environments
+- Use authentication tokens instead of API keys when possible
+
+** Performance Optimization
+- Set appropriate timeout values for bash commands
+- Configure output length limits to prevent memory issues
+- Use regional model endpoints to reduce latency
+- Disable unnecessary features in production environments
+
+** Privacy Protection
+- Use =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC= to disable all telemetry
+- Configure specific telemetry controls for granular privacy
+- Disable auto-updates in secure environments
+- Use local authentication methods when available
+
+* Configuration Priority
+
+Environment variables follow this precedence order:
+1. Local environment variables (highest priority)
+2. Shell-specific configuration
+3. System-wide environment settings
+4. Application defaults (lowest priority)
+
+Multiple authentication methods coexist with this precedence:
+1. OAuth tokens
+2. Session access tokens  
+3. API keys
+4. Bearer tokens
 
 * Conclusion
 
-The environment variables system provides a powerful, flexible mechanism for configuring Claude Code, prioritizing user choice and system adaptability.
+Claude Code's environment variable system provides comprehensive control over authentication, backends, networking, debugging, privacy, and platform integration. With over 100 variables, users can precisely configure Claude Code for any deployment scenario, from local development to enterprise production environments.
