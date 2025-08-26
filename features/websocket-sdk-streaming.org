@@ -1,0 +1,575 @@
+#+TITLE: WebSocket SDK Streaming Interface
+#+DATE: 2025-08-20
+
+* Overview
+
+The WebSocket SDK streaming interface provides a persistent, bidirectional communication channel between Claude Code and SDK servers. Introduced in version 1.0.77, this feature enables real-time streaming interactions with automatic reconnection, message buffering, and exactly-once delivery semantics.
+
+* Key Features
+
+** Persistent Connections
+- Maintains long-lived WebSocket connections to SDK servers
+- Supports both =ws://= and =wss://= protocols
+- Bearer token authentication for secure connections
+
+** Resilient Communication
+- Automatic reconnection with exponential backoff (up to 5 attempts)
+- 1000-message circular buffer for offline queuing
+- UUID-based message tracking and replay after disconnection
+- Graceful handling of temporary network interruptions
+
+** Stream-JSON Format
+- Newline-delimited JSON (NDJSON) for message serialization
+- Bidirectional streaming for real-time request/response
+- Compatible with Claude's SDK protocol specification
+
+* Installation & Requirements
+
+** Version Requirements
+- Claude Code v1.0.77 or later for basic WebSocket support
+- Claude Code v1.0.78+ for enhanced security features (file descriptor authentication)
+
+** Required Flags
+When using =--sdk-url=, the following flags are mandatory:
+- =--input-format=stream-json=
+- =--output-format=stream-json=
+
+* Usage
+
+** Basic Connection
+
+*** Environment Variable Authentication
+#+BEGIN_SRC bash
+# Set authentication token
+export CLAUDE_CODE_SESSION_ACCESS_TOKEN="your-token-here"
+
+# Connect to WebSocket SDK server
+claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
+       --input-format=stream-json \
+       --output-format=stream-json
+#+END_SRC
+
+*** File Descriptor Authentication (v1.0.78+)
+More secure method that prevents token exposure in process listings:
+
+#+BEGIN_SRC bash
+# Pass token through file descriptor
+export CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR=3
+exec 3< <(echo "your-token-here")
+
+claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
+       --input-format=stream-json \
+       --output-format=stream-json
+#+END_SRC
+
+** Local Development Server
+#+BEGIN_SRC bash
+# Connect to local WebSocket server (no TLS)
+claude --sdk-url=ws://localhost:8080/sdk \
+       --input-format=stream-json \
+       --output-format=stream-json
+#+END_SRC
+
+** Programmatic Usage
+
+*** Node.js Example
+#+BEGIN_SRC javascript
+const { spawn } = require('child_process');
+const readline = require('readline');
+
+// Start Claude Code with WebSocket SDK
+const claude = spawn('claude', [
+  '--sdk-url=wss://api.claude.ai/sdk/v1/connect',
+  '--input-format=stream-json',
+  '--output-format=stream-json'
+], {
+  env: {
+    ...process.env,
+    CLAUDE_CODE_SESSION_ACCESS_TOKEN: 'your-token-here'
+  }
+});
+
+// Create interface for reading responses
+const rl = readline.createInterface({
+  input: claude.stdout
+});
+
+// Handle streaming responses
+rl.on('line', (line) => {
+  try {
+    const message = JSON.parse(line);
+    console.log('Received:', message);
+  } catch (e) {
+    console.error('Invalid JSON:', line);
+  }
+});
+
+// Send a message
+const request = {
+  type: 'user',
+  uuid: crypto.randomUUID(),
+  message: {
+    role: 'user',
+    content: 'Hello, Claude!'
+  }
+};
+
+claude.stdin.write(JSON.stringify(request) + '\n');
+#+END_SRC
+
+*** Python Example
+#+BEGIN_SRC python
+import subprocess
+import json
+import uuid
+import os
+
+# Start Claude Code with WebSocket SDK
+env = os.environ.copy()
+env['CLAUDE_CODE_SESSION_ACCESS_TOKEN'] = 'your-token-here'
+
+process = subprocess.Popen([
+    'claude',
+    '--sdk-url=wss://api.claude.ai/sdk/v1/connect',
+    '--input-format=stream-json',
+    '--output-format=stream-json'
+], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+   stderr=subprocess.PIPE, text=True, env=env)
+
+# Send a message
+request = {
+    'type': 'user',
+    'uuid': str(uuid.uuid4()),
+    'message': {
+        'role': 'user',
+        'content': 'Explain quantum computing'
+    }
+}
+
+process.stdin.write(json.dumps(request) + '\n')
+process.stdin.flush()
+
+# Read streaming responses
+for line in iter(process.stdout.readline, ''):
+    if line:
+        try:
+            message = json.loads(line.strip())
+            print('Received:', message)
+        except json.JSONDecodeError:
+            print('Invalid JSON:', line)
+#+END_SRC
+
+* Message Protocol
+
+** Message Format
+All messages use newline-delimited JSON (NDJSON):
+
+#+BEGIN_SRC json
+{"type":"user","uuid":"550e8400-e29b-41d4-a716-446655440000","message":{"role":"user","content":"Hello"}}
+{"type":"assistant","uuid":"550e8400-e29b-41d4-a716-446655440001","message":{"role":"assistant","content":"Hi!"}}
+#+END_SRC
+
+** Message Structure
+
+*** Request Messages
+#+BEGIN_SRC javascript
+{
+  "type": "user",                    // Message type
+  "uuid": "unique-message-id",       // Required for replay tracking
+  "message": {
+    "role": "user",
+    "content": "Your message here"
+  }
+}
+#+END_SRC
+
+*** Response Messages
+#+BEGIN_SRC javascript
+{
+  "type": "assistant",
+  "uuid": "response-id",
+  "message": {
+    "role": "assistant",
+    "content": "Claude's response"
+  }
+}
+#+END_SRC
+
+*** Control Messages
+#+BEGIN_SRC javascript
+{
+  "type": "control_response",
+  "status": "connected",
+  "metadata": {
+    "session_id": "abc123",
+    "last_request_id": "550e8400-e29b-41d4-a716-446655440000"
+  }
+}
+#+END_SRC
+
+** UUID Tracking
+- Messages with a =uuid= field are automatically buffered
+- UUIDs enable message replay after reconnection
+- Server acknowledges last processed UUID via headers
+
+* Connection Lifecycle
+
+** State Machine
+The WebSocket transport manages these states:
+1. =idle= - Initial state, no connection
+2. =connecting= - Establishing WebSocket connection
+3. =connected= - Active connection, messages flowing
+4. =reconnecting= - Connection lost, attempting to reconnect
+5. =closing= - Graceful shutdown initiated
+6. =closed= - Connection terminated
+
+** Reconnection Logic
+
+*** Exponential Backoff
+Reconnection delays increase exponentially:
+- 1st attempt: 1 second
+- 2nd attempt: 2 seconds
+- 3rd attempt: 4 seconds
+- 4th attempt: 8 seconds
+- 5th attempt: 16 seconds
+- Maximum delay: 30 seconds
+- Maximum attempts: 5
+
+*** Message Replay
+After successful reconnection:
+1. Client sends =X-Last-Request-Id= header with last sent UUID
+2. Server responds with =x-last-request-id= indicating last processed message
+3. Client replays all buffered messages after that point
+
+** Buffer Management
+
+*** Circular Buffer Design
+- Capacity: 1000 messages
+- Overwrites oldest messages when full
+- Prevents unbounded memory growth
+- Maintains message order for replay
+
+*** Buffer Implementation
+#+BEGIN_SRC javascript
+class CircularBuffer {
+  constructor(capacity = 1000) {
+    this.capacity = capacity;
+    this.buffer = new Array(capacity);
+    this.head = 0;
+    this.size = 0;
+  }
+  
+  add(message) {
+    this.buffer[this.head] = message;
+    this.head = (this.head + 1) % this.capacity;
+    if (this.size < this.capacity) this.size++;
+  }
+  
+  getMessages() {
+    // Returns messages in order, handling wrap-around
+    const start = this.size < this.capacity ? 0 : this.head;
+    const messages = [];
+    for (let i = 0; i < this.size; i++) {
+      messages.push(this.buffer[(start + i) % this.capacity]);
+    }
+    return messages;
+  }
+}
+#+END_SRC
+
+* Authentication
+
+** Bearer Token Authentication
+The WebSocket connection includes an Authorization header:
+#+BEGIN_SRC http
+Authorization: Bearer <your-token-here>
+#+END_SRC
+
+** Token Sources (in priority order)
+1. File descriptor (v1.0.78+): =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR=
+2. Environment variable: =CLAUDE_CODE_SESSION_ACCESS_TOKEN=
+3. Standard Claude Code authentication flow
+
+** Security Best Practices
+- Use file descriptor method in production to avoid token exposure
+- Rotate tokens regularly
+- Use =wss://= (TLS) for production connections
+- Never log or display tokens in output
+
+* Error Handling
+
+** Connection Errors
+#+BEGIN_SRC javascript
+// Connection refused
+Error: WebSocket connection failed: ECONNREFUSED
+
+// Authentication failure
+Error: WebSocket authentication failed: 401 Unauthorized
+
+// Invalid URL
+Error: Invalid WebSocket URL: must start with ws:// or wss://
+#+END_SRC
+
+** Reconnection Failures
+After 5 failed reconnection attempts:
+#+BEGIN_SRC
+WebSocket reconnection failed after 5 attempts. Connection closed.
+#+END_SRC
+
+** Message Format Errors
+#+BEGIN_SRC
+Error: Invalid stream-json message: Unexpected token < in JSON at position 0
+#+END_SRC
+
+* Configuration
+
+** Connection Parameters
+| Parameter | Default | Description |
+|-----------+---------+-------------|
+| Buffer Capacity | 1000 | Maximum messages to buffer |
+| Max Reconnect Attempts | 5 | Reconnection attempts before giving up |
+| Initial Reconnect Delay | 1000ms | Starting delay for exponential backoff |
+| Max Reconnect Delay | 30000ms | Maximum delay between reconnection attempts |
+
+** Environment Variables
+| Variable | Description |
+|----------+-------------|
+| =CLAUDE_CODE_SESSION_ACCESS_TOKEN= | Bearer token for authentication |
+| =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR= | File descriptor containing token |
+
+* Best Practices
+
+** Message Design
+- Always include =uuid= field for important messages
+- Keep message payloads reasonably sized
+- Use appropriate message types for different operations
+- Implement idempotent message handlers
+
+** Connection Management
+- Monitor connection state and handle disconnections gracefully
+- Implement application-level heartbeat/ping if needed
+- Consider message ordering requirements
+- Plan for message replay scenarios
+
+** Error Recovery
+- Handle parsing errors gracefully
+- Implement retry logic at application level
+- Log connection events for debugging
+- Monitor buffer usage in high-throughput scenarios
+
+** Performance Considerations
+- Batch small messages when possible
+- Avoid sending messages faster than they can be processed
+- Monitor memory usage with large message volumes
+- Consider implementing flow control
+
+* Troubleshooting
+
+** Common Issues
+
+*** Connection Fails Immediately
+Possible causes:
+- Invalid SDK URL format
+- Missing or invalid authentication token
+- Network connectivity issues
+- Firewall blocking WebSocket connections
+
+Solution:
+#+BEGIN_SRC bash
+# Test connectivity
+curl -I https://api.claude.ai
+
+# Verify token
+echo $CLAUDE_CODE_SESSION_ACCESS_TOKEN
+
+# Check WebSocket support
+wscat -c wss://api.claude.ai/sdk/v1/connect \
+      -H "Authorization: Bearer $CLAUDE_CODE_SESSION_ACCESS_TOKEN"
+#+END_SRC
+
+*** Messages Not Being Received
+Possible causes:
+- Missing =--verbose= flag for debugging
+- Incorrect message format
+- Server not sending newline delimiters
+
+Solution:
+#+BEGIN_SRC bash
+# Enable verbose output for debugging
+claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
+       --input-format=stream-json \
+       --output-format=stream-json \
+       --verbose
+#+END_SRC
+
+*** Reconnection Loop
+Possible causes:
+- Token expired
+- Server rejecting connections
+- Network instability
+
+Solution:
+- Refresh authentication token
+- Check server logs
+- Implement circuit breaker pattern
+
+** Debug Output
+Enable debug logging:
+#+BEGIN_SRC bash
+DEBUG=websocket claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
+                      --input-format=stream-json \
+                      --output-format=stream-json
+#+END_SRC
+
+* Advanced Topics
+
+** Custom SDK Servers
+
+*** Implementation Requirements
+Your SDK server must:
+1. Accept WebSocket connections with Bearer token auth
+2. Support newline-delimited JSON messages
+3. Handle =X-Last-Request-Id= header for replay
+4. Send =x-last-request-id= in response headers
+
+*** Example Server (Node.js)
+#+BEGIN_SRC javascript
+const WebSocket = require('ws');
+const http = require('http');
+
+const server = http.createServer();
+const wss = new WebSocket.Server({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+  // Verify Bearer token
+  const auth = request.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  
+  // Handle replay header
+  const lastRequestId = request.headers['x-last-request-id'];
+  
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    // Send last processed ID
+    if (lastRequestId) {
+      ws.send(JSON.stringify({
+        type: 'control_response',
+        metadata: { last_request_id: lastRequestId }
+      }) + '\n');
+    }
+    
+    wss.emit('connection', ws, request);
+  });
+});
+
+wss.on('connection', (ws) => {
+  ws.on('message', (data) => {
+    const message = JSON.parse(data.toString());
+    console.log('Received:', message);
+    
+    // Echo response
+    ws.send(JSON.stringify({
+      type: 'assistant',
+      uuid: crypto.randomUUID(),
+      message: {
+        role: 'assistant',
+        content: `Received: ${message.message.content}`
+      }
+    }) + '\n');
+  });
+});
+
+server.listen(8080);
+#+END_SRC
+
+** Integration Patterns
+
+*** Request-Response Pattern
+#+BEGIN_SRC javascript
+const pendingRequests = new Map();
+
+function sendRequest(content) {
+  const uuid = crypto.randomUUID();
+  const promise = new Promise((resolve, reject) => {
+    pendingRequests.set(uuid, { resolve, reject });
+    
+    claude.stdin.write(JSON.stringify({
+      type: 'user',
+      uuid,
+      message: { role: 'user', content }
+    }) + '\n');
+  });
+  
+  return promise;
+}
+
+// Handle responses
+rl.on('line', (line) => {
+  const message = JSON.parse(line);
+  if (message.correlation_id && pendingRequests.has(message.correlation_id)) {
+    const { resolve } = pendingRequests.get(message.correlation_id);
+    resolve(message);
+    pendingRequests.delete(message.correlation_id);
+  }
+});
+#+END_SRC
+
+*** Streaming Pattern
+#+BEGIN_SRC javascript
+class StreamingClient {
+  constructor(sdkUrl) {
+    this.messages = [];
+    this.listeners = [];
+    
+    this.process = spawn('claude', [
+      `--sdk-url=${sdkUrl}`,
+      '--input-format=stream-json',
+      '--output-format=stream-json'
+    ]);
+    
+    this.setupStreaming();
+  }
+  
+  setupStreaming() {
+    const rl = readline.createInterface({
+      input: this.process.stdout
+    });
+    
+    rl.on('line', (line) => {
+      const message = JSON.parse(line);
+      this.messages.push(message);
+      this.listeners.forEach(fn => fn(message));
+    });
+  }
+  
+  onMessage(callback) {
+    this.listeners.push(callback);
+  }
+  
+  send(content) {
+    this.process.stdin.write(JSON.stringify({
+      type: 'user',
+      uuid: crypto.randomUUID(),
+      message: { role: 'user', content }
+    }) + '\n');
+  }
+}
+#+END_SRC
+
+* Version History
+
+| Version | Changes |
+|---------+---------|
+| v1.0.77 | Initial WebSocket support with stream-json format |
+| v1.0.78 | Added file descriptor authentication for enhanced security |
+| v1.0.84 | Current stable version with refined implementation |
+
+* See Also
+
+- [[https://docs.anthropic.com/en/docs/claude-code/sdk][Claude Code SDK Documentation]]
+- [[https://github.com/anthropics/claude-code][Claude Code GitHub Repository]]
+- [[https://jsonlines.org/][JSON Lines Specification]]
+- [[https://developer.mozilla.org/en-US/docs/Web/API/WebSocket][WebSocket API Reference]]

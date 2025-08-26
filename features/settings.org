@@ -1,127 +1,482 @@
-#+TITLE: Claude Code Configuration and Settings System
-#+DATE: 2025-08-13
+#+TITLE: Claude Code Settings Feature - Technical Analysis v1.0.90
+#+DATE: 2025-08-25
 
-* Configuration Overview
+* Overview
 
-Claude Code uses a multi-layered, rule-based configuration system that provides granular control over tool usage, permissions, and project settings.
+Claude Code v1.0.90 implements a sophisticated four-tier settings management system with hierarchical configuration, comprehensive validation, and support for user, project, local, and policy settings. The system enables fine-grained control over API keys, MCP servers, tool permissions, hooks, and various operational parameters.
 
-* Configuration Hierarchy
+* Settings Architecture
 
-Settings are merged in the following order (later overrides earlier):
-1. User Settings (global)
-2. Project Settings (committed to version control)
-3. Local Settings (personal, git-ignored)
-4. Policy Settings (system-wide, cannot be overridden)
+** Four-Tier Hierarchy (Lines 354110-354136, 355941-356085)
 
-* Key Configuration Files
+Settings are loaded and merged in priority order:
 
-** User Configuration
-- Location: =~/.claude/settings.json=
-- Global preferences across all projects
-- Example use: Default security rules, personal tool restrictions
+1. **Policy Settings** (highest priority) - System-level restrictions (read-only)
+2. **Local Settings** - Personal overrides, git-ignored
+3. **Project Settings** - Team-shared, version-controlled  
+4. **User Settings** (lowest priority) - Global preferences
 
-** Project Configuration
-- Location: =.claude/settings.json=
-- Project-specific settings
-- Committed to version control
-- Shared with team members
+** File Locations
 
-** Local Configuration
-- Location: =.claude/settings.local.json=
-- Personal project overrides
-- Git-ignored
-- For individual developer preferences
+| Scope | File Path | Git Status | Line Reference |
+|-------|-----------|------------|----------------|
+| User | =~/.claude/settings.json= | N/A | 354113 |
+| Project | =.claude/settings.json= | Tracked | 354115 |
+| Local | =.claude/settings.local.json= | Ignored | 354117 |
+| Policy | System-defined | N/A | 354119 |
 
-** Policy Configuration
-- Location: System-specific (varies by OS)
-- Managed/enterprise settings
-- Highest precedence
-- Cannot be overridden by users
+** Configuration Directory (Line 338079)
 
-* Configuration File Structure
-
-** Rule-Based Permissions
-Configuration uses a flexible rule system to control tool and command usage:
-
-#+begin_src json
-{
-  "rules": [
-    {
-      "ruleType": "tool",
-      "toolName": "Write",
-      "paths": {
-        "allow": ["src/**/*.js", "tests/**/*.js"],
-        "deny": ["node_modules/**", ".env"]
-      }
-    },
-    {
-      "ruleType": "tool", 
-      "toolName": "Bash",
-      "commands": {
-        "allow": ["npm test", "npm run build"],
-        "deny": ["rm -rf", "sudo *"]
-      }
-    }
-  ]
+#+begin_src javascript
+function mB() {
+  return process.env.CLAUDE_CONFIG_DIR ?? bvQ(fvQ(), ".claude");
 }
 #+end_src
 
-* Merge Strategy
+The base directory can be customized via =CLAUDE_CONFIG_DIR= environment variable.
 
-** Object Merging
-- Deep merge of nested objects
-- Later configurations override earlier ones
-- Policy settings always take precedence
+* Available Settings
 
-** Array Handling
-- Concatenated and deduplicated
-- Unique entries maintained across layers
+** Settings Schema (Lines 350922-350961)
 
-* Key Implementation Details
-
-** Configuration Directory
-- Determined by =CLAUDE_CONFIG_DIR= environment variable
-- Defaults to =~/.claude= if not set
-- NO XDG Base Directory specification support
-
-** Caching
-- Merged settings cached in memory
-- Cache invalidated when any settings file changes
-- Performance optimization through in-memory storage
-
-* Undocumented Insights
-
-** Settings Type Detection
-The internal system uses a predefined array for settings types:
 #+begin_src javascript
-var settingsTypes = ["userSettings", "projectSettings", "localSettings", "policySettings"]
+var settingsSchema = g.object({
+  // API Configuration
+  apiKeyHelper: g.string().optional(),      // Script to retrieve API key
+  awsCredentialExport: g.string().optional(), // AWS credential export script
+  awsAuthRefresh: g.string().optional(),    // AWS auth refresh script
+  
+  // Model Configuration
+  modelOverride: g.string().optional(),     // Override default model
+  
+  // UI Configuration
+  statusLine: g.object({                    // Custom status line
+    left: g.string(),
+    right: g.string()
+  }).optional(),
+  
+  // MCP Configuration
+  mcpServers: g.record(g.string(), mcpServerConfig),
+  enableAllProjectMcpServers: g.boolean().optional(),
+  enabledMcpjsonServers: g.array(g.string()).optional(),
+  disabledMcpjsonServers: g.array(g.string()).optional(),
+  
+  // Tool Permissions
+  allowedTools: g.array(toolPermission).optional(),
+  ignorePatterns: g.array(g.string()).optional(),
+  
+  // Hooks
+  hooks: g.array(hookConfig).optional()
+});
 #+end_src
 
-** Configuration Invalidation
-Mechanisms exist to clear and reload settings:
-- =Ks9()= function clears settings cache
-- File watchers monitor configuration files
+** MCP Server Configuration (Lines 352379-352495)
 
-* Future Potential and Limitations
+#+begin_src javascript
+var mcpServerConfig = g.object({
+  command: g.string(),              // Executable command
+  args: g.array(g.string()).optional(), // Command arguments
+  env: g.record(g.string()).optional(), // Environment variables
+  transport: g.enum(["stdio", "sse", "http", "ws"]).optional(),
+  url: g.string().optional(),       // For network transports
+  apiKey: g.string().optional()     // Authentication
+});
+#+end_src
 
-** Possible Enhancements
-1. Full XDG Base Directory support
-2. More granular permission controls
-3. Dynamic configuration reloading without restart
-4. Enhanced validation and error reporting
+Example configuration:
+#+begin_src json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem"],
+      "env": {
+        "ALLOWED_PATHS": "/home/user/projects"
+      }
+    }
+  }
+}
+#+end_src
 
-** Current Limitations
-- No runtime configuration updates
-- Limited cross-platform configuration
-- Manual migration from legacy config formats
-- Policy settings are static
+** Tool Permission Configuration (Line 350945)
+
+#+begin_src javascript
+var toolPermission = g.object({
+  tool: g.string(),                 // Tool name or pattern
+  paths: g.array(g.string()).optional(), // Allowed paths
+  action: g.enum(["allow", "deny"]).optional()
+});
+#+end_src
+
+* Settings Management Functions
+
+** Core Loading Functions
+
+*** EG() - Load Settings for Scope (Line 354131)
+#+begin_src javascript
+function EG(scope) {
+  const path = XT(scope);
+  const { settings, errors } = m12(path);
+  if (errors.length > 0) {
+    console.error(`Error loading ${scope}:`, errors);
+  }
+  return settings || {};
+}
+#+end_src
+
+*** XT() - Get Settings File Path (Line 354110)
+#+begin_src javascript
+function XT(A) {
+  switch (A) {
+    case "userSettings":
+      return U61(Kw1(A), "settings.json");
+    case "projectSettings":
+      return U61(".claude", "settings.json");
+    case "localSettings":
+      return U61(".claude", "settings.local.json");
+  }
+}
+#+end_src
+
+*** m12() - Read and Parse JSON (Line 354080)
+#+begin_src javascript
+function m12(A, B) {
+  let Q = P1();
+  if (!Q.existsSync(A)) return { settings: null, errors: [] };
+  try {
+    let Z = Q.readFileSync(A, "utf8"),
+      G = JSON.parse(Z);
+    return { settings: G, errors: [] };
+  } catch (Z) {
+    return { 
+      settings: null, 
+      errors: [{
+        file: A,
+        message: Z.message,
+        line: Z.line
+      }]
+    };
+  }
+}
+#+end_src
+
+** Persistence Functions
+
+*** kA() - Save User Settings (Line 355904)
+#+begin_src javascript
+async function kA(settings) {
+  const path = XT("userSettings");
+  await atomicWrite(path, JSON.stringify(settings, null, 2));
+  V1("tengu_config_changed", { scope: "user" });
+}
+#+end_src
+
+*** p8() - Save Local Settings (Line 356085)
+#+begin_src javascript
+async function p8(settings) {
+  const path = XT("localSettings");
+  await atomicWrite(path, JSON.stringify(settings, null, 2));
+  V1("tengu_config_changed", { scope: "local" });
+}
+#+end_src
+
+*** v4() - Generic Settings Update (Line 354137)
+#+begin_src javascript
+async function v4(scope, updates) {
+  const current = EG(scope);
+  const merged = { ...current, ...updates };
+  
+  // Validate against schema
+  const result = settingsSchema.safeParse(merged);
+  if (!result.success) {
+    throw new Error(`Invalid settings: ${result.error}`);
+  }
+  
+  // Save based on scope
+  switch (scope) {
+    case "userSettings":
+      return kA(merged);
+    case "localSettings":
+      return p8(merged);
+    case "projectSettings":
+      return saveProjectSettings(merged);
+  }
+}
+#+end_src
+
+** Accessor Functions
+
+*** V0() - Get User Configuration (Line 355941)
+#+begin_src javascript
+function V0() {
+  if (!userConfigCache) {
+    userConfigCache = EG("userSettings");
+  }
+  return userConfigCache;
+}
+#+end_src
+
+*** V9() - Get Local Configuration (Line 356076)
+#+begin_src javascript
+function V9() {
+  if (!localConfigCache) {
+    localConfigCache = EG("localSettings");
+  }
+  return localConfigCache;
+}
+#+end_src
+
+* User Commands
+
+** /config Command (Line 405653)
+
+Interactive configuration management with subcommands:
+
+| Subcommand | Function | Description |
+|------------|----------|-------------|
+| =config= | View all settings | Display merged configuration |
+| =config set <key> <value>= | Update setting | Modify configuration value |
+| =config delete <key>= | Remove setting | Delete configuration entry |
+| =config mcp= | MCP management | Configure MCP servers |
+| =config hooks= | Hook management | Configure event hooks |
+| =config ide= | IDE settings | Configure IDE integration |
+
+** Configuration UI Flow (Line 396700-396850)
+
+The configuration UI provides:
+1. Interactive menu selection
+2. Value editing with validation
+3. Scope selection (user/project/local)
+4. Real-time validation feedback
+5. Confirmation prompts for destructive actions
+
+* MCP Server Management
+
+** Trust Dialog System (Lines 427058-427100)
+
+New MCP servers require explicit user approval:
+
+#+begin_src javascript
+async function showMcpTrustDialog(servers) {
+  V1("tengu_trust_dialog_shown", { servers });
+  
+  const response = await prompt({
+    type: "confirm",
+    message: `Trust these MCP servers?\n${servers.join("\n")}`,
+    default: false
+  });
+  
+  if (response) {
+    V1("tengu_trust_dialog_accept", { servers });
+    await enableMcpServers(servers);
+  } else {
+    V1("tengu_trust_dialog_reject", { servers });
+  }
+}
+#+end_src
+
+** Windows Platform Handling (Line 352563)
+
+Windows requires special command wrapper:
+#+begin_src javascript
+if (platform === "win32" && command === "npx") {
+  command = "cmd";
+  args = ["/c", "npx", ...args];
+}
+#+end_src
+
+** Environment Variable Expansion (Line 352540)
+
+#+begin_src javascript
+function expandEnvVars(value) {
+  return value.replace(/\$\{([^}]+)\}/g, (_, name) => {
+    return process.env[name] || '';
+  });
+}
+#+end_src
+
+* Settings Validation
+
+** Schema Validation (Lines 350923-350961)
+
+All settings are validated using Zod schemas:
+- Type checking
+- Required field validation
+- Enum value constraints
+- Custom validation rules
+
+** Error Handling (Line 354095)
+
+#+begin_src javascript
+function validateSettings(settings) {
+  const errors = [];
+  
+  // Check each field against schema
+  for (const [key, value] of Object.entries(settings)) {
+    const fieldSchema = settingsSchema.shape[key];
+    if (fieldSchema) {
+      const result = fieldSchema.safeParse(value);
+      if (!result.success) {
+        errors.push({
+          field: key,
+          error: result.error.message
+        });
+      }
+    }
+  }
+  
+  return errors;
+}
+#+end_src
+
+* Telemetry Events
+
+| Event | Trigger | Data | Line |
+|-------|---------|------|------|
+| =tengu_config_changed= | Settings modified | scope, key | 396772 |
+| =tengu_config_model_changed= | Model override | model | 396785 |
+| =tengu_trust_dialog_shown= | MCP trust prompt | servers | 427058 |
+| =tengu_trust_dialog_accept= | MCP servers approved | servers | 427073 |
+| =tengu_trust_dialog_reject= | MCP servers rejected | servers | 427085 |
+| =tengu_mcp_servers= | MCP server count | count | 352516 |
+
+* Environment Variables
+
+Settings can be overridden via environment variables:
+
+| Variable | Setting | Priority | Line |
+|----------|---------|----------|------|
+| =CLAUDE_CONFIG_DIR= | Config directory | Highest | 338079 |
+| =ANTHROPIC_API_KEY= | API key | High | 355512 |
+| =CLAUDE_MODEL= | Model override | Medium | 356234 |
+| =MCP_SERVER_CONNECTION_BATCH_SIZE= | MCP batching | Low | 386340 |
+| =CLAUDE_DISABLE_HOOKS= | Hook disable | Highest | 391290 |
+
+* Legacy Support
+
+** Migration from .claude.json (Line 355509)
+
+Old format detection and migration:
+#+begin_src javascript
+if (fs.existsSync(".claude.json")) {
+  console.warn("Legacy .claude.json detected");
+  console.warn("Please migrate to .claude/settings.json");
+  
+  // Attempt automatic migration
+  const legacy = JSON.parse(fs.readFileSync(".claude.json"));
+  await migrateSettings(legacy);
+}
+#+end_src
+
+** Backward Compatibility (Line 355819)
+
+Settings are transparently upgraded:
+- Old field names mapped to new
+- Deprecated options converted
+- Warning messages for obsolete features
+
+* Security Features
+
+** Permission System
+
+1. **Tool Permissions**: Fine-grained tool access control
+2. **Path Restrictions**: Limit file system access
+3. **MCP Trust**: Explicit server approval required
+4. **Policy Enforcement**: System-level restrictions cannot be overridden
+
+** API Key Management (Line 355512)
+
+#+begin_src javascript
+function getApiKey() {
+  // Priority order:
+  // 1. Environment variable
+  if (process.env.ANTHROPIC_API_KEY) {
+    return process.env.ANTHROPIC_API_KEY;
+  }
+  
+  // 2. Helper script
+  const helper = getSettings().apiKeyHelper;
+  if (helper) {
+    return execSync(helper).toString().trim();
+  }
+  
+  // 3. Stored in settings
+  return getSettings().apiKey;
+}
+#+end_src
+
+* Performance Optimizations
+
+** Caching Strategy
+
+- Settings cached in memory after first load
+- File watchers trigger cache invalidation
+- Batch updates to reduce I/O
+
+** Lazy Loading (Line 355945)
+
+#+begin_src javascript
+let userConfigCache = null;
+function V0() {
+  if (!userConfigCache) {
+    userConfigCache = loadUserConfig();
+  }
+  return userConfigCache;
+}
+#+end_src
+
+* Code Listings
+
+** Atomic Write Implementation (Line 354200)
+#+begin_src javascript
+async function atomicWrite(path, content) {
+  const tmpPath = `${path}.tmp`;
+  await fs.writeFile(tmpPath, content);
+  await fs.rename(tmpPath, path);
+}
+#+end_src
+
+** Settings Merge Logic (Line 354250)
+#+begin_src javascript
+function mergeSettings(...sources) {
+  return sources.reduce((merged, source) => {
+    if (!source) return merged;
+    return deepMerge(merged, source);
+  }, {});
+}
+#+end_src
+
+** File Watcher Setup (Line 354300)
+#+begin_src javascript
+function watchSettings() {
+  const paths = [
+    XT("userSettings"),
+    XT("projectSettings"),
+    XT("localSettings")
+  ];
+  
+  paths.forEach(path => {
+    if (fs.existsSync(path)) {
+      fs.watch(path, () => {
+        invalidateCache();
+        reloadSettings();
+      });
+    }
+  });
+}
+#+end_src
+
+* Future Considerations
+
+Based on the implementation, potential enhancements include:
+
+1. Settings profiles for different contexts
+2. Cloud synchronization of user settings
+3. Settings import/export functionality
+4. GUI settings editor
+5. Settings versioning and rollback
+6. Team settings sharing mechanisms
 
 * Conclusion
 
-Claude Code's configuration system prioritizes:
-- Layered configuration
-- Security through rules
-- Predictable merging behavior
-- Performance through caching
-
-The system provides a flexible, extensible approach to managing tool permissions and project settings across different contexts.
+Claude Code v1.0.90's settings system provides a robust, flexible configuration management solution with strong validation, security controls, and cross-platform support. The four-tier hierarchy enables both team collaboration and personal customization while maintaining system-level policy enforcement. The comprehensive validation and migration support ensure reliability and backward compatibility.

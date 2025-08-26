@@ -1,46 +1,420 @@
-#+TITLE: Claude Code Telemetry System
-#+DATE: 2025-08-13
+#+TITLE: Claude Code Telemetry System - Technical Analysis v1.0.90
+#+DATE: 2025-08-25
 
 * Overview
 
-This document details the telemetry architecture of Claude Code, focusing on privacy-conscious tracking and system insights.
+Claude Code v1.0.90 implements a dual-provider telemetry architecture using Statsig for feature flags/event tracking and Sentry for error reporting. The system prioritizes user privacy with multiple opt-out mechanisms while gathering operational metrics necessary for product improvement.
 
-* Telemetry Architecture
+* Architecture
 
-** Provider
-- Platform: Statsig (feature flag and experimentation platform)
-- Endpoint: =https://statsig.anthropic.com/v1/=
-- Privacy-first design with multiple opt-out mechanisms
+** Telemetry Providers
 
-** Telemetry Events
+*** Statsig Integration
+- *SDK Key*: =client-RRNS7R65EAtReO5XA4xDC3eU6ZdJQi6lLEP6b5j32Me= (line 338189)
+- *Endpoint*: =https://statsig.anthropic.com/v1/= (line 340102)
+- *Initialization*: Line 340119 with StatsigClient instance stored in =uh= variable
+- *Purpose*: Feature flags, A/B testing, and event tracking
 
-Events are prefixed with "tengu_" for tracking various system aspects:
-- =tengu_spinner_words= - Custom spinner configuration
-- =tengu_startup_telemetry= - Startup metrics
-- =tengu_config_*= - Configuration changes
-- =tengu_mcp_*= - MCP server interactions
-- =tengu_oauth_*= - Authentication flows
-- =tengu_refusal_*= - Content policy events
+*** Sentry Error Reporting  
+- *DSN*: =https://e531a1d9ec1de9064fae9d4affb0b0f4@o1158394.ingest.us.sentry.io/4508259541909504= (line 338188)
+- *Purpose*: Automatic error tracking and crash reporting
+- *Integration*: Follows same privacy controls as Statsig
+
+** Implementation Details
+
+*** Core Functions
+
+**** V1(eventName, properties) - Line 340214
+Primary telemetry event dispatcher that sends events to Statsig.
+#+begin_src javascript
+function V1(A, B) {
+  $g9(A, B);  // Calls internal Statsig logging
+}
+#+end_src
+
+**** iR(configName, defaultValue) - Line 340256
+Retrieves feature flag configurations from Statsig.
+#+begin_src javascript
+async function iR(A, B) {
+  // Returns config value or default if telemetry disabled
+}
+#+end_src
+
+**** gh(experimentName, parameter, defaultValue) - Line 340271
+Gets experiment parameters for A/B testing.
+#+begin_src javascript
+function gh(A, B, Q) {
+  // Returns experiment value or default
+}
+#+end_src
+
+*** Initialization Flow
+1. Check privacy environment variables (lines 340094-340098)
+2. If telemetry enabled, create Statsig client (line 340119)
+3. Initialize with user ID hash and environment config
+4. Begin event tracking and feature flag retrieval
 
 * Privacy Controls
 
-Telemetry can be disabled via:
-- =DISABLE_TELEMETRY=true=
-- =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=true=
-- =CLAUDE_CODE_USE_BEDROCK=true=
-- =CLAUDE_CODE_USE_VERTEX=true=
+** Environment Variables
 
-* Key Insights
+All telemetry and error reporting is completely disabled when ANY of these are set:
 
-1. Events are designed to be minimally invasive
-2. Multiple opt-out mechanisms
-3. Support for different cloud backends
-4. Transparent tracking with clear naming conventions
+| Variable | Purpose | Check Locations |
+|----------|---------|-----------------|
+| =DISABLE_TELEMETRY= | Direct telemetry opt-out | 340096, 340150, 340221, 340246, 340260 |
+| =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC= | Disable all non-essential network traffic | 340097, 340151, 340222, 340247, 340261 |
+| =CLAUDE_CODE_USE_BEDROCK= | AWS Bedrock deployment mode | 340094, 340148, 340219, 340244, 340258 |
+| =CLAUDE_CODE_USE_VERTEX= | Google Vertex AI deployment mode | 340095, 340149, 340220, 340245, 340259 |
+| =DISABLE_ERROR_REPORTING= | Disable Sentry error reporting only | 355304 |
+
+** Data Minimization
+
+- No user content or prompts are tracked
+- User IDs are hashed before transmission (line 340113)
+- Stable IDs use SHA-256 hashing
+- Organization-level data sharing controls via API
+
+** Backend Support
+
+When using alternative backends (Bedrock/Vertex), telemetry is automatically disabled to prevent data leakage outside the deployment environment.
+
+* Event Catalog
+
+** Event Categories
+
+Claude Code tracks 234 distinct "tengu_" prefixed events organized into categories:
+
+*** API & Model Events
+- =tengu_api_query= - API request initiated
+- =tengu_api_success= - Successful API response  
+- =tengu_api_error= - API error occurred
+- =tengu_api_retry= - API retry attempt
+- =tengu_api_opus_fallback_triggered= - Fallback to Opus model
+- =tengu_api_custom_529_overloaded_error= - Rate limit error
+- =tengu_max_tokens_reached= - Output token limit hit
+- =tengu_max_tokens_context_overflow_adjustment= - Token adjustment for context
+- =tengu_streaming_error= - Streaming API errors
+- =tengu_refusal_api_response= - Content policy refusal
+- =tengu_empty_model_response= - Empty model output
+- =tengu_thinking= - Thinking tokens used
+- =tengu_model_cost_discount= - Discounted model pricing
+- =tengu_unknown_model_cost= - Unknown model pricing
+
+*** Authentication & OAuth
+- =tengu_oauth_token_refresh_success= - Token refresh succeeded
+- =tengu_oauth_token_refresh_failure= - Token refresh failed
+- =tengu_oauth_roles_stored= - User roles saved
+- =tengu_oauth_api_key= - API key operations
+- =tengu_oauth_success= - OAuth flow completed
+- =tengu_oauth_error= - OAuth error
+- =tengu_oauth_manual_entry= - Manual token entry
+- =tengu_oauth_storage_warning= - Storage issues
+- =tengu_oauth_claudeai_selected= - Claude.ai auth selected
+- =tengu_oauth_console_selected= - Console auth selected
+- =tengu_oauth_automatic_redirect= - Auto-redirect triggered
+
+*** MCP (Model Context Protocol)
+- =tengu_mcp_servers= - Server configuration
+- =tengu_mcp_oauth_flow_start= - OAuth flow for MCP
+- =tengu_mcp_oauth_flow_success= - MCP OAuth success
+- =tengu_mcp_oauth_flow_error= - MCP OAuth error
+- =tengu_mcp_server_needs_auth= - Authentication required
+- =tengu_mcp_server_connection_succeeded= - Connected to server
+- =tengu_mcp_server_connection_failed= - Connection failed
+- =tengu_mcp_ide_server_connection_*= - IDE server events
+- =tengu_mcp_tools_commands_loaded= - Tools loaded
+- =tengu_mcp_auth_config_*= - Auth configuration
+- =tengu_mcp_add/delete/list/get= - CRUD operations
+- =tengu_mcp_dialog_choice= - User dialog selections
+
+*** File Operations
+- =tengu_atomic_write_error= - Atomic write failed
+- =tengu_file_changed= - File modification tracked
+- =tengu_write_claudemd= - CLAUDE.md file written
+- =tengu_claude_md_permission_error= - Permission errors
+- =tengu_claude_md_includes_dialog_*= - Include dialog events
+- =tengu_watched_file_changed= - File watcher triggered
+- =tengu_watched_file_stat_error= - File stat error
+
+*** Shell & Command Execution  
+- =tengu_shell_snapshot_*= - Shell state snapshots
+- =tengu_shell_set_cwd= - Directory changes
+- =tengu_bash_tool_*= - Bash tool operations
+- =tengu_bash_prefix= - Command prefix detection
+- =tengu_bash_command_backgrounded= - Background tasks
+- =tengu_git_operation= - Git operations tracked
+
+*** Tool Usage
+- =tengu_tool_use_*= - Tool execution events
+- =tengu_tool_use_cancelled= - Tool cancelled
+- =tengu_tool_use_error= - Tool errors
+- =tengu_tool_use_success= - Successful execution
+- =tengu_tool_use_progress= - Progress updates
+- =tengu_tool_use_show_permission_request= - Permission prompts
+- =tengu_tool_use_granted/denied_in_config= - Permission settings
+- =tengu_tool_use_granted/rejected_in_prompt= - Runtime permissions
+
+*** UI & Interaction Events
+- =tengu_typing_without_terminal_focus= - Focus tracking
+- =tengu_dir_search= - Directory search operations
+- =tengu_subscription_upsell_shown= - Subscription prompts
+- =tengu_ext_installed= - Extension installation
+- =tengu_ext_jetbrains_extension_install_*= - JetBrains plugin
+- =tengu_ext_ide_command= - IDE commands
+- =tengu_ext_diff_*= - Diff viewer events
+- =tengu_external_editor_hint_shown= - Editor hints
+- =tengu_help_toggled= - Help panel
+- =tengu_paste_text/image= - Paste operations
+- =tengu_mode_cycle= - Editor mode changes
+- =tengu_flicker= - UI rendering issues
+
+*** Configuration Events
+- =tengu_config_*= - Configuration CRUD
+- =tengu_config_model_changed= - Model selection
+- =tengu_auto_compact_setting_changed= - Compaction settings
+- =tengu_autocheckpointing_setting_changed= - Checkpoint settings
+- =tengu_editor_mode_changed= - Editor mode
+- =tengu_diff_tool_changed= - Diff tool selection
+- =tengu_auto_connect_ide_changed= - IDE auto-connect
+- =tengu_output_style_changed= - Output formatting
+
+*** Session & Lifecycle
+- =tengu_startup_telemetry= - Startup metrics
+- =tengu_init= - Initialization
+- =tengu_exit= - Exit tracking
+- =tengu_timer= - Performance timing
+- =tengu_cancel= - Cancellation events
+- =tengu_continue/resume/teleport= - Session management
+- =tengu_checkpoint_save_*= - Checkpoint operations
+- =tengu_message_selector_*= - Message selection
+- =tengu_concurrent_onquery_*= - Concurrency detection
+
+*** Updates & Migration
+- =tengu_auto_updater_*= - Auto-update events
+- =tengu_native_auto_updater_*= - Native updater
+- =tengu_local_install_migration= - Installation migration
+- =tengu_forced_migration_*= - Forced migrations
+- =tengu_migrate_*= - Various migrations
+- =tengu_update_check= - Update checking
+- =tengu_version_config= - Version configuration
+
+*** Agent System
+- =tengu_agent_*= - Agent operations
+- =tengu_agent_parse_error= - Agent parsing errors
+- =tengu_agent_tool_selected/completed= - Agent tools
+- =tengu_agent_definition_generated= - Agent creation
+- =tengu_agent_created= - Agent instantiation
+
+*** Attachments & Context
+- =tengu_attachment_compute_duration= - Processing time
+- =tengu_at_mention_*= - @-mention features
+- =tengu_attachments= - Attachment tracking
+- =tengu_context_size= - Context measurements
+- =tengu_sysprompt_block= - System prompt usage
+
+*** Performance & Errors
+- =tengu_ripgrep_availability= - Ripgrep detection
+- =tengu_data_sharing_response_err= - Data sharing errors
+- =tengu_claudeai_limits_*= - Rate limiting
+- =tengu_cost_threshold_*= - Cost thresholds
+- =tengu_trust_dialog_*= - Trust dialogs
+- =tengu_bypass_permissions_mode_dialog_*= - Permission bypass
+
+*** Analytics & Feedback
+- =tengu_feedback_survey_event= - Survey interactions
+- =tengu_bug_report_submitted= - Bug reports
+- =tengu_tip_shown= - Tips displayed
+- =tengu_notification_method_used= - Notifications
+- =tengu_unary_event= - Single events
+- =tengu_sonnet_1m_notice_shown= - Model notices
+- =tengu_opusplan_notice_shown= - Plan notices
+
+*** Input Processing
+- =tengu_input_bash= - Bash input mode
+- =tengu_input_memory= - Memory operations
+- =tengu_input_slash_missing/invalid= - Command parsing
+- =tengu_input_prompt= - Prompt submission
+- =tengu_input_command= - Command execution
+- =tengu_single_word_prompt= - Short prompts
+- =tengu_code_prompt_ignored= - Ignored prompts
+
+*** Compaction & Memory
+- =tengu_compact= - Message compaction
+- =tengu_compact_failed= - Compaction errors
+- =tengu_microcompact= - Micro-compaction
+- =tengu_auto_compact_succeeded= - Auto-compact success
+- =tengu_post_autocompact_turn= - Post-compact state
+- =tengu_add_memory_*= - Memory operations
+
+*** Hook System
+- =tengu_run_hook= - Hook execution
+- =tengu_repl_hook_finished= - REPL hook completion
+- =tengu_pre/post_tool_hooks_*= - Tool hook events
+- =tengu_pre/post_stop_hooks_*= - Stop hook events
+
+*** Model & Steering
+- =tengu_model_fallback_triggered= - Model fallback
+- =tengu_fallback_system_msg= - Fallback messages
+- =tengu_steering_attachment_resending= - Attachment steering
+- =tengu_off_switch_query= - Feature disabling
+- =tengu_query_error= - Query errors
+
+*** GitHub Integration
+- =tengu_setup_github_actions_*= - GitHub Actions setup
+- =tengu_install_github_app_*= - GitHub App installation
+
+*** Miscellaneous
+- =tengu_preflight_check_failed= - Startup checks
+- =tengu_began_setup= - Setup flow
+- =tengu_onboarding_step= - Onboarding tracking
+- =tengu_claude_install_command= - Installation
+- =tengu_doctor_command= - Diagnostic command
+- =tengu_spinner_words= - Custom spinner text
+
+* Code Listings
+
+** Telemetry Initialization (Lines 340089-340127)
+#+begin_src javascript
+async function OE1() {
+  if (
+    process.env.CLAUDE_CODE_USE_BEDROCK ||
+    process.env.CLAUDE_CODE_USE_VERTEX ||
+    process.env.DISABLE_TELEMETRY ||
+    process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+  )
+    return null;
+    
+  let A = xn(!0),
+    B = {
+      networkConfig: { api: "https://statsig.anthropic.com/v1/" },
+      environment: {
+        tier: ["test", "dev"].includes("production")
+          ? "development"
+          : "production",
+      },
+      initializeValues: V0().cachedStatsigGates,
+      userID: P91() || qV0(),
+      customIDs: { stableID: FD0() },
+      getStableID: () => {
+        let G = FD0();
+        return createHash("sha256")
+          .update(G.userID || "")
+          .digest("hex")
+          .slice(0, 10);
+      },
+    };
+    
+  uh = new ME1.StatsigClient(co0, A, B);
+  uh.on("error", () => {
+    BQ.head("https://api.anthropic.com/api/hello").catch(() => {});
+  });
+  
+  let Q = uh.initializeAsync().then(() => {});
+  return (
+    (mh = YA(async () => uh)),
+    hh.push(Q),
+    uh
+  );
+}
+#+end_src
+
+** Event Logging Function (Lines 340208-340216)
+#+begin_src javascript
+async function $g9(A, B) {
+  let Q = await mh();
+  if (!Q) return;
+  let Z = OD0(),
+    G = process.env.CLAUDE_CODE_PARTNER,
+    I = xn(!0),
+    Y = Object.assign(Object.assign({}, B), {
+      eventTime: Date.now(),
+      isNonInteractiveSession: I,
+      userId: RD0(),
+      sessionId: Z,
+      partner: G,
+    }),
+    W = { eventName: A, value: null, metadata: Y },
+    J = Q.client;
+  J.logEvent(W);
+  await J.flush();
+}
+
+function V1(A, B) {
+  $g9(A, B);
+}
+#+end_src
+
+** Privacy Check Implementation (Lines 340217-340227)
+#+begin_src javascript
+async function NJ(A) {
+  if (
+    process.env.CLAUDE_CODE_USE_BEDROCK ||
+    process.env.CLAUDE_CODE_USE_VERTEX ||
+    process.env.DISABLE_TELEMETRY ||
+    process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+  )
+    return !1;
+  let B = await mh();
+  if (!B) return !1;
+  return B.client.checkGate(A);
+}
+#+end_src
+
+* Backend Support
+
+** Bedrock/Vertex Integration
+
+When Claude Code is configured to use AWS Bedrock or Google Vertex AI as the backend, all telemetry is automatically disabled to ensure data doesn't leave the customer's cloud environment. This is enforced at multiple checkpoints throughout the codebase.
+
+** Telemetry Modes
+
+| Mode | Telemetry | Error Reporting | Feature Flags |
+|------|-----------|-----------------|---------------|
+| Standard | Enabled | Enabled | Enabled |
+| Bedrock | Disabled | Disabled | Defaults only |
+| Vertex | Disabled | Disabled | Defaults only |
+| Privacy Mode | Disabled | Disabled | Defaults only |
+
+* Data Collection Principles
+
+** What IS Collected
+- Operational metrics (startup time, command execution)
+- Feature usage patterns (which tools are used)
+- Error conditions and recovery
+- Performance metrics
+- Configuration preferences
+- Session identifiers (hashed)
+
+** What is NOT Collected
+- User prompts or conversations
+- File contents or code
+- Personal identifiable information
+- API keys or secrets
+- Directory paths with user information
+- Clipboard contents
+
+* Organization-Level Controls
+
+Organizations can manage data sharing preferences via the API endpoint:
+=https://api.anthropic.com/api/organizations/{org_id}/claude_code_data_sharing=
+
+This provides centralized control for enterprise deployments.
+
+* Technical Notes
+
+** Event Rate Limiting
+- Sampling is applied to high-frequency events
+- Batch flushing reduces network overhead
+- Failed events are not retried indefinitely
+
+** Storage
+- Telemetry preferences are stored locally
+- No persistent tracking across installations
+- Cache invalidation on privacy setting changes
 
 * Conclusion
 
-Claude Code's telemetry system prioritizes:
-- User privacy
-- Minimal data collection
-- Comprehensive system insights
-- Flexible configuration options
+Claude Code v1.0.90's telemetry system demonstrates a sophisticated balance between gathering necessary operational insights and respecting user privacy. The comprehensive opt-out mechanisms, clear event naming conventions, and support for isolated deployments make it suitable for both individual developers and enterprise environments requiring strict data governance.
+
+The consistent use of the "tengu_" prefix for all events and centralized control through environment variables shows thoughtful architecture design prioritizing transparency and user control.

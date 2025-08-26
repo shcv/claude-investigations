@@ -284,21 +284,21 @@ Collected metrics:
 
 *** Common Issues
 
-1. **Permission Denied**
+1. *Permission Denied*
    #+begin_src bash
    gh auth refresh -h github.com -s repo,workflow
    #+end_src
 
-2. **API Key Not Found**
+2. *API Key Not Found*
    - Verify secret name matches workflow
    - Check secret is set at repository level
 
-3. **Workflow Not Triggering**
+3. *Workflow Not Triggering*
    - Verify @claude is in comment
    - Check workflow permissions
    - Review if conditions
 
-4. **Rate Limiting**
+4. *Rate Limiting*
    - Use sticky comments for reviews
    - Limit trigger events
    - Consider path filters
@@ -310,9 +310,7 @@ Collected metrics:
 - Example Workflows: https://github.com/anthropics/claude-code-action/tree/main/examples
 
 ** Implementation Notes
-
-1. **React-based UI**: Interactive setup uses React components with Ink
-2. **GitHub CLI Dependency**: Requires =gh= CLI for API operations
-3. **Automatic PR Creation**: Creates PR with setup instructions
-4. **Stateful Wizard**: Multi-step setup with state management
-5. **Error Recovery**: Graceful handling of missing dependencies
+1. *GitHub CLI Dependency*: Requires =gh= CLI for API operations
+2. *Automatic PR Creation*: Creates PR with setup instructions
+3. *Stateful Wizard*: Multi-step setup with state management
+4. *Error Recovery*: Graceful handling of missing dependencies

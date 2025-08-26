@@ -1,0 +1,62 @@
+#+TITLE: Claude Code Features Documentation
+
+* Overview
+
+This directory contains detailed technical investigations of Claude Code's features. Each document provides in-depth analysis of implementation details, configuration options, and code references from the latest prettified source.
+
+* Feature Documentation
+
+** Core Features
+
+- [[file:settings.org][Settings]] - Configuration management, persistence, and preference handling
+- [[file:environment-variables.org][Environment Variables]] - System environment configuration and management
+- [[file:keyboard-shortcuts.org][Keyboard Shortcuts]] - Interactive terminal keyboard controls and shortcuts
+- [[file:notifications.org][Notifications]] - Desktop notification system integration
+
+** Advanced Capabilities
+
+- [[file:mcp.org][MCP (Model Context Protocol)]] - External tool and resource integration via MCP servers
+- [[file:mcp-configuration.org][MCP Configuration]] - MCP server setup and configuration management
+- [[file:websocket-sdk-streaming.org][WebSocket SDK Streaming]] - Real-time streaming communication via WebSocket
+- [[file:websocket-protocol.org][WebSocket Protocol]] - Internal WebSocket protocol implementation details
+
+** Task Management
+
+- [[file:background-shells.org][Background Shells]] - Parallel command execution and background task management
+- [[file:queued-prompts.org][Queued Prompts]] - Prompt queuing and sequential execution system
+
+** User Experience
+
+- [[file:output-styles.org][Output Styles]] - Customizable response formatting and presentation modes
+- [[file:conversation-search.org][Conversation Search]] - Search functionality for chat history and conversations
+- [[file:session-memory.org][Session Memory]] - Conversation persistence and memory management
+- [[file:spinner-words.org][Spinner Words]] - Customizable loading spinner messages
+- [[file:thinking.org][Thinking]] - Claude's thinking process visualization
+
+** Integration & Extensions
+
+- [[file:hooks.org][Hooks]] - Event-driven hook system for extending functionality
+- [[file:plugins.org][Plugins]] - Plugin system architecture and management
+- [[file:github-actions.org][GitHub Actions]] - GitHub integration and CI/CD workflows
+
+** Security & Analysis
+
+- [[file:security-review.org][Security Review]] - Security analysis and vulnerability assessment
+
+* Documentation Standards
+
+Each feature document should include:
+
+1. **Overview** - High-level description of the feature
+2. **Implementation Details** - Technical implementation with specific line references
+3. **Configuration** - Environment variables, settings, and options
+4. **Key Components** - Main functions, classes, and data structures
+5. **Code Listings** - Important code snippets with line numbers from the prettified source
+6. **Telemetry** - Related telemetry events and tracking
+7. **Version History** - When the feature was introduced and major changes
+
+* Source Reference
+
+All investigations use the latest prettified Claude Code source:
+- Version: v1.0.90
+- Location: =archive/pretty/pretty-v1.0.90.js=

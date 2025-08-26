@@ -1,53 +1,390 @@
-#+TITLE: Claude Code Hooks System
-#+DATE: 2025-08-13
+#+TITLE: Claude Code Hooks Feature - Technical Analysis v1.0.90
+#+DATE: 2025-08-25
 
 * Overview
 
-A sophisticated mechanism for extending and customizing Claude Code's behavior through strategic intervention points.
+Claude Code v1.0.90 implements a sophisticated event-driven hook system that enables users to extend functionality by executing custom commands at specific points in the conversation lifecycle. The system supports 9 distinct hook event types, parallel execution with timeouts, structured JSON responses, and comprehensive telemetry tracking.
 
-* Hook Types
+* Hook Event Types
 
-** User Prompt Submit Hook
-- Allows preprocessing of user input
-- Can modify or validate input
-- Supports complex input transformations
-- Provides flexibility in interaction design
+** Complete Event List (Line 350644)
 
-** Tool Use Hooks
-- Pre-tool execution validation
-- Post-tool execution processing
-- Enables custom result handling
-- Supports complex tool workflows
+#+begin_src javascript
+var V90 = [
+  "PreToolUse",      // Before any tool execution
+  "PostToolUse",     // After tool completion
+  "Notification",    // System notifications
+  "UserPromptSubmit", // User input submission
+  "SessionStart",    // Session initialization
+  "SessionEnd",      // Session termination
+  "Stop",           // User-initiated stop
+  "SubagentStop",   // Subagent termination
+  "PreCompact"      // Before message compaction
+];
+#+end_src
 
-* Implementation Characteristics
+** Event Trigger Points
 
-- Declarative hook definition
-- Supports async hook functions
-- Minimal performance overhead
-- Comprehensive error handling
+| Event | Trigger Point | Data Provided | Line Reference |
+|-------|--------------|---------------|----------------|
+| PreToolUse | Before tool execution | Tool name, arguments | 391646 |
+| PostToolUse | After tool completion | Tool name, result, error | 391678 |
+| UserPromptSubmit | User prompt submission | Prompt text, attachments | 391710 |
+| SessionStart | Session initialization | Session ID, model | 391742 |
+| SessionEnd | Session termination | Session ID, duration | 391774 |
+| Stop | User cancellation | Context state | 391806 |
+| SubagentStop | Subagent stop | Agent ID, state | 391838 |
+| PreCompact | Before compaction | Message count, size | 391870 |
+| Notification | System notifications | Message, type | 391902 |
 
-* Use Cases
+* Hook Configuration
 
-- Input sanitization
-- Automatic command augmentation
-- Workflow customization
-- Security enforcement
-- Logging and telemetry
+** Configuration Schema (Line 350918)
 
-* Design Principles
+#+begin_src javascript
+var z90 = g.object({
+  trigger: g.enum(V90),           // Event type
+  command: g.string(),            // Command to execute
+  matcher: g.string().optional(), // Optional regex matcher
+  includeContext: g.boolean().optional(), // Include conversation context
+  timeout: g.number().optional()  // Execution timeout (max 600s)
+});
+#+end_src
 
-- Extensibility
-- Performance
-- Security
-- User customization
+** Storage Locations
 
-* Potential Enhancements
+Hooks are configured in settings files:
+- User hooks: =~/.claude/settings.json=
+- Project hooks: =.claude/settings.json=
+- Local hooks: =.claude/settings.local.json=
 
-- Machine learning-based hook suggestions
-- More granular hook types
-- Context-aware hook execution
-- Performance optimization techniques
+** Example Configuration
+
+#+begin_src json
+{
+  "hooks": [
+    {
+      "trigger": "PreToolUse",
+      "command": "./scripts/validate-tool.sh",
+      "matcher": "Write|Edit|Delete",
+      "timeout": 30
+    },
+    {
+      "trigger": "SessionStart",
+      "command": "echo 'Session started' | tee session.log",
+      "includeContext": false
+    }
+  ]
+}
+#+end_src
+
+* Hook Data Payloads
+
+** PreToolUse Data (Line 391646)
+
+#+begin_src javascript
+{
+  event: "PreToolUse",
+  toolName: "Write",
+  toolArguments: {
+    file_path: "/path/to/file",
+    content: "file content"
+  },
+  context: [...messages] // If includeContext: true
+}
+#+end_src
+
+** PostToolUse Data (Line 391678)
+
+#+begin_src javascript
+{
+  event: "PostToolUse",
+  toolName: "Write",
+  toolResult: {
+    success: true,
+    output: "File written successfully"
+  },
+  error: null, // Or error message if failed
+  context: [...messages]
+}
+#+end_src
+
+** UserPromptSubmit Data (Line 391710)
+
+#+begin_src javascript
+{
+  event: "UserPromptSubmit",
+  prompt: "User's input text",
+  attachments: [
+    {
+      type: "file",
+      path: "/path/to/attachment"
+    }
+  ],
+  context: [...messages]
+}
+#+end_src
+
+* Response Processing
+
+** Response Schema (Line 391215)
+
+#+begin_src javascript
+var kk1 = g.discriminatedUnion("action", [
+  g.object({
+    action: g.literal("approve"),
+    message: g.string().optional()
+  }),
+  g.object({
+    action: g.literal("reject"),
+    message: g.string().optional()
+  }),
+  g.object({
+    action: g.literal("modify"),
+    data: g.unknown()
+  })
+]);
+#+end_src
+
+** Response Actions
+
+| Action | Effect | Use Case |
+|--------|--------|----------|
+| approve | Continue normally | Validation passed |
+| reject | Block operation | Security violation |
+| modify | Alter data | Transform input/output |
+
+* Implementation Details
+
+** Main Orchestration Function (Line 391534)
+
+#+begin_src javascript
+async function bZ1(event, data, options) {
+  // 1. Find matching hooks
+  const hooks = getHooksForEvent(event);
+  
+  // 2. Filter by matcher pattern
+  const filtered = hooks.filter(h => 
+    !h.matcher || new RegExp(h.matcher).test(data.toolName)
+  );
+  
+  // 3. Execute in parallel
+  const results = await Promise.allSettled(
+    filtered.map(h => executeHook(h, data))
+  );
+  
+  // 4. Process responses
+  return processHookResponses(results);
+}
+#+end_src
+
+** Command Execution (Line 391364)
+
+#+begin_src javascript
+async function pD0(command, input, timeout = 60000) {
+  const child = spawn(command, {
+    shell: true,
+    timeout: Math.min(timeout, 600000), // Max 10 minutes
+    signal: abortSignal
+  });
+  
+  // Send JSON input
+  child.stdin.write(JSON.stringify(input));
+  child.stdin.end();
+  
+  // Collect output
+  const output = await collectOutput(child);
+  
+  // Parse JSON response
+  try {
+    return JSON.parse(output);
+  } catch {
+    return { action: "approve" }; // Default to approve
+  }
+}
+#+end_src
+
+** Matcher Pattern Support (Line 391450)
+
+Matchers support pipe-separated patterns:
+#+begin_src javascript
+function matchesPattern(pattern, value) {
+  const patterns = pattern.split('|');
+  return patterns.some(p => 
+    new RegExp(p.trim()).test(value)
+  );
+}
+#+end_src
+
+* Telemetry Events
+
+** Hook-Related Events
+
+| Event | Trigger | Data | Line |
+|-------|---------|------|------|
+| =tengu_run_hook= | Hook execution started | event, command | 391582 |
+| =tengu_hook_error= | Hook execution failed | error, event | 391598 |
+| =tengu_hook_timeout= | Hook timed out | timeout, event | 391614 |
+| =tengu_hook_rejected= | Hook rejected action | event, message | 391630 |
+| =tengu_pre_tool_hooks_rejected= | Pre-tool hook blocked | tool, reason | 391654 |
+| =tengu_post_tool_hooks_modified= | Post-tool hook modified | tool, changes | 391686 |
+| =tengu_repl_hook_finished= | REPL hook completed | duration | 391934 |
+
+* Hook Management
+
+** User Commands
+
+*** /config hooks Command (Line 405653)
+
+Interactive hook management:
+- View configured hooks
+- Add new hooks
+- Remove hooks
+- Test hook execution
+
+*** Global Disable (Line 391290)
+
+Emergency shutoff via environment variable:
+#+begin_src bash
+export CLAUDE_DISABLE_HOOKS=true
+#+end_src
+
+** Plugin Hook Integration (Line 391970)
+
+Plugins can register hooks programmatically:
+#+begin_src javascript
+registerHook({
+  trigger: "PreToolUse",
+  handler: async (data) => {
+    // Plugin logic
+    return { action: "approve" };
+  }
+});
+#+end_src
+
+* Security Considerations
+
+** Execution Environment
+
+1. **No Sandboxing**: Hooks run with full user privileges
+2. **Shell Execution**: Commands execute via system shell
+3. **Input Exposure**: Hook commands receive potentially sensitive data
+4. **Timeout Limits**: Maximum 600 seconds (10 minutes) execution time
+
+** Risk Mitigation
+
+- Explicit user configuration required
+- Matcher patterns limit hook activation
+- Timeout prevents infinite execution
+- Global disable for emergencies
+- Telemetry tracks all hook executions
+
+* Advanced Features
+
+** Parallel Execution (Line 391550)
+
+Multiple hooks for same event execute in parallel:
+#+begin_src javascript
+const results = await Promise.allSettled(
+  hooks.map(hook => executeWithTimeout(hook, data))
+);
+#+end_src
+
+** Context Inclusion Control (Line 391466)
+
+Hooks can opt out of receiving conversation context:
+#+begin_src javascript
+if (hook.includeContext !== false) {
+  data.context = getConversationContext();
+}
+#+end_src
+
+** Error Handling (Line 391598)
+
+EPIPE errors indicate early termination:
+#+begin_src javascript
+if (error.code === 'EPIPE') {
+  // Hook terminated early, treat as approval
+  return { action: "approve" };
+}
+#+end_src
+
+* Code Listings
+
+** Hook Registration (Line 391306)
+#+begin_src javascript
+function registerHooks(settings) {
+  const hooks = settings.hooks || [];
+  return hooks.map(h => ({
+    ...h,
+    timeout: h.timeout || 60000,
+    matcher: h.matcher ? new RegExp(h.matcher) : null
+  }));
+}
+#+end_src
+
+** Hook Filtering (Line 391426)
+#+begin_src javascript
+function getHooksForEvent(event, data) {
+  return registeredHooks
+    .filter(h => h.trigger === event)
+    .filter(h => !h.matcher || h.matcher.test(data.toolName));
+}
+#+end_src
+
+** Response Validation (Line 391482)
+#+begin_src javascript
+function validateResponse(output) {
+  try {
+    const parsed = JSON.parse(output);
+    return kk1.parse(parsed); // Zod validation
+  } catch {
+    return { action: "approve" }; // Safe default
+  }
+}
+#+end_src
+
+* Performance Characteristics
+
+- Parallel execution minimizes latency
+- Default 60-second timeout prevents hanging
+- JSON parsing overhead for data exchange
+- No persistent state between hook executions
+- Abort signals propagate to child processes
+
+* Limitations
+
+1. **No State Persistence**: Hooks cannot maintain state between executions
+2. **JSON Only**: Communication limited to JSON-serializable data
+3. **No Streaming**: Hooks must complete before continuing
+4. **Single Response**: Hooks cannot interact multiple times
+5. **Platform Dependencies**: Shell command availability varies
+
+* Future Considerations
+
+Based on the implementation, potential enhancements could include:
+
+1. WebAssembly hook execution for sandboxing
+2. Persistent hook state management
+3. Streaming hook responses
+4. Hook composition and chaining
+5. Built-in hook marketplace
+6. Visual hook builder interface
+
+* Function Reference
+
+| Function | Line | Purpose |
+|----------|------|---------|
+| =bZ1= | 391534 | Main hook orchestration |
+| =pD0= | 391364 | Command execution |
+| =kk1.parse= | 391215 | Response validation |
+| =V90= | 350644 | Event type definitions |
+| =z90.parse= | 350918 | Configuration validation |
+| =registerHook= | 391306 | Hook registration |
+| =getHooksForEvent= | 391426 | Event filtering |
+| =validateResponse= | 391482 | Output validation |
+| =executeWithTimeout= | 391550 | Timeout enforcement |
 
 * Conclusion
 
-The hooks system provides a powerful, flexible mechanism for users to customize and extend Claude Code's core functionality.
+Claude Code v1.0.90's hook system provides a powerful, flexible extension mechanism with robust error handling and comprehensive monitoring. The implementation balances extensibility with security through explicit configuration, timeout limits, and telemetry tracking. While hooks run with full privileges, the matcher pattern system and response validation provide granular control over hook activation and behavior.

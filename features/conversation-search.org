@@ -1,4 +1,6 @@
 * Claude Past Conversations Feature Documentation
+This is a claude.ai / Desktop feature.
+
 ** Overview
 Claude can search through and reference past conversations to maintain
 continuity across chat sessions. Two tools provide comprehensive access

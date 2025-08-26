@@ -98,6 +98,8 @@ class SyncStats:
         self.prettier_failures = 0
         self.diff_generation_failures = 0
         self.changelog_generation_failures = 0
+        self.changes_generated_count = 0
+        self.changes_generation_failures = 0
 
 
 class ClaudeCodeSync:
@@ -108,12 +110,49 @@ class ClaudeCodeSync:
     # Default changelog system prompt
     DEFAULT_CHANGELOG_PROMPT = """Give me a changelog based on the diff provided in the prompt. Return only the changelog contents. Be detailed and clear in your explanations. Investigate the newer file as needed. Focus on and prioritize user-facing (interactive and cli argument) features. If there is a new command, argument, flag, or other user-facing feature, give explanations and examples for how a user could use it. Note that this is an interactive CLI application, not a library; user's won't interact with the code directly, so present usage from the perspective of an interaction or command-line arguments, not function calls. If you want to explain the code, reproduce the relevant snippet with semantic names."""
 
+    # Default changes system prompt
+    DEFAULT_CHANGES_PROMPT = """You are analyzing a code diff to make it more understandable. Your task is to process one specific change from the diff.
+
+## Your Task
+
+Given a specific change (addition, removal, or modification), you should:
+
+1. **Preserve the exact function names and line numbers** where the change occurred
+2. **Rewrite the changed code using meaningful variable and parameter names** instead of minified names
+3. **Match related additions and removals** that should be grouped together (e.g., a function being moved or renamed)
+4. **Classify if this change is unimportant** (e.g., whitespace, formatting, build artifacts)
+
+## Output Format
+
+Return a JSON object with this structure:
+
+```json
+{
+  "location": "functionName() at line 123",
+  "type": "addition|removal|modification|move",
+  "original": "original minified code snippet",
+  "rewritten": "code with meaningful names",
+  "related_changes": ["line numbers of related changes"],
+  "importance": "high|medium|low|trivial",
+  "reason": "brief explanation if marked as low importance or trivial"
+}
+```
+
+## Guidelines
+
+- Focus on making the change understandable, not on classifying the kind of change
+- Use descriptive names that explain what the code does
+- Keep the output concise but informative
+- Group related changes (e.g., function moved to different location)
+- Mark build artifacts, whitespace changes, or auto-generated code as trivial"""
+
     def __init__(
         self,
         base_dir: Path,
         prettier: bool = False,
         diff: bool = False,
         changelog: bool = False,
+        changes: bool = False,
         latest: bool = False,
         since: Optional[str] = None,
         oldest_first: bool = False,
@@ -123,6 +162,7 @@ class ClaudeCodeSync:
         self.prettier = prettier
         self.diff = diff
         self.changelog = changelog
+        self.changes = changes
         self.latest = latest
         self.since = since
         self.oldest_first = oldest_first
@@ -134,6 +174,7 @@ class ClaudeCodeSync:
         self.pretty_dir = self.archive_dir / "pretty"
         self.diff_dir = self.archive_dir / "diff"
         self.changelog_dir = self.archive_dir / "changelog"
+        self.changes_dir = self.archive_dir / "changes"
         self.temp_dir = base_dir / ".sync-temp"
 
         self.stats = SyncStats()
@@ -150,6 +191,9 @@ class ClaudeCodeSync:
 
         if self.changelog:
             directories.append(self.changelog_dir)
+
+        if self.changes:
+            directories.append(self.changes_dir)
 
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)
@@ -639,17 +683,26 @@ class ClaudeCodeSync:
 
         if self.latest and diff_files:
             # For --latest, only check the most recent diff
-            diff_files.sort(
-                key=lambda p: version.parse(
-                    re.match(r"v([0-9.]+)\.diff$", p.name).group(1)
-                ),
-                reverse=True,
-            )  # Always get the latest for --latest flag
-            diff_files = [diff_files[0]]
+            # Filter out files that don't match our pattern first
+            valid_diff_files = []
+            for f in diff_files:
+                if re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name):
+                    valid_diff_files.append(f)
+            
+            if valid_diff_files:
+                valid_diff_files.sort(
+                    key=lambda p: version.parse(
+                        re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", p.name).group(1)
+                    ),
+                    reverse=True,
+                )  # Always get the latest for --latest flag
+                diff_files = [valid_diff_files[0]]
+            else:
+                diff_files = []
 
         for diff_file in diff_files:
-            # Extract version from filename
-            match = re.match(r"v([0-9.]+)\.diff$", diff_file.name)
+            # Extract version from filename (handle both v1.0.69.diff and v1.0.69-2.diff)
+            match = re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", diff_file.name)
             if not match:
                 continue
 
@@ -824,6 +877,268 @@ class ClaudeCodeSync:
                 f"{self.stats.changelog_generation_failures} changelog generations failed."
             )
 
+    def get_versions_to_changes(self) -> List[str]:
+        """Get list of versions that need changes files generated"""
+        versions_to_changes = []
+
+        # Get all diff files
+        diff_files = list(self.diff_dir.glob("v*.diff"))
+
+        if self.latest and diff_files:
+            # For --latest, only check the most recent diff
+            # Filter out files that don't match our pattern first
+            valid_diff_files = []
+            for f in diff_files:
+                if re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name):
+                    valid_diff_files.append(f)
+            
+            if valid_diff_files:
+                valid_diff_files.sort(
+                    key=lambda p: version.parse(
+                        re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", p.name).group(1)
+                    ),
+                    reverse=True,
+                )
+                diff_files = [valid_diff_files[0]]
+            else:
+                diff_files = []
+
+        for diff_file in diff_files:
+            # Extract version from filename (handle both v1.0.69.diff and v1.0.69-2.diff)
+            match = re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", diff_file.name)
+            if not match:
+                continue
+
+            version_str = match.group(1)
+
+            # Filter by --since if specified
+            if self.since:
+                since_version = self.since.lstrip("v")
+                try:
+                    if version.parse(version_str) < version.parse(since_version):
+                        continue
+                except Exception:
+                    pass
+
+            changes_file = self.changes_dir / f"changes-v{version_str}.diff"
+
+            # Check if changes file already exists
+            if not changes_file.exists():
+                versions_to_changes.append(version_str)
+
+        # Sort by version
+        versions_to_changes.sort(key=version.parse, reverse=not self.oldest_first)
+
+        return versions_to_changes
+
+    def generate_changes(self, version_str: str, iteration: int = 1) -> bool:
+        """Generate changes file for a specific version. Returns True on success."""
+        # Use the appropriate diff file based on iteration
+        if iteration > 1:
+            diff_file = self.diff_dir / f"v{version_str}-{iteration}.diff"
+            if not diff_file.exists():
+                diff_file = self.diff_dir / f"v{version_str}.diff"
+        else:
+            diff_file = self.diff_dir / f"v{version_str}.diff"
+
+        # Add iteration suffix to changes file if > 1
+        if iteration > 1:
+            changes_file = self.changes_dir / f"changes-v{version_str}-{iteration}.diff"
+        else:
+            changes_file = self.changes_dir / f"changes-v{version_str}.diff"
+
+        print(f"\n--- Generating changes for version {version_str} ---")
+
+        if not diff_file.exists():
+            print_warning(
+                f"Diff file not found for version {version_str}. Run with --diff to generate diffs first."
+            )
+            return False
+
+        try:
+            # Read the diff
+            with open(diff_file, "r", encoding="utf-8") as f:
+                diff_content = f.read()
+
+            # Parse the diff to extract individual changes
+            changes = self.parse_diff_changes(diff_content)
+            
+            if not changes:
+                print_warning(f"No changes found in diff for v{version_str}")
+                return False
+
+            # Ensure system prompt file exists and read it
+            self.ensure_changes_prompt()
+            system_prompt_file = self.changes_dir / "changes-prompt.md"
+            with open(system_prompt_file, "r", encoding="utf-8") as f:
+                system_prompt = f.read()
+
+            processed_changes = []
+            print_info(f"Processing {len(changes)} changes with Sonnet...")
+
+            # Process each change with Sonnet
+            for i, change in enumerate(changes, 1):
+                print(f"  Processing change {i}/{len(changes)}...", end="\r")
+                
+                # Use claude CLI with Sonnet model for each change
+                claude_result = run(["which", "claude"], capture_output=True)
+                if claude_result.returncode == 0:
+                    try:
+                        prompt = f"Analyze this specific change from the diff:\n\n{change}"
+                        
+                        # Use Sonnet for better structured output following the prompt
+                        result = run(
+                            [
+                                "claude",
+                                "--print",
+                                "--model", "sonnet",
+                                "--system-prompt", system_prompt,
+                                prompt,
+                            ],
+                            capture_output=True,
+                            text=True,
+                            timeout=60,  # Increased timeout to 60 seconds
+                        )
+
+                        if result.returncode == 0:
+                            processed_changes.append(result.stdout)
+                        else:
+                            processed_changes.append(f"# Failed to process change:\n{change}")
+                    except Exception as e:
+                        processed_changes.append(f"# Error processing change: {e}\n{change}")
+                else:
+                    print_warning("Claude CLI not available for processing changes")
+                    return False
+
+            print()  # Clear the progress line
+
+            # Combine all processed changes
+            changes_content = f"# Changes for version {version_str}\n\n"
+            changes_content += "## Processed Changes\n\n"
+            changes_content += "\n---\n\n".join(processed_changes)
+            
+            # Add a section for unimportant changes
+            changes_content += "\n\n## Unimportant Changes\n\n"
+            changes_content += "Changes marked as trivial or low importance are moved here.\n"
+
+            # Write changes file
+            with open(changes_file, "w", encoding="utf-8") as f:
+                f.write(changes_content)
+
+            print_success(f"Generated changes file for v{version_str}")
+            return True
+
+        except Exception as e:
+            print_warning(f"Changes generation failed for v{version_str}: {e}")
+            changes_file.unlink(missing_ok=True)
+            return False
+
+    def parse_diff_changes(self, diff_content: str) -> List[str]:
+        """Parse diff content into individual changes"""
+        changes = []
+        current_change = []
+        in_change = False
+        
+        # Check if this is an astdiff output or unified diff
+        is_astdiff = "=== Removed" in diff_content or "=== Added" in diff_content
+        
+        if is_astdiff:
+            # Parse astdiff format
+            lines = diff_content.split("\n")
+            i = 0
+            while i < len(lines):
+                line = lines[i]
+                # Look for section headers like "--- Removed function 'xyz'"
+                if line.startswith("--- Removed") or line.startswith("--- Added") or line.startswith("--- Modified"):
+                    # Start of a change block
+                    change_block = [line]
+                    i += 1
+                    # Collect the file path line
+                    if i < len(lines) and lines[i].startswith("/"):
+                        change_block.append(lines[i])
+                        i += 1
+                    # Collect the actual code lines (prefixed with - or +)
+                    while i < len(lines) and (lines[i].startswith("-") or lines[i].startswith("+") or lines[i].strip() == ""):
+                        if lines[i].strip():  # Skip empty lines
+                            change_block.append(lines[i])
+                        i += 1
+                    if len(change_block) > 1:
+                        changes.append("\n".join(change_block))
+                else:
+                    i += 1
+        else:
+            # Parse unified diff format
+            for line in diff_content.split("\n"):
+                # Detect start of a new change block
+                if line.startswith("@@"):
+                    if current_change:
+                        changes.append("\n".join(current_change))
+                        current_change = []
+                    in_change = True
+                    current_change.append(line)
+                elif in_change and (line.startswith("+") or line.startswith("-") or line.startswith(" ")):
+                    current_change.append(line)
+                elif in_change and not line:
+                    # Empty line might separate changes
+                    if current_change:
+                        changes.append("\n".join(current_change))
+                        current_change = []
+                    in_change = False
+            
+            # Add the last change if any
+            if current_change:
+                changes.append("\n".join(current_change))
+        
+        return changes
+
+    def phase_5_generate_changes(self):
+        """Phase 5: Generate changes files using Claude subagents"""
+        if not self.changes:
+            return
+
+        print_header("Phase 5: Generating Changes Files")
+
+        # Ensure the system prompt file exists
+        self.ensure_changes_prompt()
+
+        # Check if Claude CLI is available
+        claude_result = run(["which", "claude"], capture_output=True)
+        if claude_result.returncode != 0:
+            print_warning(
+                "Claude CLI not found. Skipping changes generation."
+            )
+            print_info(
+                "Ensure claude CLI is in PATH"
+            )
+            return
+
+        print_info("Checking for changes files to generate...")
+
+        versions_to_changes = self.get_versions_to_changes()
+
+        if not versions_to_changes:
+            print_info("All changes files already generated.")
+            return
+
+        order_desc = "oldest first" if self.oldest_first else "newest first"
+        print_info(
+            f"Found {len(versions_to_changes)} changes files to generate (processing {order_desc})"
+        )
+
+        for version_str in versions_to_changes:
+            if self.generate_changes(version_str):
+                self.stats.changes_generated_count += 1
+            else:
+                self.stats.changes_generation_failures += 1
+
+        print_info(
+            f"\nGenerated {self.stats.changes_generated_count} new changes files."
+        )
+        if self.stats.changes_generation_failures > 0:
+            print_warning(
+                f"{self.stats.changes_generation_failures} changes generations failed."
+            )
+
     def ensure_changelog_prompt(self):
         """Ensure the changelog system prompt file exists"""
         system_prompt_file = self.changelog_dir / "system-prompt.md"
@@ -834,6 +1149,17 @@ class ClaudeCodeSync:
                 f.write(self.DEFAULT_CHANGELOG_PROMPT)
             print_success(f"Created {system_prompt_file}")
             print_info("You can edit this file to customize changelog generation")
+
+    def ensure_changes_prompt(self):
+        """Ensure the changes system prompt file exists"""
+        system_prompt_file = self.changes_dir / "changes-prompt.md"
+
+        if not system_prompt_file.exists():
+            print_info("Creating default changes system prompt file...")
+            with open(system_prompt_file, "w", encoding="utf-8") as f:
+                f.write(self.DEFAULT_CHANGES_PROMPT)
+            print_success(f"Created {system_prompt_file}")
+            print_info("You can edit this file to customize changes generation")
 
     def update_claude_md(self, version_str: str):
         """Update CLAUDE.md file to indicate the current version for analysis"""
@@ -931,12 +1257,21 @@ When analyzing Claude Code's source, please use the prettified version at:
                     f"Generated {self.stats.changelog_generated_count} new changelogs"
                 )
 
+        if self.changes:
+            changes_count = len(list(self.changes_dir.glob("changes-v*.diff")))
+            print(f"Version changes: {changes_count}")
+            if self.stats.changes_generated_count > 0:
+                print_success(
+                    f"Generated {self.stats.changes_generated_count} new changes files"
+                )
+
         # Print any failures
         total_failures = (
             self.stats.download_failures
             + self.stats.prettier_failures
             + self.stats.diff_generation_failures
             + self.stats.changelog_generation_failures
+            + self.stats.changes_generation_failures
         )
         if total_failures > 0:
             print_warning(f"Total failures: {total_failures}")
@@ -959,6 +1294,7 @@ When analyzing Claude Code's source, please use the prettified version at:
             self.phase_2_prettify_files()
             self.phase_3_generate_diffs()
             self.phase_4_generate_changelogs()
+            self.phase_5_generate_changes()
 
             # Summary
             self.print_summary()
@@ -1141,6 +1477,17 @@ When analyzing Claude Code's source, please use the prettified version at:
                 else:
                     self.stats.changelog_generation_failures += 1
 
+            # Generate changes if requested
+            if self.changes:
+                changes_iteration = changelog_iteration  # Use same iteration tracking
+                print_info(
+                    f"Generating changes iteration {changes_iteration} for v{version_str}"
+                )
+                if self.generate_changes(version_str, changes_iteration):
+                    self.stats.changes_generated_count += 1
+                else:
+                    self.stats.changes_generation_failures += 1
+
         print_info(
             f"\nRedo complete: {self.stats.diff_generated_count} diffs, {self.stats.changelog_generated_count} changelogs"
         )
@@ -1169,6 +1516,7 @@ Examples:
   %(prog)s --all --since 1.0.50   # Process all steps for versions 1.0.50+
   %(prog)s --changelog --oldest-first     # Generate changelogs in chronological order
   %(prog)s --prettier --diff --changelog  # Generate diffs and changelogs
+  %(prog)s --diff --changes               # Generate diffs and detailed changes
   %(prog)s --redo 69 --changelog          # Redo changelog for v1.0.69 (creates changelog-v1.0.69-2.md)
   %(prog)s --redo 69-71 --diff --changelog # Redo diffs and changelogs for v1.0.69 through v1.0.71
   %(prog)s --redo 1.0.69- --changelog     # Redo changelogs for v1.0.69 and later
@@ -1184,13 +1532,19 @@ Examples:
     parser.add_argument(
         "--diff",
         action="store_true",
-        help="Generate diffs between consecutive versions (requires --prettier)",
+        help="Generate diffs between consecutive versions",
     )
 
     parser.add_argument(
         "--changelog",
         action="store_true",
         help="Generate changelogs using Claude SDK (processes available diffs)",
+    )
+
+    parser.add_argument(
+        "--changes",
+        action="store_true",
+        help="Generate detailed changes files with meaningful names using Claude subagents",
     )
 
     parser.add_argument(
@@ -1232,11 +1586,7 @@ Examples:
         args.prettier = True
         args.diff = True
         args.changelog = True
-
-    # Validate arguments
-    if args.diff and not args.prettier:
-        print_error("--diff requires --prettier flag")
-        sys.exit(1)
+        args.changes = True
 
     # --changelog will work independently and process available diffs
 
@@ -1254,6 +1604,7 @@ Examples:
         prettier=args.prettier,
         diff=args.diff,
         changelog=args.changelog,
+        changes=args.changes,
         latest=args.latest,
         since=args.since,
         oldest_first=args.oldest_first,
@@ -1262,9 +1613,9 @@ Examples:
 
     # If --redo is specified, run the redo process instead
     if args.redo:
-        # For redo, we need at least one of diff or changelog
-        if not args.diff and not args.changelog:
-            print_error("--redo requires at least one of --diff or --changelog")
+        # For redo, we need at least one of diff, changelog, or changes
+        if not args.diff and not args.changelog and not args.changes:
+            print_error("--redo requires at least one of --diff, --changelog, or --changes")
             sys.exit(1)
         sync_tool.setup_directories()
         sync_tool.check_dependencies()

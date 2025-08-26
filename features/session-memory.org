@@ -1,0 +1,438 @@
+#+TITLE: Session Memory (Automatic Note-Taking)
+#+DATE: 2025-08-20
+
+* Overview
+
+Session Memory is an automatic background note-taking system introduced in Claude Code v1.0.85. It maintains persistent, structured notes about your development work throughout a session, capturing task specifications, work progress, code documentation, workflows, corrections, and learnings without interrupting your conversation flow.
+
+* Key Characteristics
+
+** Automatic Activation
+- Activates after 5 messages in a session
+- No environment variables or feature flags required
+- Always enabled by default (no opt-out mechanism currently)
+- Transparent to the user - updates happen silently in the background
+
+** Persistent Storage
+- Notes stored at: =~/.claude/session-memory/[session-id].md=
+- Each session gets a unique UUID-based identifier
+- Notes persist across Claude Code restarts if using the same session
+- Markdown format for easy reading and editing
+
+** Intelligent Updates
+- Claude uses itself to update the notes based on conversation context
+- Updates use the MultiEdit tool without requiring permissions
+- Maintains structured format with predefined sections
+- Focuses on actionable, specific information
+
+* Activation Mechanism
+
+** Message Count Trigger
+The feature activates when a session reaches 5 messages:
+#+BEGIN_SRC javascript
+var nN8 = 5;  // Minimum message count threshold
+#+END_SRC
+
+This threshold ensures notes aren't created for trivial interactions while still capturing meaningful development sessions early enough to be useful.
+
+** Activation Check Function
+The =aN8()= function checks if the conversation has tool usage:
+#+BEGIN_SRC javascript
+function aN8(A) {
+  for (let B = A.length - 1; B >= 0; B--) {
+    let Q = A[B];
+    if (Q && Q.type === "assistant") {
+      let D = Q.message.content;
+      if (Array.isArray(D)) 
+        return D.some((G) => G.type === "tool_use");
+    }
+  }
+  return !1;
+}
+#+END_SRC
+
+This ensures the feature activates for sessions involving actual work (tool usage) rather than just conversation.
+
+** Permission Bypass
+The system automatically allows operations on session-memory files:
+#+BEGIN_SRC javascript
+if (typeof Q === "string" && Q.includes("session-memory"))
+  return { behavior: "allow", updatedInput: B };
+#+END_SRC
+
+This prevents permission prompts from interrupting the background note-taking process.
+
+* Directory Structure
+
+** Base Directory
+#+BEGIN_SRC
+~/.claude/session-memory/
+├── [session-uuid-1].md    # Notes for session 1
+├── [session-uuid-2].md    # Notes for session 2
+├── template.md            # Optional custom template
+└── prompt.md              # Optional custom update prompt
+#+END_SRC
+
+** Directory Creation
+The directory is created using:
+#+BEGIN_SRC javascript
+var _T0 = auB(P9(), "session-memory");
+// P9() returns the Claude home directory (~/.claude)
+// auB() is a path joining function
+#+END_SRC
+
+The directory is created automatically when the feature first activates. If it doesn't exist, Claude Code creates it before writing the first notes file.
+
+* Default Template
+
+** Structure
+The default template (=uI8= variable) contains six main sections:
+
+#+BEGIN_SRC markdown
+# Task specification
+_What did the user ask to build? Any design decisions or other explanatory context_
+
+# Worklog
+_Step by step, what was attempted, done? Very terse summary for each step_
+
+# Code documentation
+_Major functions, classes, architecture notes_
+
+# Workflow
+_What bash commands are usually run and in what order? How to interpret their output if not obvious?_
+
+# User Corrections / Mistakes
+_What did the user correct Assistant about? What did not work and should not be tried again?_
+
+# Learnings
+_What has worked well? What has not? What to avoid? Do not duplicate items in other sections_
+#+END_SRC
+
+** Template Rules
+- Section headers must never be modified or deleted
+- Italic descriptions under headers must remain intact
+- Only content below descriptions should be updated
+- Sections are preserved even if empty
+
+* Update Mechanism
+
+** Update Prompt
+The system uses a detailed prompt (=mI8= variable) that instructs Claude to:
+1. Read the current notes content
+2. Update based on the conversation (excluding the update instruction itself)
+3. Maintain exact structure with all sections and headers
+4. Use MultiEdit tool exactly once
+5. Never mention the note-taking process to the user
+
+** Update Process
+1. System reads current notes from file
+2. Generates update prompt with current content embedded
+3. Claude processes the prompt and updates via MultiEdit
+4. Changes are saved automatically
+5. Process repeats periodically as conversation continues
+
+** Content Management
+- Sections that grow beyond ~2000 words cycle out less important details
+- Focus on actionable, specific information
+- Preserve most critical information when trimming
+- Maintain chronological progression in Worklog section
+
+* Customization
+
+** Custom Template
+Create your own template structure:
+#+BEGIN_SRC bash
+mkdir -p ~/.claude/session-memory
+cat > ~/.claude/session-memory/template.md << 'EOF'
+# Project Goals
+_High-level objectives and requirements_
+
+# Implementation Progress
+_Current status and completed features_
+
+# Technical Decisions
+_Architecture choices and rationale_
+
+# Outstanding Issues
+_Bugs, TODOs, and blockers_
+
+# Notes
+_Miscellaneous observations and ideas_
+EOF
+#+END_SRC
+
+** Custom Update Prompt
+Define how Claude should update your notes:
+#+BEGIN_SRC bash
+cat > ~/.claude/session-memory/prompt.md << 'EOF'
+Update the session notes focusing on:
+1. Technical implementation details
+2. Design decisions and their rationale
+3. Problems encountered and solutions found
+4. Code quality observations
+5. Performance considerations
+
+Maintain a professional, technical tone.
+Prioritize information useful for code reviews.
+EOF
+#+END_SRC
+
+** Loading Custom Configuration
+The system checks for custom files at startup:
+#+BEGIN_SRC javascript
+async function GPB() {
+  let A = P1(),  // File system module
+    B = DPB(P9(), "session-memory", "template.md");
+  if (A.existsSync(B))
+    try {
+      return A.readFileSync(B, { encoding: "utf-8" });
+    } catch (Q) {
+      // Falls back to default template
+    }
+  return uI8;  // Default template
+}
+#+END_SRC
+
+* Implementation Details
+
+** File Naming
+Session files use UUID-based names:
+#+BEGIN_SRC javascript
+import { randomUUID as bN8 } from "crypto";
+// Files named like: 550e8400-e29b-41d4-a716-446655440000.md
+#+END_SRC
+
+** Update Frequency
+The system appears to update notes:
+- After significant tool usage
+- When new sections have content to add
+- At natural conversation breakpoints
+- Not on every single message to avoid excessive updates
+
+** Error Handling
+- Missing directories are created automatically
+- Read/write errors fail silently to avoid disrupting workflow
+- Malformed templates fall back to defaults
+- Update failures don't affect main conversation
+
+** Performance Considerations
+- Updates run asynchronously in background
+- No blocking operations in main conversation flow
+- Efficient diffing via MultiEdit tool
+- Minimal file I/O operations
+
+* Use Cases
+
+** Development Documentation
+- Automatically documents coding sessions
+- Captures architectural decisions as they're made
+- Records command sequences for reproducibility
+- Tracks what approaches were tried and abandoned
+
+** Knowledge Transfer
+- Creates handoff documentation for team members
+- Preserves context for returning to projects later
+- Documents workarounds and gotchas discovered
+- Maintains record of user preferences and corrections
+
+** Learning and Improvement
+- Tracks what solutions worked vs. failed
+- Records patterns to avoid in future
+- Documents user corrections for better assistance
+- Builds project-specific knowledge base
+
+** Debugging Aid
+- Maintains chronological record of attempts
+- Documents error messages and solutions
+- Tracks configuration changes made
+- Records successful command sequences
+
+* Best Practices
+
+** Template Design
+- Keep sections focused and specific
+- Use clear, descriptive headers
+- Include sections for both successes and failures
+- Design for scanability and quick reference
+
+** Content Guidelines
+- Focus on actionable information
+- Prioritize "why" over "what" for decisions
+- Include enough context for future understanding
+- Keep entries concise but complete
+
+** Maintenance
+- Periodically review and clean old session files
+- Archive important sessions for future reference
+- Consider version controlling important templates
+- Share useful templates with team members
+
+* Technical Architecture
+
+** Component Structure
+#+BEGIN_SRC
+Session Memory System
+├── Activation Logic
+│   ├── Message counter (nN8 = 5)
+│   ├── Tool usage detector (aN8)
+│   └── Session state manager
+├── Storage Layer
+│   ├── Directory management (_T0)
+│   ├── File operations (P1)
+│   └── Path resolution (auB, DPB)
+├── Template System
+│   ├── Default template (uI8)
+│   ├── Custom template loader (GPB)
+│   └── Template validator
+├── Update Engine
+│   ├── Update prompt generator (mI8)
+│   ├── Custom prompt loader (dI8)
+│   ├── Content processor (FPB)
+│   └── MultiEdit interface
+└── Permission System
+    └── Automatic bypass for session-memory paths
+#+END_SRC
+
+** Data Flow
+1. User conversation reaches 5 messages
+2. System checks for tool usage activity
+3. Creates session-memory directory if needed
+4. Generates or loads template
+5. Creates initial notes file with template
+6. Monitors conversation for updates
+7. Periodically updates notes via MultiEdit
+8. Maintains notes throughout session
+
+* Limitations and Considerations
+
+** Current Limitations
+- No opt-out mechanism currently available
+- Cannot disable for specific projects
+- No configuration for activation threshold
+- Limited control over update frequency
+- No built-in cleanup for old sessions
+
+** Privacy Considerations
+- Notes stored in plaintext on local filesystem
+- May contain sensitive code or information
+- No encryption or access control
+- Accessible to any process with user permissions
+
+** Storage Considerations
+- Each session creates a new file
+- No automatic cleanup mechanism
+- Files accumulate over time
+- Manual maintenance required
+- Consider disk space for long-term usage
+
+* Troubleshooting
+
+** Notes Not Being Created
+- Ensure conversation has at least 5 messages
+- Check that tools are being used (not just chat)
+- Verify ~/.claude/session-memory/ exists
+- Check file system permissions
+
+** Custom Template Not Loading
+#+BEGIN_SRC bash
+# Verify template exists and is readable
+ls -la ~/.claude/session-memory/template.md
+cat ~/.claude/session-memory/template.md
+
+# Check for syntax errors in markdown
+# Ensure file encoding is UTF-8
+file ~/.claude/session-memory/template.md
+#+END_SRC
+
+** Finding Session Files
+#+BEGIN_SRC bash
+# List all session files
+ls -la ~/.claude/session-memory/*.md
+
+# Find most recent session
+ls -t ~/.claude/session-memory/*.md | head -1
+
+# Search for specific content
+grep -r "keyword" ~/.claude/session-memory/
+#+END_SRC
+
+** Manual Cleanup
+#+BEGIN_SRC bash
+# Remove sessions older than 30 days
+find ~/.claude/session-memory -name "*.md" -mtime +30 -delete
+
+# Archive old sessions
+tar czf session-archive-$(date +%Y%m%d).tar.gz ~/.claude/session-memory/*.md
+rm ~/.claude/session-memory/*.md
+#+END_SRC
+
+* Examples
+
+** Sample Session Notes
+After a typical development session:
+
+#+BEGIN_SRC markdown
+# Task specification
+User requested implementation of a REST API for todo list management with 
+CRUD operations, PostgreSQL persistence, and JWT authentication.
+
+# Worklog
+- Set up Express server with TypeScript configuration
+- Created PostgreSQL schema with users and todos tables  
+- Implemented JWT authentication middleware
+- Added user registration and login endpoints
+- Created CRUD endpoints for todos with user association
+- Added input validation using Joi
+- Implemented error handling middleware
+- Added unit tests for auth endpoints
+- Fixed SQL injection vulnerability in search endpoint
+- Added rate limiting to prevent abuse
+
+# Code documentation
+- `AuthController`: Handles user registration/login, generates JWT tokens
+- `TodoController`: CRUD operations for todos, enforces user ownership
+- `authMiddleware`: Validates JWT tokens, attaches user to request
+- `Database`: Connection pool management, query builder wrapper
+- `validators/`: Joi schemas for request validation
+
+# Workflow
+npm run dev          # Start development server with hot reload
+npm test            # Run Jest test suite
+npm run db:migrate  # Run database migrations
+npm run db:seed     # Populate test data
+npm run build       # Compile TypeScript for production
+
+# User Corrections / Mistakes
+- Initial JWT implementation used HS256, user requested RS256 for better security
+- First attempt at search used string concatenation (SQL injection risk)
+- User corrected that todos should be soft-deleted, not hard-deleted
+
+# Learnings
+- RS256 requires public/private key pair, more complex but more secure
+- Always use parameterized queries to prevent SQL injection
+- Soft deletes preserve data integrity and audit trail
+- Rate limiting essential for public APIs to prevent abuse
+#+END_SRC
+
+** Custom Template Example
+For a machine learning project:
+
+#+BEGIN_SRC markdown
+# Model Objectives
+_Target metrics, business goals, constraints_
+
+# Data Pipeline
+_Data sources, preprocessing steps, feature engineering_
+
+# Experiments Log
+_Model architectures tried, hyperparameters, results_
+
+# Current Best Model
+_Architecture, parameters, performance metrics_
+
+# Deployment Notes
+_Serving infrastructure, monitoring, A/B test setup_
+
+# Issues & Blockers
+_Data quality issues, performance bottlenecks, integration challenges_
+#+END_SRC

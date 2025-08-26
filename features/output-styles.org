@@ -1,360 +1,479 @@
-#+TITLE: Claude Code Output Styles Investigation
-#+DATE: 2025-08-15
+#+TITLE: Claude Code Output Styles Feature - Technical Analysis v1.0.90
+#+DATE: 2025-08-25
 
-* Executive Summary
+* Overview
 
-Output styles in Claude Code v1.0.81 are a powerful feature that modifies Claude's conversational behavior and response patterns. They work by injecting additional system prompt content that augments or overrides default behavior. The system includes built-in styles ("Explanatory" and "Learning") and supports custom user-defined styles through markdown files with frontmatter.
+Claude Code v1.0.90 implements a sophisticated output style system that allows users to customize Claude's communication style by injecting additional instructions into the system prompt. This feature enables different response formats, educational modes, and custom interaction patterns while maintaining core functionality and safety.
 
-* How Output Styles Work
+* Built-in Styles
 
-** Architecture Overview
+** Available Styles (Lines 364675-364770)
 
-Output styles modify Claude's behavior through a layered prompt system:
-
-1. *Base System Prompt*: Core instructions for Claude Code
-2. *Output Style Prompt*: Additional instructions that modify behavior
-3. *Final Merged Prompt*: Combination used for the conversation
-
-** Implementation Details
-
-The output style system (lines 365810-365955) works as follows:
-
-1. Styles are loaded from markdown files in specific directories
-2. The active style is determined from user settings (=outputStyle= field)
-3. The style's prompt content is injected into the system prompt
-4. Claude's behavior changes based on the additional instructions
-
-** Key Components
-
-- =NC0= function (line 365810): Loads custom output styles from markdown files
-- =HZ1= function (line 365935): Merges built-in and custom styles
-- =u8B= function (line 365952): Retrieves the currently active output style
-- =Sm= object (line 365840): Contains built-in style definitions
-
-* Built-in Output Styles
-
-** Default Style
-
-- *Name*: =default=
-- *Behavior*: Standard Claude Code behavior without modifications
-- *Implementation*: Returns =null= for prompt content (no additional instructions)
-
-** Explanatory Style
-
-- *Name*: =Explanatory=
-- *Purpose*: Claude explains implementation choices and codebase patterns
-- *Key Features*:
-  - Provides educational insights about the codebase
-  - Includes "★ Insight" boxes before and after code changes
-  - Balances task completion with educational content
-  - May exceed typical length constraints for educational value
-
-*Prompt Snippet*:
-#+begin_src
-You should be clear and educational, providing helpful explanations 
-while remaining focused on the task. Balance educational content with 
-task completion.
-#+end_src
-
-** Learning Style
-
-- *Name*: =Learning=
-- *Purpose*: Interactive learning through hands-on practice
-- *Key Features*:
-  - Asks users to write 2-10 line code pieces for key decisions
-  - Creates TODO(human) markers in code for user contributions
-  - Focuses on design decisions and business logic
-  - Provides guidance on trade-offs and constraints
-
-*Learn by Doing Format*:
-#+begin_src
-• **Learn by Doing**
-**Context:** [what's built and why this decision matters]
-**Your Task:** [specific function/section in file]
-**Guidance:** [trade-offs and constraints to consider]
-#+end_src
-
-* Custom Output Styles
-
-** File Structure
-
-Custom output styles are markdown files with YAML frontmatter:
-
-#+begin_src markdown
----
-name: Style Display Name        # Optional, defaults to filename
-description: Brief description   # Optional
----
-
-# Custom Style Instructions
-
-Your additional system prompt content goes here.
-This will be appended to Claude's base instructions.
-#+end_src
-
-** Storage Locations
-
-Output styles are loaded from three locations in priority order:
-
-1. *User Level*: =~/.claude/output-styles/*.md=
-2. *Project Level*: =.claude/output-styles/*.md=
-3. *Policy Level*: Managed by organization (if applicable)
-
-Priority: User styles override project styles, which override policy styles.
-
-** Loading Process
-
-1. The =Oe= function (line 365747) scans all output style directories
-2. Markdown files are parsed for frontmatter and content
-3. Styles are registered with their name, description, and prompt
-4. Duplicate names are resolved by priority (user > project > policy)
-
-* Creating Custom Output Styles
-
-** Using the output-style-setup Agent
-
-Claude Code includes a specialized agent (line 394900) for creating output styles:
-
-#+begin_src bash
-claude "create an output style that makes responses more concise"
-#+end_src
-
-The agent will:
-1. Understand your requirements
-2. Generate appropriate system prompt modifications
-3. Create a markdown file with proper frontmatter
-4. Save to =~/.claude/output-styles/= by default
-
-** Manual Creation
-
-1. Create a markdown file in =~/.claude/output-styles/=:
-   #+begin_src bash
-   mkdir -p ~/.claude/output-styles
-   touch ~/.claude/output-styles/concise.md
-   #+end_src
-
-2. Add frontmatter and instructions:
-   #+begin_src markdown
-   ---
-   name: Concise
-   description: Brief, focused responses without unnecessary detail
-   ---
-   
-   You are an interactive CLI tool that provides concise, focused responses.
-   
-   # Response Guidelines
-   - Keep explanations brief and to the point
-   - Avoid repetition and unnecessary preamble
-   - Focus on actionable information
-   - Use bullet points for clarity
-   - Limit code comments to essential information only
-   #+end_src
-
-3. Restart Claude Code or reload styles
-
-** Example Custom Styles
-
-*** Code Reviewer Style
-#+begin_src markdown
----
-name: Code Reviewer
-description: Focuses on code quality, best practices, and potential issues
----
-
-You are acting as a senior code reviewer. When examining code:
-
-- Point out potential bugs and edge cases
-- Suggest performance optimizations
-- Highlight security concerns
-- Recommend best practices and patterns
-- Explain the "why" behind suggestions
-#+end_src
-
-*** Debugging Assistant Style
-#+begin_src markdown
----
-name: Debugging Assistant
-description: Systematic approach to finding and fixing bugs
----
-
-You are a debugging specialist. For every issue:
-
-1. First understand the expected vs actual behavior
-2. Add strategic logging/debugging statements
-3. Trace execution flow systematically
-4. Identify root causes, not just symptoms
-5. Verify fixes with appropriate tests
-#+end_src
-
-*** Documentation Writer Style
-#+begin_src markdown
----
-name: Documentation Writer
-description: Focuses on clear documentation and examples
----
-
-You prioritize documentation and clarity:
-
-- Write comprehensive docstrings for all functions
-- Include usage examples in comments
-- Create README sections for new features
-- Explain complex logic with inline comments
-- Generate API documentation automatically
-#+end_src
-
-* Configuration and Management
-
-** Setting the Active Style
-
-The active output style is configured in user settings (=~/.claude/settings.json=):
-
-#+begin_src json
+*** Default Style (Line 364675)
+#+begin_src javascript
 {
-  "outputStyle": "Explanatory"
+  id: "default",
+  displayName: "Default",
+  description: "Standard Claude Code behavior",
+  isCodingRelated: true,
+  content: "" // No prompt modifications
 }
 #+end_src
 
-** Changing Styles at Runtime
+*** Explanatory Style (Line 364683)
+#+begin_src javascript
+{
+  id: "explanatory",
+  displayName: "Explanatory",
+  description: "Provides educational insights alongside solutions",
+  isCodingRelated: true,
+  content: `# Output Style: Explanatory
+You are an interactive CLI tool that helps users with software engineering tasks. 
+In addition to software engineering tasks, you should provide educational insights 
+about the codebase along the way.
 
-Use the =/output-style= command to change styles during a session:
+## Insights
+Before and after writing code, always provide brief educational explanations 
+about implementation choices using (with backticks):
+"\`★ Insight ─────────────────────────────────────\`
+[2-3 key educational points]
+\`─────────────────────────────────────────────────\`"
 
-#+begin_src
-/output-style
+Focus on interesting insights specific to the codebase or the code you just wrote, 
+rather than general programming concepts.`
+}
 #+end_src
 
-This will present a menu of available styles to choose from.
+*** Learning Style (Line 364696)
+#+begin_src javascript
+{
+  id: "learning",
+  displayName: "Learning",
+  description: "Interactive learning mode with hands-on practice",
+  isCodingRelated: true,
+  content: `# Output Style: Learning
+You are an interactive learning assistant. When asked to implement something, 
+guide the user to write code themselves.
 
-** Listing Available Styles
+## Approach
+1. Break down tasks into small, manageable steps
+2. Ask the user to write specific code snippets
+3. Provide hints and feedback on their attempts
+4. Celebrate their progress
 
-All available styles are discovered automatically from:
-- Built-in styles (=default=, =Explanatory=, =Learning=)
-- User custom styles in =~/.claude/output-styles/=
-- Project styles in =.claude/output-styles/=
-- Policy styles (if configured by organization)
-
-* Technical Implementation
-
-** Style Loading Flow
-
-1. *Initialization* (line 365810-365827):
-   - =NC0= function loads all markdown files from style directories
-   - Parses frontmatter for metadata
-   - Extracts prompt content from markdown body
-
-2. *Style Merging* (line 365935-365950):
-   - =HZ1= function creates style registry
-   - Starts with built-in styles from =Sm= object
-   - Overlays custom styles by priority order
-   - Returns complete style dictionary
-
-3. *Style Selection* (line 365952-365954):
-   - =u8B= function reads =outputStyle= from user settings
-   - Defaults to "default" if not specified
-   - Returns style object or =null= if not found
-
-4. *Prompt Integration* (line 412403-412406):
-   - Style prompt is retrieved during system prompt generation
-   - Appended to base system instructions
-   - Affects all subsequent Claude responses
-
-** File Format Schema
-
-While not explicitly defined, the implicit schema is:
-
-#+begin_src yaml
-# Frontmatter (optional)
-name: string          # Display name for the style
-description: string   # Brief description of the style's purpose
-
-# Body (required)
-# Markdown content that becomes the additional system prompt
+Example:
+"Let's implement this together! First, can you write a function that 
+[specific small task]? Give it a try and I'll help if you get stuck!"`
+}
 #+end_src
 
-** Cache Management
+* Style Schema
 
-- Styles are cached using the =EA= (memoization) wrapper
-- Cache is cleared when styles are modified
-- =h8B= function (line 365828) clears the style cache
+** Style Definition Structure (Line 364634)
 
-* Advanced Features
+#+begin_src javascript
+interface OutputStyle {
+  id: string;           // Unique identifier
+  displayName: string;  // User-friendly name
+  description: string;  // Brief description
+  isCodingRelated: boolean; // Flag for future filtering
+  content: string;      // System prompt additions
+}
+#+end_src
 
-** Style-Specific Tool Restrictions
+** Custom Style File Format
 
-While not implemented in v1.0.81, the architecture supports potential features like:
-
-- Limiting available tools per style
-- Modifying tool behavior based on active style
-- Style-specific command availability
-
-** Conditional Style Content
-
-Styles can include conditional instructions based on:
-- Current project type
-- Available tools
-- User preferences
-- Task context
-
-** Style Composition
-
-Advanced users can create styles that reference common patterns:
+Custom styles are stored as markdown files with YAML frontmatter:
 
 #+begin_src markdown
 ---
-name: Composite Style
+id: custom-style
+displayName: Custom Style Name
+description: Description of what this style does
+isCodingRelated: true
 ---
 
-${existing_style_patterns}
+# Output Style: Custom
 
-Additional custom instructions...
+Instructions for Claude on how to respond in this style...
 #+end_src
 
-* Limitations and Considerations
+* Storage Locations
 
-** Current Limitations
+** Three-Tier Storage System (Line 364771)
 
-1. *No Style Inheritance*: Styles cannot extend other styles
-2. *No Dynamic Variables*: Limited template variable support
-3. *Single Active Style*: Cannot combine multiple styles simultaneously
-4. *No Validation*: No schema validation for style content
-5. *Manual Reload*: Changes require session restart or manual reload
+Styles are loaded from three locations in priority order:
 
-** Best Practices
+| Location | Path | Purpose | Priority |
+|----------|------|---------|----------|
+| Policy | Organization-defined | Enterprise styles | Highest |
+| Project | =.claude/output-styles/= | Team-shared styles | Medium |
+| User | =~/.claude/output-styles/= | Personal styles | Lowest |
 
-1. *Keep Styles Focused*: Each style should have a clear, single purpose
-2. *Test Thoroughly*: Verify style behavior before relying on it
-3. *Document Intent*: Use clear descriptions in frontmatter
-4. *Avoid Conflicts*: Don't contradict base system instructions
-5. *Version Control*: Track custom styles in git for team sharing
+** Directory Structure
 
-** Security Considerations
+#+begin_src
+~/.claude/output-styles/
+├── concise.md
+├── verbose.md
+└── technical.md
 
-- Styles can significantly alter Claude's behavior
-- Project-level styles affect all team members
-- No sandboxing or permission system for styles
-- Malicious styles could compromise output quality
+.claude/output-styles/
+├── team-standard.md
+└── project-specific.md
+#+end_src
 
-* Future Potential
+* Implementation Details
 
-** Possible Enhancements
+** Style Loading Function (Line 364771)
 
-1. *Style Marketplace*: Share and discover community styles
-2. *Style Inheritance*: Build styles that extend others
-3. *Dynamic Styles*: Context-aware style switching
-4. *Style Validation*: Schema validation and linting
-5. *Style Preview*: Test styles before activation
-6. *Multi-Style Support*: Combine multiple styles
-7. *Style Parameters*: Configurable style variables
-8. *IDE Integration*: VS Code style picker
+#+begin_src javascript
+var Eu = YA(async () => {
+  let A = {},
+    B = await jZ("output-styles"); // Load custom styles
+    
+  // Process custom styles
+  for (let Q of B || []) {
+    if (Q.frontmatter?.id) {
+      A[Q.frontmatter.id] = {
+        id: Q.frontmatter.id,
+        displayName: Q.frontmatter.displayName || Q.frontmatter.id,
+        description: Q.frontmatter.description || ko(Q.content),
+        isCodingRelated: Q.frontmatter.isCodingRelated ?? true,
+        content: Q.content
+      };
+    }
+  }
+  
+  // Merge with built-in styles
+  return { ...builtInStyles, ...A };
+});
+#+end_src
 
-** Integration Opportunities
+** Current Style Retrieval (Line 364788)
 
-- Integration with project templates
-- Automatic style selection based on file type
-- Style recommendations based on task
-- Team style standards and enforcement
+#+begin_src javascript
+async function xP2() {
+  let A = await Eu(),          // Get all available styles
+    B = sR2(),                 // Get current style ID from settings
+    Q = A[B];                  // Look up style definition
+    
+  if (!Q && B !== "default") {
+    // Fallback to default if style not found
+    console.warn(`Style '${B}' not found, using default`);
+    Q = A.default;
+  }
+  
+  return Q;
+}
+#+end_src
+
+** System Prompt Injection (Lines 417065-417068)
+
+#+begin_src javascript
+async function buildSystemPrompt() {
+  let basePrompt = getBaseSystemPrompt();
+  let style = await xP2();
+  
+  if (style && style.content) {
+    // Inject style instructions after base prompt
+    basePrompt += "\n\n" + style.content;
+  }
+  
+  return basePrompt;
+}
+#+end_src
+
+** Style Discovery Function (Line 364752)
+
+#+begin_src javascript
+async function jZ(directory) {
+  let files = [];
+  
+  // Check all scope directories
+  for (let scope of ["user", "project", "policy"]) {
+    let path = getPathForScope(scope, directory);
+    if (fs.existsSync(path)) {
+      let mdFiles = fs.readdirSync(path)
+        .filter(f => f.endsWith('.md'));
+      
+      for (let file of mdFiles) {
+        let content = fs.readFileSync(path + '/' + file, 'utf8');
+        let { frontmatter, body } = parseFrontmatter(content);
+        files.push({ frontmatter, content: body });
+      }
+    }
+  }
+  
+  return files;
+}
+#+end_src
+
+* User Commands
+
+** /output-style Command (Line 405890)
+
+The main command for style management:
+
+#+begin_src javascript
+{
+  name: "output-style",
+  description: "Change or create output styles",
+  handler: async (args) => {
+    if (!args) {
+      // Show interactive menu
+      return showStyleMenu();
+    }
+    
+    if (args === "new") {
+      // Launch creation wizard
+      return launchStyleCreationAgent();
+    }
+    
+    // Set style directly
+    return setStyle(args);
+  }
+}
+#+end_src
+
+** Interactive Style Menu (Line 424934)
+
+#+begin_src javascript
+async function showStyleMenu() {
+  let styles = await Eu();
+  let current = sR2();
+  
+  let choices = Object.values(styles).map(s => ({
+    title: s.displayName,
+    value: s.id,
+    description: s.description,
+    selected: s.id === current
+  }));
+  
+  choices.push({
+    title: "Create new style...",
+    value: "new"
+  });
+  
+  let selection = await prompt({
+    type: "select",
+    message: "Choose an output style:",
+    choices
+  });
+  
+  if (selection === "new") {
+    return launchStyleCreationAgent();
+  }
+  
+  return setStyle(selection);
+}
+#+end_src
+
+** Style Creation Wizard (Line 425000)
+
+Launches a dedicated agent for style creation:
+
+#+begin_src javascript
+async function launchStyleCreationAgent() {
+  V1("tengu_output_style_creation_started");
+  
+  await Task({
+    subagent_type: "output-style-setup",
+    prompt: "Help the user create a custom output style",
+    description: "Creating custom output style"
+  });
+}
+#+end_src
+
+* Style Management
+
+** Setting the Current Style (Line 424967)
+
+#+begin_src javascript
+async function setStyle(styleId) {
+  let styles = await Eu();
+  
+  // Case-insensitive matching
+  let style = JL5(styles, styleId);
+  
+  if (!style) {
+    console.error(`Style '${styleId}' not found`);
+    return;
+  }
+  
+  // Save to settings
+  await updateSettings({
+    outputStyle: style.id
+  });
+  
+  V1("tengu_output_style_changed", {
+    from: sR2(),
+    to: style.id
+  });
+  
+  console.log(`Output style changed to: ${style.displayName}`);
+}
+#+end_src
+
+** Case-Insensitive Style Lookup (Line 364806)
+
+#+begin_src javascript
+function JL5(styles, name) {
+  if (!name) return null;
+  
+  // Direct match
+  if (styles[name]) return styles[name];
+  
+  // Case-insensitive search
+  let lower = name.toLowerCase();
+  for (let [id, style] of Object.entries(styles)) {
+    if (id.toLowerCase() === lower ||
+        style.displayName.toLowerCase() === lower) {
+      return style;
+    }
+  }
+  
+  return null;
+}
+#+end_src
+
+* Helper Functions
+
+** Description Extraction (Line 364745)
+
+#+begin_src javascript
+function ko(content) {
+  // Extract description from first heading or paragraph
+  let lines = content.split('\n');
+  
+  for (let line of lines) {
+    line = line.trim();
+    
+    // Skip empty lines and headings
+    if (!line || line.startsWith('#')) continue;
+    
+    // Return first non-empty paragraph
+    if (line.length > 0) {
+      return line.slice(0, 100) + (line.length > 100 ? '...' : '');
+    }
+  }
+  
+  return "Custom output style";
+}
+#+end_src
+
+** Settings Integration (Line 364794)
+
+#+begin_src javascript
+function sR2() {
+  // Get current style from settings
+  let settings = getSettings();
+  return settings.outputStyle || "default";
+}
+#+end_src
+
+* Telemetry Events
+
+| Event | Trigger | Data | Line |
+|-------|---------|------|------|
+| =tengu_output_style_changed= | Style change | from, to | 424982 |
+| =tengu_output_style_command_menu= | Menu opened | current | 424940 |
+| =tengu_output_style_command_inline= | Direct set | style | 424975 |
+| =tengu_output_style_creation_started= | Wizard launched | - | 425003 |
+| =tengu_output_style_not_found= | Invalid style | attempted | 424970 |
+
+* Memory Context Integration
+
+Output styles are included in the conversation memory context to ensure Claude maintains the selected style throughout the session:
+
+#+begin_src javascript
+function buildMemoryContext() {
+  let context = [];
+  let style = await xP2();
+  
+  if (style && style.id !== "default") {
+    context.push({
+      type: "system",
+      content: `Output style: ${style.displayName} is active`
+    });
+  }
+  
+  return context;
+}
+#+end_src
+
+* Agent Integration
+
+** Output Style Setup Agent
+
+A dedicated agent type exists for creating custom styles:
+
+- Agent Type: =output-style-setup=
+- Purpose: Guide users through style creation
+- Capabilities: Read, Write, Edit, Glob, LS, Grep
+- Output: Generates markdown files with proper frontmatter
+
+* Best Practices
+
+** Creating Custom Styles
+
+1. **Clear Instructions**: Be specific about desired behavior
+2. **Maintain Safety**: Don't override safety guidelines
+3. **Test Thoroughly**: Verify style works as expected
+4. **Document Well**: Include examples in the style definition
+5. **Version Control**: Track project styles in git
+
+** Style Design Principles
+
+1. **Additive Only**: Styles should add instructions, not remove
+2. **Preserve Core Function**: Don't break essential features
+3. **User-Centric**: Focus on improving user experience
+4. **Consistency**: Maintain consistent tone throughout
+
+* Security Considerations
+
+1. **Prompt Injection**: Styles are appended, not prepended, preventing override of core instructions
+2. **Validation**: All custom styles are validated before loading
+3. **Scope Isolation**: Project styles don't affect other projects
+4. **No Code Execution**: Styles are pure text, no executable code
+
+* Performance Characteristics
+
+- Styles are cached after first load (=YA= wrapper)
+- File system operations are minimized
+- Frontmatter parsing is optimized
+- Style switching is instantaneous
+
+* Limitations
+
+1. **No Dynamic Styles**: Styles cannot change during conversation
+2. **Text Only**: No support for structured data or code
+3. **Single Style Active**: Cannot combine multiple styles
+4. **No Conditional Logic**: Styles are static text
+
+* Future Considerations
+
+The =isCodingRelated= flag (lines 364683, 364696) suggests planned features:
+
+1. Non-coding style categories
+2. Context-aware style selection
+3. Style composition/inheritance
+4. Dynamic style parameters
+5. Style marketplace integration
+
+* Code Reference
+
+| Function | Line | Purpose |
+|----------|------|---------|
+| =Eu= | 364771 | Load all available styles |
+| =xP2= | 364788 | Get current active style |
+| =JL5= | 364806 | Case-insensitive style lookup |
+| =ko= | 364745 | Extract description from content |
+| =sR2= | 364794 | Get style ID from settings |
+| =jZ= | 364752 | Discover style files |
+| =showStyleMenu= | 424934 | Display interactive menu |
+| =setStyle= | 424967 | Change active style |
 
 * Conclusion
 
-The output styles system in Claude Code v1.0.81 provides a powerful mechanism for customizing Claude's behavior without modifying core code. Through simple markdown files with frontmatter, users can create specialized interaction patterns tailored to specific workflows. While the current implementation has limitations, the foundation is solid for future enhancements that could make output styles a key differentiator for Claude Code as a development assistant.
-
-The system elegantly balances simplicity (markdown-based definitions) with power (complete behavior modification), making it accessible to users while providing deep customization capabilities for advanced use cases.
+Claude Code v1.0.90's output style system represents a sophisticated prompt engineering framework that democratizes AI behavior customization. By providing both built-in styles and a flexible custom style system, it enables users to tailor Claude's communication to their specific needs while maintaining safety and functionality. The implementation demonstrates excellent software design principles including separation of concerns, extensibility, and graceful degradation.

@@ -1,0 +1,830 @@
+#+TITLE: Claude Code Permission System - Technical Analysis v1.0.92
+#+DATE: 2025-08-26
+
+* Overview
+
+Claude Code v1.0.92 implements a comprehensive permission system that controls tool access and file operations through a sophisticated rule-based engine. The system provides granular security controls while maintaining workflow efficiency through pre-approved operations. It uses a three-tier permission model (allow/deny/ask) with pattern matching, multiple configuration sources, and intelligent rule precedence.
+
+* Permission Architecture
+
+** Three-Tier Permission Model
+
+The system evaluates permissions in strict order:
+
+1. **DENY** (Highest Priority) - Explicitly blocked operations
+2. **ASK** - Requires user interaction for each use
+3. **ALLOW** (Lowest Priority) - Pre-approved operations
+
+This ensures that deny rules always take precedence for security.
+
+** Configuration Sources (Lines 344843-344906)
+
+Permissions are loaded from multiple sources with defined precedence:
+
+| Priority | Source | Description | Location |
+|----------|--------|-------------|----------|
+| 1 | policySettings | Enterprise/managed settings | Organization-defined |
+| 2 | projectSettings | Project-specific rules | =.claude/settings.json= |
+| 3 | localSettings | Personal project overrides | =.claude/settings.local.json= |
+| 4 | userSettings | User-wide defaults | =~/.claude/settings.json= |
+| 5 | flagSettings | Command-line flags | =--config= flag |
+| 6 | cliArg | Direct CLI arguments | =--allowedTools=, =--disallowedTools= |
+| 7 | command | Runtime permissions | Interactive prompts |
+| 8 | session | Temporary session rules | Memory only |
+
+* Permission Rule Syntax
+
+** Basic Tool Patterns
+
+Permission rules follow the pattern: =ToolName= or =ToolName(pattern)=
+
+*** Simple Tool Rules
+#+begin_src json
+{
+  "allowedTools": [
+    "Read",          // Allow all Read operations
+    "Write",         // Allow all Write operations
+    "Edit",          // Allow all Edit operations
+    "Bash"           // Allow all Bash commands
+  ]
+}
+#+end_src
+
+*** Pattern-Based Rules (Lines 348777-348799)
+
+Patterns use parentheses to specify constraints:
+
+#+begin_src json
+{
+  "allowedTools": [
+    "Read(~/Documents/*)",        // Read only in Documents
+    "Edit(*.py)",                 // Edit only Python files
+    "Write(./src/**/*.js)",       // Write JS files in src
+    "Bash(git:*)",               // Only git commands
+    "Bash(npm:test)",            // Only npm test command
+    "WebSearch(claude ai)"       // Specific search terms
+  ]
+}
+#+end_src
+
+** Path Pattern Syntax
+
+*** Glob Pattern Support
+
+Path patterns support standard glob syntax:
+
+| Pattern | Matches | Example |
+|---------|---------|---------|
+| =*= | Any file in directory | =Read(./*)= |
+| =**= | Recursive subdirectories | =Edit(./**/*)= |
+| =*.ext= | Files with extension | =Write(*.md)= |
+| =dir/*= | Files in specific directory | =Read(src/*)= |
+| ={a,b}= | Multiple options | =Edit({*.js,*.ts})= |
+| =?= | Single character | =Read(file?.txt)= |
+| =[abc]= | Character set | =Write(file[0-9].txt)= |
+
+*** Special Path Prefixes
+
+#+begin_src json
+{
+  "allowedTools": [
+    "Read(~/)",           // Home directory
+    "Edit(./)",          // Current directory
+    "Write(/tmp/)",      // Absolute path
+    "Read(../)",         // Parent directory
+    "Edit($HOME/)"       // Environment variable
+  ]
+}
+#+end_src
+
+** Command Pattern Syntax
+
+For Bash commands, patterns support two distinct matching modes:
+
+*** Exact Matching
+Matches commands precisely as specified:
+#+begin_src json
+{
+  "allowedTools": [
+    "Bash(npm install)",      // Only exactly "npm install"
+    "Bash(git add .)",        // Only exactly "git add ."
+    "Bash(echo hello world)"  // Only exactly "echo hello world"
+  ]
+}
+#+end_src
+
+*** Prefix Matching with :*
+Uses =:*= suffix to match any command starting with the prefix:
+#+begin_src json
+{
+  "allowedTools": [
+    "Bash(git:*)",       // Any git command (git add, git commit, etc.)
+    "Bash(npm:*)",       // Any npm command (npm install, npm test, etc.)
+    "Bash(npm run:*)",   // Any npm run script (npm run build, npm run dev)
+    "Bash(ls:*)",        // Any ls variant (ls -la, ls -l, ls *.js)
+    "Bash(cd:*)",        // Directory changes (cd .., cd /home)
+    "Bash(echo:*)"       // Echo with any arguments
+  ]
+}
+#+end_src
+
+** Command Parsing and Matching Implementation
+
+*** Command Tokenization (Lines 374910-374965)
+
+Commands are parsed through a sophisticated shell parser that handles:
+- Quoted strings (single and double quotes)
+- Pipes and command chaining (|, &&, ||)
+- Redirects (>, <, >>)
+- Environment variables
+- Complex shell syntax
+
+#+begin_src javascript
+// Example: git commit -m "Initial commit"
+// Parsed to: ["git", "commit", "-m", "Initial commit"]
+
+// Example: echo 'Hello World' | grep Hello  
+// Parsed to: Two separate commands to check independently
+#+end_src
+
+*** Pattern Matching Algorithm (Lines 379107-379124)
+
+#+begin_src javascript
+function matchPattern(command, pattern) {
+  // Check if it's a prefix pattern
+  if (pattern.endsWith(':*')) {
+    let prefix = pattern.slice(0, -2);  // Remove ':*'
+    return command.startsWith(prefix);
+  }
+  
+  // Otherwise do exact match
+  return command === pattern;
+}
+#+end_src
+
+*** Matching Precedence Hierarchy (Lines 379135-379198)
+
+Rules are checked in this specific order:
+1. **Exact DENY rules** (highest priority)
+2. **Exact ASK rules**
+3. **Exact ALLOW rules**
+4. **Prefix DENY rules**
+5. **Prefix ASK rules**  
+6. **Prefix ALLOW rules** (lowest priority)
+
+This ensures deny rules always take precedence and exact matches are prioritized over prefix matches.
+
+*** Complex Command Handling (Lines 379241-379265)
+
+For piped or chained commands like =git status | grep modified=:
+1. Commands are split at pipe operators
+2. Each segment is checked independently against rules
+3. All segments must pass for the overall command to execute
+
+#+begin_src javascript
+// Command: "git status | grep modified | wc -l"
+// Splits into three commands to check:
+1. "git status"     → Check against rules
+2. "grep modified"  → Check against rules  
+3. "wc -l"         → Check against rules
+#+end_src
+
+* Permission Configuration
+
+** Configuration Schema (Line 348805)
+
+#+begin_src javascript
+{
+  "permissions": {
+    "allow": [],  // Array of allow rules
+    "deny": [],   // Array of deny rules  
+    "ask": []     // Array of ask rules
+  },
+  "allowedTools": [],    // Legacy format (still supported)
+  "disallowedTools": []  // Legacy format (still supported)
+}
+#+end_src
+
+** Settings File Examples
+
+*** Project Settings (=.claude/settings.json=)
+
+Team-wide configuration for a web project:
+
+#+begin_src json
+{
+  "permissions": {
+    "allow": [
+      "Read(./src/**/*)",
+      "Edit(./src/**/*.{js,jsx,ts,tsx})",
+      "Write(./src/**/*.test.{js,ts})",
+      "Bash(npm:*)",
+      "Bash(git:*)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Edit(.env*)",
+      "Edit(./config/production.json)",
+      "Read(./secrets/**/*)",
+      "Bash(rm:*)",
+      "Bash(sudo:*)"
+    ],
+    "ask": [
+      "Write(./public/**/*)",
+      "Edit(package.json)",
+      "Edit(./config/*.json)",
+      "Bash(npm:publish)"
+    ]
+  }
+}
+#+end_src
+
+*** User Settings (=~/.claude/settings.json=)
+
+Personal defaults across all projects:
+
+#+begin_src json
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "LS",
+      "Glob"
+    ],
+    "deny": [
+      "Read(~/.ssh/**/*)",
+      "Edit(~/.bashrc)",
+      "Edit(~/.zshrc)",
+      "Read(~/private/**/*)"
+    ],
+    "ask": [
+      "Write",
+      "Edit",
+      "Bash",
+      "WebFetch"
+    ]
+  }
+}
+#+end_src
+
+*** Local Settings (=.claude/settings.local.json=)
+
+Personal overrides for a specific project (git-ignored):
+
+#+begin_src json
+{
+  "permissions": {
+    "allow": [
+      "Edit(./experiments/**/*)",
+      "Bash(python:./scripts/test.py)",
+      "Write(./debug.log)"
+    ]
+  }
+}
+#+end_src
+
+* Implementation Details
+
+** Core Permission Check (Lines 348662-348715)
+
+#+begin_src javascript
+var q$ = async (A, B, Q) => {
+  // 1. Check deny rules first (highest priority)
+  let Z = nZ9(Q.getToolPermissionContext(), A);
+  if (Z) return { 
+    behavior: "deny", 
+    decisionReason: { type: "rule", rule: Z },
+    message: `Permission to use ${A.name} has been denied.`
+  };
+  
+  // 2. Check ask rules
+  let G = aZ9(Q.getToolPermissionContext(), A);
+  if (G) return { 
+    behavior: "ask",
+    decisionReason: { type: "rule", rule: G },
+    message: pF(Q.getToolPermissionContext(), A.name)
+  };
+  
+  // 3. Tool-specific permission check
+  let Y = await A.checkPermissions(J, Q);
+  
+  // 4. Check bypass mode
+  if (Q.getToolPermissionContext().mode === "bypassPermissions")
+    return { behavior: "allow" };
+  
+  // 5. Check allow rules
+  let I = iZ9(Q.getToolPermissionContext(), A);
+  if (I) return { 
+    behavior: "allow",
+    decisionReason: { type: "rule", rule: I }
+  };
+  
+  // 6. Default to ask
+  return { behavior: "ask" };
+};
+#+end_src
+
+** Rule Matching Function (Line 348615)
+
+#+begin_src javascript
+function Lr1(tool, rule) {
+  // Direct tool name match
+  if (rule.ruleValue.toolName === tool.name) return true;
+  
+  // Pattern matching for tool arguments
+  if (rule.ruleValue.ruleContent !== undefined) {
+    return matchPattern(tool.arguments, rule.ruleValue.ruleContent);
+  }
+  
+  // MCP server wildcard matching
+  let Q = yk(rule.ruleValue.toolName),
+      Z = yk(tool.name);
+  return (
+    Q !== null &&
+    Z !== null &&
+    Q.toolName === undefined &&
+    Q.serverName === Z.serverName
+  );
+}
+#+end_src
+
+** Permission Context Structure (Lines 392416-392423)
+
+#+begin_src javascript
+var lU = () => ({
+  mode: "default",  // "default" | "bypassPermissions" | "acceptEdits" | "plan"
+  additionalWorkingDirectories: new Map(),
+  alwaysAllowRules: {},  // Rules by source
+  alwaysDenyRules: {},   // Rules by source
+  alwaysAskRules: {},    // Rules by source
+  isBypassPermissionsModeAvailable: false,
+  networkSandboxConfig: {
+    allowNetwork: true,
+    allowedHosts: [],
+    deniedHosts: []
+  }
+});
+#+end_src
+
+* Permission Modes
+
+** Available Modes (Lines 348449-348514)
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| =default= | Normal permission checking | Standard operation |
+| =acceptEdits= | Auto-approve edit operations | Bulk editing tasks |
+| =bypassPermissions= | Skip all permission checks | Emergency access |
+| =plan= | Restricted planning mode | Architecture planning |
+
+** Bypass Permissions Mode
+
+Requires explicit user consent via dialog:
+1. User must accept risks
+2. Session-only (doesn't persist)
+3. All operations allowed
+4. Telemetry tracks usage
+
+* Special Tool Behaviors
+
+** Tools with Special Permission Handling
+
+*** Read-Only Tools
+These tools typically bypass permissions or have relaxed rules:
+- =LS= - Directory listing
+- =Glob= - File pattern matching
+- =Grep= - File searching
+- =Read= - File reading (configurable)
+
+*** Destructive Tools
+These tools always require explicit permission:
+- =Write= - File creation
+- =Edit= - File modification
+- =MultiEdit= - Batch file editing
+- =NotebookEdit= - Jupyter notebook editing
+- =Bash= - Command execution
+
+*** Network Tools
+Subject to network sandbox configuration:
+- =WebSearch= - Internet searches
+- =WebFetch= - URL fetching
+- =Bash= - May fail if network restricted
+
+** MCP Tool Permissions
+
+MCP (Model Context Protocol) tools follow special naming:
+- Format: =mcp__<server>__<tool>=
+- Server-wide rules: =mcp__server__*=
+- Individual tool rules: =mcp__server__specific_tool=
+
+Example:
+#+begin_src json
+{
+  "allowedTools": [
+    "mcp__filesystem__*",           // All filesystem MCP tools
+    "mcp__github__create_issue",    // Specific GitHub tool
+    "mcp__*__read*"                 // All read operations across MCP servers
+  ]
+}
+#+end_src
+
+* User Interface
+
+** Permission Prompts (Lines 419612-425800)
+
+When permission is needed, users see:
+
+#+begin_example
+Claude wants to use Edit to modify src/index.js
+
+[A]llow once  [D]eny  [Always allow Edit(src/*.js)]  [?]Help
+#+end_example
+
+Options:
+- **Allow once** - Permits this single operation
+- **Deny** - Blocks the operation
+- **Always allow** - Adds rule to appropriate settings file
+- **Help** - Shows detailed permission information
+
+** Trust Dialog (Lines 427808-427835)
+
+Initial setup when first using Claude in a directory:
+
+#+begin_example
+Welcome to Claude Code!
+
+This appears to be your first time using Claude in this directory.
+Would you like to:
+
+1. Trust this directory (recommended for your projects)
+2. Use restricted mode (recommended for untrusted code)
+3. Configure custom permissions
+
+Choice:
+#+end_example
+
+** Configuration Commands
+
+Interactive permission management:
+
+#+begin_src bash
+# View current permissions
+claude config permissions
+
+# Add permission rule
+claude config add-permission "Read(./src/*)"
+
+# Remove permission rule  
+claude config remove-permission "Write(*)"
+
+# Reset to defaults
+claude config reset-permissions
+#+end_src
+
+* Command Matching Examples
+
+** Real-World Command Matching Scenarios
+
+*** Git Operations with Granular Control
+#+begin_src json
+{
+  "permissions": {
+    "allow": ["Bash(git:*)"],           // Allow all git commands
+    "deny": ["Bash(git push)"],         // But explicitly deny push
+    "ask": ["Bash(git push origin main)"] // Except ask for main branch
+  }
+}
+#+end_src
+
+**Behavior:**
+- =git status= → ✅ Allowed (matches =git:*=)
+- =git add .= → ✅ Allowed (matches =git:*=)  
+- =git commit -m "fix"= → ✅ Allowed (matches =git:*=)
+- =git push= → ❌ Denied (exact deny match overrides allow)
+- =git push origin develop= → ❌ Denied (exact deny =git push= matches)
+- =git push origin main= → ❓ Prompts user (exact ask match overrides deny)
+
+*** NPM Script Management
+#+begin_src json
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",        // Exact: only 'npm test'
+      "Bash(npm run:*)"        // Prefix: any 'npm run' script
+    ],
+    "deny": ["Bash(npm:*)"]    // Deny all other npm commands
+  }
+}
+#+end_src
+
+**Behavior:**
+- =npm test= → ✅ Allowed (exact allow match)
+- =npm run build= → ✅ Allowed (matches =npm run:*=)
+- =npm run dev= → ✅ Allowed (matches =npm run:*=)
+- =npm install= → ❌ Denied (matches deny =npm:*=, no allow rule)
+- =npm publish= → ❌ Denied (matches deny =npm:*=, no allow rule)
+
+*** Complex Piped Commands
+#+begin_src json
+{
+  "permissions": {
+    "allow": [
+      "Bash(ps:*)",
+      "Bash(grep:*)", 
+      "Bash(awk:*)"
+    ]
+  }
+}
+#+end_src
+
+**Command:** =ps aux | grep node | awk '{print $2}'=
+
+**Evaluation:**
+1. =ps aux= → ✅ Allowed (matches =ps:*=)
+2. =grep node= → ✅ Allowed (matches =grep:*=)
+3. =awk '{print $2}'= → ✅ Allowed (matches =awk:*=)
+4. **Overall:** ✅ Allowed (all segments pass)
+
+*** Command with Quotes and Special Characters
+#+begin_src json
+{
+  "permissions": {
+    "allow": ["Bash(git commit:*)"],
+    "deny": ["Bash(git commit -m:*)"]
+  }
+}
+#+end_src
+
+**Behavior:**
+- =git commit -m "Initial commit"= → ❌ Denied (exact deny overrides allow)
+- =git commit --amend= → ✅ Allowed (matches =git commit:*=)
+- =git commit -a -m "Fix"= → ❌ Denied (starts with =git commit -m=)
+
+*** Directory-Specific Commands
+#+begin_src json
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",              // Allow any cd command
+      "Bash(ls:*)",              // Allow any ls variant
+      "Bash(cat README.md)"      // Only allow reading README
+    ]
+  }
+}
+#+end_src
+
+**Behavior:**
+- =cd /home/user= → ✅ Allowed (matches =cd:*=)
+- =ls -la= → ✅ Allowed (matches =ls:*=)
+- =cat README.md= → ✅ Allowed (exact match)
+- =cat package.json= → ❓ No rule matches, defaults to ask
+
+** Edge Cases and Special Handling
+
+*** Environment Variables in Commands
+Commands with environment variables are matched literally (not expanded):
+
+#+begin_src json
+{
+  "allowedTools": ["Bash(echo $HOME)"]  // Matches literally "echo $HOME"
+}
+#+end_src
+
+- =echo $HOME= → ✅ Matches literally
+- =echo /home/user= → ❌ Doesn't match (not expanded during matching)
+
+*** Quoted Arguments
+Quotes are preserved during matching:
+
+#+begin_src json
+{
+  "allowedTools": ["Bash(git commit -m:*)"]
+}
+#+end_src
+
+- =git commit -m "Initial commit"= → ✅ Matches (quotes preserved)
+- =git commit -m Initial commit= → ❌ Doesn't match (missing quotes)
+
+*** Command Injection Protection
+The system detects and handles potentially dangerous patterns:
+
+- Commands with =;=, =&&=, =||= are split and checked individually
+- Subshells with =$()= or backticks are flagged
+- Redirects are parsed but don't affect matching
+
+*** Case Sensitivity
+All matching is case-sensitive:
+
+#+begin_src json
+{
+  "allowedTools": ["Bash(git:*)"]
+}
+#+end_src
+
+- =git status= → ✅ Matches
+- =Git status= → ❌ Doesn't match (capital G)
+- =GIT status= → ❌ Doesn't match (all caps)
+
+** Why the :* Syntax?
+
+The =:*= syntax clearly distinguishes command matching from file pattern matching:
+
+| Pattern Type | Syntax | Example | Meaning |
+|--------------|--------|---------|---------|
+| Command Prefix | =:*= | =Bash(git:*)= | Any command starting with "git" |
+| File Glob | =*= | =Read(*.js)= | Any file ending with ".js" |
+| Path Glob | =**/*= | =Edit(src/**/*.ts)= | TypeScript files in src/ recursively |
+
+This prevents ambiguity:
+- =Bash(git:*)= → Matches commands starting with "git"
+- =Read(*.js)= → Matches files ending with ".js"  
+- Without the colon, =Bash(git*)= would be ambiguous
+
+* Advanced Patterns
+
+** Complex Rule Examples
+
+*** Multi-Pattern Rules
+
+Allow multiple file types:
+#+begin_src json
+"Edit(./src/**/*.{js,jsx,ts,tsx,css,scss})"
+#+end_src
+
+*** Exclude Patterns
+
+Allow all except specific files:
+#+begin_src json
+{
+  "allow": ["Edit(./*)"],
+  "deny": ["Edit(./*.test.js)"]
+}
+#+end_src
+
+*** Command Chaining
+
+Allow specific command sequences:
+#+begin_src json
+"Bash(git:add . && git:commit -m*)"
+#+end_src
+
+*** Environment-Specific Rules
+
+Use environment variables in patterns:
+#+begin_src json
+"Read($HOME/projects/*)"
+"Write($TEMP/*)"
+#+end_src
+
+** Security Best Practices
+
+*** Recommended Deny Rules
+
+Always deny access to:
+#+begin_src json
+{
+  "deny": [
+    "Read(~/.ssh/**/*)",           // SSH keys
+    "Edit(~/.aws/credentials)",    // AWS credentials
+    "Read(~/.gnupg/**/*)",        // GPG keys
+    "Edit(/etc/passwd)",          // System files
+    "Bash(sudo:*)",               // Elevated commands
+    "Edit(.git/config)",          // Git configuration
+    "Read(**/*password*)",        // Password files
+    "Read(**/*secret*)",          // Secret files
+    "Read(**/*.key)",             // Key files
+    "Edit(~/.bashrc)",           // Shell configuration
+    "Edit(~/.zshrc)"             // Shell configuration
+  ]
+}
+#+end_src
+
+*** Project Protection
+
+Protect critical project files:
+#+begin_src json
+{
+  "deny": [
+    "Edit(.github/workflows/*)",  // CI/CD workflows
+    "Write(./dist/*)",            // Build output
+    "Edit(package-lock.json)",    // Lock files
+    "Bash(rm:-rf*)",             // Destructive commands
+    "Edit(*.min.js)",            // Minified files
+    "Write(./node_modules/*)"     // Dependencies
+  ]
+}
+#+end_src
+
+* Telemetry Events
+
+** Permission-Related Events
+
+| Event | Trigger | Data | Line |
+|-------|---------|------|------|
+| =tengu_tool_use_show_permission_request= | Permission prompt shown | tool, context | 393491 |
+| =tengu_tool_use_granted_in_config= | Allowed by configuration | tool, rule | 393505 |
+| =tengu_tool_use_denied_in_config= | Denied by configuration | tool, rule | 393519 |
+| =tengu_tool_use_granted_in_prompt_permanent= | User allowed permanently | tool, pattern | 393533 |
+| =tengu_tool_use_granted_in_prompt_temporary= | User allowed once | tool | 393547 |
+| =tengu_tool_use_rejected_in_prompt= | User denied in prompt | tool | 393561 |
+| =tengu_bypass_permissions_mode_dialog_shown= | Bypass dialog displayed | - | 428940 |
+| =tengu_bypass_permissions_mode_dialog_accept= | Bypass mode enabled | - | 428955 |
+| =tengu_trust_dialog_shown= | Trust dialog displayed | directory | 427815 |
+| =tengu_trust_dialog_accept= | Directory trusted | directory | 427830 |
+
+* Network Sandbox Configuration
+
+** Network Restrictions (Line 392420)
+
+Control network access for tools:
+
+#+begin_src json
+{
+  "networkSandboxConfig": {
+    "allowNetwork": false,        // Disable all network
+    "allowedHosts": [             // Or whitelist specific hosts
+      "api.github.com",
+      "docs.python.org"
+    ],
+    "deniedHosts": [              // Or blacklist specific hosts
+      "example.com"
+    ]
+  }
+}
+#+end_src
+
+Effects:
+- =WebSearch= and =WebFetch= respect these settings
+- =Bash= commands may fail if they require network
+- MCP servers may be unable to connect
+
+* Migration and Compatibility
+
+** Legacy Configuration Format (Line 355359)
+
+Old format (deprecated):
+#+begin_src json
+{
+  "allowedTools": ["Read", "Write"],
+  "disallowedTools": ["Bash"]
+}
+#+end_src
+
+New format (recommended):
+#+begin_src json
+{
+  "permissions": {
+    "allow": ["Read", "Write"],
+    "deny": ["Bash"]
+  }
+}
+#+end_src
+
+Both formats are currently supported but the new format is preferred.
+
+* Troubleshooting
+
+** Common Issues
+
+*** Permission Denied Despite Allow Rule
+
+Check rule precedence - deny rules override allow rules:
+#+begin_src json
+{
+  "allow": ["Edit(*)"],
+  "deny": ["Edit(*.md)"]  // This wins for .md files
+}
+#+end_src
+
+*** Pattern Not Matching
+
+Ensure correct glob syntax:
+- Wrong: =Edit(src/*.js)= (missing recursive)
+- Right: =Edit(src/**/*.js)= (includes subdirectories)
+
+*** MCP Tools Not Accessible
+
+MCP tools need explicit permission:
+#+begin_src json
+"allowedTools": ["mcp__servername__*"]
+#+end_src
+
+*** Session Permissions Not Persisting
+
+Session permissions are temporary. To persist:
+1. Choose "Always allow" in prompt
+2. Or manually add to settings file
+
+* Best Practices
+
+1. **Start Restrictive**: Begin with minimal permissions, add as needed
+2. **Use Project Settings**: Share permission rules with your team
+3. **Protect Sensitive Files**: Always deny access to credentials
+4. **Document Rules**: Comment complex permission patterns
+5. **Test Patterns**: Verify rules work before relying on them
+6. **Layer Security**: Combine allow and deny rules for defense in depth
+7. **Regular Audits**: Review permission rules periodically
+8. **Use Ask for Risky Operations**: Better to prompt than accidentally allow
+9. **Version Control Settings**: Track =.claude/settings.json= in git
+10. **Local Overrides**: Use =.claude/settings.local.json= for personal rules

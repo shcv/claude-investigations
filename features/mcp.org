@@ -1,82 +1,376 @@
-#+TITLE: Claude Code MCP (Model Context Protocol) Internals
-#+DATE: 2025-08-13
+#+TITLE: Claude Code MCP (Model Context Protocol) Feature - Technical Analysis v1.0.90
+#+DATE: 2025-08-25
 
 * Overview
 
-Claude Code implements the Model Context Protocol (MCP) with a focus on manual, explicit resource and tool management. This document consolidates findings about MCP's implementation in v1.0.70.
+Claude Code v1.0.90 implements the Model Context Protocol (MCP) as a comprehensive extension system that enables external servers to provide tools, resources, and commands. The implementation features multiple transport mechanisms (stdio, SSE, WebSocket, HTTP), OAuth authentication support, multi-scope configuration management, and sophisticated error handling. MCP servers are namespaced to prevent conflicts, with tools prefixed as =mcp__<server>__<tool>=, and the system supports both interactive and programmatic resource access.
 
-* Resource Handling
+* Core Protocol Implementation
 
-** Key Characteristics
-- **Pull-based model**: Resources are discovered at startup but accessed on-demand
-- **No automatic updates**: Resources require explicit re-fetching
-- **Manual management**: Claude must actively request resource content
+** Error Handling Class (Lines 382021-382026)
 
-** Resource Discovery
-- Prefetched from MCP servers at startup
-- Metadata stored in =mcpResources= object
-- Indexed by server name for efficient lookup
+#+begin_src javascript
+class KV extends Error {
+  constructor(A, B, Q) {
+    super(`MCP error ${A}: ${B}`);
+    this.code = A;
+    this.data = Q;
+    this.name = "McpError";
+  }
+}
+#+end_src
 
-** Key Tools
-1. =ListMcpResourcesTool=
-   - Lists available resources
-   - Optional server-based filtering
-   - Adds server context to resource metadata
+** Client Implementation (Line 382028)
 
-2. =ReadMcpResourceTool=
-   - Reads specific resource content
-   - Requires server name and resource URI
-   - Supports various content types (text, images, binary)
+The =GZ1= class handles core protocol communication with comprehensive capability checking:
+
+- =assertNotificationCapability= (line 382541) - Validates notification support
+- =assertRequestHandlerCapability= (line 382562) - Validates request handler support
+- Resource, tool, prompt, and completion capabilities
+
+* Transport Layer Architecture
+
+** Supported Transports
+
+*** StdioClientTransport (Lines 382726-382798)
+
+For local executable MCP servers:
+
+#+begin_src javascript
+class StdioClientTransport {
+  constructor(command, args, env) {
+    // Child process spawning with environment filtering
+    // Buffer-based message parsing (line 382674)
+  }
+}
+#+end_src
+
+*** SSEClientTransport (Lines 383882-384500)
+
+For Server-Sent Events HTTP connections:
+- OAuth authentication support
+- Automatic reconnection logic
+- Event stream parsing
+
+*** WebSocket Transport (Line 385500)
+
+For WebSocket-based connections:
+- IDE integration primary use case
+- Authentication token support
+- Bidirectional communication
+
+*** HTTP Transport
+
+Standard HTTP-based protocol communication with request/response pattern.
+
+*** IDE-specific Transports
+
+Special variants (sse-ide, ws-ide) for IDE integration with enhanced capabilities.
+
+* Configuration Management
+
+** Schema Definition (Line 349653)
+
+#+begin_src javascript
+var stA = g.object({ 
+  mcpServers: g.record(g.string(), aQ0) 
+});
+#+end_src
+
+** Three-Tier Scope System (Lines 352466-352497)
+
+Configuration sources in priority order:
+
+1. **Project Scope**: =.mcp.json= file in project root
+2. **User Scope**: User's global configuration
+3. **Local Scope**: Project-local private configuration
+
+** Environment Variable Expansion (Line 352540)
+
+Supports expansion of environment variables in configuration:
+
+#+begin_src javascript
+function expandEnvVars(value) {
+  return value.replace(/\$\{([^}]+)\}/g, (_, name) => 
+    process.env[name] || '');
+}
+#+end_src
+
+** Platform-Specific Handling (Line 352556)
+
+Windows npx wrapper validation for command execution compatibility.
+
+* Tool and Resource Management
+
+** Tool Namespacing (Lines 349659-349694)
+
+Prevents naming conflicts between servers:
+
+#+begin_src javascript
+function Z61(A, B) {
+  let Q = `mcp__${B}__`;  // Line 349659
+  return A.filter((Z) => Z.name?.startsWith(Q));
+}
+
+function extractServerAndTool(toolName) {  // Line 349684
+  const match = toolName.match(/^mcp__(.+?)__(.+)$/);
+  return match ? { server: match[1], tool: match[2] } : null;
+}
+#+end_src
+
+** Resource Management Tools
+
+*** ListMcpResourcesTool (Lines 385684-385780)
+
+#+begin_src javascript
+{
+  name: "ListMcpResourcesTool",
+  description: "Lists available resources from MCP servers",
+  parameters: {
+    server_name: { type: "string", optional: true }
+  },
+  handler: async (params) => {
+    // Lists resources with server attribution
+    // Supports filtering by server
+  }
+}
+#+end_src
+
+*** ReadMcpResourceTool (Lines 385810-385849)
+
+#+begin_src javascript
+{
+  name: "ReadMcpResourceTool",
+  description: "Reads specific resource content by URI",
+  parameters: {
+    server_name: { type: "string", required: true },
+    resource_uri: { type: "string", required: true }
+  },
+  handler: async (params) => {
+    // Validates server connectivity
+    // Fetches resource content
+    // Supports multiple content types
+  }
+}
+#+end_src
 
 ** @Mention Support
-Users can reference resources using =@servername:resourceuri= syntax
-- Automatically fetches resource content
-- Includes resource in current context
 
-* Tool Management
+Users can reference resources using =@servername:resourceuri= syntax, which automatically fetches and includes resource content in the conversation context.
 
-** Connection and Discovery
-- Tools fetched **once at connection time**
-- No dynamic updates during session
-- Restart required to see tool changes
+* OAuth Authentication System
 
-** Naming Convention
-- Tools namespaced as =mcp__<server_name>__<tool_name>=
-- Prevents naming conflicts between servers
+** OAuth Implementation (Lines 386172-386269)
 
-** Notification Handling
-- Protocol defines =tools/list_changed= notification
-- Current implementation **ignores** these notifications
-- No refresh or update mechanism exists
+#+begin_src javascript
+class Gm {
+  serverName;
+  serverConfig;
+  redirectUri = "http://localhost:5173/oauth/callback";
+  
+  async saveClientInformation(A) {  // Line 386219
+    // Stores OAuth credentials securely
+    // Handles token persistence
+  }
+  
+  async getAuthorizationUrl() {
+    // Implements authorization code flow with PKCE
+    // Returns authorization URL for user
+  }
+  
+  async exchangeCodeForToken(code) {
+    // Exchanges authorization code for access token
+    // Handles refresh tokens
+  }
+}
+#+end_src
 
-* Limitations and Design Rationale
+** Token Management
 
-** Why Static Approach?
-1. Simplicity in state management
-2. Conversation stability
-3. Predictable tool availability
-4. Performance optimization
+- Automatic token refresh on expiration
+- Secure credential storage
+- PKCE implementation for enhanced security
 
-** User Implications
-- New tools require a full restart
-- Tool list remains constant during session
-- Removed tools may still appear (but fail when called)
+* Connection Management
 
-* Future Potential
+** Connection Flow (Lines 386380-386639)
 
-Possible enhancements:
-1. Implement resource subscriptions
-2. Auto-refresh on notifications
-3. Smart content caching
-4. Automatic context integration
-5. Resource change detection
+The connection establishment process:
+
+1. Transport-specific initialization
+2. Timeout management (configurable via environment)
+3. Authentication flow for 401 responses
+4. Server capability discovery
+5. Instructions retrieval
+
+** Connection States
+
+#+begin_src javascript
+// Connection state machine
+{
+  "pending": "Connection in progress",
+  "connected": "Successfully operational",
+  "needs-auth": "Authentication required",
+  "failed": "Connection failure"
+}
+#+end_src
+
+** Error Recovery
+
+- Automatic retry with exponential backoff
+- Authentication prompt on 401 errors
+- Graceful degradation on capability mismatch
+
+* Tool Execution
+
+** Execution Flow (Line 386999)
+
+#+begin_src javascript
+async function executeMcpTool(server, tool, args) {
+  // 1. Validate server connection and capabilities
+  if (!server.connected) throw new Error("Server not connected");
+  
+  // 2. Call tool with arguments and metadata
+  const result = await server.callTool(tool, args, {
+    progressToken: generateProgressToken()
+  });
+  
+  // 3. Handle response validation
+  validateAgainstSchema(result, tool.outputSchema);
+  
+  // 4. Apply token limits for content size
+  if (exceedsTokenLimit(result)) {
+    throw new MCPContentTooLargeError();  // Line 385455
+  }
+  
+  // 5. Transform response to content blocks
+  return transformToContentBlocks(result);
+}
+#+end_src
+
+* Telemetry Events
+
+MCP operations are tracked through comprehensive telemetry:
+
+| Event | Line | Purpose |
+|-------|------|---------|
+| =tengu_mcp_servers= | 352516 | Server configuration counts |
+| =tengu_mcp_oauth_flow_start= | 386059 | OAuth flow initiation |
+| =tengu_mcp_oauth_flow_success= | 386165 | OAuth completion |
+| =tengu_mcp_oauth_flow_error= | 386169 | OAuth failures |
+| =tengu_mcp_server_connection_succeeded= | 386618 | Successful connections |
+| =tengu_mcp_server_connection_failed= | 386632 | Connection failures |
+| =tengu_mcp_tools_commands_loaded= | 386924 | Resource loading |
+| =tengu_mcp_server_needs_auth= | 386491, 386505 | Authentication requirements |
+| =tengu_mcp_ide_server_connection_succeeded= | 386510 | IDE connections |
+| =tengu_mcp_ide_server_connection_failed= | 386517 | IDE failures |
+
+* Protocol Message Flow
+
+** Request-Response Pattern
+
+MCP uses JSON-RPC style messaging:
+
+#+begin_src javascript
+// Request format
+{
+  jsonrpc: "2.0",
+  id: "unique-id",
+  method: "tools/call",
+  params: { name: "tool-name", arguments: {} }
+}
+
+// Response format
+{
+  jsonrpc: "2.0",
+  id: "unique-id",
+  result: { content: [...] }
+}
+#+end_src
+
+** Message Types
+
+1. **Requests**: Tool calls, resource reads, prompt fetching
+2. **Notifications**: Progress updates, cancellations, resource changes
+3. **Responses**: Results with optional structured content
+
+* Resource Access Pattern
+
+** Pull-Based Model
+
+1. Metadata discovered at connection time
+2. Content fetched on-demand via =resources/read= requests
+3. No automatic synchronization of changes
+4. Manual refresh required for updates
+
+** Content Types Support
+
+- Text content
+- Image data (base64 encoded)
+- Binary data
+- Structured JSON
+
+* Error Handling Strategy
+
+** Error Categories
+
+*** Transport Errors
+- Connection failures
+- Timeout errors (configurable timeout)
+- Network interruptions
+
+*** Protocol Errors
+- Invalid messages
+- Capability mismatches
+- Schema validation failures
+
+*** Content Errors
+- Token limit exceeded (=MCPContentTooLargeError=, line 385455)
+- Invalid content format
+- Resource not found
+
+*** Configuration Errors
+- Missing environment variables
+- Invalid server configurations
+- Platform incompatibilities
+
+* Platform-Specific Considerations
+
+** Windows Support
+
+- NPX wrapper validation for command execution
+- Path normalization for file:// URLs
+- Special handling for Windows-specific transports
+
+** Environment Variable Filtering
+
+Certain environment variables are filtered when spawning MCP server processes to prevent information leakage.
+
+* Security Considerations
+
+1. **OAuth Security**: PKCE implementation for authorization code flow
+2. **Token Storage**: Secure credential persistence
+3. **Transport Security**: HTTPS/WSS for network transports
+4. **Capability Validation**: Strict capability checking before operations
+5. **Resource Access Control**: Server-level access validation
+
+* Performance Optimizations
+
+1. **Connection Pooling**: Reuse of established connections
+2. **Token Limits**: Content size restrictions to prevent memory issues
+3. **Timeout Management**: Configurable timeouts for all operations
+4. **Lazy Resource Loading**: On-demand content fetching
+5. **Capability Caching**: One-time capability discovery
+
+* Future Considerations
+
+Based on protocol definitions but not yet implemented:
+
+- Resource subscription support (defined but unused)
+- Dynamic tool updates (=tools/list_changed= notifications ignored)
+- Diagnostic system integration (line 387037)
+- Real-time resource synchronization
 
 * Conclusion
 
-Claude Code v1.0.70's MCP implementation prioritizes:
-- Explicit control
-- Simplicity
-- Stability
-- Predictable behavior
-
-Manual resource and tool management ensures no unexpected mid-conversation changes while keeping the system straightforward and performant.
+Claude Code v1.0.90's MCP implementation represents a mature, extensible system for integrating external tools and resources. The multi-transport architecture, comprehensive error handling, and security-conscious design make it suitable for both local development and enterprise deployments. The namespacing strategy and multi-scope configuration provide flexibility while preventing conflicts, establishing MCP as a robust foundation for extending Claude Code's capabilities.

@@ -1,0 +1,230 @@
+#+TITLE: MCP (Model Context Protocol) Configuration in Claude Code
+#+DATE: 2025-08-21
+
+* Overview
+
+MCP (Model Context Protocol) servers extend Claude Code's capabilities by providing access to external tools, commands, and resources. Configuration is managed through multiple scopes with different precedence levels.
+
+* Configuration Scopes
+
+MCP servers can be configured at three different scope levels:
+
+1. *Project scope* - Stored in =.mcp.json= in the project root (dedicated MCP file)
+2. *User scope* - Stored in user configuration files:
+   - =~/.claude/.config.json= (primary location)
+   - =~/.claude.json= (fallback if CLAUDE_CONFIG_DIR is not set)
+   - These files can contain =mcpServers= alongside other settings
+3. *Local scope* - Stored in local configuration
+
+** Scope Precedence
+
+When the same server name exists in multiple scopes, project scope takes precedence over user scope, which takes precedence over local scope.
+
+* Configuration File Structure
+
+MCP servers can be configured in two types of files:
+
+1. **Dedicated MCP configuration file** (=.mcp.json= in project root)
+2. **General settings files** (=.config.json= or =.claude.json=)
+
+Both file types support the same =mcpServers= field.
+
+** Schema
+
+The configuration object contains a =mcpServers= field that maps server names to server configurations:
+
+#+BEGIN_SRC json
+{
+  "mcpServers": {
+    "server-name": {
+      // server configuration
+    }
+  },
+  // Other settings can also be present in .config.json/.claude.json
+  "apiKeyHelper": "/path/to/script",
+  "todoFeatureEnabled": true
+  // etc.
+}
+#+END_SRC
+
+* Transport Types
+
+MCP supports five different transport mechanisms:
+
+** stdio (Standard Input/Output)
+
+Default transport type for local executables.
+
+#+BEGIN_SRC json
+{
+  "type": "stdio",
+  "command": "path/to/executable",
+  "args": ["arg1", "arg2"],
+  "env": {
+    "ENV_VAR": "value"
+  }
+}
+#+END_SRC
+
+Fields:
+- =type=: Optional, defaults to "stdio"
+- =command=: Required, the command to execute
+- =args=: Optional array of command arguments
+- =env=: Optional environment variables
+
+** sse (Server-Sent Events)
+
+For HTTP-based server connections.
+
+#+BEGIN_SRC json
+{
+  "type": "sse",
+  "url": "https://example.com/mcp",
+  "headers": {
+    "Authorization": "Bearer token"
+  }
+}
+#+END_SRC
+
+Fields:
+- =type=: Required, must be "sse"
+- =url=: Required, the server URL
+- =headers=: Optional HTTP headers
+
+** sse-ide (IDE Server-Sent Events)
+
+For IDE integration via SSE.
+
+#+BEGIN_SRC json
+{
+  "type": "sse-ide",
+  "url": "http://localhost:3000",
+  "ideName": "vscode",
+  "ideRunningInWindows": false
+}
+#+END_SRC
+
+Fields:
+- =type=: Required, must be "sse-ide"
+- =url=: Required, the server URL
+- =ideName=: Required, name of the IDE
+- =ideRunningInWindows=: Optional boolean flag
+
+** ws-ide (WebSocket IDE)
+
+For IDE integration via WebSocket.
+
+#+BEGIN_SRC json
+{
+  "type": "ws-ide",
+  "url": "ws://localhost:3000",
+  "ideName": "vscode",
+  "authToken": "secret-token",
+  "ideRunningInWindows": false
+}
+#+END_SRC
+
+Fields:
+- =type=: Required, must be "ws-ide"
+- =url=: Required, the WebSocket URL
+- =ideName=: Required, name of the IDE
+- =authToken=: Optional authentication token
+- =ideRunningInWindows=: Optional boolean flag
+
+** http
+
+For standard HTTP-based connections.
+
+#+BEGIN_SRC json
+{
+  "type": "http",
+  "url": "https://api.example.com/mcp",
+  "headers": {
+    "X-API-Key": "key123"
+  }
+}
+#+END_SRC
+
+Fields:
+- =type=: Required, must be "http"
+- =url=: Required, the server URL
+- =headers=: Optional HTTP headers
+
+* Environment Variable Expansion
+
+All configuration scopes support environment variable expansion using the =expandVars= feature. This allows dynamic configuration based on environment variables.
+
+Environment variables can be referenced in string values using standard shell syntax (=$VAR= or =${VAR}=).
+
+* Command Line Interface
+
+Claude Code provides CLI commands for managing MCP servers:
+
+** Adding a Server
+
+#+BEGIN_SRC bash
+claude mcp add <name> <command> [args...]
+#+END_SRC
+
+Options:
+- =-s, --scope <scope>=: Specify scope (project, user, local)
+- =-t, --transport <transport>=: Transport type (stdio, sse, http, sse-ide, ws-ide)
+- =-u, --url <url>=: Server URL (for non-stdio transports)
+- =-e, --env <env...>=: Set environment variables (KEY=value format)
+- =-H, --header <header...>=: Set headers (for HTTP/SSE transports)
+
+** Listing Servers
+
+#+BEGIN_SRC bash
+claude mcp list
+#+END_SRC
+
+Shows all configured MCP servers with their status and scope.
+
+** Removing a Server
+
+#+BEGIN_SRC bash
+claude mcp remove <name>
+#+END_SRC
+
+Options:
+- =-s, --scope <scope>=: Specify which scope to remove from
+
+* Configuration Paths
+
+** User Configuration
+- Primary: =~/.claude/.config.json=
+- Fallback: =~/.claude.json= (if CLAUDE_CONFIG_DIR is not set)
+- Custom: Defined by =CLAUDE_CONFIG_DIR= environment variable
+
+** Project Configuration
+- Location: =.mcp.json= in project root directory
+
+* MCP Server Identification
+
+MCP tools and commands are prefixed with =mcp__<server-name>__= for namespacing. This allows Claude Code to identify which server provides which capabilities.
+
+* Interactive Management
+
+Within Claude Code's interactive mode, use the =/mcp= command to:
+- View server status
+- Authenticate servers that require credentials
+- Reconnect to failed servers
+- View available tools from each server
+
+* Error Handling
+
+Configuration errors are collected and reported for each scope:
+- Parsing errors for malformed JSON
+- Validation errors for incorrect schema
+- Connection failures for unreachable servers
+
+The system continues to load valid servers even if some configurations fail.
+
+* Server States
+
+MCP servers can be in various states:
+- =connected=: Successfully connected and operational
+- =failed=: Connection failed or server error
+- =needs-auth=: Requires authentication
+- =pending=: Connection in progress

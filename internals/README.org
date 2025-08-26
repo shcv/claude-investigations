@@ -1,0 +1,64 @@
+#+TITLE: Claude Code Internals Documentation
+
+* Overview
+
+This directory contains detailed technical investigations of Claude Code's internal systems and architecture. These documents provide deep dives into the underlying mechanisms that power Claude Code's functionality.
+
+* Internal Systems Documentation
+
+** Core Architecture
+
+- [[file:websocket-protocol.org][WebSocket Protocol]] - Internal WebSocket communication protocol and message handling
+- [[file:session-log-format.org][Session Log Format]] - Conversation logging format and session data structure
+- [[file:telemetry.org][Telemetry]] - Analytics, metrics collection, and privacy controls
+
+** Performance & Optimization
+
+- [[file:caching.org][Caching]] - Cache management, data persistence, and performance optimization
+- [[file:microcompaction.org][Microcompaction]] - Data compaction and optimization strategies
+- [[file:diff-spec.org][Diff Spec]] - Differential update specifications and patch management
+
+** System Management
+
+- [[file:recursion-stack.org][Recursion Stack]] - Call stack management and recursion handling
+- [[file:root-detection.org][Root Detection]] - System privilege detection and security measures
+
+* Documentation Standards
+
+Each internals document should include:
+
+1. **System Overview** - High-level architectural description
+2. **Technical Implementation** - Detailed implementation with line references
+3. **Data Structures** - Key data formats, schemas, and structures
+4. **Algorithms** - Core algorithms and logic flows
+5. **Code Analysis** - Important code sections with line numbers from prettified source
+6. **Performance Considerations** - Optimization strategies and bottlenecks
+7. **Security Implications** - Security considerations and safeguards
+8. **Evolution History** - How the system has evolved across versions
+
+* Investigation Methodology
+
+When investigating internals:
+
+1. Start with the latest prettified source (v1.0.90)
+2. Trace through the implementation from entry points
+3. Document all configuration options and environment variables
+4. Identify telemetry events and logging points
+5. Note any security-sensitive operations
+6. Track changes across versions when significant
+
+* Source Reference
+
+All investigations use the latest prettified Claude Code source:
+- Version: v1.0.90
+- Location: =archive/pretty/pretty-v1.0.90.js=
+
+* Contributing
+
+When adding new internal documentation:
+
+1. Use the standard org-mode format
+2. Include specific line references to the prettified source
+3. Provide code snippets for critical sections
+4. Document any related features that depend on this internal
+5. Update this README with a description of the new document
