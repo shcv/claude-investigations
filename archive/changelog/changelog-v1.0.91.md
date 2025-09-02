@@ -1,132 +1,116 @@
 # Changelog for version 1.0.91
 
-Now I'll create the comprehensive changelog for version 1.0.91 based on all the verified changes.
-
-# Changelog for version 1.0.91
-
 ## 🎯 Highlights
-Version 1.0.91 enhances command-line security with obfuscation detection, adds native grep/ripgrep support, and introduces GitHub Actions workflow templates. The update also improves OAuth compatibility, adds sophisticated CLI animations, and integrates analytics capabilities.
+Version 1.0.91 is a targeted refinement release focused on security enhancements, developer experience improvements, and user interface polish. Key additions include command obfuscation detection, native grep/ripgrep support, GitHub Actions integration templates, and enhanced CLI animations.
 
 ## 🚀 New Features
 
 ### Native grep and ripgrep Support
-**What:** Added full support for `grep` and `rg` (ripgrep) commands within Claude's secure sandbox
+**What:** Added native support for `grep` and `rg` (ripgrep) commands within Claude's secure sandbox
 **How to use:**
 ```bash
 # Search for patterns in files
 grep "TODO" src/*.js
 rg "function.*async" --type js
-
-# These commands now work with path restrictions and permission checks
 ```
 **Details:**
 - Both commands are treated as read-only operations
-- Custom path extraction handles complex argument structures
-- Works within the existing security framework
-- Supports common flags like `-e`, `--regexp`, `-f`, `--file` for grep
-- Supports ripgrep-specific flags like `-g`, `--glob`, `-t`, `--type`
+- Added to command descriptors and safe commands list
+- Integrates with existing path restriction framework
+- Eliminates need for shell execution for basic search operations
 
 ### Command Obfuscation Detection
-**What:** New security feature that detects attempts to hide malicious flags using quotes
+**What:** New security feature that detects attempts to hide malicious command flags using quotes
+**Implementation:** New `ML6` function at `archive/pretty/pretty-v1.0.91.js:374835`
 **How it works:**
 ```bash
-# This will now trigger a security prompt:
-rm "-rf" /  # Quoted flag detected
-ls "-"la    # Obfuscated flag pattern detected
+# These patterns will now trigger security prompts:
+rm "-rf" /     # Quoted flag detected
+ls "-"la       # Obfuscated flag pattern detected
 ```
 **Details:**
-- Detects quoted characters within flag names
-- Identifies patterns where quotes are used to bypass security
-- Prompts user for confirmation when suspicious patterns are found
-- Echo command is exempted as safe
+- Analyzes command arguments for suspicious quoting patterns
+- Prevents sophisticated command injection attempts
+- Echo command exempted from checks as inherently safe
+- Part of the enhanced command validation pipeline
 
-### GitHub Actions Workflow Templates
-**What:** Pre-configured GitHub Actions workflows for Claude Code integration
-**How to use:**
-```bash
-# Templates are now available for automatic setup
-# Two workflows included:
-# 1. Claude Code - responds to @claude mentions
-# 2. Claude Code Review - automatic PR reviews
-```
+### GitHub Actions Workflow Templates  
+**What:** Pre-configured workflow templates for Claude Code CI/CD integration
+**Implementation:** Two new templates added:
+- `e_B` template for claude.yml workflow
+- `AxB` template for claude-review.yml workflow
 **Details:**
-- Triggers on issue comments, PR comments, and PR reviews containing "@claude"
-- Includes proper permissions configuration
-- Uses `anthropics/claude-code-action@v1`
+- Responds to @claude mentions in issues and PR comments
+- Uses production `anthropics/claude-code-action@v1` (upgraded from beta)
+- Includes proper permissions and trigger configurations
 - Supports both manual triggers and automatic code review
 
 ### Enhanced CLI Animations
-**What:** Sophisticated visual feedback with color interpolation and pulsing effects
+**What:** New shimmer and color interpolation animations for improved visual feedback
+**Implementation:** New animation functions `yN0`, `xN0`, `bN0`, `fN0` at `archive/pretty/pretty-v1.0.91.js:398709-398954`
 **Details:**
-- **Tool-use mode**: Text now pulses with smooth color transitions instead of static symbol
-- **RGB color interpolation**: Smooth transitions between colors for flash effects
-- **Glimmer animations**: Enhanced character-by-character shimmer effects
-- **Sine-wave opacity**: Creates natural breathing/pulsing animation
-- Separate animation modes for different operation types
+- RGB color interpolation for smooth transitions
+- Character-by-character glimmer effects  
+- Sine-wave opacity for natural pulsing animations
+- Enhanced visual feedback during tool operations
+
+### TodoWrite activeForm UI Display
+**What:** Status spinner now displays the `activeForm` field from in-progress todos
+**Implementation:** Removed feature flag `MQ("false")` at `archive/pretty/pretty-v1.0.91.js:398916-398919`
+**How it works:**
+- When a todo is marked as "in_progress", the spinner shows the `activeForm` text + "…"
+- Example: "Fixing authentication bug…" instead of generic loading text
+- Provides contextual progress feedback using present continuous tense
+**Details:**
+- Feature was implemented behind a disabled flag in v1.0.90
+- Flag removal in v1.0.91 made the display unconditional
+- Completes the TodoWrite enhancement that began with schema changes in v1.0.89
 
 ### Node.js Warning Monitoring
-**What:** Automatic tracking and reporting of Node.js runtime warnings
+**What:** Automatic detection and reporting of Node.js runtime warnings
+**Implementation:** New `UN2` function and warning patterns at `archive/pretty/pretty-v1.0.91.js:356268`
 **Details:**
-- Captures MaxListenersExceededWarning events
-- Distinguishes internal vs external warnings
-- Tracks warning occurrence counts
-- Sends telemetry for monitoring
-- Optional debug mode logging with `CLAUDE_DEBUG=true`
-
-### Analytics Integration
-**What:** Statsig integration for feature flags and experimentation
-**Details:**
-- Connects to Anthropic's Statsig endpoint
-- Enables A/B testing and feature rollouts
-- Configured for production environment
-- Custom user cache key generation
+- Specifically monitors MaxListenersExceededWarning events
+- Distinguishes between internal vs external warnings
+- Tracks occurrence counts for telemetry
+- Optional debug logging with `CLAUDE_DEBUG=true`
 
 ## 🔧 Improvements
 
-### OAuth Authentication Enhancements
-**What:** Improved compatibility with various OAuth server implementations
+### OAuth Server Reliability
+**What:** Enhanced OAuth callback server with dynamic port allocation
 **Details:**
-- **Dynamic authentication method selection**: Automatically chooses between `client_secret_basic`, `client_secret_post`, or `none` based on server capabilities
-- **Better metadata discovery**: Refactored well-known endpoint discovery with fallback mechanisms
-- **Enhanced error handling**: Structured OAuth error responses with proper error codes
-- **Improved token exchange**: Proper Accept headers and custom authentication support
-- **Comprehensive validation**: New Zod schemas for OAuth/OpenID provider metadata
+- Server class restructured from `zL0` to `rL0`
+- Now starts on port 0 for OS-assigned available ports
+- Prevents port conflicts during authentication flows
+- Improved error handling and cleanup with `removeAllListeners()`
 
-### Local OAuth Server Improvements
-**What:** Better port allocation for OAuth callback server
+### OAuth Error Handling
+**What:** Structured OAuth error classes and better error recovery
 **Details:**
-- Dynamic port allocation instead of fixed port
-- Starts on port 0 to let OS assign available port
-- Better error handling during server startup
-- Cleaner shutdown with removeAllListeners()
+- New error classes: `cI`, `ak1`, `Ve`, `Ke` for different OAuth failure modes
+- Enhanced metadata discovery with fallback mechanisms
+- Better handling of various OAuth server implementations
+- More robust token exchange processes
 
 ## 🐛 Bug Fixes
 
 ### Command Argument Processing
-**What:** Fixed null handling in command argument filtering
+**What:** Fixed null pointer exception in command argument filtering
 **Details:**
 - Changed filter condition from `!B.startsWith("-")` to `!B?.startsWith("-")`
-- Prevents crashes when processing commands with null arguments
+- Prevents crashes when processing commands with null/undefined arguments
+- Improves robustness of command parsing pipeline
 
-### Import Organization
-**What:** Cleaned up duplicate imports and reorganized crypto/stream imports
-**Details:**
-- Consolidated crypto imports using destructuring
-- Removed redundant import statements
-- Better code organization
+## 📝 Clarifications
 
-## 📝 Other Changes
+### Features NOT New in 1.0.91
+The following were already present in v1.0.90 and are not new features:
+- **Statsig Analytics Integration**: Full analytics infrastructure was already implemented
+- **OAuth Authentication Core**: Basic OAuth functionality existed, only reliability improvements added
+- **Command Security Framework**: Core security mechanisms were in place, only obfuscation detection added
 
-### Permission System Updates
-**What:** Added grep and ripgrep to permission maps
-**Details:**
-- Both commands classified as "read" operations
-- Added to path restriction framework
-- Included in safe command lists for specific modes
-
-### Telemetry Enhancements
-**What:** New telemetry events for monitoring
-**Details:**
-- `tengu_node_warning` event for runtime warnings
-- Warning occurrence tracking
-- Internal vs external warning classification
+## Technical Notes
+- File structure similarity: 99.1% between versions
+- Total changes: 74 additions, 16 deletions, 17 modifications  
+- Primary focus on security, reliability, and user experience refinements

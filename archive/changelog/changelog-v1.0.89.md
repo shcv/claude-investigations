@@ -98,11 +98,26 @@ diff file1.txt file2.txt
 **New behavior:** Displays "Request timed out (check API_TIMEOUT_MS)" with clear next steps
 **Impact:** Users can easily identify and resolve timeout issues by adjusting the API_TIMEOUT_MS environment variable
 
-### Todo List Schema Enhancement
-**What changed:** Todo items now require both imperative and present continuous descriptions
-**Previous behavior:** Only required a single `content` field
-**New behavior:** Requires both `content` (imperative: "Fix bug") and `activeForm` (present continuous: "Fixing bug")
-**Impact:** Provides richer task descriptions for better clarity, though the activeForm is not yet displayed in the UI
+### TodoWrite Tool Schema Enhancement
+**What changed:** TodoWrite tool now requires dual-form descriptions for all todo items
+**Previous behavior:** Todo items only had `content` and `status` fields:
+```json
+{"content": "Fix authentication bug", "status": "pending"}
+```
+**New behavior:** Todo items require three fields including a new `activeForm`:
+```json
+{
+  "content": "Fix authentication bug",
+  "activeForm": "Fixing authentication bug",
+  "status": "pending"
+}
+```
+**Impact:**
+- Forces clearer articulation of both task goals and current actions
+- Improves communication between AI and user about task progress  
+- Enables status spinner to show contextual progress messages (though todo lists remain hidden since v1.0.86)
+- All three fields (`content`, `activeForm`, `status`) are now required for TodoWrite tool usage
+- Note: While activeForm enhances the schema, users still cannot see todo lists due to display removal in v1.0.86
 
 ### Platform Compatibility - Musl Libc Detection
 **What changed:** Added detection for musl-based Linux distributions like Alpine Linux

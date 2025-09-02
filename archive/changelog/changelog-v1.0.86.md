@@ -70,15 +70,27 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - TodoWrite tool now enforces keeping at least one task in_progress
 - Visual feedback simplified - completed tasks always show in green
 
-### Smart Todo Display
-**What changed:** Improved todo list visualization with intelligent truncation
+### Todo List Feature Flag System
+**What changed:** TodoWrite tool now controlled by runtime feature flag instead of hardcoded visibility
+**Previous behavior:** TodoWrite had hardcoded visibility conditions
+**New behavior:** Todo list visibility controlled by `todoFeatureEnabled` feature flag (defaults to disabled)
+**Implementation:** Tool inclusion controlled by dynamic feature flag system rather than hardcoded conditions
+**Impact:**
+- Todos become opt-in feature rather than always-on
+- Tool functionality remains fully implemented but filtered out at runtime by default
+- Users must explicitly enable todo feature to see todo list management
+- Creates configurable task management system
+- Todos still persist to disk and function when enabled
+
+### Smart Todo Display (Hidden Implementation)
+**What changed:** Improved todo list visualization with intelligent truncation (for internal use)
 **Previous behavior:** Simple list display without truncation
 **New behavior:** Shows up to 4 most relevant items with counts for hidden items
-**Impact:**
+**Impact:** (Note: These improvements exist in code but users never see them due to display removal)
 - Prioritizes showing in-progress tasks
 - Displays "... +N done" for multiple completed tasks
 - Shows "... +N more" for remaining tasks
-- Keeps focus on active work while maintaining context
+- Would keep focus on active work while maintaining context (if visible)
 
 ### Permission Prompt Clarity
 **What changed:** Operation-specific permission messages

@@ -1,0 +1,613 @@
+#+TITLE: Headless SDK API and Stream-JSON Protocol
+#+DATE: 2025-08-27
+
+* Overview
+
+Claude Code's headless mode provides a programmatic API through stdin/stdout using the stream-json format. This mode transforms Claude Code into a service that communicates via structured JSON messages, enabling SDK integration and remote control capabilities including real-time turn interruption.
+
+* Key Features
+
+** Headless Operation
+- No interactive UI - purely stdin/stdout communication
+- Designed for SDK integration and automation
+- Supports all Claude Code functionality through JSON messages
+- Compatible with Python and TypeScript SDKs
+
+** Stream-JSON Protocol
+- Line-delimited JSON (NDJSON) message format
+- Bidirectional communication over stdin/stdout
+- Structured message types for different operations
+- Real-time streaming responses
+
+** Turn Interruption
+- Ability to interrupt active Claude turns without killing the session
+- Clean cancellation using AbortController mechanism
+- Graceful handling of interrupted operations
+- Resume capability after interruption
+
+* Installation & Requirements
+
+** Version Requirements
+- Claude Code v1.0.86+ for basic stream-json support
+- All versions support turn interruption via control messages
+
+** Required Flags
+#+BEGIN_SRC bash
+claude --input-format stream-json --output-format stream-json
+#+END_SRC
+
+* Message Protocol
+
+** Message Format
+All messages use newline-delimited JSON (NDJSON):
+
+#+BEGIN_SRC json
+{"type":"user_message","message":{"role":"user","content":"Hello"}}
+{"type":"assistant_message","message":{"role":"assistant","content":"Hi there!"}}
+{"type":"control_request","request":{"subtype":"interrupt"},"request_id":"123"}
+#+END_SRC
+
+** Message Types
+
+*** User Messages
+#+BEGIN_SRC javascript
+{
+  "type": "user_message",
+  "message": {
+    "role": "user", 
+    "content": "Your prompt here"
+  }
+}
+#+END_SRC
+
+*** Assistant Messages
+#+BEGIN_SRC javascript  
+{
+  "type": "assistant_message",
+  "message": {
+    "role": "assistant",
+    "content": "Claude's response"
+  }
+}
+#+END_SRC
+
+*** Tool Responses
+#+BEGIN_SRC javascript
+{
+  "type": "tool_response",
+  "tool_use_id": "tool_123",
+  "content": "Result of tool execution"
+}
+#+END_SRC
+
+*** Control Requests
+#+BEGIN_SRC javascript
+{
+  "type": "control_request",
+  "request": {
+    "subtype": "interrupt" | "initialize" | "set_permissions"
+  },
+  "request_id": "unique-id"
+}
+#+END_SRC
+
+*** Control Responses  
+#+BEGIN_SRC javascript
+{
+  "type": "control_response", 
+  "response": {
+    "subtype": "success" | "error",
+    "message": "Optional status message"
+  },
+  "request_id": "matching-request-id"
+}
+#+END_SRC
+
+* Turn Interruption
+
+** How to Interrupt
+Send a control request with interrupt subtype:
+
+#+BEGIN_SRC javascript
+{
+  "type": "control_request",
+  "request": {
+    "subtype": "interrupt"  
+  },
+  "request_id": "interrupt_001"
+}
+#+END_SRC
+
+** What Happens
+1. Claude Code receives interrupt signal
+2. Calls =abort()= on active AbortController
+3. Stops current processing (API calls, tool execution, etc.)
+4. Sends success confirmation:
+
+#+BEGIN_SRC javascript
+{
+  "type": "control_response",
+  "response": {
+    "subtype": "success"
+  },
+  "request_id": "interrupt_001"
+}
+#+END_SRC
+
+** Interruption Scope
+- Interrupts the current turn completely
+- Cannot inject new context into active turn
+- New messages must wait for turn completion or interruption
+- Does not kill the entire Claude Code session
+
+** Use Cases
+- Long-running operations that need to be cancelled
+- User changing their mind mid-generation
+- Implementing timeout mechanisms
+- Dynamic priority handling in multi-request scenarios
+
+* Usage Examples
+
+** Basic Python SDK Usage
+#+BEGIN_SRC python
+import subprocess
+import json
+import uuid
+
+# Start Claude Code in headless mode
+process = subprocess.Popen([
+    'claude',
+    '--input-format', 'stream-json',
+    '--output-format', 'stream-json'
+], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+   stderr=subprocess.PIPE, text=True)
+
+# Send a message
+message = {
+    'type': 'user_message',
+    'message': {
+        'role': 'user', 
+        'content': 'Write a long essay about quantum computing'
+    }
+}
+
+process.stdin.write(json.dumps(message) + '\n')
+process.stdin.flush()
+
+# Read responses
+for line in iter(process.stdout.readline, ''):
+    if line.strip():
+        try:
+            response = json.loads(line.strip())
+            print('Received:', response)
+        except json.JSONDecodeError:
+            print('Invalid JSON:', line)
+#+END_SRC
+
+** Interruption Example
+#+BEGIN_SRC python
+import threading
+import time
+
+def interrupt_after_delay(process, delay=5):
+    """Interrupt Claude after specified delay"""
+    time.sleep(delay)
+    
+    interrupt_msg = {
+        'type': 'control_request',
+        'request': {'subtype': 'interrupt'},
+        'request_id': str(uuid.uuid4())
+    }
+    
+    process.stdin.write(json.dumps(interrupt_msg) + '\n')
+    process.stdin.flush()
+    print(f"Sent interrupt after {delay} seconds")
+
+# Start Claude Code
+process = subprocess.Popen([...])  # Same as above
+
+# Start interrupt timer
+interrupt_thread = threading.Thread(
+    target=interrupt_after_delay, 
+    args=(process, 10)  # Interrupt after 10 seconds
+)
+interrupt_thread.daemon = True
+interrupt_thread.start()
+
+# Send long-running request
+long_request = {
+    'type': 'user_message',
+    'message': {
+        'role': 'user',
+        'content': 'Write a comprehensive analysis of machine learning algorithms, covering at least 20 different algorithms in detail'
+    }
+}
+
+process.stdin.write(json.dumps(long_request) + '\n')
+process.stdin.flush()
+
+# Handle responses including interruption
+for line in iter(process.stdout.readline, ''):
+    if line.strip():
+        response = json.loads(line.strip())
+        if response.get('type') == 'control_response':
+            print('Interruption confirmed:', response)
+            break
+        print('Received:', response)
+#+END_SRC
+
+** Node.js SDK Usage
+#+BEGIN_SRC javascript
+const { spawn } = require('child_process');
+const { createInterface } = require('readline');
+
+class ClaudeSDK {
+    constructor() {
+        this.process = spawn('claude', [
+            '--input-format', 'stream-json',
+            '--output-format', 'stream-json'
+        ]);
+        
+        this.rl = createInterface({
+            input: this.process.stdout
+        });
+        
+        this.setupHandlers();
+    }
+    
+    setupHandlers() {
+        this.rl.on('line', (line) => {
+            try {
+                const message = JSON.parse(line);
+                this.handleMessage(message);
+            } catch (e) {
+                console.error('Invalid JSON:', line);
+            }
+        });
+    }
+    
+    handleMessage(message) {
+        console.log('Received:', message);
+        
+        if (message.type === 'control_response') {
+            console.log('Control response:', message);
+        }
+    }
+    
+    sendMessage(content) {
+        const message = {
+            type: 'user_message',
+            message: {
+                role: 'user',
+                content: content
+            }
+        };
+        
+        this.process.stdin.write(JSON.stringify(message) + '\n');
+    }
+    
+    interrupt() {
+        const interrupt = {
+            type: 'control_request',
+            request: { subtype: 'interrupt' },
+            request_id: 'interrupt_' + Date.now()
+        };
+        
+        this.process.stdin.write(JSON.stringify(interrupt) + '\n');
+        return interrupt.request_id;
+    }
+}
+
+// Usage example
+const claude = new ClaudeSDK();
+
+// Send a message
+claude.sendMessage('Explain machine learning in detail');
+
+// Interrupt after 5 seconds
+setTimeout(() => {
+    const requestId = claude.interrupt();
+    console.log('Sent interrupt with ID:', requestId);
+}, 5000);
+#+END_SRC
+
+* Control Commands
+
+** Initialize Session
+#+BEGIN_SRC javascript
+{
+  "type": "control_request",
+  "request": {
+    "subtype": "initialize",
+    "configuration": {
+      "model": "claude-3-sonnet-20240229",
+      "max_tokens": 4096
+    }
+  },
+  "request_id": "init_001"
+}
+#+END_SRC
+
+** Set Permissions
+#+BEGIN_SRC javascript
+{
+  "type": "control_request", 
+  "request": {
+    "subtype": "set_permissions",
+    "permissions": {
+      "file_access": true,
+      "command_execution": false
+    }
+  },
+  "request_id": "perms_001"
+}
+#+END_SRC
+
+** Get Status
+#+BEGIN_SRC javascript
+{
+  "type": "control_request",
+  "request": {
+    "subtype": "status"
+  },
+  "request_id": "status_001"
+}
+#+END_SRC
+
+* Advanced Features
+
+** Message Acknowledgment
+Enable message replay for acknowledgment:
+
+#+BEGIN_SRC bash
+claude --input-format stream-json \
+       --output-format stream-json \
+       --replay-user-messages
+#+END_SRC
+
+This causes user messages to be echoed back for confirmation:
+#+BEGIN_SRC javascript
+// Input:
+{"type":"user_message","message":{"role":"user","content":"Hello"}}
+
+// Output includes acknowledgment:
+{"type":"user_message","message":{"role":"user","content":"Hello"}}  // Acknowledgment
+{"type":"assistant_message","message":{"role":"assistant","content":"Hi!"}}  // Response
+#+END_SRC
+
+** Tool Execution Flow
+#+BEGIN_SRC javascript
+// Claude requests tool use
+{
+  "type": "tool_use",
+  "tool_name": "bash",
+  "tool_use_id": "bash_123",
+  "parameters": {
+    "command": "ls -la"
+  }
+}
+
+// SDK provides tool result
+{
+  "type": "tool_response",
+  "tool_use_id": "bash_123", 
+  "content": "total 42\ndrwxr-xr-x  5 user user 4096 Aug 27 10:30 ."
+}
+
+// Claude continues with tool result
+{
+  "type": "assistant_message",
+  "message": {
+    "role": "assistant", 
+    "content": "I can see the directory listing..."
+  }
+}
+#+END_SRC
+
+** Streaming Response Handling
+#+BEGIN_SRC javascript
+// Enable verbose mode for token-level streaming
+const claude = spawn('claude', [
+    '--input-format', 'stream-json',
+    '--output-format', 'stream-json',
+    '--verbose'
+]);
+
+// Responses arrive as incremental updates
+{
+  "type": "assistant_message_delta",
+  "delta": {
+    "content": "Hello"
+  }
+}
+{
+  "type": "assistant_message_delta", 
+  "delta": {
+    "content": " there!"
+  }
+}
+{
+  "type": "assistant_message",  // Final complete message
+  "message": {
+    "role": "assistant",
+    "content": "Hello there!"
+  }
+}
+#+END_SRC
+
+* Error Handling
+
+** Protocol Errors
+#+BEGIN_SRC javascript
+// Invalid JSON format
+{"type":"control_response","response":{"subtype":"error","message":"Invalid JSON: Unexpected token"}}
+
+// Unknown message type  
+{"type":"control_response","response":{"subtype":"error","message":"Unknown message type: invalid_type"}}
+
+// Missing required fields
+{"type":"control_response","response":{"subtype":"error","message":"Missing required field: message"}}
+#+END_SRC
+
+** Tool Execution Errors
+#+BEGIN_SRC javascript
+{
+  "type": "tool_error",
+  "tool_use_id": "bash_123",
+  "error": {
+    "type": "permission_denied",
+    "message": "Command execution not permitted"
+  }
+}
+#+END_SRC
+
+** Interruption Failures
+If interruption fails (rare), you'll receive:
+#+BEGIN_SRC javascript
+{
+  "type": "control_response",
+  "response": {
+    "subtype": "error", 
+    "message": "No active turn to interrupt"
+  },
+  "request_id": "interrupt_001"
+}
+#+END_SRC
+
+* Best Practices
+
+** Message Handling
+- Always parse JSON with error handling
+- Handle partial messages gracefully
+- Implement message queuing for high throughput
+- Use request IDs for tracking control commands
+
+** Interruption Strategy
+- Only interrupt when necessary (cancellation, timeouts)
+- Wait for confirmation before sending new messages
+- Implement retry logic for failed interruptions  
+- Consider user experience when interrupting
+
+** Error Recovery
+- Implement robust JSON parsing with fallbacks
+- Handle unexpected message types gracefully
+- Log errors for debugging without exposing sensitive data
+- Implement circuit breaker patterns for repeated failures
+
+** Performance Optimization
+- Use streaming for real-time feedback
+- Batch small messages when possible
+- Implement backpressure handling
+- Monitor memory usage with large responses
+
+* SDK Integration
+
+** Official SDKs
+The stream-json protocol is used by:
+- Claude Code Python SDK
+- Claude Code TypeScript/JavaScript SDK
+- Claude Code Action (GitHub Actions)
+
+** Custom Integration
+#+BEGIN_SRC python
+class CustomClaudeSDK:
+    def __init__(self):
+        self.process = None
+        self.request_id_counter = 0
+        
+    def start(self):
+        self.process = subprocess.Popen([
+            'claude',
+            '--input-format', 'stream-json', 
+            '--output-format', 'stream-json'
+        ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        
+    def send_message(self, content):
+        message = {
+            'type': 'user_message',
+            'message': {'role': 'user', 'content': content}
+        }
+        self._send_json(message)
+        
+    def interrupt_turn(self):
+        self.request_id_counter += 1
+        request_id = f'interrupt_{self.request_id_counter}'
+        
+        interrupt = {
+            'type': 'control_request',
+            'request': {'subtype': 'interrupt'},
+            'request_id': request_id
+        }
+        self._send_json(interrupt)
+        return request_id
+        
+    def _send_json(self, data):
+        json_str = json.dumps(data) + '\n'
+        self.process.stdin.write(json_str)
+        self.process.stdin.flush()
+        
+    def read_responses(self):
+        for line in iter(self.process.stdout.readline, ''):
+            if line.strip():
+                yield json.loads(line.strip())
+#+END_SRC
+
+* Troubleshooting
+
+** Common Issues
+
+*** Messages Not Processing
+Ensure newline delimiter:
+#+BEGIN_SRC bash
+# Correct - with newline
+echo '{"type":"user_message","message":{"role":"user","content":"Hello"}}' | claude --input-format stream-json --output-format stream-json
+
+# Incorrect - missing newline delimiter  
+printf '{"type":"user_message","message":{"role":"user","content":"Hello"}}' | claude --input-format stream-json --output-format stream-json
+#+END_SRC
+
+*** Interruption Not Working
+- Ensure there's an active turn to interrupt
+- Check that request_id is unique
+- Verify JSON format is correct
+- Wait for control_response before assuming failure
+
+*** Tool Execution Issues
+- Verify permissions are properly set
+- Check tool parameters format
+- Ensure tool_use_id matches between request and response
+- Handle tool_error responses appropriately
+
+** Debug Mode
+Enable debug output:
+#+BEGIN_SRC bash
+DEBUG=stream-json claude --input-format stream-json --output-format stream-json
+#+END_SRC
+
+* Security Considerations
+
+** Input Validation
+- Always validate JSON structure
+- Sanitize user inputs appropriately
+- Implement rate limiting for requests
+- Validate control command permissions
+
+** Process Isolation  
+- Run Claude Code in restricted environments
+- Limit file system access appropriately
+- Monitor resource usage (CPU, memory)
+- Implement process monitoring and restart capabilities
+
+** Sensitive Data
+- Never log full request/response content
+- Implement secure credential handling
+- Use environment variables for configuration
+- Rotate authentication tokens regularly
+
+* See Also
+
+- [[file:websocket-sdk-streaming.org][WebSocket SDK Streaming Interface]]
+- [[https://docs.anthropic.com/en/docs/claude-code/sdk][Official Claude Code SDK Documentation]]
+- [[https://jsonlines.org/][JSON Lines Specification]]
+- [[file:permissions.org][Permissions System]]
+- [[file:settings.org][Configuration and Settings]]

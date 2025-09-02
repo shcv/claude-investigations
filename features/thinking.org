@@ -1,52 +1,220 @@
-#+TITLE: Claude Code Thinking Keywords and Token Budget
-#+DATE: 2025-08-13
+#+TITLE: Claude Code Thinking Mode Token Budget System
+#+DATE: 2025-08-29
 
 * Overview
 
-A sophisticated mechanism for managing the AI's cognitive process, focusing on token allocation and thinking strategy.
+Claude Code implements a hierarchical token budget system that allocates cognitive resources based on pattern matching across 8 languages. The system provides four distinct thinking levels (NONE, BASIC, MIDDLE, HIGHEST) with precise token allocations ranging from 0 to 31,999 tokens.
 
-* Thinking Keywords
+* Architecture
 
-** Purpose
-- Guide the AI's reasoning process
-- Provide structured cognitive scaffolding
-- Enhance problem-solving clarity
-- Improve response predictability
+** Token Budget Constants
+Located in =archive/pretty/pretty-v1.0.96.js:411705=
 
-** Key Categories
-- Analysis keywords
-- Synthesis keywords
-- Evaluation keywords
-- Strategy keywords
+#+BEGIN_SRC javascript
+var Lh1 = { 
+  HIGHEST: 31999,  // Maximum thinking capacity  
+  MIDDLE: 10000,   // Medium thinking capacity
+  BASIC: 4000,     // Basic thinking capacity
+  NONE: 0          // No thinking mode
+}
+#+END_SRC
 
-* Token Budget Management
+** Processing Pipeline
 
-** Core Principles
-- Efficient token utilization
-- Adaptive cognitive resource allocation
-- Predictable computational complexity
-- Transparent reasoning boundaries
+1. Extract text content from user messages
+2. Normalize text (lowercase, remove "i think"/"we think")
+3. Match against language-specific patterns using priority order
+4. Return highest matching budget level
+5. Apply environment variable overrides if present
 
-** Budget Allocation Strategies
-- Dynamic token redistribution
-- Context-aware budget scaling
-- Preservation of critical reasoning paths
-- Minimal overhead computation
+* Environment Variable Control
 
-* Reasoning Optimization
+** MAX_THINKING_TOKENS
+Complete override of pattern detection system.
 
-- Parallel sub-task processing
-- Incremental complexity management
-- Graceful cognitive degradation
-- Minimal information loss
+#+BEGIN_SRC bash
+export MAX_THINKING_TOKENS=15000
+#+END_SRC
 
-* Future Potential
+** Implementation
+Located in =archive/pretty/pretty-v1.0.96.js:411832-411836=
 
-- Machine learning-based budget optimization
-- Adaptive thinking keyword generation
-- Cross-domain reasoning enhancement
-- Advanced cognitive resource management
+#+BEGIN_SRC javascript
+function rv(A, B) {
+  if (process.env.MAX_THINKING_TOKENS) {
+    let Q = parseInt(process.env.MAX_THINKING_TOKENS, 10);
+    if (Q > 0) J1("tengu_thinking", { provider: UN(), tokenCount: Q });
+    return Q;
+  }
+  // fallback to pattern matching logic
+}
+#+END_SRC
 
-* Conclusion
+* Multi-Language Pattern System
 
-The thinking keywords and token budget system represents a sophisticated approach to managing computational reasoning, balancing efficiency, clarity, and cognitive depth.
+** Pattern Structure
+Located in =archive/pretty/pretty-v1.0.96.js:411706-411830=
+
+Each language defines patterns for four budget levels with optional word boundary enforcement.
+
+** English Patterns
+
+*** HIGHEST (31,999 tokens)
+- "think harder" (word boundary)
+- "think intensely" (word boundary)  
+- "think longer" (word boundary)
+- "think really hard" (word boundary)
+- "think super hard" (word boundary)
+- "think very hard" (word boundary)
+- "ultrathink" (word boundary)
+
+*** MIDDLE (10,000 tokens)
+- "think about it" (word boundary)
+- "think a lot" (word boundary)
+- "think deeply" (word boundary)
+- "think hard" (word boundary)
+- "think more" (word boundary)
+- "megathink" (word boundary)
+
+*** BASIC (4,000 tokens)
+- "think" (word boundary)
+
+** Additional Languages
+
+*** Japanese
+- HIGHEST: 熟考, 深く考えて, しっかり考えて
+- MIDDLE: もっと考えて, たくさん考えて, よく考えて, 長考
+- BASIC: 考えて
+
+*** Chinese
+- HIGHEST: 多想一会, 深思, 仔细思考
+- MIDDLE: 多想想, 好好想
+- BASIC: 想, 思考
+
+*** Spanish
+- HIGHEST: piensa más, piensa mucho, piensa profundamente
+- MIDDLE: piensa
+- BASIC: pienso, pensando
+
+*** French
+- HIGHEST: réfléchis plus, réfléchis beaucoup, réfléchis profondément  
+- MIDDLE: réfléchis
+- BASIC: pense, réfléchir
+
+*** German
+- HIGHEST: denk mehr, denk gründlich, denk tief
+- MIDDLE: denk nach, denk
+- BASIC: denke, nachdenken
+
+*** Korean  
+- HIGHEST: 더 오래 생각, 깊이 생각, 심사숙고, 곰곰이 생각
+- MIDDLE: 많이 생각, 더 생각, 잘 생각
+- BASIC: 생각
+
+*** Italian
+- HIGHEST: pensa di più, pensa a lungo, pensa profondamente, rifletti a fondo
+- MIDDLE: pensa, pensa molto, rifletti
+- BASIC: penso, pensare, pensando, riflettere
+
+* Pattern Matching Algorithm
+
+** Core Matching Function
+Located in =archive/pretty/pretty-v1.0.96.js:411867-411874=
+
+#+BEGIN_SRC javascript
+function SN5(A, B) {
+  for (let Q of Object.values(ON5)) {
+    let Z = Q[B];
+    for (let { pattern: G, needsWordBoundary: Y } of Z)
+      if ((Y ? new RegExp(`\\b${G}\\b`) : new RegExp(G)).test(A)) return !0;
+  }
+  return !1;
+}
+#+END_SRC
+
+** Budget Detection Logic
+Located in =archive/pretty/pretty-v1.0.96.js:411858-411866=
+
+#+BEGIN_SRC javascript
+function PN5(A) {
+  let B = [
+    ["HIGHEST", Lh1.HIGHEST],
+    ["MIDDLE", Lh1.MIDDLE], 
+    ["BASIC", Lh1.BASIC],
+  ];
+  for (let [Q, Z] of B) if (SN5(A, Q)) return Z;
+  return Lh1.NONE;
+}
+#+END_SRC
+
+** Priority Order
+1. HIGHEST (31,999 tokens)
+2. MIDDLE (10,000 tokens)  
+3. BASIC (4,000 tokens)
+4. NONE (0 tokens)
+
+* Text Processing
+
+** Content Extraction
+Located in =archive/pretty/pretty-v1.0.96.js:411852-411857=
+
+#+BEGIN_SRC javascript
+function TN5(A) {
+  if (typeof A.message.content === "string") return A.message.content;
+  return A.message.content
+    .map((B) => (B.type === "text" ? B.text : ""))
+    .join("");
+}
+#+END_SRC
+
+** Normalization
+Located in =archive/pretty/pretty-v1.0.96.js:411844-411847=
+
+#+BEGIN_SRC javascript
+let B = TN5(A)
+    .toLowerCase()
+    .replaceAll("i think", "")
+    .replaceAll("we think", "")
+#+END_SRC
+
+Removes conversational phrases that could trigger false positives.
+
+* API Integration
+
+** Request Structure
+The thinking budget is passed to the Claude API as part of the request payload:
+
+#+BEGIN_SRC javascript
+{
+  thinking: D > 0 ? { budget_tokens: f, type: "enabled" } : void 0
+}
+#+END_SRC
+
+** Telemetry
+Budget allocation events are tracked via the =tengu_thinking= telemetry system with provider and token count metadata.
+
+* Historical Development
+
+- *v0.2.44*: Initial "think harder" mode introduced
+- *v0.2.47*: =MAX_THINKING_TOKENS= environment variable added  
+- *v0.2.103*: Three-tier budget system established
+- *v1.0.8*: Multi-language support expanded to 8 languages
+- *v1.0.96*: Current stable implementation
+
+* Configuration Options
+
+** CLI Integration
+The system displays active overrides in the welcome screen including maximum thinking tokens when =MAX_THINKING_TOKENS= is set.
+
+** Debug Mode
+Pattern matching results and budget allocations are logged through the telemetry system for debugging purposes.
+
+* Implementation Location
+
+Primary implementation: =archive/pretty/pretty-v1.0.96.js= lines 411705-411874
+
+Key functions:
+- =rv()=: Main budget detection with environment override
+- =PN5()=: Pattern-based budget detection  
+- =SN5()=: Multi-language pattern matching
+- =TN5()=: Message content extraction
