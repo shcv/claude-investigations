@@ -155,7 +155,7 @@ Return a JSON object with this structure:
         changes: bool = False,
         latest: bool = False,
         since: Optional[str] = None,
-        oldest_first: bool = False,
+        new_first: bool = False,
         redo: Optional[str] = None,
     ):
         self.base_dir = base_dir
@@ -165,7 +165,7 @@ Return a JSON object with this structure:
         self.changes = changes
         self.latest = latest
         self.since = since
-        self.oldest_first = oldest_first
+        self.new_first = new_first
         self.redo = redo
 
         # Directory structure
@@ -215,7 +215,7 @@ Return a JSON object with this structure:
                 sys.exit(1)
 
     def get_npm_versions(self) -> List[str]:
-        """Get all available versions from npm registry, sorted newest first"""
+        """Get all available versions from npm registry, sorted oldest first by default"""
         print_info(f"Fetching all available versions of {self.NPM_PACKAGE}...")
 
         try:
@@ -230,9 +230,9 @@ Return a JSON object with this structure:
             if isinstance(versions, str):
                 versions = [versions]  # Handle single version case
 
-            # Sort versions (newest first by default, oldest first if --oldest-first)
+            # Sort versions (oldest first by default, newest first if --new-first)
             sorted_versions = sorted(
-                versions, key=version.parse, reverse=not self.oldest_first
+                versions, key=version.parse, reverse=self.new_first
             )
             self.stats.total_versions = len(sorted_versions)
 
@@ -348,7 +348,7 @@ Return a JSON object with this structure:
                 print_warning("No versions available to download.")
                 return
 
-            latest_version = all_versions[0]  # Already sorted newest first
+            latest_version = all_versions[-1] if not self.new_first else all_versions[0]  # Get appropriate latest version
             print_info(f"Processing latest version only: {latest_version}")
 
             # Also download the previous version for diff generation
@@ -391,13 +391,13 @@ Return a JSON object with this structure:
         """Get list of original files that need prettification"""
         files_to_prettify = []
 
-        # Get all original files sorted by version (newest first by default, oldest first if --oldest-first)
+        # Get all original files sorted by version (oldest first by default, newest first if --new-first)
         original_files = list(self.original_dir.glob("cli-v*.js"))
         original_files.sort(
             key=lambda p: version.parse(
                 re.match(r"cli-v([0-9.]+)\.js$", p.name).group(1)
             ),
-            reverse=not self.oldest_first,
+            reverse=self.new_first,
         )
 
         if self.latest and original_files:
@@ -500,7 +500,7 @@ Return a JSON object with this structure:
             print_info("All files already prettified.")
             return
 
-        order_desc = "oldest first" if self.oldest_first else "newest first"
+        order_desc = "newest first" if self.new_first else "oldest first"
         print_info(
             f"Found {len(files_to_prettify)} files to prettify (processing {order_desc})"
         )
@@ -574,8 +574,8 @@ Return a JSON object with this structure:
                 if not diff_file.exists():
                     files_to_diff.append((older_file, newer_file))
 
-            # Reverse to process newest first (unless --oldest-first is specified)
-            if not self.oldest_first:
+            # Reverse to process newest first (when --new-first is specified)
+            if self.new_first:
                 files_to_diff.reverse()
 
         return files_to_diff
@@ -657,7 +657,7 @@ Return a JSON object with this structure:
             print_info("All diffs already generated.")
             return
 
-        order_desc = "oldest first" if self.oldest_first else "newest first"
+        order_desc = "newest first" if self.new_first else "oldest first"
         print_info(
             f"Found {len(files_to_diff)} diffs to generate (processing {order_desc})"
         )
@@ -688,7 +688,7 @@ Return a JSON object with this structure:
             for f in diff_files:
                 if re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name):
                     valid_diff_files.append(f)
-            
+
             if valid_diff_files:
                 valid_diff_files.sort(
                     key=lambda p: version.parse(
@@ -723,8 +723,8 @@ Return a JSON object with this structure:
             if not changelog_file.exists():
                 versions_to_changelog.append(version_str)
 
-        # Sort by version (newest first by default, oldest first if --oldest-first)
-        versions_to_changelog.sort(key=version.parse, reverse=not self.oldest_first)
+        # Sort by version (oldest first by default, newest first if --new-first)
+        versions_to_changelog.sort(key=version.parse, reverse=self.new_first)
 
         return versions_to_changelog
 
@@ -778,7 +778,7 @@ Return a JSON object with this structure:
                     prompt=prompt,
                     system=system_prompt,
                     max_tokens_to_sample=4000,
-                    model="claude-3-sonnet-20240229",
+                    model="sonnet",
                 )
 
                 changelog_content = response.completion
@@ -858,7 +858,7 @@ Return a JSON object with this structure:
             print_info("All changelogs already generated.")
             return
 
-        order_desc = "oldest first" if self.oldest_first else "newest first"
+        order_desc = "newest first" if self.new_first else "oldest first"
         print_info(
             f"Found {len(versions_to_changelog)} changelogs to generate (processing {order_desc})"
         )
@@ -891,7 +891,7 @@ Return a JSON object with this structure:
             for f in diff_files:
                 if re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name):
                     valid_diff_files.append(f)
-            
+
             if valid_diff_files:
                 valid_diff_files.sort(
                     key=lambda p: version.parse(
@@ -927,7 +927,7 @@ Return a JSON object with this structure:
                 versions_to_changes.append(version_str)
 
         # Sort by version
-        versions_to_changes.sort(key=version.parse, reverse=not self.oldest_first)
+        versions_to_changes.sort(key=version.parse, reverse=self.new_first)
 
         return versions_to_changes
 
@@ -962,7 +962,7 @@ Return a JSON object with this structure:
 
             # Parse the diff to extract individual changes
             changes = self.parse_diff_changes(diff_content)
-            
+
             if not changes:
                 print_warning(f"No changes found in diff for v{version_str}")
                 return False
@@ -979,20 +979,24 @@ Return a JSON object with this structure:
             # Process each change with Sonnet
             for i, change in enumerate(changes, 1):
                 print(f"  Processing change {i}/{len(changes)}...", end="\r")
-                
+
                 # Use claude CLI with Sonnet model for each change
                 claude_result = run(["which", "claude"], capture_output=True)
                 if claude_result.returncode == 0:
                     try:
-                        prompt = f"Analyze this specific change from the diff:\n\n{change}"
-                        
+                        prompt = (
+                            f"Analyze this specific change from the diff:\n\n{change}"
+                        )
+
                         # Use Sonnet for better structured output following the prompt
                         result = run(
                             [
                                 "claude",
                                 "--print",
-                                "--model", "sonnet",
-                                "--system-prompt", system_prompt,
+                                "--model",
+                                "sonnet",
+                                "--system-prompt",
+                                system_prompt,
                                 prompt,
                             ],
                             capture_output=True,
@@ -1003,9 +1007,13 @@ Return a JSON object with this structure:
                         if result.returncode == 0:
                             processed_changes.append(result.stdout)
                         else:
-                            processed_changes.append(f"# Failed to process change:\n{change}")
+                            processed_changes.append(
+                                f"# Failed to process change:\n{change}"
+                            )
                     except Exception as e:
-                        processed_changes.append(f"# Error processing change: {e}\n{change}")
+                        processed_changes.append(
+                            f"# Error processing change: {e}\n{change}"
+                        )
                 else:
                     print_warning("Claude CLI not available for processing changes")
                     return False
@@ -1016,10 +1024,12 @@ Return a JSON object with this structure:
             changes_content = f"# Changes for version {version_str}\n\n"
             changes_content += "## Processed Changes\n\n"
             changes_content += "\n---\n\n".join(processed_changes)
-            
+
             # Add a section for unimportant changes
             changes_content += "\n\n## Unimportant Changes\n\n"
-            changes_content += "Changes marked as trivial or low importance are moved here.\n"
+            changes_content += (
+                "Changes marked as trivial or low importance are moved here.\n"
+            )
 
             # Write changes file
             with open(changes_file, "w", encoding="utf-8") as f:
@@ -1038,10 +1048,10 @@ Return a JSON object with this structure:
         changes = []
         current_change = []
         in_change = False
-        
+
         # Check if this is an astdiff output or unified diff
         is_astdiff = "=== Removed" in diff_content or "=== Added" in diff_content
-        
+
         if is_astdiff:
             # Parse astdiff format
             lines = diff_content.split("\n")
@@ -1049,7 +1059,11 @@ Return a JSON object with this structure:
             while i < len(lines):
                 line = lines[i]
                 # Look for section headers like "--- Removed function 'xyz'"
-                if line.startswith("--- Removed") or line.startswith("--- Added") or line.startswith("--- Modified"):
+                if (
+                    line.startswith("--- Removed")
+                    or line.startswith("--- Added")
+                    or line.startswith("--- Modified")
+                ):
                     # Start of a change block
                     change_block = [line]
                     i += 1
@@ -1058,7 +1072,11 @@ Return a JSON object with this structure:
                         change_block.append(lines[i])
                         i += 1
                     # Collect the actual code lines (prefixed with - or +)
-                    while i < len(lines) and (lines[i].startswith("-") or lines[i].startswith("+") or lines[i].strip() == ""):
+                    while i < len(lines) and (
+                        lines[i].startswith("-")
+                        or lines[i].startswith("+")
+                        or lines[i].strip() == ""
+                    ):
                         if lines[i].strip():  # Skip empty lines
                             change_block.append(lines[i])
                         i += 1
@@ -1076,7 +1094,9 @@ Return a JSON object with this structure:
                         current_change = []
                     in_change = True
                     current_change.append(line)
-                elif in_change and (line.startswith("+") or line.startswith("-") or line.startswith(" ")):
+                elif in_change and (
+                    line.startswith("+") or line.startswith("-") or line.startswith(" ")
+                ):
                     current_change.append(line)
                 elif in_change and not line:
                     # Empty line might separate changes
@@ -1084,11 +1104,11 @@ Return a JSON object with this structure:
                         changes.append("\n".join(current_change))
                         current_change = []
                     in_change = False
-            
+
             # Add the last change if any
             if current_change:
                 changes.append("\n".join(current_change))
-        
+
         return changes
 
     def phase_5_generate_changes(self):
@@ -1104,12 +1124,8 @@ Return a JSON object with this structure:
         # Check if Claude CLI is available
         claude_result = run(["which", "claude"], capture_output=True)
         if claude_result.returncode != 0:
-            print_warning(
-                "Claude CLI not found. Skipping changes generation."
-            )
-            print_info(
-                "Ensure claude CLI is in PATH"
-            )
+            print_warning("Claude CLI not found. Skipping changes generation.")
+            print_info("Ensure claude CLI is in PATH")
             return
 
         print_info("Checking for changes files to generate...")
@@ -1120,7 +1136,7 @@ Return a JSON object with this structure:
             print_info("All changes files already generated.")
             return
 
-        order_desc = "oldest first" if self.oldest_first else "newest first"
+        order_desc = "newest first" if self.new_first else "oldest first"
         print_info(
             f"Found {len(versions_to_changes)} changes files to generate (processing {order_desc})"
         )
@@ -1514,7 +1530,7 @@ Examples:
   %(prog)s --all --latest         # Process only the most recent version
   %(prog)s --changelog --since v1.0.50    # Generate changelogs for v1.0.50 and newer
   %(prog)s --all --since 1.0.50   # Process all steps for versions 1.0.50+
-  %(prog)s --changelog --oldest-first     # Generate changelogs in chronological order
+  %(prog)s --changelog --new-first        # Generate changelogs in reverse chronological order (newest first)
   %(prog)s --prettier --diff --changelog  # Generate diffs and changelogs
   %(prog)s --diff --changes               # Generate diffs and detailed changes
   %(prog)s --redo 69 --changelog          # Redo changelog for v1.0.69 (creates changelog-v1.0.69-2.md)
@@ -1550,7 +1566,7 @@ Examples:
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Run all processing steps (prettier, diff, changelog)",
+        help="Run main processing steps (prettier, diff, changelog - excludes changes)",
     )
 
     parser.add_argument(
@@ -1564,9 +1580,9 @@ Examples:
     )
 
     parser.add_argument(
-        "--oldest-first",
+        "--new-first",
         action="store_true",
-        help="Process versions in chronological order (oldest first) instead of newest first",
+        help="Process versions in reverse chronological order (newest first) instead of chronological order",
     )
 
     parser.add_argument(
@@ -1586,7 +1602,6 @@ Examples:
         args.prettier = True
         args.diff = True
         args.changelog = True
-        args.changes = True
 
     # --changelog will work independently and process available diffs
 
@@ -1607,7 +1622,7 @@ Examples:
         changes=args.changes,
         latest=args.latest,
         since=args.since,
-        oldest_first=args.oldest_first,
+        new_first=args.new_first,
         redo=args.redo,
     )
 
@@ -1615,7 +1630,9 @@ Examples:
     if args.redo:
         # For redo, we need at least one of diff, changelog, or changes
         if not args.diff and not args.changelog and not args.changes:
-            print_error("--redo requires at least one of --diff, --changelog, or --changes")
+            print_error(
+                "--redo requires at least one of --diff, --changelog, or --changes"
+            )
             sys.exit(1)
         sync_tool.setup_directories()
         sync_tool.check_dependencies()
