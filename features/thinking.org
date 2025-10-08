@@ -1,0 +1,177 @@
+#+TITLE: Thinking System in Claude Code
+
+* Overview
+
+Claude Code's thinking feature allows the model to use extended reasoning tokens before generating responses. The system provides multiple ways to control thinking behavior, with a priority-based configuration system.
+
+* Control Mechanisms
+
+** Tab Toggle (Interactive)
+
+- Keybinding: ~Tab~ (without shift) in empty input field
+- Location: ~archive/pretty/pretty-v2.0.9.js:419681-419706~
+- Condition: Only works when input is empty and ~MAX_THINKING_TOKENS~ is not set
+- State: Toggles ~thinkingEnabled~ (persisted as ~alwaysThinkingEnabled~ in user settings)
+- Feedback: Shows notification with current status
+  - "Thinking on (tab to toggle)"
+  - "Thinking off (tab to toggle)"
+- Initial notification shown on startup displaying current thinking status
+
+** Ultrathink Keyword (Per-Message)
+
+- Keywords: ~ultrathink~, ~think ultra hard~, ~think ultrahard~ (case insensitive)
+- Location: ~archive/pretty/pretty-v2.0.9.js:364186, 364205-364246~
+- Token Budget: ~ULTRATHINK = 31999~ tokens
+- Detection: Regex ~/\bultrathink\b/gi~
+- Scope: Only applies to the specific message containing the keyword
+- Metadata: Sets ~thinkingMetadata: { level: "high", disabled: false }~
+- Onboarding: "Type 'ultrathink' in your message to enable thinking for just that turn"
+
+** Environment Variables
+
+- ~MAX_THINKING_TOKENS~: Override thinking token budget (takes precedence over all other settings)
+- ~DISABLE_INTERLEAVED_THINKING~: Disable interleaved thinking mode
+
+* Token Budget Calculation
+
+Priority order (~archive/pretty/pretty-v2.0.9.js:364207-364236~):
+
+1. ~MAX_THINKING_TOKENS~ env var (if set, overrides everything)
+2. ~alwaysThinking~ mode → returns ~ULTRATHINK~ (31999)
+3. Per-message ~thinkingMetadata.level~ → "high" = ULTRATHINK, else 0
+4. Keyword detection (~ultrathink~ in message) → returns ULTRATHINK
+5. Otherwise → returns 0 or max from user messages
+
+* Default Behavior
+
+Location: ~archive/pretty/pretty-v2.0.9.js:364256-364263~
+
+#+BEGIN_SRC javascript
+function lL1() {
+  if (process.env.MAX_THINKING_TOKENS)
+    return parseInt(process.env.MAX_THINKING_TOKENS, 10) > 0;
+  let B = eA().alwaysThinkingEnabled;
+  if (B === !0 || B === !1) return B;
+  if (!J7().includes("claude-sonnet-4-5")) return !1;
+  return tZ("thinking_on_default", "on_by_default", !1);
+}
+#+END_SRC
+
+Logic:
+1. Check ~MAX_THINKING_TOKENS~ env var first
+2. Check user's ~alwaysThinkingEnabled~ setting
+3. For ~claude-sonnet-4-5~ models, use A/B test flag ~thinking_on_default~
+4. Other models default to off
+
+* Display Modes
+
+** Collapsed Mode
+
+Location: ~archive/pretty/pretty-v2.0.9.js:405431~
+
+Display: ~∴ Thinking (ctrl+o to expand)~
+
+Used when thinking content exists but is not being actively shown.
+
+** Streaming Mode
+
+Location: ~archive/pretty/pretty-v2.0.9.js:405437~
+
+Display: ~∴ Thinking…~
+
+Shown while thinking is being generated in normal mode.
+
+** Ultrathink Streaming
+
+Location: ~archive/pretty/pretty-v2.0.9.js:405450~
+
+Display: ~✻ Thinking…~
+
+Special indicator for ultrathink mode (different symbol: ✻ vs ∴).
+
+** Transcript Mode
+
+Location: ~archive/pretty/pretty-v2.0.9.js:405434-405442~
+
+Display:
+- Header: ~∴ Thinking…~
+- Content: Indented thinking text below header
+- Used when viewing full conversation history
+
+* Interleaved Thinking
+
+Location: ~archive/pretty/pretty-v2.0.9.js:376222, 376236~
+
+- Beta Feature: ~interleaved-thinking-2025-05-14~
+- Models: Enabled for claude-opus-4 and claude-sonnet-4 series (not claude-3)
+- Provider Check: Only enabled for certain model configurations via ~ys4(A)~
+- Override: Can disable with ~DISABLE_INTERLEAVED_THINKING~ env var
+- Beta Set: Part of ~CV0~ set alongside ~context-1m-2025-08-07~
+
+* Telemetry
+
+Each thinking activation fires a ~tengu_thinking~ event with:
+- ~provider~: Provider type (e.g., "firstParty")
+- ~tokenCount~: Number of thinking tokens allocated
+
+Locations:
+- ~archive/pretty/pretty-v2.0.9.js:364210~ (MAX_THINKING_TOKENS)
+- ~archive/pretty/pretty-v2.0.9.js:364230~ (thinkingMetadata)
+- ~archive/pretty/pretty-v2.0.9.js:364235~ (message content)
+
+Toggle telemetry: ~tengu_thinking_toggled~ with ~enabled~ boolean
+Location: ~archive/pretty/pretty-v2.0.9.js:419706~
+
+* Content Block Types
+
+The API uses specific content block types for thinking:
+
+- ~thinking~: Standard thinking content block
+- ~redacted_thinking~: Thinking content that has been redacted
+- ~thinking_delta~: Streaming delta updates for thinking content
+
+These are handled in the streaming parser and displayed differently based on mode.
+
+* Key Implementation Details
+
+** Persistence
+
+- User's thinking preference saved via ~O9("userSettings", { alwaysThinkingEnabled: ... })~
+- Location: ~archive/pretty/pretty-v2.0.9.js:444772~
+
+** UI Hints
+
+Control+O expand hint: ~archive/pretty/pretty-v2.0.9.js:378307~
+- Constant: ~my2 = "(ctrl+o to expand)"~
+- Used in collapsed thinking display
+
+** Message Filtering
+
+Location: ~archive/pretty/pretty-v2.0.9.js:437240~
+
+#+BEGIN_SRC javascript
+return A.message.content.every((B) => B.type === "thinking");
+#+END_SRC
+
+Function checks if a message contains only thinking (no visible content).
+
+** Experimental Features
+
+Location: ~archive/pretty/pretty-v2.0.9.js:406462-406468~
+
+Code checks for ~alwaysThinking~ experiments and determines if thinking should be hidden based on:
+- ~thinkingMetadata?.level~
+- ~thinkingMetadata?.disabled~
+- ~MAX_THINKING_TOKENS~ env var
+
+* Configuration Hierarchy
+
+From highest to lowest priority:
+
+1. ~MAX_THINKING_TOKENS~ environment variable (overrides all)
+2. ~alwaysThinking~ experimental flag
+3. User setting ~alwaysThinkingEnabled~
+4. Per-message ~ultrathink~ keyword
+5. Per-message ~thinkingMetadata~
+6. Model-specific defaults (claude-sonnet-4-5 uses A/B test)
+7. Global default (off for most models)
