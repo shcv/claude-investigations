@@ -1,9 +1,40 @@
-#+TITLE: Claude Code Thinking Mode Token Budget System
+#+TITLE: Claude Code Thinking Mode Token Budget System (Legacy)
 #+DATE: 2025-08-29
+#+OBSOLETE: v2.0.0
 
-* Overview
+* OBSOLESCENCE NOTICE
 
-Claude Code implements a hierarchical token budget system that allocates cognitive resources based on pattern matching across 8 languages. The system provides four distinct thinking levels (NONE, BASIC, MIDDLE, HIGHEST) with precise token allocations ranging from 0 to 31,999 tokens.
+*This document describes the legacy thinking system used in Claude Code v1.0.128 and earlier.*
+
+*OBSOLETE AS OF:* Version 2.0.0
+*REPLACED BY:* Simplified binary system (see ~features/thinking.org~)
+*LAST VERSION USING THIS SYSTEM:* v1.0.128
+
+** What Changed in v2.0.0
+
+The multi-language, multi-tier thinking system was completely redesigned:
+
+*Removed:*
+- 8-language support (Japanese, Chinese, Spanish, French, German, Korean, Italian)
+- 4-tier token budgets (HIGHEST, MIDDLE, BASIC, NONE)
+- Dozens of trigger phrases per language
+- Complex pattern matching with word boundary detection
+
+*Added:*
+- Single English keyword: "ultrathink"
+- Binary system: ULTRATHINK (31,999 tokens) or NONE (0)
+- Tab toggle for interactive control
+- ~thinkingMetadata~ API for programmatic control
+- ~alwaysThinkingEnabled~ user setting with persistence
+
+*Retained:*
+- ~MAX_THINKING_TOKENS~ environment variable override
+
+See ~archive/changelog/changelog-v2.0.0.md~ for full migration details.
+
+* Overview (Legacy System)
+
+Claude Code implemented a hierarchical token budget system that allocated cognitive resources based on pattern matching across 8 languages. The system provided four distinct thinking levels (NONE, BASIC, MIDDLE, HIGHEST) with precise token allocations ranging from 0 to 31,999 tokens.
 
 * Architecture
 
@@ -196,10 +227,12 @@ Budget allocation events are tracked via the =tengu_thinking= telemetry system w
 * Historical Development
 
 - *v0.2.44*: Initial "think harder" mode introduced
-- *v0.2.47*: =MAX_THINKING_TOKENS= environment variable added  
+- *v0.2.47*: =MAX_THINKING_TOKENS= environment variable added
 - *v0.2.103*: Three-tier budget system established
 - *v1.0.8*: Multi-language support expanded to 8 languages
-- *v1.0.96*: Current stable implementation
+- *v1.0.96*: Mature implementation of multi-tier system
+- *v1.0.128*: Final version with legacy multi-language system
+- *v2.0.0*: *COMPLETE REDESIGN* - System documented here became obsolete
 
 * Configuration Options
 
@@ -209,12 +242,24 @@ The system displays active overrides in the welcome screen including maximum thi
 ** Debug Mode
 Pattern matching results and budget allocations are logged through the telemetry system for debugging purposes.
 
-* Implementation Location
+* Implementation Location (Legacy)
 
 Primary implementation: =archive/pretty/pretty-v1.0.96.js= lines 411705-411874
 
 Key functions:
 - =rv()=: Main budget detection with environment override
-- =PN5()=: Pattern-based budget detection  
+- =PN5()=: Pattern-based budget detection
 - =SN5()=: Multi-language pattern matching
 - =TN5()=: Message content extraction
+
+** Migration Path
+
+To use the modern thinking system (v2.0.0+):
+
+1. *Remove legacy keywords*: Replace language-specific phrases with "ultrathink"
+2. *Adjust expectations*: No intermediate thinking levels (BASIC, MIDDLE) - only full ultrathink or none
+3. *Use tab toggle*: Press Tab in empty input to toggle thinking on/off globally
+4. *Environment variable*: =MAX_THINKING_TOKENS= still works for override
+5. *Programmatic control*: Use =thinkingMetadata= API instead of text patterns
+
+See ~features/thinking.org~ for current system documentation.
