@@ -8,9 +8,9 @@ Claude Code's thinking feature allows the model to use extended reasoning tokens
 
 ** Tab Toggle (Interactive)
 
-- Keybinding: ~Tab~ (without shift) in empty input field
+- Keybinding: ~Tab~ (without shift)
 - Location: ~archive/pretty/pretty-v2.0.9.js:419681-419706~
-- Condition: Only works when input is empty and ~MAX_THINKING_TOKENS~ is not set
+- Condition: ~MAX_THINKING_TOKENS~ is not set
 - State: Toggles ~thinkingEnabled~ (persisted as ~alwaysThinkingEnabled~ in user settings)
 - Feedback: Shows notification with current status
   - "Thinking on (tab to toggle)"
