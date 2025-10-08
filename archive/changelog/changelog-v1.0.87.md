@@ -1,7 +1,5 @@
 # Changelog for version 1.0.87
 
-# Changelog for version 1.0.87
-
 ## 🎯 Highlights
 Version 1.0.87 enhances the permission system with granular source tracking and new management operations, while improving session notes extraction to better filter system content. These internal improvements provide better debugging capabilities and more flexible permission control.
 

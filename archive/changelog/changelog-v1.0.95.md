@@ -1,9 +1,5 @@
 # Changelog for version 1.0.95
 
-Based on my thorough analysis of the diff between v1.0.94 and v1.0.95, I can now generate the changelog. The investigation reveals that all changes are internal refactoring with no user-facing impact.
-
-# Changelog for version 1.0.95
-
 ## 🎯 Highlights
 This is a maintenance release with internal code refactoring. No new features, improvements, or bug fixes affect user functionality.
 

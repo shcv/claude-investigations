@@ -1,9 +1,5 @@
 # Changelog for version 1.0.76
 
-Based on my comprehensive investigation of the diff and source code, here's the complete changelog for version 1.0.76:
-
-# Changelog for version 1.0.76
-
 ## 🎯 Highlights
 Claude Code now supports Sonnet 4 with 1-million token context windows, allowing for much longer conversations and the ability to work with significantly larger codebases without hitting context limits. This premium feature provides 5x more context than the standard 200,000 token limit.
 

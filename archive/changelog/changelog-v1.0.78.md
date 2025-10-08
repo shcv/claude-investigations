@@ -1,9 +1,5 @@
 # Changelog for version 1.0.78
 
-Now let me generate the final changelog based on all the investigations:
-
-# Changelog for version 1.0.78
-
 ## 🎯 Highlights
 Claude Code 1.0.78 introduces enhanced security for authentication tokens, a completely refactored permission system with three-tier control, and renames "output modes" to "output styles" for clarity. The update also adds support for a new Sonnet model with 1M context and implements infrastructure for A/B testing and dynamic configuration.
 

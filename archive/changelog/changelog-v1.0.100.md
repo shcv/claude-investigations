@@ -1,7 +1,5 @@
 # Changelog for version 1.0.100
 
-# Changelog for version 1.0.100
-
 ## 🎯 Highlights
 Version 1.0.100 is a maintenance release focused on internal code optimization and build system improvements. No user-facing functionality has changed.
 

@@ -1,7 +1,5 @@
 # Changelog for version 1.0.86
 
-# Changelog for version 1.0.86
-
 ## 🎯 Highlights
 Version 1.0.86 introduces a context usage visualization command, enhances file permission handling with intelligent suggestions and git config protection, and improves the trust dialog UI for better clarity and security awareness.
 

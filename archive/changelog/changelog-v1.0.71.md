@@ -1,9 +1,5 @@
 # Changelog for version 1.0.71
 
-Now I can create the comprehensive changelog:
-
-# Changelog for version 1.0.71
-
 ## 🎯 Highlights
 Version 1.0.71 introduces a customizable statusLine feature for terminal display, simplifies memory management for better reliability, and adds protection against concurrent operations while improving overall performance through optimized imports and bug fixes.
 

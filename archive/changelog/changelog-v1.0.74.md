@@ -1,9 +1,5 @@
 # Changelog for version 1.0.74
 
-Now I have a comprehensive understanding of all the changes. Let me create the final changelog:
-
-# Changelog for version 1.0.74
-
 ## 🎯 Highlights
 Claude Code 1.0.74 introduces Sonnet 4 with 1M token context for eligible organizations, a powerful new custom output modes system that lets you personalize how Claude communicates, and improved bash command handling with enhanced security controls.
 

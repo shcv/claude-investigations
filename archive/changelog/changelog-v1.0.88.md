@@ -1,9 +1,5 @@
 # Changelog for version 1.0.88
 
-Based on my comprehensive analysis of the diff between versions 1.0.87 and 1.0.88, I can now generate the changelog. This version contains minimal changes - primarily a bug fix for authentication cache management and some internal code refactoring.
-
-# Changelog for version 1.0.88
-
 ## 🎯 Highlights
 Version 1.0.88 fixes a cache management issue that could cause stale authentication states and inconsistent feature access after login/logout operations. This maintenance release improves the reliability of account switching and feature flag updates.
 

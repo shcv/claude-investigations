@@ -1,9 +1,5 @@
 # Changelog for version 1.0.84
 
-Now I'll create the comprehensive changelog based on my verified findings.
-
-# Changelog for version 1.0.84
-
 ## 🎯 Highlights
 Version 1.0.84 introduces improved search performance with native ripgrep integration, enhanced file path completion with quoted path support, and refined UI components for better interactive selections.
 

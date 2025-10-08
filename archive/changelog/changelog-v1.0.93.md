@@ -1,9 +1,5 @@
 # Changelog for version 1.0.93
 
-Now I have comprehensive information about all changes. Let me create the final changelog:
-
-# Changelog for version 1.0.93
-
 ## 🎯 Highlights
 Version 1.0.93 introduces cross-platform network sandboxing with Linux support, MCP SDK server integration, and Git checkpointing for preserving work-in-progress. Security is enhanced with command validation to prevent shell injection attacks.
 

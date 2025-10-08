@@ -1,9 +1,5 @@
 # Changelog for version 1.0.82
 
-Now let me create the final changelog based on my verified findings:
-
-# Changelog for version 1.0.82
-
 ## 🎯 Highlights
 Version 1.0.82 introduces real-time validation for Claude Code settings files, simplifies the permission system by removing complex shortcuts, and adds internal infrastructure for upcoming beta features. This is primarily a quality and stability release focused on preventing configuration errors.
 

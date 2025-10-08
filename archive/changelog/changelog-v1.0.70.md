@@ -1,9 +1,5 @@
 # Changelog for version 1.0.70
 
-Now let me create the comprehensive changelog based on all the findings:
-
-# Changelog for version 1.0.70
-
 ## Major Changes
 
 ### 🎯 New Onboarding Experience

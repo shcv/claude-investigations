@@ -1,9 +1,5 @@
 # Changelog for version 1.0.85
 
-Now I'll create the final, accurate changelog based on all my investigations:
-
-# Changelog for version 1.0.85
-
 ## 🎯 Highlights
 Version 1.0.85 introduces comprehensive rate limit messaging with clear feedback about usage limits and spending caps, automatic session memory that maintains persistent notes about your work, and improved environment variable validation with helpful warnings when values are misconfigured.
 

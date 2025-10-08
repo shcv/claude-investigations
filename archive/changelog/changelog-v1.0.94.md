@@ -1,9 +1,5 @@
 # Changelog for version 1.0.94
 
-Now I have enough information to create the comprehensive changelog. Let me compile all the verified findings into the final changelog format.
-
-# Changelog for version 1.0.94
-
 ## 🎯 Highlights
 Version 1.0.94 introduces comprehensive performance monitoring with new warnings for large agent descriptions and MCP tools, significantly improves security with sophisticated sed command validation, and enhances the permission system with dynamic update capabilities.
 

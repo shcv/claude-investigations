@@ -1,9 +1,5 @@
 # Changelog for version 1.0.77
 
-Now I have all the information needed to create a comprehensive changelog. Let me synthesize all findings into the final changelog format:
-
-# Changelog for version 1.0.77
-
 ## 🎯 Highlights
 Claude Code 1.0.77 introduces WebSocket support for real-time communication with Claude's SDK servers, enhanced permission explanations that show exactly why actions require confirmation, and improved security with sophisticated shell command escaping to prevent injection attacks.
 

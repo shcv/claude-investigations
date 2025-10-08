@@ -1,9 +1,5 @@
 # Changelog for version 1.0.80
 
-Based on my investigation of the diff between v1.0.79 and v1.0.80, this is primarily an internal maintenance release with one notable change. Let me generate the changelog:
-
-# Changelog for version 1.0.80
-
 ## 🎯 Highlights
 This maintenance release focuses on internal code improvements and refactoring. The output style customization feature has been temporarily disabled while the team works on improvements.
 

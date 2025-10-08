@@ -1,9 +1,5 @@
 # Changelog for version 1.0.72
 
-Now let me compile all this information into a comprehensive changelog.
-
-# Changelog for version 1.0.72
-
 ## 🎯 Highlights
 Claude Code 1.0.72 introduces a new `/statusline` command for customizing your terminal status line, enhances security with improved path validation, and provides clearer visual indicators for different operational modes.
 

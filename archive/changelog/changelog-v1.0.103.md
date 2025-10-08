@@ -1,7 +1,5 @@
 # Changelog for version 1.0.103
 
-# Changelog for version 1.0.103
-
 ## 🎯 Highlights
 This release introduces npm plugin support, allowing users to install and use Claude plugins directly from npm packages. It also enhances file security by expanding protection to include IDE configurations and shell files beyond just Git files.
 

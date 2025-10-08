@@ -1,9 +1,5 @@
 # Changelog for version 1.0.81
 
-Now let me create the final changelog based on all my investigations:
-
-# Changelog for version 1.0.81
-
 ## 🎯 Highlights
 Claude Code v1.0.81 introduces a powerful plugin system for extending functionality through custom commands and agents, improves concurrent query handling to prevent race conditions, and adds enhanced telemetry for better usage insights.
 

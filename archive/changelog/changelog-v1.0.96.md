@@ -1,9 +1,5 @@
 # Changelog for version 1.0.96
 
-Now I'll create the comprehensive changelog based on my analysis:
-
-# Changelog for version 1.0.96
-
 ## 🎯 Highlights
 Version 1.0.96 introduces privacy controls that allow users to manage whether their usage data helps improve Claude, along with updated Consumer Terms and Privacy Policy notifications. This update also removes some internal telemetry code and makes minor improvements to the codebase.
 

@@ -1,9 +1,5 @@
 # Changelog for version 1.0.89
 
-Now I have a comprehensive understanding of all the changes in v1.0.89. Let me create the complete changelog.
-
-# Changelog for version 1.0.89
-
 ## 🎯 Highlights
 Version 1.0.89 introduces powerful debug filtering, a new wizard-based UI framework for multi-step workflows, and significantly improves reliability with enhanced error handling, permission persistence, and extended timeout support for long-running operations.
 

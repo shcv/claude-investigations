@@ -1,9 +1,5 @@
 # Changelog for version 1.0.98
 
-Based on my thorough analysis of the diff and verification of both versions, I can now provide the accurate changelog for Claude Code version 1.0.98.
-
-# Changelog for version 1.0.98
-
 ## 🎯 Highlights
 This release focuses on architectural improvements to session persistence, removes the LS tool in favor of existing alternatives, and enhances UI component organization with better todo list management.
 

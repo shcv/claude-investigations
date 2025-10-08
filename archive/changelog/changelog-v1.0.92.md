@@ -1,9 +1,5 @@
 # Changelog for version 1.0.92
 
-Based on my thorough investigation of both v1.0.91 and v1.0.92 source files, I can now provide the accurate changelog:
-
-# Changelog for version 1.0.92
-
 ## 🎯 Highlights
 Version 1.0.92 is a version bump release with no functional changes from v1.0.91.
 

@@ -1,9 +1,5 @@
 # Changelog for version 1.0.83
 
-Based on my analysis of the diff and source code investigation, I can now create the comprehensive changelog for version 1.0.83.
-
-# Changelog for version 1.0.83
-
 ## 🎯 Highlights
 Advanced beta features including interleaved thinking and 1M token context windows are now available for users of the Anthropic API and Google Vertex AI. AWS Bedrock users maintain the previous feature set for compatibility.
 
