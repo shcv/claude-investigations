@@ -16,6 +16,13 @@ archive/diff/
 # Temp directory for sync tool
 .sync-temp/
 
+# Environment variables
+.env
+
+# Discord posting tracking
+.last_posted_version
+.upload_state.json
+
 # Python cache
 __pycache__/
 *.pyc

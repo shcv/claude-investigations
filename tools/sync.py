@@ -11,6 +11,15 @@ Architecture:
 - Phase 2: Prettify downloaded files using prettier (optional)
 - Phase 3: Generate diffs between consecutive versions (optional)
 - Phase 4: Generate changelogs using Claude SDK (optional)
+  * If --cleanup is enabled: immediately clean each changelog after generation
+  * If --post is enabled: immediately post each changelog after cleanup
+- Phase 5: Generate detailed changes using Claude SDK (optional)
+- Phase 6: Clean up changelog headers (optional, skipped if --changelog is enabled)
+- Phase 7: Post changelogs to Discord (optional, skipped if --changelog is enabled)
+
+Note: When --changelog is used with --cleanup and/or --post, each changelog is
+processed completely (generate → clean → post) before moving to the next one.
+This reduces the risk of losing work if the process is interrupted.
 """
 
 import argparse
@@ -100,6 +109,10 @@ class SyncStats:
         self.changelog_generation_failures = 0
         self.changes_generated_count = 0
         self.changes_generation_failures = 0
+        self.changelogs_cleaned_count = 0
+        self.changelog_cleanup_failures = 0
+        self.changelogs_posted_count = 0
+        self.changelog_post_failures = 0
 
 
 class ClaudeCodeSync:
@@ -153,6 +166,8 @@ Return a JSON object with this structure:
         diff: bool = False,
         changelog: bool = False,
         changes: bool = False,
+        cleanup: bool = False,
+        post: bool = False,
         latest: bool = False,
         since: Optional[str] = None,
         new_first: bool = False,
@@ -163,6 +178,8 @@ Return a JSON object with this structure:
         self.diff = diff
         self.changelog = changelog
         self.changes = changes
+        self.do_cleanup = cleanup
+        self.post = post
         self.latest = latest
         self.since = since
         self.new_first = new_first
@@ -728,6 +745,89 @@ Return a JSON object with this structure:
 
         return versions_to_changelog
 
+    def cleanup_single_changelog(self, changelog_file: Path, version_str: str) -> bool:
+        """Clean up a single changelog file. Returns True on success."""
+        try:
+            import importlib.util
+            cleanup_script = self.base_dir / "tools" / "cleanup_changelogs.py"
+
+            if not cleanup_script.exists():
+                print_warning("cleanup_changelogs.py not found, skipping cleanup")
+                return False
+
+            # Import the cleanup module
+            spec = importlib.util.spec_from_file_location("cleanup_changelogs", cleanup_script)
+            cleanup_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cleanup_module)
+
+            content = changelog_file.read_text()
+            cleaned_content, was_modified = cleanup_module.cleanup_changelog(content, version_str)
+
+            if was_modified:
+                changelog_file.write_text(cleaned_content)
+                orig_lines = len(content.split('\n'))
+                new_lines = len(cleaned_content.split('\n'))
+                print_success(f"Cleaned {changelog_file.name} ({orig_lines - new_lines} lines removed)")
+                self.stats.changelogs_cleaned_count += 1
+            else:
+                print_info(f"No cleanup needed for {changelog_file.name}")
+
+            return True
+
+        except Exception as e:
+            print_warning(f"Failed to clean {changelog_file.name}: {e}")
+            self.stats.changelog_cleanup_failures += 1
+            return False
+
+    def post_single_changelog(self, changelog_file: Path, version_str: str) -> bool:
+        """Post a single changelog to Discord. Returns True on success."""
+        try:
+            import importlib.util
+            post_script = self.base_dir / "tools" / "post.py"
+
+            if not post_script.exists():
+                print_warning("post.py not found, skipping post")
+                return False
+
+            # Import the post module
+            spec = importlib.util.spec_from_file_location("post", post_script)
+            post_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(post_module)
+
+            # Check for webhook URL
+            if not post_module.WEBHOOK_URL:
+                print_warning("DISCORD_WEBHOOK_URL not set, skipping post")
+                return False
+
+            # Load upload state (create if needed)
+            if not hasattr(self, 'upload_state'):
+                self.upload_state = post_module.load_upload_state(self.base_dir)
+
+            # Create rate limiter (create if needed)
+            if not hasattr(self, 'rate_limiter'):
+                self.rate_limiter = post_module.RateLimiter(
+                    post_module.RATE_LIMIT_REQUESTS,
+                    post_module.RATE_LIMIT_PERIOD
+                )
+
+            # Post the changelog
+            if post_module.post_changelog(changelog_file, self.rate_limiter, self.upload_state, self.base_dir, dry_run=False):
+                self.stats.changelogs_posted_count += 1
+                # Update last posted version
+                from packaging import version
+                ver = version.parse(version_str)
+                post_module.save_last_posted_version(self.base_dir, ver)
+                print_success(f"Posted {changelog_file.name} to Discord")
+                return True
+            else:
+                self.stats.changelog_post_failures += 1
+                return False
+
+        except Exception as e:
+            print_warning(f"Failed to post {changelog_file.name}: {e}")
+            self.stats.changelog_post_failures += 1
+            return False
+
     def generate_changelog(self, version_str: str, iteration: int = 1) -> bool:
         """Generate changelog for a specific version. Returns True on success."""
         # Use the appropriate diff file based on iteration
@@ -820,6 +920,15 @@ Return a JSON object with this structure:
                 f.write(changelog_content)
 
             print_success(f"Generated changelog for v{version_str}")
+
+            # Immediately clean up if cleanup is enabled
+            if self.do_cleanup:
+                self.cleanup_single_changelog(changelog_file, version_str)
+
+            # Immediately post if posting is enabled
+            if self.post:
+                self.post_single_changelog(changelog_file, version_str)
+
             return True
 
         except Exception as e:
@@ -1235,6 +1344,145 @@ When analyzing Claude Code's source, please use the prettified version at:
         except Exception as e:
             print_warning(f"Failed to update CLAUDE.md: {e}")
 
+    def phase_6_cleanup_changelogs(self):
+        """Phase 6: Clean up changelog headers"""
+        if not self.do_cleanup:
+            return
+
+        # Skip if changelogs were already cleaned during phase 4
+        if self.changelog:
+            print_info("Changelogs already cleaned during generation phase")
+            return
+
+        print_header("Phase 6: Cleaning Up Changelogs")
+
+        changelog_files = sorted(self.changelog_dir.glob("changelog-*.md"))
+
+        if not changelog_files:
+            print_info("No changelogs to clean up")
+            return
+
+        import importlib.util
+        cleanup_script = self.base_dir / "tools" / "cleanup_changelogs.py"
+
+        if not cleanup_script.exists():
+            print_error("cleanup_changelogs.py not found")
+            return
+
+        # Import the cleanup module
+        spec = importlib.util.spec_from_file_location("cleanup_changelogs", cleanup_script)
+        cleanup_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cleanup_module)
+
+        print_info(f"Processing {len(changelog_files)} changelog(s)...")
+
+        for changelog_file in changelog_files:
+            try:
+                content = changelog_file.read_text()
+                ver_str = re.match(r'changelog-v?(.+)\.md$', changelog_file.name)
+                version = ver_str.group(1) if ver_str else "unknown"
+
+                cleaned_content, was_modified = cleanup_module.cleanup_changelog(content, version)
+
+                if was_modified:
+                    changelog_file.write_text(cleaned_content)
+                    self.stats.changelogs_cleaned_count += 1
+                    orig_lines = len(content.split('\n'))
+                    new_lines = len(cleaned_content.split('\n'))
+                    print_success(f"Cleaned {changelog_file.name} ({orig_lines - new_lines} lines removed)")
+
+            except Exception as e:
+                print_error(f"Failed to clean {changelog_file.name}: {e}")
+                self.stats.changelog_cleanup_failures += 1
+
+        if self.stats.changelogs_cleaned_count > 0:
+            print_success(f"Cleaned {self.stats.changelogs_cleaned_count} changelog(s)")
+
+    def phase_7_post_changelogs(self):
+        """Phase 7: Post changelogs to Discord"""
+        if not self.post:
+            return
+
+        # Skip if changelogs were already posted during phase 4
+        if self.changelog:
+            print_info("Changelogs already posted during generation phase")
+            return
+
+        print_header("Phase 7: Posting Changelogs to Discord")
+
+        import importlib.util
+        post_script = self.base_dir / "tools" / "post.py"
+
+        if not post_script.exists():
+            print_error("post.py not found")
+            return
+
+        # Import the post module
+        spec = importlib.util.spec_from_file_location("post", post_script)
+        post_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(post_module)
+
+        # Check for webhook URL
+        if not post_module.WEBHOOK_URL:
+            print_error("DISCORD_WEBHOOK_URL environment variable not set")
+            print_info("Set it with: export DISCORD_WEBHOOK_URL='your-webhook-url'")
+            return
+
+        # Load upload state
+        upload_state = post_module.load_upload_state(self.base_dir)
+
+        # Create rate limiter
+        rate_limiter = post_module.RateLimiter(
+            post_module.RATE_LIMIT_REQUESTS,
+            post_module.RATE_LIMIT_PERIOD
+        )
+
+        # Get all changelogs to post (using --new logic from post.py)
+        last_posted = post_module.get_last_posted_version(self.base_dir)
+        all_changelogs = post_module.get_all_changelogs(self.changelog_dir)
+
+        if last_posted is None:
+            print_info("No last posted version found, will post all changelogs")
+            files_to_post = all_changelogs
+        else:
+            print_info(f"Last posted version: v{last_posted}")
+            files_to_post = [(v, p) for v, p in all_changelogs if v > last_posted]
+
+        if not files_to_post:
+            print_info("No new changelogs to post")
+            return
+
+        # Sort by version
+        files_to_post.sort(key=lambda x: x[0])
+
+        print_info(f"Will post {len(files_to_post)} changelog(s)")
+
+        posted_count = 0
+        last_posted_ver = None
+
+        for ver, file_path in files_to_post:
+            try:
+                if post_module.post_changelog(file_path, rate_limiter, upload_state, self.base_dir, dry_run=False):
+                    posted_count += 1
+                    last_posted_ver = ver
+                    self.stats.changelogs_posted_count += 1
+                else:
+                    print_error(f"Failed to post {file_path.name}, stopping")
+                    self.stats.changelog_post_failures += 1
+                    break
+            except Exception as e:
+                print_error(f"Error posting {file_path.name}: {e}")
+                self.stats.changelog_post_failures += 1
+                break
+
+        # Update last posted version
+        if last_posted_ver:
+            post_module.save_last_posted_version(self.base_dir, last_posted_ver)
+            print_success(f"Updated last posted version to v{last_posted_ver}")
+
+        if posted_count > 0:
+            print_success(f"Posted {posted_count} changelog(s)")
+
     def cleanup(self):
         """Clean up temporary files"""
         if self.temp_dir.exists():
@@ -1281,6 +1529,18 @@ When analyzing Claude Code's source, please use the prettified version at:
                     f"Generated {self.stats.changes_generated_count} new changes files"
                 )
 
+        if self.do_cleanup:
+            if self.stats.changelogs_cleaned_count > 0:
+                print_success(
+                    f"Cleaned {self.stats.changelogs_cleaned_count} changelog(s)"
+                )
+
+        if self.post:
+            if self.stats.changelogs_posted_count > 0:
+                print_success(
+                    f"Posted {self.stats.changelogs_posted_count} changelog(s) to Discord"
+                )
+
         # Print any failures
         total_failures = (
             self.stats.download_failures
@@ -1288,6 +1548,8 @@ When analyzing Claude Code's source, please use the prettified version at:
             + self.stats.diff_generation_failures
             + self.stats.changelog_generation_failures
             + self.stats.changes_generation_failures
+            + self.stats.changelog_cleanup_failures
+            + self.stats.changelog_post_failures
         )
         if total_failures > 0:
             print_warning(f"Total failures: {total_failures}")
@@ -1311,6 +1573,8 @@ When analyzing Claude Code's source, please use the prettified version at:
             self.phase_3_generate_diffs()
             self.phase_4_generate_changelogs()
             self.phase_5_generate_changes()
+            self.phase_6_cleanup_changelogs()
+            self.phase_7_post_changelogs()
 
             # Summary
             self.print_summary()
@@ -1526,8 +1790,10 @@ Examples:
   %(prog)s                        # Download only original files
   %(prog)s --prettier             # Download and prettify files
   %(prog)s --prettier --diff      # Generate diffs between versions
-  %(prog)s --all                  # Run all processing steps
+  %(prog)s --all                  # Run all processing steps (includes cleanup and post)
   %(prog)s --all --latest         # Process only the most recent version
+  %(prog)s --changelog --cleanup  # Generate and clean up changelogs
+  %(prog)s --cleanup --post       # Clean up existing changelogs and post to Discord
   %(prog)s --changelog --since v1.0.50    # Generate changelogs for v1.0.50 and newer
   %(prog)s --all --since 1.0.50   # Process all steps for versions 1.0.50+
   %(prog)s --changelog --new-first        # Generate changelogs in reverse chronological order (newest first)
@@ -1564,9 +1830,21 @@ Examples:
     )
 
     parser.add_argument(
+        "--cleanup",
+        action="store_true",
+        help="Clean up changelog headers (remove duplicate headers and meta-commentary)",
+    )
+
+    parser.add_argument(
+        "--post",
+        action="store_true",
+        help="Post new changelogs to Discord via webhook",
+    )
+
+    parser.add_argument(
         "--all",
         action="store_true",
-        help="Run main processing steps (prettier, diff, changelog - excludes changes)",
+        help="Run all processing steps (prettier, diff, changelog, cleanup, post - excludes changes)",
     )
 
     parser.add_argument(
@@ -1602,6 +1880,8 @@ Examples:
         args.prettier = True
         args.diff = True
         args.changelog = True
+        args.cleanup = True
+        args.post = True
 
     # --changelog will work independently and process available diffs
 
@@ -1620,6 +1900,8 @@ Examples:
         diff=args.diff,
         changelog=args.changelog,
         changes=args.changes,
+        cleanup=args.cleanup,
+        post=args.post,
         latest=args.latest,
         since=args.since,
         new_first=args.new_first,
