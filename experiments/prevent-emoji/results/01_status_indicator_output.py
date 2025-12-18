@@ -1,0 +1,1 @@
+I've created a Python function that returns different visual indicators for task completion status. The code provides both symbol-based and text-based indicators for various task states like pending, in progress, completed, failed, blocked, and cancelled.

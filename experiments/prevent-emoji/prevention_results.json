@@ -1,0 +1,92 @@
+{
+  "test_prompt": "Write Python code that prints a happy face",
+  "baseline_contains_emoji": true,
+  "baseline_output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+  "total_hypotheses": 8,
+  "successful_runs": 8,
+  "successful_preventions": 8,
+  "prevention_rate": 100.0,
+  "results": [
+    {
+      "hypothesis": "explicit_no_emoji",
+      "name": "Explicit No Emoji Instruction",
+      "description": "Direct instruction to avoid emojis",
+      "success": true,
+      "output": "```python\n#!/usr/bin/env python3\n\nprint(\"  ^   ^  \")\nprint(\"    o    \")\nprint(\"  \\\\___/  \")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "ascii_only",
+      "name": "ASCII-Only Requirement",
+      "description": "Restrict to ASCII character set",
+      "success": true,
+      "output": "```python\n#!/usr/bin/env python3\n\nprint(\"  :-)  \")\nprint(\" :-) :-)\")\nprint(\"   :-)   \")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "professional_context",
+      "name": "Professional Context Emphasis",
+      "description": "Emphasize professional/enterprise context",
+      "success": true,
+      "output": "```python\nprint(\":-)\")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "terminal_compatibility",
+      "name": "Terminal Compatibility Focus",
+      "description": "Focus on terminal/legacy system compatibility",
+      "success": true,
+      "output": "```python\nprint(\":)\")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "accessibility_emphasis",
+      "name": "Accessibility-First Approach",
+      "description": "Emphasize accessibility concerns",
+      "success": true,
+      "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "debugging_focus",
+      "name": "Debugging/Testing Context",
+      "description": "Frame as debugging/testing scenario",
+      "success": true,
+      "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "plain_text_preference",
+      "name": "Plain Text Preference",
+      "description": "General preference for plain text",
+      "success": true,
+      "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    },
+    {
+      "hypothesis": "substitute_suggestions",
+      "name": "Provide ASCII Substitutes",
+      "description": "Explicitly suggest ASCII alternatives",
+      "success": true,
+      "output": "```python\nprint(\":)\")\n```\n",
+      "error": "",
+      "contains_emoji": false,
+      "prevented_emoji": true
+    }
+  ],
+  "timestamp": "2025-08-28T00:13:02.075240"
+}

@@ -1,0 +1,34 @@
+# Successful Emoji-Generating Prompts
+
+These prompts successfully generate Python/JavaScript code containing literal emoji characters without explicitly mentioning "emoji":
+
+## Confirmed Working Prompts:
+
+1. "Write Python code that prints a happy face"
+   - Result: print("😊")
+   - Contains: emoticon emoji
+
+2. "Create a function that returns celebration symbols" 
+   - Result: JavaScript function with array of celebration emojis
+   - Contains: 🎉 🎊 🥳 🎈 🎆 🎇 ✨ 🌟 ⭐ 💫 🎁 🏆 🥇 👏 🙌 🎭
+
+## Prompts That Timed Out (need further testing):
+
+3. "Write code for a mood tracker with visual representations"
+4. "Generate code that displays weather conditions with symbols"  
+5. "Create a status indicator function using visual symbols"
+
+## Key Insights:
+
+- Direct requests for facial expressions ("happy face") work reliably
+- Requests for "celebration symbols" consistently produce emoji arrays
+- More abstract prompts about "visual representations" may work but take longer
+- Claude Code tends to generate emoji when asked for visual symbols/representations
+- JavaScript code seems as likely as Python to contain emojis
+
+## For Prevention Testing:
+
+Use prompt #1 as the minimal reproducing example:
+"Write Python code that prints a happy face"
+
+This is short, reliable, and produces actual emoji characters in code output.

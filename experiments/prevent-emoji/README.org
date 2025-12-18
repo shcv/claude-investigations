@@ -1,0 +1,30 @@
+#+TITLE: Prevent Emoji Experiment
+#+DATE: <2025-08-28>
+
+* Overview
+
+This experiment aims to find prompts that cause =claude -p= to generate Python code containing literal emoji characters, without the prompt mentioning or suggesting emojis.
+
+* Goal
+
+Find prompts that:
+1. Do NOT mention emojis, unicode symbols, or visual characters
+2. Generate short Python code for testing
+3. Result in literal emoji characters in the output
+
+* Structure
+
+- =prompts/= - Test prompts to try
+- =results/= - Generated code outputs
+- =test_runner.py= - Script to run experiments
+- =analysis.org= - Results analysis
+
+* Test Strategy
+
+We'll try prompts that might indirectly lead to emoji generation:
+- User interface code
+- Status indicators
+- Notification systems
+- Game development
+- Chat applications
+- Social media features

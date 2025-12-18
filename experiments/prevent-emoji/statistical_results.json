@@ -1,0 +1,594 @@
+{
+  "test_configuration": {
+    "test_prompt": "Write Python code that prints a happy face",
+    "trials_per_hypothesis": 10,
+    "total_tests_run": 60,
+    "timestamp": "2025-08-28T00:36:21.277630"
+  },
+  "baseline_results": {
+    "num_trials": 10,
+    "successful_runs": 10,
+    "contains_emoji_count": 10,
+    "emoji_rate": 100.0,
+    "unique_outputs": 1,
+    "output_samples": [
+      "```python\nprint(\"\ud83d\ude0a\")\n```"
+    ],
+    "trials": [
+      {
+        "trial_number": 1,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 2,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 3,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 4,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 5,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 6,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 7,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 8,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 9,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      },
+      {
+        "trial_number": 10,
+        "success": true,
+        "output": "```python\nprint(\"\ud83d\ude0a\")\n```\n",
+        "contains_emoji": true
+      }
+    ]
+  },
+  "hypothesis_results": [
+    {
+      "hypothesis": "explicit_no_emoji",
+      "name": "Explicit No Emoji Instruction",
+      "description": "Direct instruction to avoid emojis",
+      "num_trials": 10,
+      "successful_runs": 10,
+      "success_rate": 100.0,
+      "prevented_emojis": 10,
+      "prevention_rate": 100.0,
+      "unique_outputs": 3,
+      "output_samples": [
+        "```python\nprint(\":)\")\n```",
+        "```python\nprint(\"Happy face: :)\")\n```",
+        "```python\nprint(\":-)\")\n```"
+      ],
+      "trials": [
+        {
+          "trial_number": 1,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 2,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 3,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 4,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 5,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 6,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 7,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 8,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 9,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 10,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        }
+      ],
+      "statistical_confidence": "High"
+    },
+    {
+      "hypothesis": "ascii_only",
+      "name": "ASCII-Only Requirement",
+      "description": "Restrict to ASCII character set",
+      "num_trials": 10,
+      "successful_runs": 10,
+      "success_rate": 100.0,
+      "prevented_emojis": 10,
+      "prevention_rate": 100.0,
+      "unique_outputs": 4,
+      "output_samples": [
+        "```python\n#!/usr/bin/env python3\n\nprint(\"  :)  \")\nprint(\" :-) \")\nprint(\":---:\")\n```",
+        "```python\n#!/usr/bin/env python3\n\nprint(\"  :-)  \")\nprint(\" :-) \")\nprint(\":-)   \")\nprint(\" :-) \")\nprint(\"  :-)  \")\n```",
+        "```python\n#!/usr/bin/env python3\n\nprint(\"  :-)  \")\nprint(\" :-) \")\nprint(\":-)  \")\n```",
+        "```python\nprint(\":-)\")\n```"
+      ],
+      "trials": [
+        {
+          "trial_number": 1,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 2,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 3,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 4,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 5,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\"  :)  \")\nprint(\" :-) \")\nprint(\":---:\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 6,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\"  :-)  \")\nprint(\" :-) \")\nprint(\":-)   \")\nprint(\" :-) \")\nprint(\"  :-)  \")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 7,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\"  :-)  \")\nprint(\" :-) \")\nprint(\":-)  \")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 8,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 9,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 10,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        }
+      ],
+      "statistical_confidence": "High"
+    },
+    {
+      "hypothesis": "professional_context",
+      "name": "Professional Context Emphasis",
+      "description": "Emphasize professional/enterprise context",
+      "num_trials": 10,
+      "successful_runs": 10,
+      "success_rate": 100.0,
+      "prevented_emojis": 10,
+      "prevention_rate": 100.0,
+      "unique_outputs": 4,
+      "output_samples": [
+        "```python\nprint(\":)\")\n```",
+        "```python\ndef print_happy_face():\n    face = [\n        \"  O   O  \",\n        \"    ^    \",\n        \" \\\\     / \",\n        \"  \\\\___/  \"\n    ]\n    \n    for line in face:\n        print(line)\n\nif __name__ == \"__main__\":\n    print_happy_face()\n```",
+        "```python\nprint(\"^_^\")\n```",
+        "```python\nprint(\":-)\")\n```"
+      ],
+      "trials": [
+        {
+          "trial_number": 1,
+          "success": true,
+          "output": "```python\nprint(\"^_^\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 2,
+          "success": true,
+          "output": "```python\ndef print_happy_face():\n    face = [\n        \"  O   O  \",\n        \"    ^    \",\n        \" \\\\     / \",\n        \"  \\\\___/  \"\n    ]\n    \n    for line in face:\n        print(line)\n\nif __name__ == \"__main__\":\n    print_happy_face()\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 3,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 4,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 5,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 6,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 7,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 8,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 9,
+          "success": true,
+          "output": "```python\nprint(\":-)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 10,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        }
+      ],
+      "statistical_confidence": "High"
+    },
+    {
+      "hypothesis": "terminal_compatibility",
+      "name": "Terminal Compatibility Focus",
+      "description": "Focus on terminal/legacy system compatibility",
+      "num_trials": 10,
+      "successful_runs": 10,
+      "success_rate": 100.0,
+      "prevented_emojis": 10,
+      "prevention_rate": 100.0,
+      "unique_outputs": 2,
+      "output_samples": [
+        "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```",
+        "```python\nprint(\":)\")\n```"
+      ],
+      "trials": [
+        {
+          "trial_number": 1,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 2,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 3,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 4,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 5,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 6,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 7,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 8,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 9,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 10,
+          "success": true,
+          "output": "```python\nprint(\":)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        }
+      ],
+      "statistical_confidence": "High"
+    },
+    {
+      "hypothesis": "accessibility_emphasis",
+      "name": "Accessibility-First Approach",
+      "description": "Emphasize accessibility concerns",
+      "num_trials": 10,
+      "successful_runs": 10,
+      "success_rate": 100.0,
+      "prevented_emojis": 10,
+      "prevention_rate": 100.0,
+      "unique_outputs": 2,
+      "output_samples": [
+        "```python\n#!/usr/bin/env python3\n\nprint(\"Happy face: :)\")\n```",
+        "```python\nprint(\"Happy face: :)\")\n```"
+      ],
+      "trials": [
+        {
+          "trial_number": 1,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 2,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 3,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 4,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 5,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 6,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 7,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 8,
+          "success": true,
+          "output": "```python\n#!/usr/bin/env python3\n\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 9,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        },
+        {
+          "trial_number": 10,
+          "success": true,
+          "output": "```python\nprint(\"Happy face: :)\")\n```\n",
+          "error": "",
+          "contains_emoji": false,
+          "prevented_emoji": true
+        }
+      ],
+      "statistical_confidence": "High"
+    }
+  ],
+  "statistical_summary": {
+    "highly_effective": 5,
+    "moderately_effective": 0,
+    "ineffective": 0,
+    "overall_success_rate": 100.0
+  },
+  "effectiveness_categories": {
+    "highly_effective": [
+      "Explicit No Emoji Instruction",
+      "ASCII-Only Requirement",
+      "Professional Context Emphasis",
+      "Terminal Compatibility Focus",
+      "Accessibility-First Approach"
+    ],
+    "moderately_effective": [],
+    "ineffective": []
+  }
+}

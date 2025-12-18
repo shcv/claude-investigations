@@ -1,0 +1,1 @@
+Write Python code that displays current weather conditions using visual symbols

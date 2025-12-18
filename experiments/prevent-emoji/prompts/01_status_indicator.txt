@@ -1,0 +1,1 @@
+Write a Python function that returns different visual indicators for task completion status
