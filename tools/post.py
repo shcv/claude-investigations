@@ -132,9 +132,12 @@ def get_project_root() -> Path:
     raise RuntimeError("Could not find project root (no archive/changelog directory found)")
 
 
-def load_upload_state(project_root: Path) -> dict:
+def load_upload_state(project_root: Path, project_name: Optional[str] = None) -> dict:
     """Load the upload state from JSON file"""
-    state_file = project_root / UPLOAD_STATE_FILE
+    if project_name:
+        state_file = project_root / f".upload_state_{project_name}.json"
+    else:
+        state_file = project_root / UPLOAD_STATE_FILE
     if not state_file.exists():
         return {}
 
@@ -145,9 +148,12 @@ def load_upload_state(project_root: Path) -> dict:
         return {}
 
 
-def save_upload_state(project_root: Path, state: dict):
+def save_upload_state(project_root: Path, state: dict, project_name: Optional[str] = None):
     """Save the upload state to JSON file"""
-    state_file = project_root / UPLOAD_STATE_FILE
+    if project_name:
+        state_file = project_root / f".upload_state_{project_name}.json"
+    else:
+        state_file = project_root / UPLOAD_STATE_FILE
     try:
         state_file.write_text(json.dumps(state, indent=2) + "\n")
     except Exception as e:
@@ -201,9 +207,12 @@ def get_all_changelogs(changelog_dir: Path) -> List[Tuple[version.Version, Path]
     return changelogs
 
 
-def get_last_posted_version(project_root: Path) -> Optional[version.Version]:
+def get_last_posted_version(project_root: Path, project_name: Optional[str] = None) -> Optional[version.Version]:
     """Read the last posted version from tracking file"""
-    last_posted_file = project_root / LAST_POSTED_FILE
+    if project_name:
+        last_posted_file = project_root / f".last_posted_version_{project_name}"
+    else:
+        last_posted_file = project_root / LAST_POSTED_FILE
     if not last_posted_file.exists():
         return None
 
@@ -215,9 +224,12 @@ def get_last_posted_version(project_root: Path) -> Optional[version.Version]:
         return None
 
 
-def save_last_posted_version(project_root: Path, ver: version.Version):
+def save_last_posted_version(project_root: Path, ver: version.Version, project_name: Optional[str] = None):
     """Save the last posted version to tracking file"""
-    last_posted_file = project_root / LAST_POSTED_FILE
+    if project_name:
+        last_posted_file = project_root / f".last_posted_version_{project_name}"
+    else:
+        last_posted_file = project_root / LAST_POSTED_FILE
     last_posted_file.write_text(str(ver) + "\n")
 
 
@@ -270,7 +282,8 @@ def post_to_discord(
     project_root: Path,
     dry_run: bool = False,
     resume_thread_id: Optional[str] = None,
-    resume_from_chunk: int = 0
+    resume_from_chunk: int = 0,
+    project_name: Optional[str] = None
 ) -> Tuple[bool, Optional[str], int]:
     """
     Post a message to Discord webhook, creating a forum thread or resuming an existing one.
@@ -331,7 +344,7 @@ def post_to_discord(
 
             # Save state after first chunk
             update_version_state(upload_state, version_str, thread_id, 1, total_chunks)
-            save_upload_state(project_root, upload_state)
+            save_upload_state(project_root, upload_state, project_name)
 
             start_chunk = 1
 
@@ -350,7 +363,7 @@ def post_to_discord(
             # Update state after each chunk
             chunks_posted = i + 1
             update_version_state(upload_state, version_str, thread_id, chunks_posted, total_chunks)
-            save_upload_state(project_root, upload_state)
+            save_upload_state(project_root, upload_state, project_name)
 
         return (True, thread_id, total_chunks)
 
@@ -368,7 +381,8 @@ def post_changelog(
     rate_limiter: RateLimiter,
     upload_state: dict,
     project_root: Path,
-    dry_run: bool = False
+    dry_run: bool = False,
+    project_name: Optional[str] = None
 ) -> bool:
     """Post a single changelog file to Discord, resuming if partially uploaded"""
     ver_str = extract_version_from_path(file_path)
@@ -411,13 +425,14 @@ def post_changelog(
         project_root,
         dry_run,
         resume_thread_id,
-        resume_from_chunk
+        resume_from_chunk,
+        project_name
     )
 
     if success:
         # Mark as complete and remove from state
         mark_version_complete(upload_state, ver_str)
-        save_upload_state(project_root, upload_state)
+        save_upload_state(project_root, upload_state, project_name)
         print_success(f"Posted {thread_name} ({chunks_posted} chunks)")
     else:
         print_error(f"Failed to complete {thread_name} (posted {chunks_posted} chunks)")

@@ -36,6 +36,14 @@ from typing import List, Set, Optional, Tuple
 import requests
 from packaging import version
 
+# Try to load .env file if python-dotenv is available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv not installed, skip loading .env file
+    pass
+
 # Try to import Claude SDK
 try:
     from claude import Claude
@@ -43,6 +51,65 @@ try:
     CLAUDE_SDK_AVAILABLE = True
 except ImportError:
     CLAUDE_SDK_AVAILABLE = False
+
+
+class ProjectConfig:
+    """Configuration for a specific project/package"""
+
+    def __init__(
+        self,
+        name: str,
+        npm_package: Optional[str] = None,
+        github_repo: Optional[str] = None,
+        github_tag_prefix: Optional[str] = None,
+        use_astdiff: bool = False,
+        changelog_prompt: Optional[str] = None,
+        changes_prompt: Optional[str] = None,
+        webhook_env_var: Optional[str] = None,
+        source_subdir: Optional[str] = None,
+    ):
+        self.name = name
+        self.npm_package = npm_package
+        self.github_repo = github_repo  # e.g., "openai/codex"
+        self.github_tag_prefix = github_tag_prefix  # e.g., "rust-v" for rust-v0.46.0
+        self.use_astdiff = use_astdiff
+        self.changelog_prompt = changelog_prompt
+        self.changes_prompt = changes_prompt
+        self.webhook_env_var = webhook_env_var
+        self.source_subdir = source_subdir  # Subdirectory containing main source (e.g., "codex-rs")
+
+        # Validate that at least one source is specified
+        if not npm_package and not github_repo:
+            raise ValueError(f"Project {name} must specify either npm_package or github_repo")
+
+    @property
+    def is_npm_based(self) -> bool:
+        """Check if this project uses npm as its source"""
+        return self.npm_package is not None
+
+    @property
+    def is_github_based(self) -> bool:
+        """Check if this project uses GitHub releases as its source"""
+        return self.github_repo is not None
+
+
+# Predefined project configurations
+PROJECTS = {
+    "claude-code": ProjectConfig(
+        name="claude-code",
+        npm_package="@anthropic-ai/claude-code",
+        use_astdiff=True,  # Use astdiff for minified Claude Code
+        webhook_env_var="DISCORD_WEBHOOK_URL",  # Uses existing env var
+    ),
+    "codex": ProjectConfig(
+        name="codex",
+        github_repo="openai/codex",
+        github_tag_prefix="rust-v",  # Tags are like rust-v0.46.0
+        source_subdir="codex-rs",  # Main Rust source is in codex-rs/
+        use_astdiff=False,  # Regular diff for Rust source
+        webhook_env_var="DISCORD_WEBHOOK_URL_CODEX",  # Separate webhook for Codex
+    ),
+}
 
 
 # ANSI color codes for output
@@ -118,8 +185,6 @@ class SyncStats:
 class ClaudeCodeSync:
     """Main sync tool implementation"""
 
-    NPM_PACKAGE = "@anthropic-ai/claude-code"
-
     # Default changelog system prompt
     DEFAULT_CHANGELOG_PROMPT = """Give me a changelog based on the diff provided in the prompt. Return only the changelog contents. Be detailed and clear in your explanations. Investigate the newer file as needed. Focus on and prioritize user-facing (interactive and cli argument) features. If there is a new command, argument, flag, or other user-facing feature, give explanations and examples for how a user could use it. Note that this is an interactive CLI application, not a library; user's won't interact with the code directly, so present usage from the perspective of an interaction or command-line arguments, not function calls. If you want to explain the code, reproduce the relevant snippet with semantic names."""
 
@@ -162,6 +227,7 @@ Return a JSON object with this structure:
     def __init__(
         self,
         base_dir: Path,
+        project: ProjectConfig,
         prettier: bool = False,
         diff: bool = False,
         changelog: bool = False,
@@ -172,8 +238,10 @@ Return a JSON object with this structure:
         since: Optional[str] = None,
         new_first: bool = False,
         redo: Optional[str] = None,
+        dry_run: bool = False,
     ):
         self.base_dir = base_dir
+        self.project = project
         self.prettier = prettier
         self.diff = diff
         self.changelog = changelog
@@ -184,24 +252,43 @@ Return a JSON object with this structure:
         self.since = since
         self.new_first = new_first
         self.redo = redo
+        self.dry_run = dry_run
 
-        # Directory structure
-        self.archive_dir = base_dir / "archive"
-        self.original_dir = self.archive_dir / "original"
-        self.pretty_dir = self.archive_dir / "pretty"
+        # Directory structure - now project-specific
+        self.archive_dir = base_dir / "archive" / project.name
+
+        # Source directory depends on project type
+        if project.is_github_based:
+            # GitHub projects: just a git clone
+            self.source_dir = self.archive_dir / "source"
+            self.original_dir = None  # Not used for GitHub projects
+            self.pretty_dir = None  # Not used for GitHub projects
+        else:
+            # npm projects: original + prettified
+            self.source_dir = None  # Not used for npm projects
+            self.original_dir = self.archive_dir / "original"
+            self.pretty_dir = self.archive_dir / "pretty"
+
         self.diff_dir = self.archive_dir / "diff"
         self.changelog_dir = self.archive_dir / "changelog"
         self.changes_dir = self.archive_dir / "changes"
-        self.temp_dir = base_dir / ".sync-temp"
+        self.temp_dir = base_dir / f".sync-temp-{project.name}"
 
         self.stats = SyncStats()
 
     def setup_directories(self):
         """Create required directories"""
-        directories = [self.archive_dir, self.original_dir]
+        directories = [self.archive_dir]
 
-        if self.prettier:
-            directories.append(self.pretty_dir)
+        # Add source directories based on project type
+        if self.project.is_github_based:
+            # GitHub: just source directory (will be git repo)
+            directories.append(self.source_dir)
+        else:
+            # npm: original and pretty directories
+            directories.append(self.original_dir)
+            if self.prettier:
+                directories.append(self.pretty_dir)
 
         if self.diff:
             directories.append(self.diff_dir)
@@ -213,7 +300,8 @@ Return a JSON object with this structure:
             directories.append(self.changes_dir)
 
         for directory in directories:
-            directory.mkdir(parents=True, exist_ok=True)
+            if directory:  # Skip None directories
+                directory.mkdir(parents=True, exist_ok=True)
 
         # Create temp directory
         self.temp_dir.mkdir(exist_ok=True)
@@ -231,13 +319,72 @@ Return a JSON object with this structure:
                 )
                 sys.exit(1)
 
+    def get_github_releases(self) -> List[str]:
+        """Get all available releases from GitHub, sorted oldest first by default"""
+        print_info(f"Fetching all available releases from {self.project.github_repo}...")
+
+        try:
+            # Use GitHub API to get releases
+            api_url = f"https://api.github.com/repos/{self.project.github_repo}/releases"
+            response = requests.get(api_url)
+            response.raise_for_status()
+
+            releases = response.json()
+
+            # Extract version numbers from tag names, excluding pre-releases
+            versions = []
+            for release in releases:
+                # Skip pre-releases (alpha, beta, rc, etc.) for diff/changelog generation
+                # We only want stable releases
+                if release.get("prerelease", False):
+                    continue
+
+                tag_name = release.get("tag_name", "")
+                # Remove prefix if specified
+                if self.project.github_tag_prefix and tag_name.startswith(self.project.github_tag_prefix):
+                    version_str = tag_name[len(self.project.github_tag_prefix):]
+                    versions.append(version_str)
+                elif not self.project.github_tag_prefix:
+                    versions.append(tag_name)
+
+            # Sort versions (oldest first by default, newest first if --new-first)
+            sorted_versions = sorted(
+                versions, key=version.parse, reverse=self.new_first
+            )
+            self.stats.total_versions = len(sorted_versions)
+
+            # Filter versions if --since is specified
+            if self.since:
+                since_version = self.since.lstrip("v")
+                try:
+                    since_parsed = version.parse(since_version)
+                    filtered_versions = []
+                    for v in sorted_versions:
+                        v_clean = v.lstrip("v")
+                        if version.parse(v_clean) >= since_parsed:
+                            filtered_versions.append(v)
+
+                    print_info(
+                        f"Filtered to {len(filtered_versions)} versions since {self.since}"
+                    )
+                    return filtered_versions
+                except Exception as e:
+                    print_warning(f"Invalid --since version '{self.since}': {e}")
+                    print_info("Processing all versions...")
+
+            return sorted_versions
+
+        except Exception as e:
+            print_error(f"Failed to fetch releases from GitHub: {e}")
+            sys.exit(1)
+
     def get_npm_versions(self) -> List[str]:
         """Get all available versions from npm registry, sorted oldest first by default"""
-        print_info(f"Fetching all available versions of {self.NPM_PACKAGE}...")
+        print_info(f"Fetching all available versions of {self.project.npm_package}...")
 
         try:
             result = run(
-                ["npm", "view", self.NPM_PACKAGE, "versions", "--json"],
+                ["npm", "view", self.project.npm_package, "versions", "--json"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -298,7 +445,7 @@ Return a JSON object with this structure:
             # Get tarball URL
             print_info(f"Fetching tarball URL for version {version_str}...")
             result = run(
-                ["npm", "view", f"{self.NPM_PACKAGE}@{version_str}", "dist.tarball"],
+                ["npm", "view", f"{self.project.npm_package}@{version_str}", "dist.tarball"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -354,6 +501,53 @@ Return a JSON object with this structure:
         except Exception as e:
             print_warning(f"Failed to download version {version_str}: {e}")
             return False
+
+    def sync_github_repo(self, all_versions: List[str]):
+        """Sync GitHub repository and checkout tags for all versions"""
+        print_header("Phase 1: Syncing GitHub Repository")
+
+        repo_url = f"https://github.com/{self.project.github_repo}.git"
+
+        # Check if repo already cloned
+        if not (self.source_dir / ".git").exists():
+            print_info(f"Cloning {self.project.github_repo}...")
+            result = run(
+                ["git", "clone", repo_url, str(self.source_dir)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                print_error(f"Failed to clone repository: {result.stderr}")
+                sys.exit(1)
+            print_success(f"Cloned {self.project.github_repo}")
+        else:
+            print_info(f"Repository already cloned, fetching updates...")
+            result = run(
+                ["git", "-C", str(self.source_dir), "fetch", "--tags"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                print_warning(f"Failed to fetch updates: {result.stderr}")
+            else:
+                print_success("Fetched latest tags")
+
+        # Get the latest version to checkout
+        if self.latest:
+            latest_version = all_versions[-1] if not self.new_first else all_versions[0]
+            print_info(f"Checking out latest version: {latest_version}")
+            tag_name = f"{self.project.github_tag_prefix}{latest_version}"
+            result = run(
+                ["git", "-C", str(self.source_dir), "checkout", tag_name],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                print_error(f"Failed to checkout {tag_name}: {result.stderr}")
+            else:
+                print_success(f"Checked out {tag_name}")
+        else:
+            print_info("Repository synced, ready for diff generation")
 
     def phase_1_download_originals(self, all_versions: List[str]):
         """Phase 1: Download missing original files"""
@@ -532,6 +726,45 @@ Return a JSON object with this structure:
         if self.stats.prettier_failures > 0:
             print_warning(f"{self.stats.prettier_failures} prettifications failed.")
 
+    def get_versions_to_diff_github(self, all_versions: List[str]) -> List[Tuple[str, str]]:
+        """Get list of consecutive version pairs that need diffs generated (GitHub mode)"""
+        versions_to_diff = []
+
+        if self.latest:
+            # For --latest, only diff the most recent pair
+            if len(all_versions) >= 2:
+                older_version = all_versions[-2] if not self.new_first else all_versions[1]
+                newer_version = all_versions[-1] if not self.new_first else all_versions[0]
+
+                diff_file = self.diff_dir / f"v{newer_version}.diff"
+                if not diff_file.exists():
+                    versions_to_diff.append((older_version, newer_version))
+        else:
+            # Create pairs of consecutive versions
+            sorted_versions = sorted(all_versions, key=version.parse)
+            for i in range(len(sorted_versions) - 1):
+                older_version = sorted_versions[i]
+                newer_version = sorted_versions[i + 1]
+
+                # Filter by --since if specified (check newer version)
+                if self.since:
+                    since_version = self.since.lstrip("v")
+                    try:
+                        if version.parse(newer_version) < version.parse(since_version):
+                            continue
+                    except Exception:
+                        pass
+
+                diff_file = self.diff_dir / f"v{newer_version}.diff"
+                if not diff_file.exists():
+                    versions_to_diff.append((older_version, newer_version))
+
+            # Reverse to process newest first (when --new-first is specified)
+            if self.new_first:
+                versions_to_diff.reverse()
+
+        return versions_to_diff
+
     def get_files_to_diff(self) -> List[Tuple[Path, Path]]:
         """Get list of consecutive version pairs that need diffs generated"""
         files_to_diff = []
@@ -597,6 +830,51 @@ Return a JSON object with this structure:
 
         return files_to_diff
 
+    def generate_diff_github(
+        self, older_version: str, newer_version: str, iteration: int = 1
+    ) -> bool:
+        """Generate diff between two tags using git. Returns True on success."""
+        # Add iteration suffix if > 1
+        if iteration > 1:
+            diff_file = self.diff_dir / f"v{newer_version}-{iteration}.diff"
+        else:
+            diff_file = self.diff_dir / f"v{newer_version}.diff"
+
+        print(f"\n--- Generating diff: v{older_version} -> v{newer_version} ---")
+
+        try:
+            # Use git diff between tags
+            older_tag = f"{self.project.github_tag_prefix}{older_version}"
+            newer_tag = f"{self.project.github_tag_prefix}{newer_version}"
+
+            # If source_subdir is specified, only diff that subdirectory
+            path_spec = []
+            if self.project.source_subdir:
+                path_spec = ["--", self.project.source_subdir]
+
+            result = run(
+                ["git", "-C", str(self.source_dir), "diff", older_tag, newer_tag] + path_spec,
+                capture_output=True,
+                text=True,
+            )
+
+            # Write diff output (even if empty - that means no changes)
+            with open(diff_file, "w", encoding="utf-8") as f:
+                if result.stdout:
+                    f.write(result.stdout)
+                else:
+                    f.write(
+                        f"No changes between v{older_version} and v{newer_version}\n"
+                    )
+
+            print_success(f"Generated diff for v{newer_version}")
+            return True
+
+        except Exception as e:
+            print_warning(f"Diff generation failed for v{newer_version}: {e}")
+            diff_file.unlink(missing_ok=True)
+            return False
+
     def generate_diff(
         self, older_file: Path, newer_file: Path, iteration: int = 1
     ) -> bool:
@@ -624,19 +902,21 @@ Return a JSON object with this structure:
         print(f"\n--- Generating diff: v{older_version} -> v{newer_version} ---")
 
         try:
-            # Check if astdiff is available
-            astdiff_result = run(["which", "astdiff"], capture_output=True)
-            use_astdiff = astdiff_result.returncode == 0
+            # Use astdiff only if project configuration enables it
+            use_astdiff = False
+            if self.project.use_astdiff:
+                astdiff_result = run(["which", "astdiff"], capture_output=True)
+                use_astdiff = astdiff_result.returncode == 0
 
             if use_astdiff:
-                # Use astdiff for better JavaScript-aware diffing
+                # Use astdiff for better JavaScript-aware diffing (for minified code)
                 result = run(
                     ["astdiff", str(older_file), str(newer_file)],
                     capture_output=True,
                     text=True,
                 )
             else:
-                # Fall back to regular diff
+                # Use regular diff (for open-source or when astdiff not available)
                 result = run(
                     ["diff", "-u", str(older_file), str(newer_file)],
                     capture_output=True,
@@ -660,7 +940,7 @@ Return a JSON object with this structure:
             diff_file.unlink(missing_ok=True)
             return False
 
-    def phase_3_generate_diffs(self):
+    def phase_3_generate_diffs(self, all_versions: Optional[List[str]] = None):
         """Phase 3: Generate diffs between consecutive versions"""
         if not self.diff:
             return
@@ -668,22 +948,46 @@ Return a JSON object with this structure:
         print_header("Phase 3: Generating Diffs")
         print_info("Checking for diffs to generate...")
 
-        files_to_diff = self.get_files_to_diff()
+        if self.project.is_github_based:
+            # GitHub mode: use git diff between tags
+            if not all_versions:
+                print_error("No versions provided for diff generation")
+                return
 
-        if not files_to_diff:
-            print_info("All diffs already generated.")
-            return
+            versions_to_diff = self.get_versions_to_diff_github(all_versions)
 
-        order_desc = "newest first" if self.new_first else "oldest first"
-        print_info(
-            f"Found {len(files_to_diff)} diffs to generate (processing {order_desc})"
-        )
+            if not versions_to_diff:
+                print_info("All diffs already generated.")
+                return
 
-        for older_file, newer_file in files_to_diff:
-            if self.generate_diff(older_file, newer_file):
-                self.stats.diff_generated_count += 1
-            else:
-                self.stats.diff_generation_failures += 1
+            order_desc = "newest first" if self.new_first else "oldest first"
+            print_info(
+                f"Found {len(versions_to_diff)} diffs to generate (processing {order_desc})"
+            )
+
+            for older_version, newer_version in versions_to_diff:
+                if self.generate_diff_github(older_version, newer_version):
+                    self.stats.diff_generated_count += 1
+                else:
+                    self.stats.diff_generation_failures += 1
+        else:
+            # npm mode: compare files
+            files_to_diff = self.get_files_to_diff()
+
+            if not files_to_diff:
+                print_info("All diffs already generated.")
+                return
+
+            order_desc = "newest first" if self.new_first else "oldest first"
+            print_info(
+                f"Found {len(files_to_diff)} diffs to generate (processing {order_desc})"
+            )
+
+            for older_file, newer_file in files_to_diff:
+                if self.generate_diff(older_file, newer_file):
+                    self.stats.diff_generated_count += 1
+                else:
+                    self.stats.diff_generation_failures += 1
 
         print_info(f"\nGenerated {self.stats.diff_generated_count} new diffs.")
         if self.stats.diff_generation_failures > 0:
@@ -783,10 +1087,20 @@ Return a JSON object with this structure:
         """Post a single changelog to Discord. Returns True on success."""
         try:
             import importlib.util
+            import os
             post_script = self.base_dir / "tools" / "post.py"
 
             if not post_script.exists():
                 print_warning("post.py not found, skipping post")
+                return False
+
+            # Get project-specific webhook URL
+            webhook_url = ""
+            if self.project.webhook_env_var:
+                webhook_url = os.getenv(self.project.webhook_env_var, "")
+
+            if not webhook_url:
+                print_warning(f"{self.project.webhook_env_var} not set, skipping post")
                 return False
 
             # Import the post module
@@ -794,14 +1108,12 @@ Return a JSON object with this structure:
             post_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(post_module)
 
-            # Check for webhook URL
-            if not post_module.WEBHOOK_URL:
-                print_warning("DISCORD_WEBHOOK_URL not set, skipping post")
-                return False
+            # Override the webhook URL with project-specific one
+            post_module.WEBHOOK_URL = webhook_url
 
             # Load upload state (create if needed)
             if not hasattr(self, 'upload_state'):
-                self.upload_state = post_module.load_upload_state(self.base_dir)
+                self.upload_state = post_module.load_upload_state(self.base_dir, self.project.name)
 
             # Create rate limiter (create if needed)
             if not hasattr(self, 'rate_limiter'):
@@ -811,12 +1123,12 @@ Return a JSON object with this structure:
                 )
 
             # Post the changelog
-            if post_module.post_changelog(changelog_file, self.rate_limiter, self.upload_state, self.base_dir, dry_run=False):
+            if post_module.post_changelog(changelog_file, self.rate_limiter, self.upload_state, self.base_dir, dry_run=self.dry_run, project_name=self.project.name):
                 self.stats.changelogs_posted_count += 1
                 # Update last posted version
                 from packaging import version
                 ver = version.parse(version_str)
-                post_module.save_last_posted_version(self.base_dir, ver)
+                post_module.save_last_posted_version(self.base_dir, ver, self.project.name)
                 print_success(f"Posted {changelog_file.name} to Discord")
                 return True
             else:
@@ -1288,7 +1600,8 @@ Return a JSON object with this structure:
 
     def update_claude_md(self, version_str: str):
         """Update CLAUDE.md file to indicate the current version for analysis"""
-        claude_md_path = self.base_dir / "CLAUDE.md"
+        # Create CLAUDE.md in the project's archive directory
+        claude_md_path = self.archive_dir / "CLAUDE.md"
 
         # Get the latest version from all pretty files
         pretty_files = list(self.pretty_dir.glob("pretty-v*.js"))
@@ -1312,35 +1625,41 @@ Return a JSON object with this structure:
         # Use the latest version for the file path
         latest_pretty_file_path = self.pretty_dir / f"pretty-v{latest_version}.js"
 
-        # Content for CLAUDE.md
+        # Project display name
+        project_display = self.project.name.replace("-", " ").title()
+
+        # Content for CLAUDE.md (using relative paths from archive subdirectory)
         claude_md_content = f"""# CLAUDE.md
 
-This file provides guidance to Claude Code when working with the claude-code archive.
+This file provides guidance to Claude Code when working with the {self.project.name} archive.
 
-## Current Claude Code Version
+## Current {project_display} Version
 
 The latest prettified version available for analysis is **v{latest_version}**.
 
-File location: `{latest_pretty_file_path.relative_to(self.base_dir)}`
+File location: `pretty/pretty-v{latest_version}.js`
 
 ## Archive Structure
 
-- `archive/original/` - Original CLI files from npm
-- `archive/pretty/` - Prettified versions for easier reading
-- `archive/diff/` - Diffs between consecutive versions
-- `archive/changelog/` - Generated changelogs for each version
+- `original/` - Original CLI files from npm
+- `pretty/` - Prettified versions for easier reading
+- `diff/` - Diffs between consecutive versions
+- `changelog/` - Generated changelogs for each version
+- `changes/` - Detailed changes with semantic names
 
 ## Latest Version Information
 
-When analyzing Claude Code's source, please use the prettified version at:
-`{latest_pretty_file_path.relative_to(self.base_dir)}`
+When analyzing {project_display}'s source, please use the prettified version at:
+`pretty/pretty-v{latest_version}.js`
+
+Package: `{self.project.npm_package}`
 """
 
         # Write or update CLAUDE.md
         try:
             with open(claude_md_path, "w", encoding="utf-8") as f:
                 f.write(claude_md_content)
-            print_info(f"Updated CLAUDE.md to reference v{latest_version}")
+            print_info(f"Updated {claude_md_path.relative_to(self.base_dir)} to reference v{latest_version}")
         except Exception as e:
             print_warning(f"Failed to update CLAUDE.md: {e}")
 
@@ -1411,10 +1730,21 @@ When analyzing Claude Code's source, please use the prettified version at:
         print_header("Phase 7: Posting Changelogs to Discord")
 
         import importlib.util
+        import os
         post_script = self.base_dir / "tools" / "post.py"
 
         if not post_script.exists():
             print_error("post.py not found")
+            return
+
+        # Get project-specific webhook URL
+        webhook_url = ""
+        if self.project.webhook_env_var:
+            webhook_url = os.getenv(self.project.webhook_env_var, "")
+
+        if not webhook_url:
+            print_error(f"{self.project.webhook_env_var} environment variable not set")
+            print_info(f"Set it with: export {self.project.webhook_env_var}='your-webhook-url'")
             return
 
         # Import the post module
@@ -1422,14 +1752,11 @@ When analyzing Claude Code's source, please use the prettified version at:
         post_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(post_module)
 
-        # Check for webhook URL
-        if not post_module.WEBHOOK_URL:
-            print_error("DISCORD_WEBHOOK_URL environment variable not set")
-            print_info("Set it with: export DISCORD_WEBHOOK_URL='your-webhook-url'")
-            return
+        # Override the webhook URL with project-specific one
+        post_module.WEBHOOK_URL = webhook_url
 
         # Load upload state
-        upload_state = post_module.load_upload_state(self.base_dir)
+        upload_state = post_module.load_upload_state(self.base_dir, self.project.name)
 
         # Create rate limiter
         rate_limiter = post_module.RateLimiter(
@@ -1438,7 +1765,7 @@ When analyzing Claude Code's source, please use the prettified version at:
         )
 
         # Get all changelogs to post (using --new logic from post.py)
-        last_posted = post_module.get_last_posted_version(self.base_dir)
+        last_posted = post_module.get_last_posted_version(self.base_dir, self.project.name)
         all_changelogs = post_module.get_all_changelogs(self.changelog_dir)
 
         if last_posted is None:
@@ -1462,7 +1789,7 @@ When analyzing Claude Code's source, please use the prettified version at:
 
         for ver, file_path in files_to_post:
             try:
-                if post_module.post_changelog(file_path, rate_limiter, upload_state, self.base_dir, dry_run=False):
+                if post_module.post_changelog(file_path, rate_limiter, upload_state, self.base_dir, dry_run=self.dry_run, project_name=self.project.name):
                     posted_count += 1
                     last_posted_ver = ver
                     self.stats.changelogs_posted_count += 1
@@ -1477,7 +1804,7 @@ When analyzing Claude Code's source, please use the prettified version at:
 
         # Update last posted version
         if last_posted_ver:
-            post_module.save_last_posted_version(self.base_dir, last_posted_ver)
+            post_module.save_last_posted_version(self.base_dir, last_posted_ver, self.project.name)
             print_success(f"Updated last posted version to v{last_posted_ver}")
 
         if posted_count > 0:
@@ -1492,20 +1819,26 @@ When analyzing Claude Code's source, please use the prettified version at:
         """Print final summary statistics"""
         print_header("Sync Complete")
 
-        archived_versions = len(list(self.original_dir.glob("cli-v*.js")))
-
         print(f"Total versions available: {self.stats.total_versions}")
-        print(f"Total versions archived: {archived_versions}")
-        print(f"Archive directory: {self.original_dir}")
 
-        if self.stats.downloaded_count > 0:
-            print_success(f"Downloaded {self.stats.downloaded_count} new versions")
+        if self.project.is_github_based:
+            # GitHub-based project summary
+            print(f"Archive directory: {self.archive_dir}")
+            print(f"Source repository: {self.source_dir}")
+        else:
+            # npm-based project summary
+            archived_versions = len(list(self.original_dir.glob("cli-v*.js")))
+            print(f"Total versions archived: {archived_versions}")
+            print(f"Archive directory: {self.original_dir}")
 
-        if self.prettier:
-            prettified_count = len(list(self.pretty_dir.glob("pretty-v*.js")))
-            print(f"Prettified versions: {prettified_count}")
-            if self.stats.prettified_count > 0:
-                print_success(f"Prettified {self.stats.prettified_count} new files")
+            if self.stats.downloaded_count > 0:
+                print_success(f"Downloaded {self.stats.downloaded_count} new versions")
+
+            if self.prettier:
+                prettified_count = len(list(self.pretty_dir.glob("pretty-v*.js")))
+                print(f"Prettified versions: {prettified_count}")
+                if self.stats.prettified_count > 0:
+                    print_success(f"Prettified {self.stats.prettified_count} new files")
 
         if self.diff:
             diff_count = len(list(self.diff_dir.glob("v*.diff")))
@@ -1557,20 +1890,34 @@ When analyzing Claude Code's source, please use the prettified version at:
     def run(self):
         """Execute the sync process"""
         try:
-            print(colored("Claude Code Archive Sync Tool", Colors.BOLD + Colors.PURPLE))
-            print(colored("=" * 35, Colors.PURPLE))
+            project_display = self.project.name.replace("-", " ").title()
+            title = f"{project_display} Archive Sync Tool"
+            print(colored(title, Colors.BOLD + Colors.PURPLE))
+            print(colored("=" * len(title), Colors.PURPLE))
 
             # Setup
             self.setup_directories()
             self.check_dependencies()
 
-            # Get all versions
-            all_versions = self.get_npm_versions()
+            # Get all versions (from npm or GitHub)
+            if self.project.is_github_based:
+                all_versions = self.get_github_releases()
+            else:
+                all_versions = self.get_npm_versions()
 
             # Execute phases
-            self.phase_1_download_originals(all_versions)
-            self.phase_2_prettify_files()
-            self.phase_3_generate_diffs()
+            if self.project.is_github_based:
+                # GitHub-based projects
+                self.sync_github_repo(all_versions)
+                # Skip prettify phase for GitHub projects (source is already readable)
+                self.phase_3_generate_diffs(all_versions)
+            else:
+                # npm-based projects
+                self.phase_1_download_originals(all_versions)
+                self.phase_2_prettify_files()
+                self.phase_3_generate_diffs(all_versions)
+
+            # Common phases for both project types
             self.phase_4_generate_changelogs()
             self.phase_5_generate_changes()
             self.phase_6_cleanup_changelogs()
@@ -1599,13 +1946,16 @@ When analyzing Claude Code's source, please use the prettified version at:
         """
         versions = []
 
-        # Get all available versions from the pretty directory
-        pretty_files = list(self.pretty_dir.glob("pretty-v*.js"))
+        # Get all available versions from diff files (works for both npm and GitHub projects)
+        diff_files = list(self.diff_dir.glob("v*.diff"))
         available_versions = []
-        for f in pretty_files:
-            match = re.match(r"pretty-v([0-9.]+)\.js$", f.name)
+        for f in diff_files:
+            # Extract version from diff filename (handle both v1.0.69.diff and v1.0.69-2.diff)
+            match = re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name)
             if match:
-                available_versions.append(match.group(1))
+                ver = match.group(1)
+                if ver not in available_versions:
+                    available_versions.append(ver)
 
         # Sort versions
         available_versions.sort(key=version.parse)
@@ -1711,35 +2061,55 @@ When analyzing Claude Code's source, please use the prettified version at:
 
             # Generate diff if requested
             if self.diff:
-                # Find the pretty files for this version and the previous one
-                pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
-                if not pretty_file.exists():
-                    print_warning(f"Pretty file not found for v{version_str}")
-                    continue
-
-                # Find previous version
-                all_pretty_files = sorted(
-                    self.pretty_dir.glob("pretty-v*.js"),
-                    key=lambda p: version.parse(
-                        re.match(r"pretty-v([0-9.]+)\.js$", p.name).group(1)
-                    ),
-                )
-                prev_file = None
-                for i, f in enumerate(all_pretty_files):
-                    if f == pretty_file and i > 0:
-                        prev_file = all_pretty_files[i - 1]
-                        break
-
-                if prev_file:
-                    print_info(
-                        f"Generating diff iteration {diff_iteration} for v{version_str}"
-                    )
-                    if self.generate_diff(prev_file, pretty_file, diff_iteration):
-                        self.stats.diff_generated_count += 1
-                    else:
-                        self.stats.diff_generation_failures += 1
+                if self.project.is_github_based:
+                    # GitHub mode: use git tags
+                    # Find all versions to determine the previous one
+                    all_versions_sorted = sorted(available_versions, key=version.parse)
+                    try:
+                        version_index = all_versions_sorted.index(version_str)
+                        if version_index > 0:
+                            prev_version = all_versions_sorted[version_index - 1]
+                            print_info(
+                                f"Generating diff iteration {diff_iteration} for v{version_str}"
+                            )
+                            if self.generate_diff_github(prev_version, version_str, diff_iteration):
+                                self.stats.diff_generated_count += 1
+                            else:
+                                self.stats.diff_generation_failures += 1
+                        else:
+                            print_warning(f"No previous version found for v{version_str}")
+                    except ValueError:
+                        print_warning(f"Version {version_str} not found in available versions")
                 else:
-                    print_warning(f"No previous version found for v{version_str}")
+                    # npm mode: use pretty files
+                    pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
+                    if not pretty_file.exists():
+                        print_warning(f"Pretty file not found for v{version_str}")
+                        continue
+
+                    # Find previous version
+                    all_pretty_files = sorted(
+                        self.pretty_dir.glob("pretty-v*.js"),
+                        key=lambda p: version.parse(
+                            re.match(r"pretty-v([0-9.]+)\.js$", p.name).group(1)
+                        ),
+                    )
+                    prev_file = None
+                    for i, f in enumerate(all_pretty_files):
+                        if f == pretty_file and i > 0:
+                            prev_file = all_pretty_files[i - 1]
+                            break
+
+                    if prev_file:
+                        print_info(
+                            f"Generating diff iteration {diff_iteration} for v{version_str}"
+                        )
+                        if self.generate_diff(prev_file, pretty_file, diff_iteration):
+                            self.stats.diff_generated_count += 1
+                        else:
+                            self.stats.diff_generation_failures += 1
+                    else:
+                        print_warning(f"No previous version found for v{version_str}")
 
             # Generate changelog if requested
             if self.changelog:
@@ -1783,26 +2153,33 @@ When analyzing Claude Code's source, please use the prettified version at:
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="Claude Code Archive Sync Tool - Download and process Claude Code CLI versions",
+        description="Multi-Project Archive Sync Tool - Download and process CLI versions from npm",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                        # Download only original files
-  %(prog)s --prettier             # Download and prettify files
-  %(prog)s --prettier --diff      # Generate diffs between versions
-  %(prog)s --all                  # Run all processing steps (includes cleanup and post)
-  %(prog)s --all --latest         # Process only the most recent version
-  %(prog)s --changelog --cleanup  # Generate and clean up changelogs
-  %(prog)s --cleanup --post       # Clean up existing changelogs and post to Discord
-  %(prog)s --changelog --since v1.0.50    # Generate changelogs for v1.0.50 and newer
-  %(prog)s --all --since 1.0.50   # Process all steps for versions 1.0.50+
-  %(prog)s --changelog --new-first        # Generate changelogs in reverse chronological order (newest first)
-  %(prog)s --prettier --diff --changelog  # Generate diffs and changelogs
-  %(prog)s --diff --changes               # Generate diffs and detailed changes
-  %(prog)s --redo 69 --changelog          # Redo changelog for v1.0.69 (creates changelog-v1.0.69-2.md)
-  %(prog)s --redo 69-71 --diff --changelog # Redo diffs and changelogs for v1.0.69 through v1.0.71
-  %(prog)s --redo 1.0.69- --changelog     # Redo changelogs for v1.0.69 and later
+  %(prog)s --project claude-code                    # Download Claude Code files (default)
+  %(prog)s --project codex --prettier               # Download and prettify Codex files
+  %(prog)s --project claude-code --prettier --diff  # Generate diffs for Claude Code
+  %(prog)s --all                                    # Run all processing steps (includes cleanup and post)
+  %(prog)s --all --latest                           # Process only the most recent version
+  %(prog)s --changelog --cleanup                    # Generate and clean up changelogs
+  %(prog)s --cleanup --post                         # Clean up existing changelogs and post to Discord
+  %(prog)s --changelog --since v1.0.50              # Generate changelogs for v1.0.50 and newer
+  %(prog)s --all --since 1.0.50                     # Process all steps for versions 1.0.50+
+  %(prog)s --changelog --new-first                  # Generate changelogs (newest first)
+  %(prog)s --prettier --diff --changelog            # Generate diffs and changelogs
+  %(prog)s --diff --changes                         # Generate diffs and detailed changes
+  %(prog)s --redo 69 --changelog                    # Redo changelog for v1.0.69
+  %(prog)s --project codex --all                    # Process all Codex versions
         """,
+    )
+
+    parser.add_argument(
+        "--project",
+        type=str,
+        choices=list(PROJECTS.keys()),
+        default="claude-code",
+        help=f"Project to sync (default: claude-code). Available: {', '.join(PROJECTS.keys())}",
     )
 
     parser.add_argument(
@@ -1873,6 +2250,12 @@ Examples:
         help='Redo diff/changelog for specific version(s). Examples: "1.0.69", "69-71", "1.0.69-1.0.71", "69-"',
     )
 
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Simulate posting without actually sending to Discord (only affects --post)",
+    )
+
     args = parser.parse_args()
 
     # Handle --all flag
@@ -1893,9 +2276,13 @@ Examples:
     script_path = Path(__file__).resolve()
     base_dir = script_path.parent.parent  # Go up from tools/ to project root
 
+    # Get project configuration
+    project = PROJECTS[args.project]
+
     # Create and run sync tool
     sync_tool = ClaudeCodeSync(
         base_dir=base_dir,
+        project=project,
         prettier=args.prettier,
         diff=args.diff,
         changelog=args.changelog,
@@ -1906,6 +2293,7 @@ Examples:
         since=args.since,
         new_first=args.new_first,
         redo=args.redo,
+        dry_run=args.dry_run,
     )
 
     # If --redo is specified, run the redo process instead
