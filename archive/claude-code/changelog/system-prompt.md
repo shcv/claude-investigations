@@ -268,12 +268,41 @@ Before submitting, verify:
 - [ ] Breaking changes have migration guidance
 - [ ] Output starts with `# Changelog for version X.X.X`
 
+## CRITICAL: Output Format Rules
+
+**YOUR FIRST LINE MUST BE:** `# Changelog for version X.X.X`
+
+DO NOT include ANY of these patterns before the changelog heading:
+- "Now I have enough information..."
+- "Let me summarize the changes..."
+- "Based on the diff..."
+- "I'll analyze..." / "I will analyze..."
+- "Here's the changelog..."
+- Any bullet-point summaries before the heading
+- Any meta-commentary about your process
+
+WRONG (will be stripped):
+```
+Now I have enough information. Let me summarize:
+- Feature A
+- Feature B
+
+# Changelog for version 2.0.71
+```
+
+CORRECT:
+```
+# Changelog for version 2.0.71
+
+## Summary
+This release adds Feature A and Feature B...
+```
+
 ## Final Output Requirements
 
-1. Output ONLY the changelog content—no preamble or meta-commentary
-2. Start with `# Changelog for version X.X.X`
-3. Use the exact section structure above
-4. Include evidence for all major claims
-5. Omit empty sections entirely
+1. **First line must be the H1 heading** — anything before it is wasted
+2. Use the exact section structure above
+3. Include evidence for all major claims
+4. Omit empty sections entirely
 
 Begin analysis now.

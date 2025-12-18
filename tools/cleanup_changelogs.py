@@ -50,6 +50,60 @@ def print_info(msg: str):
     print(colored(f"ℹ {msg}", Colors.CYAN))
 
 
+def remove_preamble(content: str) -> Tuple[str, bool]:
+    """
+    Remove LLM preamble text that appears before the changelog heading.
+
+    Common patterns:
+      - "Now I have enough information..."
+      - "Let me summarize the changes..."
+      - "Based on the diff..."
+      - Bullet point summaries before the actual heading
+    """
+    lines = content.split('\n')
+
+    # Find the first H1 changelog header
+    h1_pattern = re.compile(r'^#\s+Changelog\s+for\s+v?(ersion\s+)?', re.IGNORECASE)
+    h1_index = None
+    for i, line in enumerate(lines):
+        if h1_pattern.match(line):
+            h1_index = i
+            break
+
+    if h1_index is None or h1_index == 0:
+        return content, False
+
+    # Check if content before the H1 looks like preamble
+    preamble_content = '\n'.join(lines[:h1_index]).strip()
+
+    # Common LLM preamble patterns
+    preamble_patterns = [
+        r'(?i)now\s+i\s+have\s+enough\s+information',
+        r'(?i)let\s+me\s+summarize',
+        r'(?i)let\s+me\s+analyze',
+        r'(?i)based\s+on\s+the\s+diff',
+        r'(?i)i\'ll\s+analyze',
+        r'(?i)i\s+will\s+analyze',
+        r'(?i)here\'s\s+the\s+changelog',
+        r'(?i)here\s+is\s+the\s+changelog',
+        r'(?i)after\s+reviewing',
+        r'(?i)after\s+analyzing',
+        r'(?i)looking\s+at\s+the\s+diff',
+        r'(?i)^\*\*new\s+features?\*\*',  # Markdown bold summary headers
+        r'(?i)^\*\*internal',
+        r'(?i)^\*\*improvements?\*\*',
+    ]
+
+    is_preamble = any(re.search(pat, preamble_content) for pat in preamble_patterns)
+
+    if is_preamble:
+        # Remove everything before the first H1
+        cleaned_lines = lines[h1_index:]
+        return '\n'.join(cleaned_lines), True
+
+    return content, False
+
+
 def remove_duplicate_headers(content: str, version: str) -> Tuple[str, bool]:
     """
     Remove duplicate H1 headers and meta-commentary between them.
@@ -75,10 +129,25 @@ def remove_duplicate_headers(content: str, version: str) -> Tuple[str, bool]:
     first_h1 = h1_indices[0]
     second_h1 = h1_indices[1]
 
-    # Check if content between is just meta-commentary (typically short)
+    # Check if content between is just meta-commentary
+    # Use a larger threshold and also check for preamble patterns
     between_content = '\n'.join(lines[first_h1 + 1:second_h1]).strip()
 
-    if len(between_content) < 500:  # Arbitrary threshold - real content is longer
+    # Common patterns that indicate meta-commentary between duplicate headers
+    meta_patterns = [
+        r'(?i)now\s+i\s+have',
+        r'(?i)let\s+me',
+        r'(?i)^\*\*',  # Markdown bold (often used in quick summaries)
+        r'(?i)^-\s+',  # Bullet points
+        r'(?i)^\d+\.',  # Numbered lists
+    ]
+
+    is_meta = (
+        len(between_content) < 1500 or  # Increased threshold
+        any(re.search(pat, between_content) for pat in meta_patterns)
+    )
+
+    if is_meta:
         # Keep first H1, skip to content after second H1
         cleaned_lines = lines[:first_h1 + 1] + [''] + lines[second_h1 + 1:]
         return '\n'.join(cleaned_lines), True
@@ -208,6 +277,7 @@ def cleanup_changelog(content: str, version: str) -> Tuple[str, bool]:
 
     # Apply each transformation in order
     transformations = [
+        ('preamble', remove_preamble),
         ('duplicate headers', lambda c: remove_duplicate_headers(c, version)),
         ('emoji in headers', remove_emoji_from_headers),
         ('empty sections', collapse_empty_sections),
