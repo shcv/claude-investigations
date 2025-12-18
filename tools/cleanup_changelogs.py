@@ -2,28 +2,18 @@
 """
 Changelog Cleanup Tool
 
-Removes redundant headers and LLM meta-commentary from changelogs.
-
-Pattern to fix:
-  # Changelog for version X.X.X
-
-  [LLM commentary about generating changelog]
-
-  # Changelog for version X.X.X  <-- Remove from here up
-
-  ## Actual Content...
-
-Result:
-  # Changelog for version X.X.X
-
-  ## Actual Content...
+Cleans up LLM-generated changelogs by:
+1. Removing duplicate headers and meta-commentary
+2. Removing emoji from section headers
+3. Collapsing empty sections
+4. Standardizing formatting
 """
 
 import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 # ANSI color codes
 class Colors:
@@ -60,61 +50,180 @@ def print_info(msg: str):
     print(colored(f"ℹ {msg}", Colors.CYAN))
 
 
-def cleanup_changelog(content: str, version: str) -> tuple[str, bool]:
+def remove_duplicate_headers(content: str, version: str) -> Tuple[str, bool]:
     """
-    Clean up changelog by removing duplicate headers and meta-commentary.
+    Remove duplicate H1 headers and meta-commentary between them.
 
-    Returns:
-        tuple of (cleaned_content, was_modified)
+    Pattern to fix:
+      # Changelog for version X.X.X
+
+      [LLM commentary about generating changelog]
+
+      # Changelog for version X.X.X  <-- Remove from first H1+1 to second H1
+
+      ## Actual Content...
     """
     lines = content.split('\n')
 
-    # Pattern 1: Look for duplicate H1 headers
-    # Find all lines that match "# Changelog for version X.X.X"
-    h1_pattern = re.compile(r'^#\s+Changelog for version', re.IGNORECASE)
+    # Find all H1 changelog headers
+    h1_pattern = re.compile(r'^#\s+Changelog\s+for\s+v?(ersion\s+)?', re.IGNORECASE)
     h1_indices = [i for i, line in enumerate(lines) if h1_pattern.match(line)]
 
     if len(h1_indices) <= 1:
-        # No duplicate headers, check for other issues
         return content, False
 
-    # Find the second H1 header
     first_h1 = h1_indices[0]
     second_h1 = h1_indices[1]
 
-    # Check if there's substantive content between the headers
-    # (more than just blank lines or simple commentary)
+    # Check if content between is just meta-commentary (typically short)
     between_content = '\n'.join(lines[first_h1 + 1:second_h1]).strip()
 
-    # If the content between is just meta-commentary (typically short),
-    # remove everything from after first H1 to before second H1
-    if len(between_content) < 500:  # Arbitrary threshold - real content is usually longer
-        # Keep first H1, remove up to (but not including) second H1
-        cleaned_lines = lines[:first_h1 + 1] + lines[second_h1:]
-
-        # Remove the duplicate second H1 since we kept the first
-        cleaned_lines = cleaned_lines[:first_h1 + 1] + cleaned_lines[first_h1 + 2:]
-
-        # Clean up excessive blank lines at the start
-        result_lines = []
-        blank_count = 0
-        for i, line in enumerate(cleaned_lines):
-            if i <= first_h1:
-                result_lines.append(line)
-            elif line.strip() == '':
-                blank_count += 1
-                if blank_count <= 2:  # Allow max 2 blank lines
-                    result_lines.append(line)
-            else:
-                blank_count = 0
-                result_lines.append(line)
-
-        return '\n'.join(result_lines), True
+    if len(between_content) < 500:  # Arbitrary threshold - real content is longer
+        # Keep first H1, skip to content after second H1
+        cleaned_lines = lines[:first_h1 + 1] + [''] + lines[second_h1 + 1:]
+        return '\n'.join(cleaned_lines), True
 
     return content, False
 
 
-def process_file(file_path: Path, dry_run: bool = False) -> bool:
+def remove_emoji_from_headers(content: str) -> Tuple[str, bool]:
+    """
+    Remove emoji from markdown headers (## lines).
+
+    Examples:
+      ## 🎯 Highlights  ->  ## Highlights
+      ## 🚀 New Features  ->  ## New Features
+      ## ⚡ Improvements  ->  ## Improvements
+    """
+    # Pattern matches: ## followed by optional emoji(s) and text
+    # Emoji ranges: most common emoji are in these Unicode ranges
+    emoji_pattern = re.compile(
+        r'^(#{1,6})\s*'  # Header markers
+        r'[\U0001F300-\U0001F9FF\U00002600-\U000027BF\U0001FA00-\U0001FAFF\u2300-\u23FF\u2B50\u26A0\u2705\u274C\u2728\u2764\u200D]*'  # Emoji
+        r'\s*'  # Optional space after emoji
+        r'(.+)$',  # Actual header text
+        re.MULTILINE
+    )
+
+    new_content = emoji_pattern.sub(r'\1 \2', content)
+
+    # Clean up any double spaces that might result
+    new_content = re.sub(r'^(#{1,6})\s+', r'\1 ', new_content, flags=re.MULTILINE)
+
+    return new_content, new_content != content
+
+
+def collapse_empty_sections(content: str) -> Tuple[str, bool]:
+    """
+    Remove sections that have a header but no content.
+
+    Examples:
+      ## Bug Fixes
+
+      ## Notes  ->  (Bug Fixes section removed entirely)
+    """
+    lines = content.split('\n')
+    result_lines = []
+    i = 0
+    modified = False
+
+    while i < len(lines):
+        line = lines[i]
+
+        # Check if this is a section header (## or ###)
+        if re.match(r'^#{2,3}\s+', line):
+            # Look ahead to see if there's content before next header or end
+            j = i + 1
+            has_content = False
+
+            while j < len(lines):
+                next_line = lines[j].strip()
+
+                # Skip blank lines
+                if not next_line:
+                    j += 1
+                    continue
+
+                # Check if we hit another header
+                if re.match(r'^#{1,3}\s+', next_line):
+                    break
+
+                # Check if we hit a horizontal rule (section separator)
+                if next_line == '---':
+                    j += 1
+                    continue
+
+                # Found actual content
+                has_content = True
+                break
+
+            if has_content:
+                result_lines.append(line)
+            else:
+                # Skip this empty section header
+                modified = True
+                # Also skip any trailing blank lines or ---
+                while i + 1 < len(lines) and (not lines[i + 1].strip() or lines[i + 1].strip() == '---'):
+                    i += 1
+        else:
+            result_lines.append(line)
+
+        i += 1
+
+    return '\n'.join(result_lines), modified
+
+
+def remove_trailing_separators(content: str) -> Tuple[str, bool]:
+    """
+    Remove trailing --- separators at the end of the document.
+    """
+    lines = content.rstrip().split('\n')
+
+    # Remove trailing --- and blank lines
+    while lines and (not lines[-1].strip() or lines[-1].strip() == '---'):
+        lines.pop()
+
+    new_content = '\n'.join(lines) + '\n'
+    return new_content, new_content != content
+
+
+def normalize_blank_lines(content: str) -> Tuple[str, bool]:
+    """
+    Normalize multiple consecutive blank lines to at most 2.
+    """
+    # Replace 3+ consecutive newlines with 2
+    new_content = re.sub(r'\n{4,}', '\n\n\n', content)
+    return new_content, new_content != content
+
+
+def cleanup_changelog(content: str, version: str) -> Tuple[str, bool]:
+    """
+    Apply all cleanup transformations to a changelog.
+
+    Returns:
+        tuple of (cleaned_content, was_modified)
+    """
+    original_content = content
+    modified = False
+
+    # Apply each transformation in order
+    transformations = [
+        ('duplicate headers', lambda c: remove_duplicate_headers(c, version)),
+        ('emoji in headers', remove_emoji_from_headers),
+        ('empty sections', collapse_empty_sections),
+        ('trailing separators', remove_trailing_separators),
+        ('blank lines', normalize_blank_lines),
+    ]
+
+    for name, transform in transformations:
+        content, changed = transform(content)
+        if changed:
+            modified = True
+
+    return content, modified
+
+
+def process_file(file_path: Path, dry_run: bool = False, verbose: bool = False) -> bool:
     """Process a single changelog file."""
     try:
         content = file_path.read_text()
@@ -129,12 +238,12 @@ def process_file(file_path: Path, dry_run: bool = False) -> bool:
     cleaned_content, was_modified = cleanup_changelog(content, version)
 
     if not was_modified:
-        print_info(f"{file_path.name}: No changes needed")
+        if verbose:
+            print_info(f"{file_path.name}: No changes needed")
         return True
 
     if dry_run:
         print_warning(f"{file_path.name}: Would be modified (dry run)")
-        # Show what would change
         orig_lines = len(content.split('\n'))
         new_lines = len(cleaned_content.split('\n'))
         print_info(f"  Lines: {orig_lines} → {new_lines} ({orig_lines - new_lines} removed)")
@@ -151,21 +260,49 @@ def process_file(file_path: Path, dry_run: bool = False) -> bool:
         return False
 
 
+def find_changelog_dir() -> Optional[Path]:
+    """Find the changelog directory, searching up from cwd if needed."""
+    # Try relative path first
+    changelog_dir = Path("archive/claude-code/changelog")
+    if changelog_dir.exists():
+        return changelog_dir
+
+    # Try from project root
+    project_root = Path.cwd()
+    while project_root != project_root.parent:
+        test_dir = project_root / "archive" / "claude-code" / "changelog"
+        if test_dir.exists():
+            return test_dir
+        # Also try without claude-code subdir for other projects
+        test_dir = project_root / "archive" / "changelog"
+        if test_dir.exists():
+            return test_dir
+        project_root = project_root.parent
+
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Clean up changelog files by removing redundant headers and meta-commentary"
+        description="Clean up changelog files by removing redundant content and standardizing format"
     )
 
     parser.add_argument(
         "files",
         nargs="*",
-        help="Specific changelog files to process (default: all in archive/changelog/)"
+        help="Specific changelog files to process (default: all in archive/*/changelog/)"
     )
 
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Show what would be changed without modifying files"
+    )
+
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Show status for unchanged files too"
     )
 
     parser.add_argument(
@@ -183,20 +320,11 @@ def main():
     if args.files:
         files_to_process = [Path(f) for f in args.files]
     else:
-        # Find all changelog files
-        changelog_dir = Path("archive/changelog")
-        if not changelog_dir.exists():
-            # Try from project root
-            project_root = Path.cwd()
-            while project_root != project_root.parent:
-                test_dir = project_root / "archive" / "changelog"
-                if test_dir.exists():
-                    changelog_dir = test_dir
-                    break
-                project_root = project_root.parent
-            else:
-                print_error("Could not find archive/changelog directory")
-                return 1
+        changelog_dir = find_changelog_dir()
+        if not changelog_dir:
+            print_error("Could not find changelog directory")
+            print_info("Run from project root or specify files explicitly")
+            return 1
 
         files_to_process = sorted(changelog_dir.glob("changelog-*.md"))
 
@@ -204,7 +332,8 @@ def main():
         print_warning("No changelog files found")
         return 0
 
-    print_info(f"Processing {len(files_to_process)} file(s){'...' if not args.dry_run else ' (dry run)...'}")
+    mode_str = " (dry run)" if args.dry_run else ""
+    print_info(f"Processing {len(files_to_process)} file(s){mode_str}...")
     print()
 
     success_count = 0
@@ -215,12 +344,10 @@ def main():
             print_error(f"File not found: {file_path}")
             continue
 
-        # Track original content to count modifications
         try:
             original = file_path.read_text()
-            if process_file(file_path, args.dry_run):
+            if process_file(file_path, args.dry_run, args.verbose):
                 success_count += 1
-                # Check if actually modified
                 if not args.dry_run:
                     current = file_path.read_text()
                     if current != original:
