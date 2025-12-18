@@ -1,0 +1,555 @@
+#+TITLE: Claude Code Skills
+#+DATE: 2025-10-16
+
+* Overview
+
+Skills are modular, reusable capabilities that extend Claude Code's functionality through organized folders containing instructions, scripts, and supporting resources. Unlike slash commands which require explicit user invocation, Skills are *model-invoked*—Claude autonomously decides when to use them based on your request and the skill's description.
+
+** Key Characteristics
+
+- *Autonomous Invocation*: Claude loads skills automatically when relevant to the user's request
+- *Progressive Disclosure*: Skills use a three-tier loading strategy to manage context efficiently
+- *Tool Restriction*: Skills can limit which tools Claude can access during execution
+- *Three Scopes*: Personal (~/.claude/skills/), project (.claude/skills/), and plugin-bundled
+- *Hidden from UI*: Skills don't appear in command lists like slash commands do
+
+* Skill Structure
+
+** Basic Directory Layout
+
+A skill is a directory containing a ~SKILL.md~ file:
+
+#+begin_example
+my-skill/
+├── SKILL.md           # Required: metadata and instructions
+├── reference.md       # Optional: additional documentation
+├── scripts/          # Optional: executable code
+│   └── helper.py
+└── templates/        # Optional: file templates
+    └── template.txt
+#+end_example
+
+** SKILL.md Format
+
+Every skill must have a ~SKILL.md~ file with YAML frontmatter:
+
+#+begin_src yaml
+---
+name: Your Skill Name
+description: Brief description of what this skill does and when to use it
+allowed-tools: Read, Grep, Glob  # Optional: restrict tools
+when_to_use: Optional guidance    # Optional: additional context
+version: 1.0                      # Optional: version tracking
+model: inherit                    # Optional: model override
+disable-model-invocation: false   # Optional: disable auto-invocation
+---
+
+# Skill Instructions
+
+Your skill instructions go here. Claude will read this content when the skill is activated.
+
+You can reference other files in the skill directory by name.
+#+end_src
+
+** Metadata Fields
+
+| Field | Required | Description |
+|-------+----------+-------------|
+| ~name~ | Yes | Skill name displayed to user |
+| ~description~ | Yes | Used for skill discovery and routing |
+| ~allowed-tools~ | No | Comma-separated list of permitted tools |
+| ~when_to_use~ | No | Additional context for when to invoke |
+| ~version~ | No | Version tracking for documentation |
+| ~model~ | No | Override default model (~inherit~ = use current) |
+| ~disable-model-invocation~ | No | Disable autonomous invocation (default: false) |
+
+* Progressive Disclosure Architecture
+
+Skills implement a three-level loading strategy to minimize context usage:
+
+** Level 1: Metadata Loading
+
+At startup, Claude Code loads *only* the YAML frontmatter from all available skills:
+- Name
+- Description
+
+This metadata is injected into Claude's system prompt, enabling skill discovery without consuming full context.
+
+*Code location*: ~archive/claude-code/pretty/pretty-v2.0.20.js:449220-449299~
+
+** Level 2: Core Content Loading
+
+When Claude determines a skill is relevant, it loads the full ~SKILL.md~ content:
+- Complete instructions
+- Base directory path
+- Tool restrictions
+
+The base directory is provided to Claude: ~Base directory for this skill: /path/to/skill~
+
+*Code location*: ~archive/claude-code/pretty/pretty-v2.0.20.js:449262~
+
+** Level 3: Supplementary File Access
+
+Skills can reference additional files (like ~reference.md~ or ~forms.md~). Claude reads these on-demand using standard file tools.
+
+This progressive approach means "the amount of context that can be bundled into a skill is effectively unbounded" since Claude doesn't need to load everything simultaneously.
+
+* Tool Restriction with allowed-tools
+
+The ~allowed-tools~ field enables fine-grained control over which tools Claude can access during skill execution. This is particularly useful for:
+
+- *Read-only Skills*: Limit to ~Read, Grep, Glob~
+- *Security-sensitive Workflows*: Restrict potentially dangerous operations
+- *Controlled Automation*: Prevent unintended modifications
+
+** Syntax
+
+#+begin_src yaml
+---
+allowed-tools: Read, Grep, Glob
+---
+#+end_src
+
+Multiple tools are comma-separated. Tool names are case-sensitive.
+
+** How It Works
+
+When a skill with ~allowed-tools~ is invoked, Claude Code modifies the tool permission context to only allow the specified tools. This happens automatically without requiring user permission prompts.
+
+*Code location*: ~archive/claude-code/pretty/pretty-v2.0.20.js:449274-449289~
+
+The implementation injects ~alwaysAllowRules~ into the app state, overriding normal permission checks.
+
+* Skill Scopes
+
+Skills can be installed at three different scopes, each with different visibility and use cases:
+
+** Personal Skills (~/.claude/skills/)
+
+- *Location*: ~$HOME/.claude/skills/~
+- *Visibility*: Available to you across all projects
+- *Use Case*: Personal workflows, coding preferences, custom utilities
+- *Shared*: No (private to your machine)
+
+** Project Skills (.claude/skills/)
+
+- *Location*: ~PROJECT_ROOT/.claude/skills/~
+- *Visibility*: Available to all team members working on the project
+- *Use Case*: Project-specific workflows, team conventions, shared automation
+- *Shared*: Yes (checked into git)
+
+** Plugin Skills
+
+- *Location*: Managed by plugin system
+- *Visibility*: Available when plugin is installed
+- *Use Case*: Reusable capabilities distributed via marketplace
+- *Shared*: Yes (via plugin distribution)
+
+Plugin skills can be invoked using fully qualified names: ~ms-office-suite:pdf~
+
+* Invoking Skills
+
+** User Perspective
+
+As a user, you don't explicitly invoke skills. Simply describe what you want to do, and Claude will load the appropriate skill if available:
+
+#+begin_example
+User: "Please analyze this Excel spreadsheet and extract the quarterly revenue data"
+
+# Claude automatically invokes the 'xlsx' skill if available
+#+end_example
+
+** Claude's Perspective
+
+From the system prompt (~archive/claude-code/pretty/pretty-v2.0.20.js:428993-429013~):
+
+#+begin_quote
+When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively. Skills provide specialized capabilities and domain knowledge.
+
+How to use skills:
+- Invoke skills using this tool with the skill name only (no arguments)
+- When you invoke a skill, you will see <command-message>The "{name}" skill is loading</command-message>
+- The skill's prompt will expand and provide detailed instructions on how to complete the task
+#+end_quote
+
+Claude uses the ~Skill~ tool, passing only the skill name:
+
+#+begin_src json
+{
+  "command": "pdf"
+}
+#+end_src
+
+or with fully qualified name:
+
+#+begin_src json
+{
+  "command": "ms-office-suite:pdf"
+}
+#+end_src
+
+** Skill Loading Process
+
+1. User makes a request
+2. Claude reviews available skill descriptions (from system prompt)
+3. If a skill matches, Claude invokes it using the Skill tool
+4. User sees: ~The "{name}" skill is loading~
+5. Skill's full ~SKILL.md~ content expands into context
+6. Claude follows skill instructions to complete task
+7. Tool restrictions (if specified) are enforced
+
+* Creating Your Own Skills
+
+** Minimal Example
+
+Create ~.claude/skills/my-skill/SKILL.md~:
+
+#+begin_src yaml
+---
+name: Code Review Helper
+description: Performs thorough code reviews focusing on security, performance, and best practices. Use when user asks for code review or audit.
+---
+
+# Code Review Instructions
+
+When reviewing code, check for:
+
+1. Security vulnerabilities
+   - SQL injection risks
+   - XSS vulnerabilities
+   - Authentication bypasses
+
+2. Performance issues
+   - N+1 queries
+   - Inefficient algorithms
+   - Memory leaks
+
+3. Best practices
+   - Error handling
+   - Code organization
+   - Documentation
+
+Provide specific line numbers and actionable recommendations.
+#+end_src
+
+** Advanced Example with Tool Restriction
+
+Create ~.claude/skills/safe-analysis/SKILL.md~:
+
+#+begin_src yaml
+---
+name: Read-Only Codebase Analysis
+description: Analyzes codebase patterns and architecture without making any changes. Use for exploration and understanding tasks.
+allowed-tools: Read, Grep, Glob
+---
+
+# Safe Analysis Instructions
+
+You are operating in read-only mode. Your tools are limited to:
+- Read: View file contents
+- Grep: Search for patterns
+- Glob: Find files by pattern
+
+Analyze the codebase to answer the user's question, but do not modify any files.
+
+If the user asks you to make changes, explain that this skill is read-only and offer to exit the skill to make modifications.
+#+end_src
+
+** Example with Supporting Files
+
+Create ~.claude/skills/api-design/SKILL.md~:
+
+#+begin_src yaml
+---
+name: REST API Designer
+description: Designs RESTful APIs following industry best practices. Use when designing new API endpoints or reviewing API architecture.
+---
+
+# API Design Instructions
+
+Follow the REST API guidelines in ~reference.md~ when designing endpoints.
+
+Use the template in ~templates/endpoint-spec.yaml~ for documenting new endpoints.
+
+Key principles:
+1. Use appropriate HTTP verbs
+2. Design resource-oriented URLs
+3. Implement proper error responses
+4. Include API versioning
+#+end_src
+
+Create ~.claude/skills/api-design/reference.md~:
+
+#+begin_src markdown
+# REST API Design Guidelines
+
+## URL Structure
+- Use nouns for resources: /users, /posts
+- Use plural forms: /users not /user
+- Nest resources logically: /users/123/posts
+
+## HTTP Methods
+- GET: Retrieve resource(s)
+- POST: Create new resource
+- PUT: Update entire resource
+- PATCH: Partial update
+- DELETE: Remove resource
+#+end_src
+
+* Best Practices
+
+** Writing Effective Descriptions
+
+The ~description~ field is critical for skill discovery. It should include:
+
+1. *What*: What the skill does
+2. *When*: Specific triggers or use cases
+
+*Good examples:*
+- "Performs security audits of authentication code. Use when reviewing login systems, password handling, or session management."
+- "Generates API documentation from OpenAPI specs. Use when user wants to create or update API docs."
+
+*Poor examples:*
+- "Helps with code" (too vague)
+- "Testing utility" (unclear when to use)
+
+** Keep Skills Focused
+
+One skill should do one thing well:
+- ✓ ~pdf-reader~: Read and extract data from PDFs
+- ✗ ~document-handler~: Handle PDFs, Word docs, Excel, PowerPoint, and text files
+
+Break large capabilities into multiple focused skills.
+
+** Document Tool Restrictions
+
+If using ~allowed-tools~, explain the restrictions in the skill instructions:
+
+#+begin_src yaml
+---
+allowed-tools: Read, Grep
+---
+
+# Documentation Analyzer
+
+NOTE: This skill operates in read-only mode. I can search and read files but cannot modify them.
+#+end_src
+
+** Test with Your Team
+
+For project skills shared via git:
+1. Write initial version
+2. Test with realistic scenarios
+3. Share with team for feedback
+4. Iterate on description if Claude doesn't invoke it appropriately
+5. Document version changes
+
+** Organize Supporting Files
+
+Use subdirectories for complex skills:
+
+#+begin_example
+complex-skill/
+├── SKILL.md
+├── docs/
+│   ├── reference.md
+│   └── examples.md
+├── scripts/
+│   ├── parser.py
+│   └── validator.sh
+└── templates/
+    ├── template1.txt
+    └── template2.yaml
+#+end_example
+
+* Visual Differences from Slash Commands
+
+Skills display differently in the UI to distinguish them from commands:
+
+| Type | Display Format | Example |
+|------+----------------+---------|
+| Slash Command | ~/command-name~ | ~/review-pr~ |
+| Skill | ~The Skill Name~ | ~The "pdf" skill is loading~ |
+
+Skills do not appear in command lists or autocomplete. They are invisible until invoked.
+
+*Evidence*: ~archive/claude-code/changelog/changelog-v2.0.18.md:93-101~
+
+* Debugging Common Issues
+
+** Skill Not Being Invoked
+
+*Symptom*: Claude doesn't use your skill even when it seems relevant.
+
+*Solutions*:
+1. Make description more specific with concrete trigger words
+2. Add ~when_to_use~ field with additional context
+3. Test description with explicit requests: "Use the X skill to..."
+4. Check that skill directory structure is correct
+5. Verify YAML frontmatter syntax is valid
+
+** Skill Not Found
+
+*Symptom*: Error message about missing skill.
+
+*Solutions*:
+1. Verify file is named exactly ~SKILL.md~ (case-sensitive)
+2. Check directory is in correct location (~/.claude/skills/~ or ~.claude/skills/~)
+3. Ensure YAML frontmatter is properly formatted with ~---~ delimiters
+4. Validate required fields (~name~ and ~description~) are present
+
+** Multiple Skills Conflicting
+
+*Symptom*: Wrong skill gets invoked for a task.
+
+*Solutions*:
+1. Use distinct terminology in descriptions
+2. Make trigger conditions more specific
+3. Consider ~when_to_use~ field to clarify boundaries
+4. Rename skills to avoid confusion
+5. Disable unwanted skills temporarily with ~disable-model-invocation: true~
+
+** Tool Permission Errors
+
+*Symptom*: Permission denied when skill tries to use a tool.
+
+*Solutions*:
+1. Check ~allowed-tools~ includes the tool being used
+2. Verify tool name is spelled correctly (case-sensitive)
+3. Add missing tools to ~allowed-tools~ list
+4. Consider if tool restriction is too limiting for skill's purpose
+
+* Implementation Details
+
+** Code Locations (v2.0.20)
+
+| Function | Line | Purpose |
+|----------+------+---------|
+| ~zwQ~ | 436743 | Load plugin skills from directory |
+| ~HwQ~ | 436644 | Process skill directory structure |
+| ~AC1~ | 436655 | Parse skill metadata and create skill object |
+| Skill tool prompt | 428991 | System prompt explaining skills to Claude |
+| Personal skills loading | 449220 | Load skills from personal/project directories |
+
+** Skill Object Structure
+
+Skills are internally represented as command objects with special flags:
+
+#+begin_src javascript
+{
+  type: "prompt",
+  name: "skill-name",
+  description: "Description (skill:source)",
+  isSkill: true,              // Marks as skill not command
+  isHidden: true,             // Hidden from UI command lists
+  progressMessage: "loading", // Shows "loading" not "running"
+  allowedTools: ["Read", "Grep"], // Tool restrictions
+  disableModelInvocation: false,  // Auto-invocation enabled
+  source: "personal",         // Source scope
+  async getPromptForCommand() {
+    // Returns skill instructions with base directory
+  }
+}
+#+end_src
+
+** Auto-Invocation Logic
+
+The ~disableModelInvocation~ field controls whether Claude can autonomously invoke the skill:
+
+- For skills: defaults to ~false~ (autonomous invocation enabled)
+- For commands: defaults to ~true~ (requires explicit user invocation)
+
+This is the key difference between skills and slash commands at the implementation level.
+
+*Code location*: ~archive/claude-code/pretty/pretty-v2.0.20.js:436672-436675~
+
+** Version History
+
+Skills infrastructure was introduced in stages:
+
+- *v2.0.12*: Initial skills stub implementation (disabled)
+- *v2.0.15*: Skills infrastructure expanded with marketplace plugin support
+- *v2.0.18*: Skills display enhancement (removed "/" prefix)
+- *v2.0.20*: Current implementation (as of this writing)
+
+* Relationship to Slash Commands
+
+Skills and slash commands are related but distinct concepts:
+
+** Similarities
+
+- Both use ~.md~ files with YAML frontmatter
+- Both can use ~allowed-tools~ for tool restriction
+- Both expand prompts that guide Claude's behavior
+- Both support ~$ARGUMENTS~ placeholder and argument passing
+
+** Key Differences
+
+| Aspect | Skills | Slash Commands |
+|--------+--------+----------------|
+| Invocation | Autonomous (model-invoked) | Explicit (user types ~/command~) |
+| UI Visibility | Hidden | Listed in autocomplete |
+| Display Format | "The skill is loading" | ~/command running~ |
+| File Name | ~SKILL.md~ | ~command-name.md~ |
+| Location | ~skills/~ directory | ~commands/~ directory |
+| Default Auto-invoke | Enabled | Disabled |
+| Primary Use | Specialized capabilities | User-facing commands |
+
+** When to Use Which
+
+Use *Skills* when:
+- Claude should recognize need automatically
+- Capability is specialized domain knowledge
+- You want it available without user knowing command syntax
+- Tool restrictions would improve safety
+
+Use *Slash Commands* when:
+- User should explicitly trigger the behavior
+- Command has a memorable name
+- Clear user intent signal is important
+- Part of documented team workflow
+
+* Future Directions
+
+Based on stub implementations and recent changes, potential future enhancements:
+
+** Settings Source Restriction
+
+Added in v2.0.18, this capability suggests future enterprise controls over skill sources.
+
+** Model-Specific Skills
+
+The ~model~ field supports ~inherit~ but could enable skills optimized for specific models.
+
+** Skill Composition
+
+Multiple skills could potentially be chained or composed for complex workflows.
+
+** Marketplace Integration
+
+Plugin skills suggest a marketplace ecosystem for distributing skills.
+
+* Example: MS Office Suite Skills
+
+The documentation references MS Office skills as examples:
+
+- ~pdf~: Read and generate professional PDF documents
+- ~xlsx~: Work with Excel spreadsheets including formulas
+- ~pptx~: Create PowerPoint presentations
+- ~docx~: Edit Word documents
+
+Invocation: ~claude invoke ms-office-suite:xlsx~
+
+These demonstrate skills for specialized file formats that benefit from dedicated instructions and potentially custom code.
+
+* Conclusion
+
+Skills represent a powerful extensibility mechanism for Claude Code, enabling:
+
+- Autonomous capability discovery
+- Efficient context management through progressive disclosure
+- Fine-grained tool restrictions for security
+- Modular, reusable specialized knowledge
+- Team collaboration through git-shared project skills
+
+The key insight is that skills are *discovered and invoked by Claude itself* based on semantic matching between the user's request and skill descriptions, creating a more natural interaction model than explicit command invocation.

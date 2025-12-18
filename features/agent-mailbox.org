@@ -1,0 +1,406 @@
+#+TITLE: Agent Mailbox Communication System
+#+DATE: 2025-12-16
+
+* Overview
+
+Claude Code v2.0.66 includes an *agent mailbox communication system* that enables
+multi-agent coordination through message passing. This system allows spawned
+agents ("teammates") to communicate with each other, coordinate on tasks, and
+share information.
+
+** Feature Status
+
+#+begin_quote
+*Currently Disabled*: The ~py()~ function at line 449573 returns ~false~, meaning
+the Task management tools (TaskCreate, TaskGet, TaskUpdate, TaskList) are
+not available. However, the TeammateTool and mailbox infrastructure are
+present and functional.
+#+end_quote
+
+The system appears to be in a pre-release or feature-flagged state. The code is
+complete but not yet enabled for general use.
+
+* Architecture
+
+** File-Based Message Storage
+
+Messages are persisted in the user's home directory:
+
+#+begin_example
+~/.claude/teams/{teamName}/inboxes/{agentName}.json
+~/.claude/teams/{teamName}/config.json
+~/.claude/tasks/{teamName}/
+#+end_example
+
+Each agent has a JSON inbox file that stores messages with the following structure:
+
+#+begin_src javascript
+{
+  from: string,      // Sender agent ID or name
+  text: string,      // Message content
+  timestamp: string, // When sent
+  color?: string,    // Optional color for display
+  read?: boolean     // Read status
+}
+#+end_src
+
+** Environment Variables
+
+Agent identity is determined by environment variables set when spawning:
+
+| Variable                    | Purpose                                 |
+|-----------------------------+-----------------------------------------|
+| ~CLAUDE_CODE_AGENT_NAME~    | Human-readable agent name               |
+| ~CLAUDE_CODE_AGENT_ID~      | Unique agent identifier (UUID)          |
+| ~CLAUDE_CODE_AGENT_TYPE~    | Agent role (e.g., "worker", "team-lead")|
+| ~CLAUDE_CODE_TEAM_NAME~     | Team identifier (defaults to "default") |
+| ~CLAUDE_CODE_AGENT_COLOR~   | Display color for agent messages        |
+| ~CLAUDE_CODE_TEAM_LEAD_ID~  | ID of the team leader                   |
+
+* TeammateTool Operations
+
+The ~TeammateTool~ provides eight operations for multi-agent coordination:
+
+** spawn
+Create a new teammate agent.
+
+#+begin_src javascript
+{
+  "operation": "spawn",
+  "name": "worker-1",
+  "prompt": "You are part of a team implementing a plan. Check your mailbox for task assignments.",
+  "team_name": "plan-implementation",
+  "agent_type": "worker",
+  "model": "opus",           // Optional: "opus", "sonnet", "haiku", or full model ID
+  "cwd": "/path/to/work",    // Optional: working directory
+  "use_worktree": false,     // Optional: create git worktree for independent changes
+  "use_splitpane": true      // Optional: spawn in split-pane view (default: true)
+}
+#+end_src
+
+Spawned agents appear in tmux windows, with the leader on the left and teammates
+equally divided on the right (when ~use_splitpane~ is true).
+
+** spawnTeam
+Create a new team before spawning individual agents.
+
+#+begin_src javascript
+{
+  "operation": "spawnTeam",
+  "team_name": "plan-implementation",
+  "description": "Team implementing the approved plan"
+}
+#+end_src
+
+** write
+Send a message to a specific teammate.
+
+#+begin_src javascript
+{
+  "operation": "write",
+  "target_agent_id": "team-lead",  // Use NAME, not UUID
+  "value": "Your message here"
+}
+#+end_src
+
+Messages can be plain text or JSON-encoded complex data.
+
+** broadcast
+Send a message to ALL teammates (expensive operation - N messages for N teammates).
+
+#+begin_src javascript
+{
+  "operation": "broadcast",
+  "value": "Urgent: stopping all work for sync meeting"
+}
+#+end_src
+
+The system explicitly warns: "prefer write to specific teammates unless you truly
+need to notify everyone."
+
+** read
+Read messages from your mailbox (generally not needed as messages are auto-delivered).
+
+#+begin_src javascript
+{
+  "operation": "read"
+}
+#+end_src
+
+** assignTask
+Assign a task to a teammate (team lead operation).
+
+#+begin_src javascript
+{
+  "operation": "assignTask",
+  "taskId": "1",
+  "assignee": "worker-1",  // Use agent name
+  "team_name": "plan-implementation"
+}
+#+end_src
+
+** claimTask
+Self-claim an available task (teammate operation).
+
+#+begin_src javascript
+{
+  "operation": "claimTask",
+  "taskId": "2"
+}
+#+end_src
+
+** cleanup
+Remove team and task directories.
+
+#+begin_src javascript
+{
+  "operation": "cleanup",
+  "team_name": "plan-implementation"
+}
+#+end_src
+
+* Message Delivery System
+
+** Automatic Delivery
+
+Messages are automatically delivered to agents through the attachment system.
+The ~getTeammateMailboxAttachments()~ function (line 356630) assembles messages
+for Claude's context window.
+
+Key behaviors:
+1. Reads unread messages from the file-based mailbox
+2. Reads pending messages from in-memory AppState inbox
+3. Deduplicates messages (same sender, timestamp, first 100 chars)
+4. Returns formatted attachment of type ~teammate_mailbox~
+5. Marks file-based messages as read after delivery
+6. Updates AppState to mark in-memory messages as "processed"
+
+** Message Rendering
+
+The UI renders mailbox messages with special handling for different types:
+
+*** Task Assignment Messages
+#+begin_src javascript
+{
+  "type": "task_assignment",
+  "taskId": "1",
+  "subject": "Implement authentication module",
+  "assignedBy": "team-lead"
+}
+#+end_src
+
+Displays as: "● Task assigned: #1 - Implement authentication module (from team-lead)"
+
+*** Idle Notifications
+#+begin_src javascript
+{
+  "type": "idle_notification"
+}
+#+end_src
+
+Displays as: "● Agent worker-1 is now idle"
+
+*** Generic Messages
+Plain text messages display with sender name and color-coded output.
+
+* Task Management System
+
+The task system (disabled by ~py()~ returning false) includes four tools:
+
+** TaskCreate
+Create a new task with subject and description.
+
+#+begin_src javascript
+{
+  "subject": "Fix authentication bug in login flow",
+  "description": "Detailed description of what needs to be done..."
+}
+#+end_src
+
+Tasks are created with:
+- ~status: 'open'~
+- ~owner: undefined~
+- Empty ~references~, ~blocks~, ~blockedBy~, ~comments~ arrays
+
+** TaskGet
+Retrieve full details of a specific task by ID.
+
+#+begin_src javascript
+{
+  "taskId": "1"
+}
+#+end_src
+
+** TaskUpdate
+Update task properties including status, subject, description, comments, and dependencies.
+
+#+begin_src javascript
+{
+  "taskId": "1",
+  "status": "resolved",
+  "addComment": {
+    "author": "your-agent-id",
+    "content": "Implemented and tested"
+  }
+}
+#+end_src
+
+Task ownership is enforced - you must claim a task before updating it (unless you're
+the team lead).
+
+** TaskList
+List all tasks with summary information.
+
+Returns:
+- ~id~: Task identifier
+- ~subject~: Brief description
+- ~status~: 'open' or 'resolved'
+- ~owner~: Agent ID if assigned
+- ~blockedBy~: List of blocking task IDs
+
+* Swarm Mode Integration
+
+The mailbox system integrates with Claude Code's "swarm mode" for parallel task execution.
+
+** Launching a Swarm
+
+When a user approves a plan with swarm mode enabled (via ~ExitPlanMode~ with
+~launchSwarm: true~ and ~teammateCount: N~), the system instructs Claude to:
+
+1. Create tasks from the plan using ~TaskCreateTool~
+2. Create a team using ~TeammateTool~ with ~spawnTeam~
+3. Spawn N teammates using ~TeammateTool~ with ~spawn~
+4. Assign tasks to teammates using ~TeammateTool~ with ~assignTask~
+5. Gather findings and post summary as the leader/coordinator
+
+** Permission Flow
+
+Swarm launch requires user approval through the permission system:
+- ~yes-launch-swarm-accept-edits~: Launch with edit acceptance mode
+- ~yes-launch-swarm-bypass~: Launch with permission bypass mode
+
+* Team Context Attachment
+
+When an agent is part of a team, a ~team_context~ attachment is injected into
+the conversation providing:
+
+#+begin_src markdown
+# Team Coordination
+
+You are a teammate in team "plan-implementation".
+
+**Your Identity:**
+- Name: worker-1
+
+**Team Resources:**
+- Team config: ~/.claude/teams/plan-implementation/config.json
+- Task list: ~/.claude/tasks/plan-implementation/
+
+**Team Leader:** The team lead's name is "team-lead". Send updates and
+completion notifications to them.
+
+Read the team config to discover your teammates' names. Check the task list
+periodically. Create new tasks when work should be divided. Mark tasks
+resolved when complete.
+
+**IMPORTANT:** Always refer to teammates by their NAME (e.g., "team-lead",
+"analyzer", "researcher"), never by UUID.
+#+end_src
+
+* Concurrency Safety
+
+The mailbox system uses file locking to prevent race conditions:
+
+1. ~markMessagesAsRead()~ uses ~lockSync()~ for atomic updates
+2. Includes verification step to confirm write succeeded
+3. Located at lines 355895-355938
+
+* Git Worktree Support
+
+The ~use_worktree~ parameter in spawn allows creating git worktrees for teammates:
+
+- Use worktrees when teammates need independent changes (parallel feature development,
+  testing destructive changes)
+- Do NOT use worktrees when teammates need to see/modify the same files (running tests
+  on changes, code review)
+
+* Feature Flags and Limits
+
+Found at line 488699:
+#+begin_src javascript
+return c7("tengu_teams_usage_limit_notifications", "enabled", !1);
+#+end_src
+
+This suggests there may be usage limits and notification systems for team features,
+possibly tied to an internal "tengu" system.
+
+* Implementation Notes
+
+** Key Functions
+
+| Function                        | Line   | Purpose                               |
+|---------------------------------+--------+---------------------------------------|
+| ~getInboxPath()~ (XrB)          | 355850 | Get path to agent's inbox file        |
+| ~readMailbox()~ (tA0)           | ~355860| Read messages from inbox              |
+| ~readUnreadMessages()~ (VQ1)    | ~355870| Filter unread messages                |
+| ~markMessagesAsRead()~ (EQ1)    | 355895 | Atomic update of read status          |
+| ~getTeammateMailboxAttachments()~ (ZI8) | 356630 | Assemble mailbox for context |
+| ~py()~                          | 449573 | Feature flag (currently returns false)|
+
+** Tools Array
+
+The task-related tools are conditionally included based on ~py()~:
+#+begin_src javascript
+...(py() ? [nj2, GP2, HP2, OP2] : [])
+// nj2 = TaskCreate
+// GP2 = TaskGet
+// HP2 = TaskUpdate
+// OP2 = TaskList
+#+end_src
+
+* Usage Example (When Enabled)
+
+#+begin_src
+User: Implement the authentication system using a team of agents
+
+Claude: I'll create a plan and launch a swarm to implement this.
+
+1. Create tasks:
+   - TaskCreate: "Design auth database schema"
+   - TaskCreate: "Implement JWT token service"
+   - TaskCreate: "Create login/logout endpoints"
+   - TaskCreate: "Add middleware for route protection"
+
+2. Create team:
+   TeammateTool { operation: "spawnTeam", team_name: "auth-impl" }
+
+3. Spawn workers:
+   TeammateTool { operation: "spawn", name: "db-worker", ... }
+   TeammateTool { operation: "spawn", name: "api-worker", ... }
+
+4. Assign tasks:
+   TeammateTool { operation: "assignTask", taskId: "1", assignee: "db-worker" }
+   TeammateTool { operation: "assignTask", taskId: "2", assignee: "api-worker" }
+
+5. Workers receive task assignments in their mailboxes automatically
+
+6. Workers communicate progress via:
+   TeammateTool { operation: "write", target_agent_id: "team-lead", value: "Schema complete" }
+
+7. Leader gathers results and summarizes for user
+#+end_src
+
+* Related Features
+
+- [[file:plan-mode.org][Plan Mode]] - Plan approval can trigger swarm launches
+- Task Tool (~Task~ in system prompt) - Different from TeammateTool's task management
+- TodoWrite - User-facing todo list, separate from team task system
+
+* Source References
+
+- TeammateTool schema: lines 449726-449802
+- Mailbox core functions: lines 355850-356692
+- Message rendering: lines 432303-432372
+- Team context attachment: lines 453337-453370
+- Task tools: lines 450720-451360
+- Swarm launch instructions: lines 394242-394278

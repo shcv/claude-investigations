@@ -1,0 +1,543 @@
+#+TITLE: Claude Code Feedback Survey System - Technical Analysis v2.0.9
+#+DATE: 2025-10-16
+
+* Overview
+
+Claude Code v2.0.9 implements an optional user satisfaction survey that periodically appears during interactive sessions. The system asks "How is Claude doing this session?" with numeric responses (1-3 for ratings, 0 to dismiss). Survey data is sent via Statsig telemetry with extensive environment metadata. Notably, pressing 0 does NOT permanently opt out—the survey reappears after cooldown periods based on time and usage thresholds.
+
+* Architecture
+
+** Survey Popup System
+
+*** Location
+File: =archive/claude-code/pretty/pretty-v2.0.9.js= lines 424426-424571
+
+*** UI Component
+The feedback survey is implemented as a modal dialog with numeric key selection:
+
+| Key | Label | Response Value |
+|-----|-------|----------------|
+| 1 | Bad | "bad" |
+| 2 | Fine | "fine" |
+| 3 | Good | "good" |
+| 0 | Dismiss | "dismissed" |
+
+*** Prompt Text (Line 424524)
+#+begin_example
+How is Claude doing this session? (optional)
+#+end_example
+
+** Response Handling
+
+*** Key Mapping (Line 424525)
+#+begin_src javascript
+cV5 = { 0: "dismissed", 1: "bad", 2: "fine", 3: "good" }
+#+end_src
+
+*** Handler Function (Lines 424507-424520)
+#+begin_src javascript
+let O = MI.useCallback(
+  (T) => {
+    (H(Date.now()),
+      C(),
+      Y1("tengu_feedback_survey_event", {
+        event_type: "responded",
+        appearance_id: J.current,
+        response: T,  // "dismissed" | "bad" | "fine" | "good"
+        last_assistant_message_id: z,
+      }));
+  },
+  [z, C, H],
+);
+#+end_src
+
+* Display Logic & Thresholds
+
+** Configuration Parameters (Lines 424426-424434)
+
+The survey appearance is controlled by Statsig dynamic config (=tengu_feedback_survey_config=):
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| =minTimeBeforeFeedbackMs= | 600000 | 10 minutes from session start |
+| =minTimeBetweenFeedbackMs= | 1800000 | 30 minutes between surveys (per-session) |
+| =minTimeBetweenGlobalFeedbackMs= | 3600000 | 1 hour global cooldown (across sessions) |
+| =minUserTurnsBeforeFeedback= | 5 | User turns before first survey |
+| =minUserTurnsBetweenFeedback= | 15 | User turns between surveys |
+| =probability= | 1.0 | 100% chance when thresholds met |
+| =onForModels= | Array | List of models that show survey |
+
+** Display Conditions (Lines 424479-424503)
+
+The survey appears when ALL conditions are met:
+1. Not already displayed in current state
+2. Model is in =onForModels= whitelist
+3. Session time >= =minTimeBeforeFeedbackMs= (10 min)
+4. Time since last survey >= =minTimeBetweenFeedbackMs= (30 min)
+5. Global time since any survey >= =minTimeBetweenGlobalFeedbackMs= (1 hour)
+6. User turns since session start >= =minUserTurnsBeforeFeedback= (5 turns)
+7. User turns since last survey >= =minUserTurnsBetweenFeedback= (15 turns)
+8. Random probability check passes (default 100%)
+
+** State Management
+
+*** Per-Session State (Lines 424450-424457)
+- =lastShownTime=: Timestamp of last survey appearance
+- =appearance_id=: UUID for each survey instance (generated via =crypto.randomUUID()=)
+
+*** Global State (Persistent across sessions)
+- Global =lastShownTime= stored in persistent storage
+- Tracks survey appearances across all Claude Code sessions
+- Location determined by config storage mechanism
+
+* Telemetry Events
+
+** Event Name
+=tengu_feedback_survey_event=
+
+** Event Types
+
+*** "appeared" Event (Lines 424464-424468)
+Logged when survey popup is displayed:
+#+begin_src javascript
+Y1("tengu_feedback_survey_event", {
+  event_type: "appeared",
+  appearance_id: J.current,
+  last_assistant_message_id: z,
+});
+#+end_src
+
+*** "responded" Event (Lines 424511-424516)
+Logged when user selects an option (including dismiss):
+#+begin_src javascript
+Y1("tengu_feedback_survey_event", {
+  event_type: "responded",
+  appearance_id: J.current,
+  response: T,  // "dismissed" | "bad" | "fine" | "good"
+  last_assistant_message_id: z,
+});
+#+end_src
+
+** Telemetry Implementation
+
+*** Event Dispatcher: =zC5()= (Lines 440843-440907)
+
+The =Y1()= function is an alias for =zC5()=, which sends events to Statsig with comprehensive metadata.
+
+*** Metadata Collected (Lines 440854-440903)
+
+**** Core Event Data
+- =eventName=: "tengu_feedback_survey_event"
+- =metadata=: Object containing all fields below
+
+**** User Response Data
+- =event_type=: "appeared" | "responded"
+- =response=: "dismissed" | "bad" | "fine" | "good" (only in "responded")
+- =appearance_id=: UUID for this survey instance
+- =last_assistant_message_id=: ID of last assistant message
+
+**** Session Context
+- =model=: Current model identifier (e.g., "claude-sonnet-4")
+- =sessionId=: Unique session identifier
+- =userType=: Always "external" for external users
+- =betas=: Array of active beta features (if any)
+- =isInteractive=: Boolean indicating interactive session
+- =clientType=: Client type identifier
+
+**** Environment Data (=env= JSON field)
+- =platform=: Operating system (linux, darwin, win32)
+- =nodeVersion=: Node.js version string
+- =terminal=: Terminal emulator name
+- =packageManagers=: Comma-separated list (npm, pnpm, yarn, bun)
+- =runtimes=: Comma-separated list (node, deno, bun)
+- =isRunningWithBun=: Boolean
+- =isCi=: Boolean - running in CI environment
+- =isClaubbit=: Boolean - custom environment flag
+- =isGithubAction=: Boolean - running in GitHub Actions
+- =isClaudeCodeAction=: Boolean - Claude Code GHA
+- =isClaudeAiAuth=: Boolean - using claude.ai authentication
+- =version=: Claude Code version (e.g., "2.0.9")
+- =wslVersion=: WSL version if applicable
+- =entrypoint=: Claude Code entrypoint path
+- =agentSdkVersion=: SDK version if using agent mode
+
+**** GitHub Actions Metadata (if applicable)
+- =githubEventName=: GitHub event triggering the workflow
+- =githubActionsRunnerEnvironment=: Runner environment type
+- =githubActionsRunnerOs=: Runner OS
+- =githubActionRef=: Git ref for the action
+
+**** SWE-Bench Integration (if applicable)
+- =sweBenchRunId=: SWE-Bench run identifier
+- =sweBenchInstanceId=: Instance identifier
+- =sweBenchTaskId=: Task identifier
+
+*** Statsig Endpoints (Lines 7429-7432)
+
+#+begin_src javascript
+NetworkDefault = {
+  [Endpoint._rgstr]: "https://prodregistryv2.org/v1",
+  [Endpoint._initialize]: "https://featureassets.org/v1",
+  [Endpoint._download_config_specs]: "https://api.statsigcdn.com/v1",
+}
+#+end_src
+
+Events are sent to Statsig's registry endpoint with automatic batching and retry logic.
+
+* Opt-Out Mechanisms
+
+** Pressing 0 ("Dismiss")
+
+*** Behavior (Lines 424507-424520, 424525)
+
+Pressing =0= does *NOT* permanently opt out, and sends *FULL TELEMETRY*. It:
+1. Maps to response value ="dismissed"= (line 424525)
+2. *Sends COMPLETE telemetry event* including:
+   - Response value: ="dismissed"=
+   - Session context (model, session ID, user type, betas)
+   - *Complete environment fingerprint* (OS, Node version, terminal, package managers, runtimes, CI detection, auth method, Claude version, GitHub Actions metadata, SWE-Bench data)
+3. Updates =lastShownTime= to =Date.now()= (line 424509)
+4. Closes the popup via =C()= callback (line 424510)
+5. Shows "Thanks" message (implied by UI flow)
+
+*CRITICAL*: The data payload sent when pressing 0 is IDENTICAL in size and scope to pressing 1/2/3. The only field that differs is =response= ("dismissed" vs "bad"/"fine"/"good").
+
+*** Reappearance Timing
+
+After dismissal, survey reappears when:
+- 30 minutes pass (=minTimeBetweenFeedbackMs=)
+- 1 hour passes globally (=minTimeBetweenGlobalFeedbackMs=)
+- 15+ additional user turns occur (=minUserTurnsBetweenFeedback=)
+
+** Complete Telemetry Opt-Out (Lines 440812-440819)
+
+*** Privacy Check Function: =Xl()=
+#+begin_src javascript
+function Xl() {
+  return (
+    lA(process.env.CLAUDE_CODE_USE_BEDROCK) ||
+    lA(process.env.CLAUDE_CODE_USE_VERTEX) ||
+    !!process.env.DISABLE_TELEMETRY ||
+    !!process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+  );
+}
+#+end_src
+
+When =Xl()= returns =true=:
+- All telemetry is disabled (line 440844)
+- =zC5()= returns early without sending events
+- Survey popup likely doesn't appear (needs verification in display logic)
+
+*** Environment Variables for Opt-Out
+
+| Variable | Effect |
+|----------|--------|
+| =DISABLE_TELEMETRY=1= | Disable all telemetry |
+| =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1= | Disable non-essential network traffic |
+| =CLAUDE_CODE_USE_BEDROCK=true= | AWS Bedrock mode (disables telemetry) |
+| =CLAUDE_CODE_USE_VERTEX=true= | Google Vertex AI mode (disables telemetry) |
+
+** Organization-Level Opt-Out (Lines 441215-441246)
+
+*** API Endpoint
+#+begin_example
+https://api.anthropic.com/api/claude_code/organizations/metrics_enabled
+#+end_example
+
+*** Implementation
+#+begin_src javascript
+await k70(
+  "https://api.anthropic.com/api/claude_code/organizations/metrics_enabled",
+  { headers: B, timeout: 5000 },
+);
+#+end_src
+
+*** Response
+- =metrics_logging_enabled=: Boolean
+  - =true=: Organization allows metrics
+  - =false=: Organization has opted out
+
+Note: This appears to be checked separately from the feedback survey system and may control different metrics.
+
+* Testing & Development
+
+** Force Display Mode (Inferred)
+
+Based on typical patterns, there may be an environment variable to force survey display for testing:
+- =CLAUDE_FORCE_DISPLAY_SURVEY=true= (name inferred, not confirmed in source)
+
+** Dynamic Configuration
+
+The survey system uses Statsig's dynamic configuration (=tengu_feedback_survey_config=), allowing:
+- Remote adjustment of thresholds without code changes
+- A/B testing via =probability= parameter
+- Model-specific targeting via =onForModels= whitelist
+- Gradual rollout of survey changes
+
+* Survey Lifecycle
+
+** Flow Diagram
+
+#+begin_example
+Session Start
+    |
+    v
+Check Display Conditions
+    |
+    +-- Time thresholds not met -------> Continue session
+    +-- Usage thresholds not met ------> Continue session
+    +-- Model not whitelisted ---------> Continue session
+    +-- Probability check fails -------> Continue session
+    |
+    v
+Generate appearance_id (UUID)
+    |
+    v
+Log "appeared" event to Statsig
+    |
+    v
+Display Survey Popup
+    |
+    v
+User Presses Key (0, 1, 2, or 3)
+    |
+    v
+Map key to response value
+    |
+    v
+Log "responded" event with response
+    |
+    v
+Update lastShownTime
+    |
+    v
+Show "Thanks" message
+    |
+    v
+Close popup
+    |
+    v
+Continue session
+    |
+    v
+[After cooldown period]
+    |
+    v
+Check Display Conditions (repeat)
+#+end_example
+
+** State Persistence
+
+*** Per-Session State
+- Stored in React component state (=useState= hook)
+- Lost on session termination
+- Includes: =lastShownTime=, =appearance_id=
+
+*** Global State
+- Persisted across sessions
+- Stored via Claude Code's persistent storage mechanism
+- Includes: global =lastShownTime=
+
+* Privacy Analysis
+
+** Data Collected
+
+*** Data Sent in ALL Cases (Both Ratings and Dismissals)
+
+*IMPORTANT*: Pressing 0 (dismiss) sends the SAME amount of telemetry data as providing a rating. The only difference is the =response= field value.
+
+**** Event Data (Same for all responses)
+- =event_type=: "appeared" (when shown) or "responded" (when answered)
+- =appearance_id=: UUID for this survey instance
+- =last_assistant_message_id=: ID of last assistant message
+
+**** Response Value (Only difference)
+- Key 1 → =response: "bad"=
+- Key 2 → =response: "fine"=
+- Key 3 → =response: "good"=
+- Key 0 → =response: "dismissed"=
+
+**** Session Context (Identical for all responses)
+- =model=: Current model identifier (e.g., "claude-sonnet-4")
+- =sessionId=: Unique session identifier
+- =userType=: "external"
+- =betas=: Array of active beta features
+- =isInteractive=: Boolean
+- =clientType=: Client type identifier
+
+**** Complete Environment Fingerprint (Identical for all responses)
+- =platform=: Operating system (linux, darwin, win32)
+- =nodeVersion=: Node.js version string
+- =terminal=: Terminal emulator name
+- =packageManagers=: Comma-separated list (npm, pnpm, yarn, bun)
+- =runtimes=: Comma-separated list (node, deno, bun)
+- =isRunningWithBun=: Boolean
+- =isCi=: Boolean - running in CI environment
+- =isClaubbit=: Boolean - custom environment flag
+- =isGithubAction=: Boolean - running in GitHub Actions
+- =isClaudeCodeAction=: Boolean - Claude Code GHA
+- =isClaudeAiAuth=: Boolean - using claude.ai authentication
+- =version=: Claude Code version (e.g., "2.0.9")
+- =wslVersion=: WSL version if applicable
+- =entrypoint=: Claude Code entrypoint path
+- =agentSdkVersion=: SDK version if using agent mode
+- =githubEventName=: (if in GHA)
+- =githubActionsRunnerEnvironment=: (if in GHA)
+- =githubActionsRunnerOs=: (if in GHA)
+- =githubActionRef=: (if in GHA)
+- =sweBenchRunId=: (if using SWE-Bench)
+- =sweBenchInstanceId=: (if using SWE-Bench)
+- =sweBenchTaskId=: (if using SWE-Bench)
+
+** Data NOT Collected
+
+- User prompts or conversation content
+- Assistant response content
+- File contents or code
+- API keys or credentials
+- Directory paths or file names
+- User's rating history over time (no longitudinal tracking visible)
+
+** Privacy Considerations
+
+*** Positive Aspects
+1. Survey is explicitly optional
+2. Dismissal is a clear option (key 0)
+3. No prompt/response content sent
+4. Respects =DISABLE_TELEMETRY= environment variable
+5. Organization-level opt-out available
+
+*** Negative Aspects
+1. *Dismissal (0) is not a permanent opt-out*
+2. *Dismissal (0) sends FULL telemetry including complete environment fingerprint*
+3. No in-app toggle for survey preferences
+4. Survey reappears without clear communication about frequency
+5. No "skip without sending data" option
+6. Same data volume sent regardless of participation choice
+
+* Comparison with v1.0.90
+
+** New in v2.0.9
+- Feedback survey system (not present in v1.0.90 telemetry docs)
+- =tengu_feedback_survey_event= event type
+- Dynamic survey configuration via Statsig
+
+** Consistent with v1.0.90
+- Statsig integration for telemetry
+- Same opt-out environment variables
+- Same privacy check function patterns
+- Event naming convention (=tengu_= prefix)
+
+* Technical Notes
+
+** Statsig Integration
+
+*** Client Configuration (Lines 440843-440907)
+The =zC5()= function wraps Statsig's event logging with metadata enrichment. Events are:
+1. Constructed with =eventName= and =metadata=
+2. Queued for batching
+3. Sent to Statsig endpoints
+4. Flushed periodically or on session end
+
+*** Initialization
+Statsig client is initialized early in Claude Code startup with:
+- SDK key: =client-RRNS7R65EAtReO5XA4xDC3eU6ZdJQi6lLEP6b5j32Me=
+- Custom API endpoint: =https://statsig.anthropic.com/v1/= (may differ from defaults)
+- User ID hashing for privacy
+
+** React Implementation
+
+The survey UI uses React hooks:
+- =useState= for local state management
+- =useCallback= for event handlers
+- =useEffect= for display logic (inferred)
+
+** UUID Generation
+
+Survey appearance IDs use =crypto.randomUUID()= for unique identification, enabling:
+- Matching "appeared" and "responded" events
+- Deduplication of survey analytics
+- Tracking completion rate (appeared vs. responded)
+
+* Security Considerations
+
+** Telemetry Endpoint Security
+
+*** TLS/HTTPS
+All Statsig endpoints use HTTPS, ensuring:
+- Encrypted transmission
+- Protection against MITM attacks
+- Certificate validation
+
+*** Authentication
+Events include session/user identifiers but no sensitive credentials.
+
+** Environment Variable Exposure
+
+The telemetry opt-out mechanism relies on environment variables, which:
+- Are easily discoverable in process listings
+- Can be overridden by administrators
+- Work in containerized environments
+
+** Fingerprinting Risk
+
+The extensive environment metadata (OS, terminal, versions, CI detection) creates a unique fingerprint that could potentially:
+- Identify individual users across sessions
+- Correlate activity between projects
+- Track environment changes over time
+
+However, the =stableID= hashing (SHA-256) mitigates direct user identification.
+
+* Recommendations
+
+** For Users
+
+*** To Permanently Disable Survey
+Add to shell profile (=~/.bashrc=, =~/.zshrc=, etc.):
+#+begin_src bash
+export DISABLE_TELEMETRY=1
+#+end_src
+
+Or for just this session:
+#+begin_src bash
+DISABLE_TELEMETRY=1 claude
+#+end_src
+
+*** To Monitor Telemetry
+- Check network traffic to =statsig.anthropic.com=
+- Inspect environment variables: =env | grep -i claude=
+- Review persistent state files in Claude Code's config directory
+
+** For Anthropic
+
+*** Improve User Control
+1. Add in-app toggle for feedback survey preferences
+2. Make dismissal (0) offer permanent opt-out option
+3. Show clear communication about survey frequency
+4. Reduce metadata collected (separate environment metrics from feedback)
+
+*** Enhance Transparency
+1. Document survey frequency in user-facing docs
+2. Explain what "optional" means (survey is optional, but reappears)
+3. Publish data retention policies for survey responses
+4. Provide dashboard for users to view their feedback history
+
+*** Privacy Enhancements
+1. Separate feedback survey from general telemetry
+2. Allow feedback without environment metadata
+3. Consider anonymous survey mode
+4. Implement client-side aggregation before sending
+
+* Conclusion
+
+Claude Code v2.0.9's feedback survey system is a sophisticated mechanism for gathering user satisfaction data, integrated deeply with the Statsig telemetry infrastructure. While the survey prompt is clear and optional, the distinction between "dismissing" (key 0) and "permanently opting out" (environment variable) may confuse users expecting dismissal to prevent future surveys.
+
+The extensive environment metadata collected alongside each survey response—while useful for product analytics—raises privacy considerations, especially since the same data is sent regardless of whether the user provides a rating or dismisses the survey.
+
+The system's technical implementation is robust, with dynamic configuration, proper state management, and multiple privacy controls. However, the lack of in-app preference management and the reappearance of dismissed surveys may impact user experience negatively for those who prefer not to participate.
+
+*Key Takeaways*:
+1. *Pressing 0 sends the EXACT SAME telemetry data as providing a rating (1-3)*—the only difference is =response= field is set to ="dismissed"= instead of ="bad"=, ="fine"=, or ="good"=
+2. *There is NO way to dismiss the survey without sending telemetry*—even "Dismiss" (0) sends your complete environment fingerprint to Statsig
+3. *Dismissal is NOT a permanent opt-out*—survey reappears after 30-60 minutes
+4. *Only environment variable =DISABLE_TELEMETRY=1= prevents ALL telemetry*, including survey appearances

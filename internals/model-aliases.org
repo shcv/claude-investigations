@@ -1,0 +1,146 @@
+#+TITLE: Claude Code Model Aliases
+#+DATE: 2025-10-08
+
+* Overview
+
+Claude Code supports user-friendly model aliases that map to specific Claude model versions. These aliases were introduced in v1.0.64 and have evolved as new models were released.
+
+* Current Model Aliases (v2.0.10)
+
+** Primary Aliases
+
+| Alias           | Maps To      | Full Model Name                 | Description                 |
+|-----------------+--------------+---------------------------------+-----------------------------|
+| =haiku=         | =haiku35=    | =claude-3-5-haiku-20241022=     | Fast and efficient          |
+| =sonnet=        | =sonnet45=   | =claude-sonnet-4-5-20250929=    | Best for daily use (default)|
+| =sonnet[1m]=    | =sonnet45[1m]= | =claude-sonnet-4-5-20250929=  | 1M token context window     |
+| =opus=          | =opus41=     | =claude-opus-4-1-20250805=      | Most capable                |
+| =opusplan=      | =opus41=     | =claude-opus-4-1-20250805=      | Legacy alias for opus       |
+
+** Agent-Specific Aliases
+
+- =inherit= - Uses the same model as the main conversation
+
+* Usage Examples
+
+** Interactive Model Selection
+
+#+begin_src bash
+# Use simple aliases with /model command
+/model haiku    # Fast and efficient
+/model sonnet   # Best for daily use (default)
+/model opus     # Most capable
+
+# Extended context window
+/model sonnet[1m]  # Sonnet with 1M token context
+#+end_src
+
+** Environment Variable Overrides
+
+#+begin_src bash
+# Override default model for each tier
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-3-5-haiku-20241022"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet-4-5-20250929"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus-4-1-20250805"
+
+# Override all agent models globally
+export CLAUDE_CODE_SUBAGENT_MODEL=haiku
+#+end_src
+
+** Agent Configuration
+
+In =.claude/agents/*.md= files:
+
+#+begin_src markdown
+---
+name: my-agent
+description: Agent description
+model: haiku    # or sonnet, opus, inherit
+tools: [Read, Write, Bash]
+---
+
+Your agent prompt here...
+#+end_src
+
+* Internal Model Identifiers
+
+These identifiers are used internally in the codebase and correspond to specific model versions:
+
+| Identifier  | Full Model Name                 | Display Name                     |
+|-------------+---------------------------------+----------------------------------|
+| =haiku35=   | =claude-3-5-haiku-20241022=     | Haiku 3.5                        |
+| =sonnet35=  | =claude-3-5-sonnet-20241022=    | Sonnet 3.5                       |
+| =sonnet37=  | =claude-3-7-sonnet-20250219=    | Sonnet 3.7                       |
+| =sonnet40=  | =claude-sonnet-4-20250514=      | Sonnet 4                         |
+| =sonnet45=  | =claude-sonnet-4-5-20250929=    | Sonnet 4.5                       |
+| =opus40=    | =claude-opus-4-20250514=        | Opus 4                           |
+| =opus41=    | =claude-opus-4-1-20250805=      | Opus 4.1                         |
+
+* Architecture Notes
+
+** Alias Resolution
+
+User-facing aliases go through this resolution chain:
+
+1. Normalize input (lowercase, trim whitespace)
+2. Check if it's a recognized alias
+3. If yes, call the appropriate function (=Ux()= for sonnet, =U80()= for opus, =ztA()= for haiku)
+4. Each function checks for environment variable override first
+5. Falls back to default model identifier from =UX()=
+6. Returns full model name based on provider (firstParty, bedrock, vertex)
+
+** Provider-Specific Model Strings
+
+Each model has three variants depending on the API provider:
+
+- *firstParty*: Direct Anthropic API (=claude.ai=)
+- *bedrock*: AWS Bedrock (=us.anthropic.*= or =global.anthropic.*=)
+- *vertex*: Google Vertex AI (=claude-*@YYYYMMDD=)
+
+Example for Haiku 3.5:
+#+begin_src javascript
+V61 = {
+  firstParty: "claude-3-5-haiku-20241022",
+  bedrock: "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+  vertex: "claude-3-5-haiku@20241022",
+}
+#+end_src
+
+* History
+
+** v1.0.64 (Initial Introduction)
+
+The =haiku=, =sonnet=, and =opus= aliases were introduced in version 1.0.64 as part of the agent model configuration feature. This allowed agents to specify which model tier they should use without hardcoding specific model versions.
+
+At the time of introduction:
+- =haiku= → =claude-3-5-haiku-20241022=
+- =sonnet= → =claude-sonnet-4-20250514= (Sonnet 4)
+- =opus= → =claude-opus-4-20250514= (Opus 4)
+
+** v2.0.0 (Sonnet 4.5)
+
+Version 2.0.0 introduced Claude Sonnet 4.5 and updated the =sonnet= alias to map to =claude-sonnet-4-5-20250929= instead of Sonnet 4.
+
+** v2.0.10 (Opus 4.1)
+
+The =opus= alias was updated to map to Claude Opus 4.1 (=claude-opus-4-1-20250805=).
+
+* Source Code References
+
+All references are to =archive/pretty/pretty-v2.0.10.js=:
+
+- Valid aliases list: line 364005
+- Alias resolution function =gU()=: line 364221
+- Model identifier mapping =kL1()=: line 363688
+- Default functions:
+  - =Ux()= (sonnet): line 364038
+  - =U80()= (opus): line 364043
+  - =ztA()= (haiku): line 364048
+- Model string constants:
+  - =V61= (haiku35): line 363334
+  - =J10= (sonnet45): line 363344
+  - =eg= (opus41): line 363354
+  - =nT= (sonnet40): line 363339
+  - =rg= (sonnet37): line 363324
+  - =og= (sonnet35): line 363329
+  - =tg= (opus40): line 363349

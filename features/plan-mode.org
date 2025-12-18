@@ -1,0 +1,259 @@
+#+TITLE: Plan Mode
+
+* Overview
+
+Plan Mode is a special operating mode in Claude Code where Claude researches and presents an implementation plan before making any changes to your codebase. This mode helps users understand what will be done before committing to an implementation, especially useful for complex multi-step tasks.
+
+Introduced in version 1.0.20, plan mode provides a safer workflow for complex coding tasks by separating the planning phase from the execution phase.
+
+* Key Features
+
+** Non-Invasive Planning
+- Claude will not make file edits while in plan mode
+- No commands that modify system state will be executed
+- Focus is on research, analysis, and planning
+
+** Visual Indicators
+- Distinct cyan/teal color scheme in the UI
+- Status bar indicator shows when plan mode is active
+- Clear visual separation from normal operation mode
+
+** ExitPlanMode Tool
+- Claude uses the =ExitPlanMode= tool to present the completed plan
+- User is prompted to confirm before proceeding with implementation
+- Plan is presented in a structured, readable format
+
+** Model Switching (v2.0.10+)
+- Claude may suggest switching to a different model when exiting plan mode
+- Based on task complexity and requirements
+- Session-scoped override that doesn't affect base model setting
+- Status display shows: =Current model: <model> (session override from plan mode)=
+
+** Ambiguity Handling (v2.0.21+)
+- Enhanced guidance for handling unclear requirements
+- Claude will ask clarifying questions before proceeding when:
+  - Multiple valid implementation approaches exist
+  - Library or framework choices need to be made
+  - Assumptions could affect implementation
+- Must resolve ambiguities before exiting plan mode
+
+* How Plan Mode Works
+
+** Entry
+Plan mode is automatically triggered for tasks that require planning and research before implementation. Users cannot manually activate plan mode - it's determined by Claude based on task complexity.
+
+** During Planning
+While in plan mode, Claude will:
+1. Research the codebase to understand context
+2. Analyze requirements and constraints
+3. Identify potential implementation approaches
+4. Create a structured plan with specific steps
+5. Ask clarifying questions if requirements are ambiguous
+
+** Exit
+When the plan is ready, Claude uses the =ExitPlanMode= tool with:
+- =plan= parameter: The complete implementation plan (markdown formatted)
+- =model= parameter (optional): Suggested model for implementation
+
+The user is then prompted to:
+- Accept the plan and proceed with implementation
+- Reject the plan and stay in plan mode for refinement
+- Cancel the task
+
+** After Exit
+If the user accepts:
+- Plan mode is deactivated
+- Model may be switched (if suggested)
+- Claude proceeds with implementation following the approved plan
+- Normal permission checking resumes
+
+If the user rejects:
+- Plan mode remains active
+- Visual feedback shows the rejected plan
+- Claude continues planning based on user feedback
+
+* Permission Mode Integration
+
+Plan mode is one of four permission modes in Claude Code:
+
+| Mode | Description | Tool Restrictions |
+|------+-------------+-------------------|
+| =default= | Normal permission checking | Standard tools available |
+| =acceptEdits= | Auto-approve edit operations | Edit tools auto-approved |
+| =bypassPermissions= | Skip all permission checks | All tools allowed |
+| =plan= | Restricted planning mode | No state-modifying tools |
+
+Location in source: =archive/claude-code/pretty/pretty-v2.0.21.js:356=
+
+* Implementation Details
+
+** Tool Schema
+The ExitPlanMode tool definition includes:
+
+#+begin_src javascript
+{
+  name: "ExitPlanMode",
+  description: "Use this tool when you are in plan mode and have finished presenting your plan...",
+  parameters: {
+    plan: "The plan you came up with, that you want to run by the user for approval. Supports markdown.",
+    model: "Optional model suggestion for implementation"
+  }
+}
+#+end_src
+
+** Color Theme
+Plan mode uses distinct colors across different UI themes:
+
+- Default: =rgb(0,102,102)=
+- ANSI: =ansi:cyan=
+- ANSI Bright: =ansi:cyanBright=
+- Dimmed: =rgb(51,102,102)=
+- Contrast modes: Various shades of cyan/teal
+
+Location in source: =archive/claude-code/pretty/pretty-v2.0.21.js:68692-69007=
+
+** State Management
+Plan mode state is tracked as part of the permission mode system:
+- Stored in state object as =mode= field
+- Value is ="plan"= when active
+- Checked before allowing state-modifying operations
+
+* User Experience
+
+** When to Expect Plan Mode
+Plan mode is automatically activated for:
+- Complex multi-step implementation tasks
+- Architecture changes
+- Feature additions requiring research
+- Tasks where multiple approaches are viable
+
+** Visual Feedback
+Users see:
+- Cyan/teal colored UI elements
+- Status bar indicator: =⏸ plan mode on=
+- Plan mode theme applied to terminal output
+- Distinct color for plan presentation
+
+** Rejection Flow (v1.0.50+)
+When rejecting a plan:
+- Dedicated UI component shows what was rejected
+- Better visual distinction using plan mode colors
+- Clear indication of continued plan mode status
+- Context preserved for iteration
+
+* Example Workflow
+
+1. User requests: "Implement user authentication for the application"
+
+2. Claude enters plan mode automatically (complex task)
+
+3. Claude researches:
+   - Existing authentication patterns in codebase
+   - Dependencies available
+   - Security requirements
+
+4. Claude asks clarifying questions:
+   - "Which authentication method: OAuth, JWT, or session-based?"
+   - "Should we use an existing library or implement custom?"
+
+5. User responds with preferences
+
+6. Claude presents plan using ExitPlanMode:
+   #+begin_example
+   ## Implementation Plan for User Authentication
+
+   ### Approach
+   Implement JWT-based authentication using the jsonwebtoken library
+
+   ### Steps
+   1. Install dependencies (jsonwebtoken, bcrypt)
+   2. Create User model with password hashing
+   3. Implement registration endpoint
+   4. Implement login endpoint with JWT generation
+   5. Create authentication middleware
+   6. Protect existing routes with middleware
+   7. Add token refresh mechanism
+
+   ### Files to Modify
+   - package.json
+   - src/models/User.js (new)
+   - src/routes/auth.js (new)
+   - src/middleware/auth.js (new)
+   - src/routes/api.js (modify)
+   #+end_example
+
+7. User accepts plan
+
+8. Claude exits plan mode, potentially switches to appropriate model
+
+9. Implementation proceeds following the approved plan
+
+* Version History
+
+** v1.0.14 - Initial Planning Concept
+- First mention of planning mode concept
+- Visual indicator: =⏸ plan mode on= in status bar
+- Programmatic detection via tool permission context
+
+** v1.0.16 - ExitPlanMode Tool Added
+- New =ExitPlanMode= tool introduced
+- Users can work in planning mode before execution
+
+** v1.0.20 - Plan Mode Official Release
+- Full planning mode implementation
+- Visual color scheme (cyan/teal)
+- Automatic triggering for complex tasks
+- Research and plan presentation workflow
+- Removed file structure snapshot to focus on planning
+
+** v1.0.32 - Documentation Enhancement
+- Improved documentation and examples
+- Better guidance on when to use exit plan mode tool
+
+** v1.0.48 - Mode Integration
+- Plan mode added to mode selection options
+- Integration with permission system
+
+** v1.0.50 - Rejection Flow Improvement
+- Enhanced visual feedback when plans are rejected
+- Dedicated UI component for rejected plans
+- Better visual distinction using plan mode colors
+
+** v1.0.74 - Opus Plan Mode
+- New hybrid model option
+- Uses Opus 4.1 in plan mode, Sonnet 4 for execution
+- Removed in v2.0.0
+
+** v2.0.0 - Opus Plan Mode Removed
+- Removed "Opus Plan Mode" model fallback strategy
+- Simplified model selection
+
+** v2.0.10 - Model Switching
+- Added model suggestion capability to ExitPlanMode
+- Session-scoped model overrides
+- Status display shows override information
+
+** v2.0.17 - Haiku Support
+- Haiku 4.5 can be used in plan mode when model preference is set to "haiku"
+
+** v2.0.21 - Ambiguity Handling
+- Enhanced guidance for handling ambiguous requirements
+- Explicit instructions to ask clarifying questions
+- Must resolve ambiguities before proceeding
+- New example for authentication feature with clarification
+
+* References
+
+** Changelog Files
+- =archive/claude-code/changelog/changelog-v1.0.20.md=
+- =archive/claude-code/changelog/changelog-v2.0.10.md=
+- =archive/claude-code/changelog/changelog-v2.0.21.md=
+
+** Source Code
+- Permission modes: =archive/claude-code/pretty/pretty-v2.0.21.js:356=
+- Color theme: =archive/claude-code/pretty/pretty-v2.0.21.js:68692-69007=
+- ExitPlanMode tool: =archive/claude-code/pretty/pretty-v2.0.21.js:428198-428210=
+
+** Related Features
+- [[file:permissions.org][Permissions System]]
+- [[file:output-styles.org][Output Styles]]

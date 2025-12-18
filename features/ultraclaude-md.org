@@ -1,0 +1,392 @@
+#+TITLE: ULTRACLAUDE.md - Experimental User Preferences File
+#+DATE: 2025-10-13
+
+* Overview
+
+=ULTRACLAUDE.md= is an experimental feature introduced in Claude Code v0.2.64 that provides a way to store critical user preferences that override default behavior. It is part of Claude Code's memory system, which allows users to persist instructions and preferences across sessions.
+
+* Location and File Path
+
+The =ULTRACLAUDE.md= file is stored in the user's home directory at:
+
+: ~/.claude/ULTRACLAUDE.md
+
+This location is the same directory where other user-level configuration files are stored, such as =~/.claude/CLAUDE.md=.
+
+* Purpose and Design
+
+** Memory Type System
+
+Claude Code has a memory type system with several levels:
+
+- *User* memory: =~/.claude/CLAUDE.md= - User-level preferences
+- *Project* memory: ={project}/CLAUDE.md= - Project-specific instructions (checked into version control)
+- *Local* memory: ={project}/CLAUDE.local.md= - Project-specific but gitignored
+- *Managed* memory: =~/.claude/managed/CLAUDE.md= - Managed memory location
+- *ExperimentalUltraClaudeMd*: =~/.claude/ULTRACLAUDE.md= - Experimental critical preferences
+
+** Key Characteristics
+
+1. *Critical Preferences*: ULTRACLAUDE.md is designed for critical user preferences that should override other settings
+2. *Experimental Status*: As of v0.2.104, this feature remains experimental
+3. *Size Monitoring*: The system monitors file size and warns when it exceeds 1000 characters
+4. *Integration with /memory command*: Can be edited using the =/memory= command
+
+* Implementation Details
+
+** File Path Resolution
+
+From the source code analysis (v2.0.10 and v2.0.14), the implementation includes:
+
+#+BEGIN_SRC javascript
+function Vd(A) {
+  let B = mB();
+  if (A === "ExperimentalUltraClaudeMd") return Vd("User");
+  switch (A) {
+    case "User":
+      return UF1(QB(), "CLAUDE.md");
+    case "Local":
+      return UF1(B, "CLAUDE.local.md");
+    case "Project":
+      return UF1(B, "CLAUDE.md");
+    case "Managed":
+      return UF1(DE(), "CLAUDE.md");
+    case "ExperimentalUltraClaudeMd":
+      return UF1(QB(), "ULTRACLAUDE.md");
+  }
+}
+#+END_SRC
+
+Note: The function first checks if the type is "ExperimentalUltraClaudeMd" and recursively calls itself with "User", then handles the actual case separately. This suggests special handling or fallback behavior.
+
+** Memory Types Array
+
+The memory types are defined in an array:
+
+#+BEGIN_SRC javascript
+var Ns2 = ["User", "Project", "Local", "Managed", "ExperimentalUltraClaudeMd"];
+#+END_SRC
+
+** Display Name Function
+
+There's a function that converts memory type names to user-friendly display names:
+
+#+BEGIN_SRC javascript
+function qD0(A) {
+  if (A === "Local") return "project (local)";
+  return A.toLowerCase();
+}
+#+END_SRC
+
+* User Interface
+
+** Size Warning
+
+When the ULTRACLAUDE.md file exceeds 1000 characters, Claude Code displays a warning:
+
+: ⚠️ ULTRACLAUDE.md exceeds 1000 chars (1234 chars) • /memory to edit
+
+This warning appears during:
+- Startup diagnostics
+- System status displays
+- Memory management operations
+
+** Editing
+
+Users can edit the ULTRACLAUDE.md file using:
+
+1. The =/memory= command within Claude Code
+2. Direct file editing with a text editor
+
+* Relationship to Other Features
+
+** Memory System Integration
+
+ULTRACLAUDE.md is part of the broader memory management system introduced and enhanced across multiple versions:
+
+- v0.2.64: Initial ULTRACLAUDE.md support
+- v0.2.104: Enhanced memory size warnings and monitoring
+
+** /memory Command
+
+The =/memory= command allows users to:
+- View current memory contents
+- Edit memory files
+- Select which memory type to modify (User, Project, Local, etc.)
+- Manage memory across different scopes
+
+** Critical User Preferences System
+
+v0.2.64 introduced an "Enhanced Instruction System" that includes:
+- Updated instruction preamble
+- Critical user preferences reminder system
+- Seamless injection of preferences into conversations
+- Automatic appending to user messages without disrupting flow
+
+* Technical Characteristics
+
+** File Format
+
+Like other CLAUDE.md files, ULTRACLAUDE.md uses Markdown format for storing instructions and preferences.
+
+** Character Limit
+
+- *Recommended limit*: 1000 characters
+- *Warning threshold*: Triggered when exceeding 1000 characters
+- *No hard limit*: The file can exceed 1000 characters, but a warning is shown
+
+** Monitoring
+
+The system actively monitors:
+- File size during startup
+- Memory usage with specific file warnings
+- Integration with system diagnostics
+
+* Use Cases
+
+Based on the design and implementation, ULTRACLAUDE.md is intended for:
+
+1. *Critical Override Preferences*: Settings that should take precedence over project or default settings
+2. *User-Level Behavior Modifications*: Personal preferences that apply across all projects
+3. *Experimental Workflows*: Testing new preference mechanisms before they become mainstream
+
+* Experimental Status Implications
+
+As an experimental feature:
+
+1. *Subject to Change*: The API and behavior may change in future versions
+2. *Limited Documentation*: Official documentation may be sparse
+3. *Feature Flag Candidate*: May require specific configuration or beta flags
+4. *Migration Path Uncertain*: Future versions may migrate or deprecate this approach
+
+* Version History
+
+** v0.2.64 (Introduction)
+- Initial experimental support
+- 1000 character warning threshold
+- Integration with /memory command
+- Warning display format established
+
+** v0.2.104 (Enhancement)
+- Continued monitoring of ULTRACLAUDE.md file size
+- Integration with enhanced memory management system
+- Part of startup diagnostics
+
+* Related Documentation
+
+- Memory system documentation
+- /memory command documentation
+- CLAUDE.md file format specifications
+- Configuration file locations
+
+* How ULTRACLAUDE.md is Read and Injected
+
+** CRITICAL FINDING: ULTRACLAUDE.md is NOT Currently Loaded
+
+After thorough analysis of the source code (v2.0.14), I discovered that *ULTRACLAUDE.md is defined in the type system but is NOT actually loaded or injected into conversations*.
+
+** The Memory Loading Function
+
+The =UX= function (line 271202) is responsible for loading memory files:
+
+#+BEGIN_SRC javascript
+UX = JA((A = !1) => {
+  let B = [],
+    Q = new Set(),
+    Z = k4(),
+    G = A || Z.hasClaudeMdExternalIncludesApproved || !1,
+    Y = Dp("Managed");
+  if ((B.push(...Vp(Y, "Managed", Q, G)), f$("userSettings"))) {
+    let J = Dp("User");
+    B.push(...Vp(J, "User", Q, !0));
+  }
+  let W = [],
+    I = YQ();
+  while (I !== L8B(I).root) (W.push(I), (I = hh1(I)));
+  for (let J of W.reverse()) {
+    if (f$("projectSettings")) {
+      let X = fh1(J, "CLAUDE.md");
+      B.push(...Vp(X, "Project", Q, G));
+      let F = fh1(J, ".claude", "CLAUDE.md");
+      B.push(...Vp(F, "Project", Q, G));
+    }
+    if (f$("localSettings")) {
+      let X = fh1(J, "CLAUDE.local.md");
+      B.push(...Vp(X, "Local", Q, G));
+    }
+  }
+  return B;
+});
+#+END_SRC
+
+*Key observation*: This function loads "Managed", "User", "Project", and "Local" memory types, but *never calls =Dp("ExperimentalUltraClaudeMd")=*.
+
+** File Reading Mechanism
+
+When a memory type IS loaded, it uses:
+
+1. =Dp(type)= - Gets the file path for the memory type
+2. =Vp(path, type, ...)= - Reads and processes the file
+3. =O8B(path, type)= - Actually reads the file from disk:
+
+#+BEGIN_SRC javascript
+function O8B(A, B) {
+  try {
+    if (N1().existsSync(A)) {
+      if (!N1().statSync(A).isFile()) return null;
+      let Z = N1().readFileSync(A, { encoding: "utf-8" });
+      return { path: A, type: B, content: Z };
+    }
+  } catch (Q) {
+    if (Q instanceof Error && Q.message.includes("EACCES"))
+      I1("tengu_claude_md_permission_error", {
+        is_access_error: 1,
+        has_home_dir: A.includes(wB()) ? 1 : 0,
+      });
+  }
+  return null;
+}
+#+END_SRC
+
+** Injection into Chat Context
+
+When memory files ARE loaded, they're injected via the =_D1= function (line 442536):
+
+#+BEGIN_SRC javascript
+function _D1(A, B) {
+  if (Object.entries(B).length === 0) return A;
+  return [
+    hA({
+      content: `<system-reminder>
+As you answer the user's questions, you can use the following context:
+${Object.entries(B).map(
+  ([Q, Z]) => `# ${Q}
+${Z}`,
+).join(`
+`)}
+
+      IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
+</system-reminder>
+`,
+      isMeta: !0,
+    }),
+    ...A,
+  ];
+}
+#+END_SRC
+
+This function:
+1. Receives messages array =A= and context object =B=
+2. Prepends a =<system-reminder>= tag with all memory content
+3. Formats each memory item with a header (=#= followed by memory type name)
+4. Marks the message as =isMeta: true= (not displayed in UI)
+
+** The Memory Content is Built By
+
+The =R8B= function (line 271172) formats loaded memory:
+
+#+BEGIN_SRC javascript
+R8B = () => {
+  let A = UX(),
+    B = [];
+  for (let Q of A)
+    if (Q.content) {
+      let Z =
+        Q.type === "Project"
+          ? " (project instructions, checked into the codebase)"
+          : Q.type === "Local"
+            ? " (user's private project instructions, not checked in)"
+            : " (user's private global instructions for all projects)";
+      B.push(`Contents of ${Q.path}${Z}:
+
+${Q.content}`);
+    }
+  if (B.length === 0) return "";
+  return `${Ny6}
+
+${B.join(`
+
+`)}`;
+};
+#+END_SRC
+
+Where =Ny6= is the preamble:
+: "Codebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written."
+
+** Why ULTRACLAUDE.md Exists But Isn't Loaded
+
+The infrastructure exists:
+1. File path resolution via =Dp("ExperimentalUltraClaudeMd")=
+2. Type enumeration includes it
+3. Size monitoring tracks it
+4. UI can display warnings about it
+
+But the loading logic never calls it. This suggests:
+1. It was intended to be used but implementation was incomplete
+2. It may have been disabled pending further development
+3. It might require a feature flag or configuration not present in the analyzed code
+4. It could be loaded through a different pathway not discovered in this analysis
+
+** When Memory is Injected
+
+Memory content is injected:
+1. At conversation start
+2. When building messages for API calls
+3. Via the =pF()= async function that returns =claudeMd= content
+4. Disabled by =CLAUDE_CODE_DISABLE_CLAUDE_MDS= environment variable
+
+* Open Questions
+
+*UPDATED WITH NEW FINDINGS:*
+
+1. *Why ULTRACLAUDE.md is not loaded*: The infrastructure exists but it's never called by =UX()=
+2. *Activation Mechanism*: Is there a hidden feature flag, configuration, or code path that enables loading?
+3. *Development Status*: Was this partially implemented and then paused?
+4. *Future Plans*: Is this waiting for specific functionality before being activated?
+5. *Testing Status*: Has anyone successfully used ULTRACLAUDE.md, or is it completely dormant?
+
+* Insights from Implementation
+
+From analyzing the source code patterns:
+
+1. *Incomplete Implementation*: ULTRACLAUDE.md has file path resolution, type enumeration, and size monitoring, but is never actually loaded into memory
+2. *Fallback Behavior*: The recursive call to =Dp("User")= before handling the ULTRACLAUDE.md case is actually just a quirk of the switch statement - it doesn't do anything meaningful
+3. *Infrastructure Without Function*: All the plumbing exists (file reading, size warnings, UI support) but the critical =UX()= function never calls it
+4. *Vestigial Feature*: This appears to be a partially implemented or disabled feature that was announced but never fully activated
+5. *Monitoring Without Loading*: The system can detect and warn about file size, but never reads or uses the content
+
+* Recommendations
+
+** For Users - CRITICAL UPDATE
+
+*DO NOT USE ULTRACLAUDE.md* - it is not functional in the current implementation:
+
+1. *The file is never read*: Even if you create it, Claude Code will not load its contents
+2. *Use CLAUDE.md instead*: For user-level preferences, use =~/.claude/CLAUDE.md=
+3. *This is a non-functional feature*: Despite being mentioned in changelogs, it doesn't actually work
+4. *Warnings may appear*: The system can detect and warn about file size, but the content is never used
+
+** For Developers
+
+1. *Feature is incomplete*: The loading logic in =UX()= function never calls =Dp("ExperimentalUltraClaudeMd")=
+2. *Infrastructure exists*: All support code is present except the actual loading call
+3. *Potential fix*: Adding a few lines to =UX()= to load ULTRACLAUDE.md would activate the feature
+4. *Question design intent*: Unclear if this was disabled intentionally or left incomplete accidentally
+
+* Conclusion
+
+*ULTRACLAUDE.md is a non-functional vestigial feature.*
+
+After deep source code analysis, the investigation reveals:
+
+1. *Announced but not implemented*: The feature was mentioned in v0.2.64 changelog but the loading logic was never completed
+2. *Infrastructure without activation*: All supporting code exists (file paths, type system, warnings) but the critical loading call is missing
+3. *Users should not use it*: Creating this file will have no effect on Claude Code's behavior
+4. *Potential future activation*: The feature could easily be activated by adding a few lines to the =UX()= function
+
+This represents either:
+- An incomplete implementation that was announced prematurely
+- A disabled feature awaiting additional development
+- An abandoned experiment that was partially removed
+
+The thorough investigation of where/when ULTRACLAUDE.md is read reveals the surprising answer: *it is never read at all*.
