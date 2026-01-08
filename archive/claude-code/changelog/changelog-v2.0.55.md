@@ -1,10 +1,8 @@
 # Changelog for version 2.0.55
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces enterprise policy controls for marketplace management, improved terminal compatibility with version-aware detection for Ghostty and iTerm, enhanced async agent monitoring with real-time progress tracking, and new telemetry for repository identification. Error handling is improved with specific detection for oversized images.
-
-## 🚀 New Features
 
 ### Enterprise Marketplace Policy Controls
 **What:** Organizations can now restrict which external marketplaces users can install via the `strictKnownMarketplaces` policy setting.
@@ -59,8 +57,6 @@ This release introduces enterprise policy controls for marketplace management, i
 - User-friendly message: "Image was too large. Double press esc to go back and try again with a smaller image."
 - **Evidence:** Error detection at line ~345176, message constant `FF5` at line ~345069
 
-## 🔧 Improvements
-
 ### Enhanced Terminal Version Detection
 **What:** Improved compatibility checking for Ghostty and iTerm terminals using semantic versioning.
 
@@ -111,8 +107,6 @@ This release introduces enterprise policy controls for marketplace management, i
 - Falls back to basic parsing if tree-sitter unavailable
 - **Evidence:** `R92()` at line ~313655 with `u01.parse()` integration
 
-## 📊 Telemetry Changes
-
 ### New Telemetry Fields
 - `repository_id` and `repository_owner_id` for GitHub Actions metadata
 - `wsl_version` for Windows Subsystem for Linux environments
@@ -125,8 +119,6 @@ This release introduces enterprise policy controls for marketplace management, i
 - `tengu_fork_agent_query`: Tracks forked agent query performance and token usage
 - `tengu_prompt_suggestion_shown`: When prompt suggestions are displayed
 - `tengu_prompt_suggestion_accepted`: When users accept suggested prompts
-
-## 🐛 Bug Fixes
 
 ### Bash Permission Check Reordering
 **What:** Fixed the order of permission checks for bash commands to ensure dangerous file checks happen before subcommand evaluation.

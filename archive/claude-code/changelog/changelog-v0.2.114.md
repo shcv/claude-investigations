@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.114 Changelog
 
-## New Features
-
 ### Debug Mode
 - Added `--debug` / `-d` command line flag for enhanced debugging capabilities
 - When enabled, provides detailed debug output with dimmed formatting
@@ -27,8 +25,6 @@
 - Improved error handling for tool progress rendering
 - Better separation of debug and verbose logging in tool contexts
 
-## Bug Fixes
-
 ### Memory Management
 - Fixed issue where extremely large text inputs could cause UI freezing
 - Automatic text truncation now triggers for inputs over 10,000 characters
@@ -38,8 +34,6 @@
 - Added `debug` and `verbose` parameters to MCP tool execution context
 - Improved error logging for MCP server failures
 - Better diagnostic information when MCP servers encounter errors
-
-## Internal Changes
 
 ### Code Organization
 - Removed unused functions related to permission prompts and decision rendering

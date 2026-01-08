@@ -1,9 +1,7 @@
 # Changelog for version 1.0.85
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.85 introduces comprehensive rate limit messaging with clear feedback about usage limits and spending caps, automatic session memory that maintains persistent notes about your work, and improved environment variable validation with helpful warnings when values are misconfigured.
-
-## 🚀 New Features
 
 ### Rate Limit Status Messaging
 **What:** Complete system for communicating rate limits, usage limits, and spending caps with clear, actionable messages
@@ -70,8 +68,6 @@ export BASH_MAX_OUTPUT_LENGTH=100000   # Warning: Capped from 100000 to 50000
 - Allows external programs to perform cleanup
 - 2-second timeout ensures quick shutdown
 
-## 💪 Improvements
-
 ### Enhanced Heredoc Security Validation
 **What changed:** More robust validation for heredoc patterns in bash command substitutions
 **Previous behavior:** Simple pattern matching could miss complex quoting scenarios
@@ -83,8 +79,6 @@ export BASH_MAX_OUTPUT_LENGTH=100000   # Warning: Capped from 100000 to 50000
 **Previous behavior:** Some child processes could linger after Claude Code exits
 **New behavior:** More thorough cleanup ensures all spawned processes terminate properly
 **Impact:** Cleaner system state after using Claude Code, no orphaned processes
-
-## 🐛 Bug Fixes
 
 ### Fixed: Heredoc Delimiter Validation
 - **Issue:** Valid heredoc patterns with multiple quotes were incorrectly rejected

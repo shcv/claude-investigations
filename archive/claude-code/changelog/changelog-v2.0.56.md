@@ -1,10 +1,8 @@
 # Changelog for version 2.0.56
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.56 introduces proactive rate limit warnings that notify users before hitting limits, a new `/plan` command for viewing and editing plan files, and significant reliability improvements to the telemetry system. SDK users gain new capabilities to customize system prompts and define agents programmatically.
-
-## 🚀 New Features
 
 ### Proactive Rate Limit Warnings
 **What:** Claude Code now warns you before you hit rate limits by monitoring your usage percentage in real-time, rather than only alerting when limits are reached.
@@ -107,8 +105,6 @@ await sdk.init({
 - Complements the existing background shell functionality
 - **Evidence**: `KI1` at line 480255
 
-## 🔧 Improvements
-
 ### Telemetry Reliability Overhaul
 **What:** Failed telemetry events are now queued, batched, and retried with exponential backoff instead of being lost.
 
@@ -163,8 +159,6 @@ await sdk.init({
 - Function `NX5()` (was `TF5`) at line 342574 now checks against `yU(Q)` (plan file path)
 - Prevents accidental modifications to the active plan file outside plan mode
 - **Evidence**: `NX5()` at line 342574
-
-## 🐛 Bug Fixes
 
 ### Rate Limit UI State Management
 **What:** Rate limit warning notifications now properly track state to avoid duplicate notifications.

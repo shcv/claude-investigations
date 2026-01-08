@@ -1,9 +1,7 @@
 # Changelog for version 1.0.78
 
-## 🎯 Highlights
+## Highlights
 Claude Code 1.0.78 introduces enhanced security for authentication tokens, a completely refactored permission system with three-tier control, and renames "output modes" to "output styles" for clarity. The update also adds support for a new Sonnet model with 1M context and implements infrastructure for A/B testing and dynamic configuration.
-
-## 🚀 New Features
 
 ### File Descriptor Authentication for Enhanced Security
 **What:** Authentication tokens can now be passed via file descriptors instead of environment variables
@@ -53,8 +51,6 @@ When Claude requests file permissions, you now have three options:
 - More focused introduction compared to standard onboarding
 - Automatically selected based on usage patterns
 
-## 💪 Improvements
-
 ### Output Modes Renamed to Output Styles
 **What changed:** The entire "output modes" feature is now called "output styles"
 **Impact:** 
@@ -85,8 +81,6 @@ When Claude requests file permissions, you now have three options:
 - New helper functions for managing directory permissions
 - Automatic addition of allowed directories to settings
 - Better handling of permissions for files outside project directory
-
-## 🐛 Bug Fixes
 
 ### Fixed: Stdin Terminal Mode Cleanup
 - **Issue:** Terminal raw mode wasn't properly cleaned up on exit

@@ -1,9 +1,7 @@
 # Changelog for version 1.0.98
 
-## 🎯 Highlights
+## Highlights
 This release focuses on architectural improvements to session persistence, removes the LS tool in favor of existing alternatives, and enhances UI component organization with better todo list management.
-
-## 🚀 New Features
 
 ### Enhanced Session Persistence
 **What:** Complete rewrite of session persistence system to support remote server synchronization
@@ -51,8 +49,6 @@ claude
 - Currently disabled (`isEnabled() returns false`) pending further development
 - **Evidence**: `ZA1 tool definition at line 414675`, `VuB() at line 414597`, `AL5() at line 414466`
 
-## 🔄 Improvements
-
 ### Enhanced Command Execution
 **What:** All slash command executions now include autocheckpoint support
 **Details:**
@@ -76,8 +72,6 @@ claude
 - Atomic rename operations to prevent corruption
 - Proper cleanup on failure scenarios
 - **Evidence**: `qvB() at line 407217`
-
-## 🗑️ Removed Features
 
 ### LS Tool Removal
 **What:** The LS (directory listing) tool has been completely removed
@@ -110,8 +104,6 @@ Read("/path/to/specific/file.txt")
 - Cleaned up obsolete session management utilities
 - Eliminated redundant path processing functions
 - **Evidence**: Removed `TPB() at line 395476`, `RY1() at line 395486`, `gmB() at line 420941`
-
-## ⚠️ Breaking Changes
 
 ### Directory Listing Workflow
 **Impact:** Users who relied on the LS tool for directory exploration must adapt their workflow

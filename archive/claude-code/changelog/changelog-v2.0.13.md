@@ -1,10 +1,8 @@
 # Changelog for version 2.0.13
 
-## 🎯 Highlights
+## Highlights
 
 This is a maintenance release focused on internal code organization and optimization. There are no user-visible changes, new features, or bug fixes in this version.
-
-## Internal Changes
 
 ### Import Statement Optimization
 

@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.29 Changelog
 
-## New Features
-
 ### Enhanced OAuth Security
 - **OAuth State Parameter**: Added CSRF protection to OAuth flows by implementing state parameter validation. The CLI now generates a secure random state value during OAuth authentication and validates it on callback to prevent cross-site request forgery attacks.
 

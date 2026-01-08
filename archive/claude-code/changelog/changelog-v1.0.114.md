@@ -1,9 +1,7 @@
 # Changelog for version 1.0.114
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.114 introduces macOS filesystem sandboxing, an interactive thinking mode with visual highlighting, and enhanced Windows terminal support. This release focuses on security hardening, improved user experience, and better cross-platform compatibility.
-
-## 🚀 New Features
 
 ### Filesystem Sandboxing for macOS
 **What:** Fine-grained filesystem access controls using macOS sandbox-exec, allowing you to restrict which files and directories bash commands can read or write.
@@ -92,8 +90,6 @@ claude "think harder about the security implications"
 - Continues on errors with detailed logging
 - **Evidence**: `_3B() at line 393833`, `k3B() at line 393866`
 
-## ✨ Improvements
-
 ### Smart Editor Detection
 **What:** Intelligent editor selection that verifies editors are actually installed before attempting to use them.
 
@@ -141,8 +137,6 @@ claude /memory
 - Useful for testing or using alternative Haiku versions
 - **Evidence**: `FX2() at line 371423`
 
-## 🐛 Bug Fixes
-
 ### Empty Directory Cleanup
 **What:** Automatically removes empty directories after file operations.
 
@@ -160,8 +154,6 @@ claude /memory
 - Ensures clean state for new sessions
 - Prevents metric accumulation across sessions
 - **Evidence**: `Fo1() at line 340029`
-
-## 🔧 Internal Changes
 
 ### Image Optimization
 - Added `hOA() at line 364421` for processing and optimizing base64-encoded images

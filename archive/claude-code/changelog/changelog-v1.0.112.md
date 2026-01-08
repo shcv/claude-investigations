@@ -1,9 +1,7 @@
 # Changelog for version 1.0.112
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.112 introduces skill.md file support for organizing commands hierarchically, adds enhanced network sandboxing with allow-lists, and removes unused internal network sandboxing code. Several improvements enhance command parsing, error tracking, and user configuration options.
-
-## 🚀 New Features
 
 ### skill.md File Support
 **What:** Organize multiple commands in a directory under a single skill.md file
@@ -44,8 +42,6 @@ echo "command content" > my-commands/command1.md
 - Automatically disabled when using Bedrock/Vertex or when telemetry is disabled
 - **Evidence:** `xqB()` at line 428347 in v1.0.112
 
-## ✨ Improvements
-
 ### Configurable Spinner Tips
 **What changed:** Added ability to disable spinner tips through configuration
 **How it works now:**
@@ -83,8 +79,6 @@ echo "command content" > my-commands/command1.md
 - Fewer visual glitches in terminal display
 - Better structured output handling
 - **Evidence:** `IC9` variable at line 361107
-
-## 🗑️ Removed
 
 ### Internal Network Sandboxing (macOS sandbox-exec)
 **What was removed:** Unused internal network sandboxing implementation

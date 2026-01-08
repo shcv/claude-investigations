@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff file, here's the changelog for Claude Code version 1.0.6:
 
-## Claude Code v1.0.6 Changelog
-
 ### New Features
 
 #### Web Search Tool Enhancement

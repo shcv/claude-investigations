@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.61 Changelog
 
-## New Features
-
 ### Enhanced Keyboard Navigation
 The interactive selection system now supports more keyboard shortcuts for improved navigation:
 
@@ -13,15 +11,11 @@ The interactive selection system now supports more keyboard shortcuts for improv
 
 These new shortcuts work in any interactive selection menu throughout the CLI, making navigation faster for users familiar with vim or emacs keybindings.
 
-## Internal Changes
-
 ### Stream Handling Update
 - Replaced direct stream import with `PassThrough` from the stream module, improving stream handling compatibility
 
 ### Process Module Update  
 - Updated process module import to use the more specific `cwd` function from `node:process` instead of importing the entire process module
-
-## Removed Features
 
 ### Deprecated UI Components
 - Removed several internal UI selection components that were replaced by a more unified keyboard navigation system

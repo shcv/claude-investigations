@@ -1,7 +1,5 @@
 # Changelog for version 0.2.85
 
-## Claude Code v0.2.85 Changelog
-
 ### New Features
 
 #### Environment Variable Management

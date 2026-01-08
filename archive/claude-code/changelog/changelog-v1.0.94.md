@@ -1,9 +1,7 @@
 # Changelog for version 1.0.94
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.94 introduces comprehensive performance monitoring with new warnings for large agent descriptions and MCP tools, significantly improves security with sophisticated sed command validation, and enhances the permission system with dynamic update capabilities.
-
-## 🚀 New Features
 
 ### Performance Context Warnings
 **What:** New warning system that monitors context consumption from custom agents and MCP tools
@@ -38,8 +36,6 @@ claude "Use sed to replace text in file.txt"
 - Detects and blocks write operations (`w`), execute operations (`e`), and dangerous flags
 - **Evidence**: `P1B() at line 379595`, `mS6() at line 379676`, `hS6() at line 379611`, `gS6() at line 379638`
 
-## 🔧 Improvements
-
 ### Dynamic Permission Updates
 **What:** Tools can now suggest and apply permission changes during execution
 **Details:**
@@ -72,16 +68,12 @@ claude "Use sed to replace text in file.txt"
 - Clearer descriptions of file locations
 - **Evidence**: `sb1() at line 400461` replacing `hb1()`
 
-## 🐛 Bug Fixes
-
 ### Git Command Flag Handling
 **What:** Fixed handling of numeric flags in git commands
 **Details:**
 - Git commands with numeric flags like `git log -5` now work correctly
 - Improved flag parsing to distinguish between numeric flags and invalid options
 - **Evidence**: `lS6() at line 380053`, added check for `/^-\d+$/` pattern at line 1404
-
-## 📚 Internal Changes
 
 ### Model Deprecation Updates
 **What:** Added deprecation dates for additional Claude models
@@ -98,8 +90,6 @@ claude "Use sed to replace text in file.txt"
 - Supports both JSON strings and file paths
 - Better error messages for invalid settings
 - **Evidence**: `wS5() at line 433801`, initialization check at lines 1537-1541
-
-## 🔄 Removed Features
 
 ### Local Memory Type Selection
 **What:** Simplified memory file selection by removing separate "Local" memory type

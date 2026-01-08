@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.92 Changelog
 
-## New Features
-
 ### OAuth Token Revocation Handling
 - Added proper error handling for revoked OAuth tokens
 - When an OAuth token is revoked, users will now see the message: "OAuth token revoked · Please run /login"
@@ -20,8 +18,6 @@
 - This allows for project-specific Claude configuration that overrides global settings
 - The system can now generate and write local configuration files when needed
 
-## Technical Improvements
-
 ### Command Execution Enhancement
 - Modified the command execution function to accept an optional working directory parameter
 - Previously, the working directory was always set to the current directory
@@ -32,14 +28,10 @@
 - Added proper path utilities import for file path operations
 - This improves code organization and reduces redundancy
 
-## Bug Fixes
-
 ### Error Handling
 - Enhanced error handling to specifically catch OAuth token revocation (403 status)
 - Previously, OAuth errors might have been handled generically
 - Now provides specific, actionable error messages for authentication issues
-
-## Usage Examples
 
 ### Handling OAuth Token Revocation
 When your OAuth token is revoked, you'll see:

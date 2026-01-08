@@ -1,10 +1,8 @@
 # Changelog for version 2.0.14
 
-## 🎯 Highlights
+## Highlights
 
 This release focuses on improving the plugin installation experience with a streamlined UI, better executable file validation, and enhanced directory path handling across different platforms.
-
-## 🚀 New Features
 
 ### Platform-Aware User Directory Detection
 **What:** Added cross-platform support for detecting standard user directories (Desktop, Documents, Downloads) with platform-specific environment variable handling.
@@ -31,8 +29,6 @@ The executable validation now explicitly rejects empty files that previously mig
 - Prevents false positives when scanning for executable files
 - More robust validation for system compatibility checks
 - **Evidence**: `MB1() at line 280658` - added `Q.size === 0` check
-
-## ✨ Improvements
 
 ### Simplified Plugin Installation UI
 **What:** Streamlined the plugin installation workflow by removing the "Mark for installation" option from the plugin details screen
@@ -72,7 +68,7 @@ The executable validation now explicitly rejects empty files that previously mig
 
 **Evidence**: `n90` class at line 69693, `renderEfficiently()` method shows cursor visibility logic
 
-## 🔧 Internal Changes
+## Internal Changes
 
 The following changes are internal refactorings with no direct user impact:
 
@@ -81,7 +77,6 @@ The following changes are internal refactorings with no direct user impact:
 - Added `bH1 = "AgentOutputTool"` string constant at line 433177 (no functional change)
 - Added helper functions `QF8()` and `ZF8()` for plugin UI rendering logic
 
----
 
 **Migration Notes:** No breaking changes. All existing workflows continue to work as before.
 

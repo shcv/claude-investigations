@@ -2,8 +2,6 @@
 
 Based on the diff analysis, here's the changelog for version 0.2.33:
 
-## Claude Code v0.2.33 Changelog
-
 ### New Features
 
 #### Improved `/compact` Command

@@ -1,9 +1,7 @@
 # Changelog for version 1.0.84
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.84 introduces improved search performance with native ripgrep integration, enhanced file path completion with quoted path support, and refined UI components for better interactive selections.
-
-## 🚀 New Features
 
 ### Native Ripgrep Integration
 **What:** Built-in support for using ripgrep as the search backend with automatic availability detection
@@ -51,8 +49,6 @@ claude --grep "search term"
 - Better color scheme using "suggestion" and "success" colors
 - Enhanced padding and spacing for improved readability
 
-## 💪 Improvements
-
 ### Todo List Display Enhancement
 **What changed:** Condensed todo list view with configurable verbosity
 **Previous behavior:** All todos always displayed in full
@@ -70,8 +66,6 @@ claude --grep "search term"
 **Previous behavior:** Bookmarks were persisted across sessions
 **New behavior:** Session management focuses on messages and checkpoints only
 **Impact:** Simplified data model with more reliable session recovery
-
-## 🐛 Bug Fixes
 
 ### Fixed: Code Signing for macOS Ripgrep Binary
 - **Issue:** Ripgrep binary on macOS could fail due to code signing requirements

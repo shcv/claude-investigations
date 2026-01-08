@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.16 Changelog
 
-## New Features
-
 ### Plan Mode Support
 - **New `ExitPlanMode` tool**: Users can now work in a "plan mode" where Claude Code presents implementation plans before executing them. When ready to proceed with coding, this tool prompts the user to exit plan mode.
   - Example usage: After Claude Code presents a plan for implementing a feature, it will use this tool to get user approval before proceeding with the actual implementation.
@@ -13,8 +11,6 @@
 - **New session mode detection**: Claude Code can now detect and handle non-interactive sessions differently from interactive ones.
   - Two new functions manage this state: `z0A()` to check if the session is non-interactive, and `w0A(A)` to set the non-interactive state.
   - This affects API key authentication behavior - non-interactive sessions have different authentication requirements.
-
-## Improvements
 
 ### Authentication and API Key Handling
 - **Enhanced API key source detection**: The authentication check now considers whether the API key comes from `ANTHROPIC_API_KEY` environment variable or the `apiKeyHelper`.

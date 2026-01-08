@@ -1,9 +1,7 @@
 # Changelog for version 1.0.105
 
-## 🎯 Highlights
+## Highlights
 Enhanced cross-platform path handling with improved Windows support for file access validation, addressing compatibility issues on Windows systems.
-
-## 🚀 Improvements
 
 ### Enhanced Windows Path Handling
 **What:** Improved file path validation with proper Windows path support

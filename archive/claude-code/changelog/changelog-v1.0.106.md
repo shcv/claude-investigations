@@ -1,9 +1,7 @@
 # Changelog for version 1.0.106
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.106 introduces conversation compacting for better performance and readability, reduces terminal flickering with synchronized updates, and enhances Windows path handling with improved Cygwin integration.
-
-## 🚀 New Features
 
 ### Conversation Compacting
 **What:** Automatically compact conversation history to improve performance and maintain context
@@ -58,8 +56,6 @@ Version 1.0.106 introduces conversation compacting for better performance and re
 - Enhanced message filtering capabilities
 - Improved conversation state management
 - **Evidence**: `CQB() at line 388855`
-
-## Other changes
 
 ### Security Improvements
 **What:** Tightened command execution security by removing pattern-matching tools from safe command list

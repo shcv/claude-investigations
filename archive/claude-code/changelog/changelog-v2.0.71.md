@@ -20,7 +20,6 @@ Press `alt+t` (or `option+t` on macOS) while focused on the prompt input to open
 
 **Evidence**: `$r2()` at line 464580 (ThinkingPicker component, contains `"Toggle thinking mode"` and `"Enable or disable thinking for this session"`) and `HsA` at line 179809 (hotkey definition, `displayText: "alt+t"`)
 
----
 
 ### Accept Prompt Suggestion with Enter
 
@@ -38,7 +37,6 @@ Press `alt+t` (or `option+t` on macOS) while focused on the prompt input to open
 
 **Evidence**: Submit handler at line 32049-32056 (input handler, checks `t.trim() === "" && JA.promptSuggestion.text && JA.promptSuggestion.shownAt > 0`)
 
----
 
 ### Improved Token Counting for Custom System Prompts
 
@@ -46,7 +44,6 @@ The `/context` command now accurately accounts for custom system prompts and app
 
 **Evidence**: `NK0()` at line 384355 (context calculation, now uses `ySA()` with `customSystemPrompt` and `appendSystemPrompt` parameters)
 
----
 
 ### Enhanced Teleportation Telemetry
 
@@ -54,7 +51,6 @@ Session teleportation (resume from web) now tracks whether the first message aft
 
 **Evidence**: `obA()` at line 2424 (sets `teleportedSessionInfo.isTeleported` and `hasLoggedFirstMessage`), with events `tengu_teleport_first_message_success` and `tengu_teleport_first_message_error`
 
----
 
 ### MCP SDK Protocol Update
 

@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.27 Changelog
 
-## New Features
-
 ### Working Directory Management Improvements
 - **Enhanced directory addition feedback**: The `/add-dir` command now provides more detailed and specific error messages when adding working directories
   - Clear message when no path is provided: "Please provide a directory path."
@@ -17,13 +15,9 @@
   - Directories specified in `permissions.additionalDirectories` are automatically added at startup
   - These are processed alongside command-line `--add-dir` arguments
 
-## Bug Fixes
-
 ### Terminal Title Generation
 - **Fixed unnecessary API calls**: Terminal title generation now skips processing for local command output (messages starting with `<local-command-stdout>`)
 - **Disabled prompt caching**: Changed `enablePromptCaching` from `true` to `false` for terminal title requests to improve performance
-
-## Technical Changes
 
 ### Import Reorganization
 - Replaced direct `stream` import with `PassThrough` from `stream`
@@ -34,8 +28,6 @@
 - Refactored directory addition logic to use a result-based pattern instead of direct success/message returns
 - Improved error handling and message formatting for directory operations
 - Better separation of concerns between directory validation and permission context updates
-
-## Usage Examples
 
 ### Adding Working Directories
 ```bash
@@ -48,9 +40,9 @@ claude --add-dir /project1 --add-dir /project2
 # Directories from config are automatically included
 # In your config file:
 # permissions:
-#   additionalDirectories:
-#     - /home/user/projects
-#     - /opt/shared/code
+# additionalDirectories:
+# - /home/user/projects
+# - /opt/shared/code
 ```
 
 ### Error Handling Examples

@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.78 Changelog
 
-## New Features
-
 ### OAuth Token Refresh Support
 - **Added automatic OAuth token refresh functionality** for MCP (Model Context Protocol) connections
   - When an OAuth access token expires, Claude Code will now automatically attempt to refresh it using the refresh token
@@ -25,8 +23,6 @@
   OTEL_METRICS_INCLUDE_VERSION=true claude
   ```
 
-## Improvements
-
 ### Enhanced OAuth Infrastructure
 - Added OAuth authorization server metadata discovery following the `.well-known/oauth-authorization-server` specification
 - Improved error handling for OAuth token refresh failures with detailed error messages
@@ -35,8 +31,6 @@
 ### Code Organization
 - Refined import statements to use more specific imports (e.g., `import { PassThrough as ou9 } from "stream"` instead of importing the entire stream module)
 - Added proper process imports using the `node:` prefix convention
-
-## Bug Fixes
 
 ### OAuth Token Management
 - Fixed potential issues with expired OAuth tokens by implementing proper refresh logic

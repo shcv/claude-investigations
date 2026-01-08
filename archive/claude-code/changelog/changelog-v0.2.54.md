@@ -4,8 +4,6 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
 
 # Claude Code v0.2.54 Changelog
 
-## New Features
-
 ### Memory System
 - **New `/memory` command**: Edit and manage Claude's memory files
   - Access three types of memory:
@@ -37,8 +35,6 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
   - Supports multiple URL formats including bare domains
   - More intelligent domain extraction from user messages
 
-## UI/UX Improvements
-
 ### Visual Indicators
 - **Memory mode indicator**: Shows `# to memorize` hint when in memory mode
 - **Auto-accept mode indicator**: Shows `⏵⏵ auto-accept edits on` when file edits are auto-accepted
@@ -55,8 +51,6 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
 - **Lodash integration**: Added Lodash (v4.17.21) for optimized utility functions
 - **Better resource cleanup**: Improved handling of memory and cache resources
 - **Streaming optimizations**: More efficient handling of large responses
-
-## Developer Experience
 
 ### Configuration
 - **MCP server configuration**: Support for both `stdio` and `sse` type servers

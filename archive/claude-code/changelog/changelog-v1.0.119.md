@@ -1,10 +1,8 @@
 # Changelog for version 1.0.119
 
-## 🎯 Highlights
+## Highlights
 
 Version 1.0.119 is a maintenance release focused on code quality improvements and internal refactoring. This release includes dependency updates (AWS Bedrock SDK reorganization) and error handling consistency improvements, with no user-facing feature changes or behavioral modifications.
-
-## Internal improvements
 
 ### Code Quality Enhancements
 

@@ -1,13 +1,11 @@
 # Changelog for version 0.2.64
 
-## Claude Code v0.2.64 Changelog
-
 ### New Features
 
-#### 🎯 Tool Call Counter
+#### Tool Call Counter
 A new visual indicator that displays the number of tool calls being made during interactions. This can be enabled through the `showToolCallCount` configuration option, helping users track Claude's tool usage in real-time.
 
-#### 📝 ULTRACLAUDE.md Support (Experimental)
+#### ULTRACLAUDE.md Support (Experimental)
 Introduced experimental support for a new user preferences file called `ULTRACLAUDE.md`. This file:
 - Lives in the `.claude` directory alongside other configuration files
 - Provides critical user preferences that override default behavior
@@ -19,7 +17,7 @@ Example warning display:
 ⚠️ ULTRACLAUDE.md exceeds 1000 chars (1234 chars) • /memory to edit
 ```
 
-#### 🔐 Enhanced Permission Debug Info
+#### Enhanced Permission Debug Info
 New permission debugging display that shows detailed information about permission decisions:
 - Rule-based decisions with their sources (CLI argument, local settings, or project settings)
 - Mode information (Default, Accept Edits, or Bypass Permissions)
@@ -37,12 +35,12 @@ Permission debug info:
 
 ### Improvements
 
-#### 🔄 Enhanced Instruction System
+#### Enhanced Instruction System
 - Updated the instruction preamble from "Codebase-specific instructions" to more authoritative language
 - New critical user preferences reminder system that seamlessly injects user preferences into conversations
 - Preferences are automatically appended to user messages without disrupting the conversation flow
 
-#### 🛠️ Stream Processing Enhancement
+#### ️ Stream Processing Enhancement
 The stream event handler now includes an optional callback for tool use detection, allowing the UI to respond immediately when Claude begins using tools.
 
 ### Technical Changes

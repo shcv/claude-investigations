@@ -6,7 +6,8 @@ Cleans up LLM-generated changelogs by:
 1. Removing duplicate headers and meta-commentary
 2. Removing emoji from section headers
 3. Collapsing empty sections
-4. Standardizing formatting
+4. Removing horizontal rules (---) that Discord doesn't render
+5. Standardizing formatting
 """
 
 import argparse
@@ -256,6 +257,28 @@ def remove_trailing_separators(content: str) -> Tuple[str, bool]:
     return new_content, new_content != content
 
 
+def remove_horizontal_rules(content: str) -> Tuple[str, bool]:
+    """
+    Remove horizontal rule separators (---) from the document.
+
+    Discord doesn't render --- as horizontal rules, so these just appear
+    as literal text. Remove them and rely on blank lines for visual separation.
+    """
+    lines = content.split('\n')
+    result_lines = []
+    modified = False
+
+    for line in lines:
+        # Check if this is a standalone horizontal rule (just --- or ---)
+        if line.strip() == '---':
+            modified = True
+            # Skip this line entirely
+            continue
+        result_lines.append(line)
+
+    return '\n'.join(result_lines), modified
+
+
 def normalize_blank_lines(content: str) -> Tuple[str, bool]:
     """
     Normalize multiple consecutive blank lines to at most 2.
@@ -282,6 +305,7 @@ def cleanup_changelog(content: str, version: str) -> Tuple[str, bool]:
         ('emoji in headers', remove_emoji_from_headers),
         ('empty sections', collapse_empty_sections),
         ('trailing separators', remove_trailing_separators),
+        ('horizontal rules', remove_horizontal_rules),
         ('blank lines', normalize_blank_lines),
     ]
 

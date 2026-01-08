@@ -1,9 +1,7 @@
 # Changelog for version 1.0.91
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.91 is a targeted refinement release focused on security enhancements, developer experience improvements, and user interface polish. Key additions include command obfuscation detection, native grep/ripgrep support, GitHub Actions integration templates, and enhanced CLI animations.
-
-## 🚀 New Features
 
 ### Native grep and ripgrep Support
 **What:** Added native support for `grep` and `rg` (ripgrep) commands within Claude's secure sandbox
@@ -75,8 +73,6 @@ ls "-"la       # Obfuscated flag pattern detected
 - Tracks occurrence counts for telemetry
 - Optional debug logging with `CLAUDE_DEBUG=true`
 
-## 🔧 Improvements
-
 ### OAuth Server Reliability
 **What:** Enhanced OAuth callback server with dynamic port allocation
 **Details:**
@@ -93,16 +89,12 @@ ls "-"la       # Obfuscated flag pattern detected
 - Better handling of various OAuth server implementations
 - More robust token exchange processes
 
-## 🐛 Bug Fixes
-
 ### Command Argument Processing
 **What:** Fixed null pointer exception in command argument filtering
 **Details:**
 - Changed filter condition from `!B.startsWith("-")` to `!B?.startsWith("-")`
 - Prevents crashes when processing commands with null/undefined arguments
 - Improves robustness of command parsing pipeline
-
-## 📝 Clarifications
 
 ### Features NOT New in 1.0.91
 The following were already present in v1.0.90 and are not new features:

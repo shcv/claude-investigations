@@ -1,10 +1,8 @@
 # Changelog for version 2.0.32
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.32 delivers significant performance improvements with optimized terminal rendering that eliminates flicker, introduces an automated tool execution API for building agentic workflows, and enhances the user feedback system for better accuracy. The release also removes seasonal Halloween content and adds helpful UI hints for users with 1M context access.
-
-## 🚀 New Features
 
 ### Automated Tool Execution API (BetaToolRunner)
 
@@ -102,8 +100,6 @@ The renderer now:
 - Implements transaction-based cursor management for atomic updates
 - **Evidence**: Functions `qRA()` at line 70135, `uR0()` at line 70140, `mR0()` at line 70379, class `dR0` at line 70395
 
-## 💪 Improvements
-
 ### Feedback Survey System Refinements
 
 **What changed:** The in-app feedback survey mechanism was refactored for improved accuracy and maintainability
@@ -176,8 +172,6 @@ feedbackSurvey: {
 - Synced to global settings via state change handler
 - **Evidence**: State structure at line 298044, sync handler in `Wb()` (renamed from `Bb`) at line 482021
 
-## 🐛 Bug Fixes
-
 ### Message Selection After Restoration
 
 **What:** Fixed message selection index calculation after restoring previous conversations
@@ -187,8 +181,6 @@ feedbackSurvey: {
 - Now resets to first message (index 0) when message list changes
 - Prevents out-of-bounds errors when message IDs don't match after restoration
 - **Evidence**: Function `w11()` at line 439713 (simplified from `I11()` at line 439313)
-
-## 🧹 Cleanup
 
 ### Seasonal Content Removal
 
@@ -212,12 +204,10 @@ feedbackSurvey: {
 - Reduces duplication and makes prompt updates easier to maintain
 - **Evidence**: Variables removed from v2.0.31 lines 205049-220 and 433633-253, re-added as variables in v2.0.32
 
-## 📊 Version Information
+## Version Information
 
 - **SDK Version:** Updated from 0.60.0 to 0.66.0
 - **Variable `Dh` at line 81689**
-
-## 🔧 Technical Changes
 
 ### Constants Added
 

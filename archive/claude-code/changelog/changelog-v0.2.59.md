@@ -2,18 +2,14 @@
 
 # Claude Code v0.2.59 Changelog
 
-## New Features
-
-### 🖼️ Copy+paste images directly into your prompt
+### ️ Copy+paste images directly into your prompt
 You can now paste images (JPEG, PNG, GIF, WebP) directly into the chat interface. Claude will automatically detect and process these images, making it easier to share screenshots, diagrams, or other visual content without having to save and reference files.
 
-### 📊 Improved progress indicators for bash and fetch tools
+### Improved progress indicators for bash and fetch tools
 The CLI now provides better visual feedback when running bash commands or fetching web content, giving you clearer indication of long-running operations.
 
-### 🐛 Bugfixes for non-interactive mode (-p)
+### Bugfixes for non-interactive mode (-p)
 Fixed several issues that affected the non-interactive prompt mode (`claude -p`), making it more reliable for scripted usage.
-
-## Technical Improvements
 
 ### Enhanced Onboarding Experience
 The getting started tips now track completion status with checkmarks (✓) for completed items:

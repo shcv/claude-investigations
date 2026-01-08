@@ -1,9 +1,7 @@
 # Changelog for version 2.0.2
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.2 focuses on security improvements, AWS Marketplace support, and bug fixes. Key changes include new workspace trust checks for AWS credential operations, billing type detection for AWS Marketplace customers, improved error handling for API concurrency issues, and a fix for stale credential caching.
-
-## 🔒 Security Enhancements
 
 ### AWS Credential Workspace Trust Checks
 **What:** Added security checks to prevent AWS credential operations before workspace trust is confirmed
@@ -16,8 +14,6 @@ Version 2.0.2 focuses on security improvements, AWS Marketplace support, and bug
 - **Evidence**: Security check implementation at `oH5() at line 438469` and `tH5() at line 438512`
 
 **Why this matters:** Prevents malicious projects from triggering AWS credential refresh or export commands that could exfiltrate credentials before the user has reviewed and trusted the workspace.
-
-## 🚀 New Features
 
 ### AWS Marketplace Billing Detection
 **What:** Added support for detecting AWS Marketplace billing and restricting features accordingly
@@ -52,8 +48,6 @@ API Error: 400 due to tool use concurrency issues. Run /rewind to recover the co
 
 **Why this matters:** Provides users with actionable recovery steps instead of a generic API error message when tool execution gets out of sync.
 
-## 🐛 Bug Fixes
-
 ### Fixed Stale Credential Cache
 **What:** Removed memoization from credential storage `read()` methods to prevent stale data
 
@@ -79,8 +73,6 @@ API Error: 400 due to tool use concurrency issues. Run /rewind to recover the co
 
 **Why this matters:** Session persistence is more reliable when multiple processes or partial fetch operations are involved.
 
-## Other Changes
-
 ### Removed Rate Limit Display from Model Selection
 **What:** Model selection UI no longer shows rate limit fallback status or reset times
 
@@ -91,11 +83,8 @@ API Error: 400 due to tool use concurrency issues. Run /rewind to recover the co
 - The underlying rate limit tracking (`maxRateLimitFallbackActive`) still exists but is no longer displayed in this UI
 - **Evidence**: Function simplified from `D3B() at line 401267` to `xs2() at line 392676`
 
-## Internal Improvements
-
 ### Terminal Rendering Refactor
 Extracted terminal resize detection logic into dedicated `p3A()` helper function at line 358129. Frame objects now track terminal dimensions (`rows`, `columns`) enabling automatic resize detection without explicit boolean parameters. No user-facing changes.
 
----
 
 **Note:** Many variable and function names changed due to minification (approximately 8,390 renames). This is normal for bundled releases and doesn't affect functionality.

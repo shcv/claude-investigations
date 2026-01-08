@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.126 Changelog
 
-## New Features
-
 ### Enhanced GitHub App Installation Workflow
 The GitHub app installation process has been significantly improved with better error handling and user guidance:
 
@@ -52,13 +50,9 @@ The GitHub app installation process has been significantly improved with better 
 ### Code Editing Metrics
 - **New Telemetry**: Added metrics tracking for code editing tool permission decisions (accept/reject) for Edit, MultiEdit, Write, and NotebookEdit tools
 
-## Model Support Updates
-
 ### Sonnet Model Handling
 - Improved support for the "sonnet" model identifier
 - Better model selection logic that properly handles custom models and built-in model aliases
-
-## Technical Improvements
 
 ### Diff Generation Enhancement
 - The diff generation function now supports a `singleHunk` parameter for better control over diff output format

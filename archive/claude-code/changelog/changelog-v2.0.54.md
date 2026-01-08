@@ -1,10 +1,8 @@
 # Changelog for version 2.0.54
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces enterprise hook control via `allowManagedHooksOnly`, adds telemetry event sampling to reduce observability costs, and begins testing a new CDN infrastructure with "dark read" parallel downloads. Terminal progress indicators are now more compatible across different terminal emulators.
-
-## 🚀 New Features
 
 ### Enterprise Hook Control: `allowManagedHooksOnly` Policy Setting
 **What:** New policy setting that restricts hook execution to only those defined in managed enterprise settings, blocking user, project, local, and plugin hooks.
@@ -60,8 +58,6 @@ Warning: MCP endpoint file not found at <path> (session: <id>). Falling back to 
 - Error messages now include session IDs and file paths for easier debugging
 - **Evidence**: `DH()` at line 519760, warning message at line 519769
 
-## ⚡ Improvements
-
 ### Smarter Terminal Progress Indicators
 **What:** OSC 9;4 taskbar progress sequences now only emit for terminals that properly support them.
 
@@ -98,8 +94,6 @@ Warning: MCP endpoint file not found at <path> (session: <id>). Falling back to 
 - Helps track download performance across different sources
 - **Evidence**: `Bh2()` at line 428934, telemetry call at line 428563
 
-## 🗑️ Removed
-
 ### OverflowTest Tool Removed
 **What:** Internal testing tool for generating large outputs has been removed from the codebase.
 
@@ -108,8 +102,6 @@ Warning: MCP endpoint file not found at <path> (session: <id>). Falling back to 
 - Used for testing tool result persistence with configurable output sizes (1-10000 KB)
 - Some orphaned schema definitions remain as dead code (`BdZ`, `GdZ` at line 475943)
 - **Evidence**: Full removal from v2.0.53 lines 475722-475818
-
-## Other Changes
 
 ### Import Reorganization
 - Various import statements reorganized and consolidated

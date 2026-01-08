@@ -1,9 +1,7 @@
 # Changelog for version 1.0.81
 
-## 🎯 Highlights
+## Highlights
 Claude Code v1.0.81 introduces a powerful plugin system for extending functionality through custom commands and agents, improves concurrent query handling to prevent race conditions, and adds enhanced telemetry for better usage insights.
-
-## 🚀 New Features
 
 ### Plugin System (Experimental)
 **What:** Complete plugin framework for extending Claude Code with custom commands, agents, and hooks
@@ -33,8 +31,6 @@ claude
 - Captures complete prompt data including tools, system prompts, and messages
 - Silent error handling to prevent interruption of normal operations
 
-## 💪 Improvements
-
 ### Enhanced Concurrent Query Handling
 **What changed:** Concurrent queries are now blocked with user feedback instead of causing undefined behavior
 **Impact:** Prevents race conditions and provides clear messaging when users submit queries too quickly. Shows "Previous query still processing. Please try again." warning message.
@@ -52,8 +48,6 @@ claude
 ### Plugin Agent Discovery
 **What changed:** Agent discovery now supports plugin-provided agents in addition to built-in and custom agents
 **Impact:** Plugin agents appear seamlessly integrated in the agent list with "Plugin: {pluginName}" attribution
-
-## 🐛 Bug Fixes
 
 ### Fixed: Concurrent Query Race Condition
 - **Issue:** Users could submit multiple queries simultaneously, causing unpredictable behavior

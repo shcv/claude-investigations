@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff file, here's the detailed changelog for Claude Code version 1.0.44:
 
-## Claude Code v1.0.44 Changelog
-
 ### New Features
 
 #### 1. **Export Conversation Command** 🆕

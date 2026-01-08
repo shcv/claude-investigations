@@ -1,10 +1,8 @@
 # Changelog for version 2.0.31
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.31 introduces startup performance profiling capabilities, significantly enhances sed command security validation, and adds support for the latest web-search API. Additionally, internal improvements to diff rendering and telemetry tracking provide better visibility into Claude Code's operations.
-
-## 🚀 New Features
 
 ### Startup Performance Profiling
 
@@ -54,8 +52,6 @@ CLAUDE_CODE_PROFILE_STARTUP=1 claude
 - Part of Anthropic's beta features system
 - **Evidence**: `ErB = "web-search-2025-03-05"` at line 203723, `AT8()` function at line 203732
 
-## 🔒 Security Enhancements
-
 ### Enhanced Sed Command Validation
 
 **What:** Significantly improved security validation for sed commands to prevent dangerous operations while allowing safe read-only usage.
@@ -81,8 +77,6 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Dangerous flag combination detection in `Gj8()` at line 209345
 - Prevents file modification and command execution while allowing safe text processing
 - **Evidence**: Comparison of `hoB()` at line 209135 in v2.0.30 vs `JtB()` at line 209288 in v2.0.31
-
-## 🔧 Improvements
 
 ### Diff Rendering Simplification
 
@@ -117,8 +111,6 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Part of the overall startup profiling infrastructure
 - **Evidence**: `o5("cli_before_main_import")` at line 486806, `o5("cli_after_main_import")` at line 486808 in function `Wo5()` at line 486798
 
-## 🐛 Bug Fixes
-
 ### Redirect Operator Quoting
 
 **What:** Fixed shell command quoting logic to correctly handle file descriptor redirects.
@@ -136,8 +128,6 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Ensures `hooks` object is properly removed when empty
 - Prevents empty configuration objects from persisting
 - **Evidence**: Function `rV2()` at line 414417 adds proper cleanup logic at lines 414433-414435, improving upon `qV2()` at line 414128 in v2.0.30
-
-## 📦 Internal Changes
 
 ### Import Organization
 
@@ -174,6 +164,5 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Added utility functions: `Vc()` at line 446305, `Qp5()` at line 460873, `xM2()` at line 429780
 - Added helper functions for tool management: `Gu2()` at line 456056, `Ve1()` at line 456053, `Iu2()` at line 456048
 
----
 
 **Note:** This changelog focuses on user-visible changes and significant internal improvements. Version 2.0.31 includes additional internal refactoring and code organization improvements not detailed here.

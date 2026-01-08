@@ -1,10 +1,8 @@
 # Changelog for version 0.2.37
 
-## Claude Code v0.2.37 Changelog
-
 ### New Features
 
-#### 🎉 `/release-notes` Command
+#### `/release-notes` Command
 A new slash command that displays release notes for all versions of Claude Code.
 
 **Usage:**
@@ -14,7 +12,7 @@ A new slash command that displays release notes for all versions of Claude Code.
 
 This command shows the complete release history with version numbers and their corresponding changes. The release notes are now always available and enabled by default (`isEnabled: !0`), replacing the previous version-specific implementation.
 
-#### 🔧 Enhanced `config add/remove` Commands
+#### Enhanced `config add/remove` Commands
 The `claude config add` and `claude config remove` commands now support adding or removing multiple values at once.
 
 **New capabilities:**
@@ -38,7 +36,7 @@ claude config add --global mcpServers server1,server2,server3
 
 ### Improvements
 
-#### 🔔 Kitty Terminal Notification Support
+#### Kitty Terminal Notification Support
 Added native notification support for Kitty terminal emulator using the OSC 99 protocol.
 
 **How it works:**
@@ -47,7 +45,7 @@ Added native notification support for Kitty terminal emulator using the OSC 99 p
 - Automatically detected when `preferredNotifChannel` is set to "auto"
 - Can be explicitly enabled with `claude config set preferredNotifChannel kitty`
 
-#### 🎯 Better Terminal Detection
+#### Better Terminal Detection
 Improved terminal detection for Kitty:
 - Now checks `TERM` environment variable for "kitty" string earlier in the detection chain
 - More reliable Kitty terminal identification

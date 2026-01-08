@@ -1,10 +1,8 @@
 # Changelog for version 2.0.68
 
-## 🎯 Highlights
+## Highlights
 
 This release adds security hardening for shell commands that access sensitive environment variables, improves the plan mode UX with cleaner empty plan handling, and introduces support for sandbox permission requests in swarm/teammate workflows. The release also includes various quality-of-life improvements to text input word navigation and the session resume UI.
-
-## 🚀 New Features
 
 ### Security Check for /proc/*/environ Access
 **What:** Commands attempting to access `/proc/*/environ` paths now trigger an explicit permission prompt, protecting against potential exposure of sensitive environment variables.
@@ -36,8 +34,6 @@ This release adds security hardening for shell commands that access sensitive en
 **Details:**
 - Tools can be filtered out when a deny rule exists with no `ruleContent`
 - Allows administrators to disable tools entirely for security or compliance
-
-## Improvements
 
 ### Plan Mode Empty Plan Handling
 **What:** When exiting plan mode without having written a plan, users now see a simplified confirmation dialog instead of the full plan approval UI.
@@ -101,8 +97,6 @@ This release adds security hardening for shell commands that access sensitive en
 - Constructor now accepts optional session ID parameter
 - Log messages include session context when available
 - Helps with debugging connection issues in multi-session scenarios
-
-## Other Changes
 
 ### Internal Refactoring
 - Permission sync system refactored to use mailbox-based communication instead of file-based polling

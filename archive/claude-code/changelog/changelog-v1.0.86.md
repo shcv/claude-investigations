@@ -1,9 +1,7 @@
 # Changelog for version 1.0.86
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.86 introduces a context usage visualization command, enhances file permission handling with intelligent suggestions and git config protection, and improves the trust dialog UI for better clarity and security awareness.
-
-## 🚀 New Features
 
 ### Context Usage Visualization
 **What:** New `/context` command that displays current token usage as a colored grid
@@ -46,8 +44,6 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Suggests appropriate permission scope based on the operation
 - Can suggest switching to "acceptEdits" mode for write operations
 - Provides rules that can be applied to efficiently grant permissions
-
-## 💪 Improvements
 
 ### Enhanced Trust Dialog
 **What changed:** Simplified and consolidated the project trust dialog
@@ -108,8 +104,6 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - File attachments stay with their relevant assistant or user messages
 - Prevents context loss when processing conversations with attachments
 - Better message organization for complex conversations
-
-## 🐛 Bug Fixes
 
 ### Fixed: Spinner Words Configuration Structure
 - **Issue:** Spinner words were stored as a plain array limiting extensibility

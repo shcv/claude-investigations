@@ -1,10 +1,8 @@
 # Changelog for version 2.0.37
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.37 introduces user feedback for tool rejections, improves telemetry tracking with version normalization and feedback metrics, and enhances proxy support with client certificates for WebSocket connections. The release also includes security refinements for Windows path validation and better session data persistence on process exit.
-
-## 🚀 New Features
 
 ### Tool Rejection Feedback
 **What:** Users can now provide feedback text when rejecting a tool use, telling Claude what to do differently.
@@ -64,8 +62,6 @@ export CLAUDE_CODE_CLIENT_KEY_PASSPHRASE=optional_passphrase
 - Replaces global proxy agent pattern with per-connection agents
 - **Evidence**: `CFA()` function at line 151929, WebSocket usage at line 488707, API usage at lines 483464 and 483483
 
-## ✨ Improvements
-
 ### Enhanced Telemetry System
 
 **Version Base Tracking:**
@@ -102,8 +98,6 @@ export CLAUDE_CODE_CLIENT_KEY_PASSPHRASE=optional_passphrase
 - Previously only disabled some checks; now more comprehensive
 - **Evidence**: Conditional check wrapping at line 373886 in `mZ5()` function
 
-## 🔧 Other Changes
-
 ### Windows Path Security Refinement
 
 **Simplified UNC Path Detection:**
@@ -123,6 +117,5 @@ Proxy bypass logic moved from axios interceptors to per-request agent creation v
 
 **Evidence**: `CFA()` function at line 151929, proxy bypass check `QbA()` integration
 
----
 
 **Note:** Line numbers reference `/home/shcv/projects/claude-investigations/archive/claude-code/pretty/pretty-v2.0.37.js` unless otherwise specified.

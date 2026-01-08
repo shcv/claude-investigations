@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.109 Changelog
 
-## New Features
-
 ### Custom Model Selection
 - Added support for specifying custom AI models via the `modelInput` parameter
 - Users can now override the default model selection when running Claude Code
@@ -27,8 +25,6 @@
 - Shows feedback prompt for sessions longer than 10 characters
 - Controlled by the "tengu-exit-feedback" feature flag
 
-## Improvements
-
 ### Version Management
 - Version now properly sourced from package.json (`y_2` variable)
 - Centralized version retrieval through `_D5` function
@@ -42,8 +38,6 @@
 ### IDE Integration
 - Enhanced IDE integration function (`jD5`) now returns a promise
 - Better error handling and cleanup for VS Code extension installation
-
-## Internal Changes
 
 ### Code Organization
 - Removed duplicate imports and unused variables

@@ -1,9 +1,7 @@
 # Changelog for version 2.0.69
 
-## 🎯 Highlights
+## Highlights
 This release fixes a significant bug in the prompt suggestion system where the token limit was too restrictive, and includes internal code refactoring for better maintainability.
-
-## 🐛 Bug Fixes
 
 ### Prompt Suggestion Token Limit Fix
 **What:** Fixed the prompt suggestion feature's `maxOutputTokens` limit, which was set far too low at 50 tokens, potentially causing truncated or failed suggestions.
@@ -13,8 +11,6 @@ This release fixes a significant bug in the prompt suggestion system where the t
 - This provides the model adequate headroom to generate suggestions without hitting token limits
 - The prompt still requests brief 3-8 word suggestions, but the model now has sufficient capacity to reason and respond reliably
 - **Evidence**: `nH8()` function at line 366252 - `maxOutputTokens` changed from `iH8` (value: 50) to hardcoded `16000`
-
-## 🔧 Internal Improvements
 
 ### Prompt Suggestion Code Refactoring
 **What:** The prompt suggestion function was refactored for better code organization and maintainability.

@@ -1,9 +1,7 @@
 # Changelog for version 2.0.60
 
-## 🎯 Highlights
+## Highlights
 This release adds Pro plan Opus defaults, improved teammate/agent messaging UI, smarter git state detection to prevent diff issues during rebases/merges, and enhanced prompt queue execution handling.
-
-## 🚀 New Features
 
 ### Pro Plan Opus Default Option
 **What:** New experimental feature that allows Pro plan subscribers to use Opus 4.5 as their default model.
@@ -78,8 +76,6 @@ Pass `disableSlashCommands: true` to the main component to disable all slash com
 - When enabled, the commands list is replaced with an empty array
 - **Evidence**: Parameter defined at line 19137, conditional at line 19191
 
-## ⚡ Improvements
-
 ### Git Rebase/Merge State Detection
 **What:** Claude now detects when git is in the middle of a rebase, merge, cherry-pick, or revert operation and skips the diff display to avoid confusing partial state.
 
@@ -122,8 +118,6 @@ When fetching from llms.txt or documentation sources, the response can include f
 - Added `Dg1()` for work loop execution with expiration handling
 - Added timing functions `Iy()`, `PzB()` for deadline checking
 - These are internal React infrastructure updates that improve rendering performance
-
-## Other Changes
 
 ### Inbox Message Handling Improvements
 - Inbox polling now properly queues messages when session is busy

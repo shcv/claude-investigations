@@ -2,11 +2,9 @@
 
 Based on my analysis of the diff file, here's the changelog for Claude Code v1.0.60:
 
-## Claude Code v1.0.60 Changelog
-
 ### Major Features
 
-#### 🚀 Agent Management System (New!)
+#### Agent Management System (New!)
 - **New `/agents` command**: Create and manage custom subagents that Claude can delegate tasks to
   - Create agents with specialized system prompts and tool access
   - Choose between AI-generated or manual agent configuration
@@ -20,7 +18,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v1.0
 /agents
 ```
 
-#### 🐚 Background Shell Management Tools (New!)
+#### Background Shell Management Tools (New!)
 - **KillShell Tool**: Kill a running background shell by its ID
   - Use `/bashes` command to find shell IDs
   - Returns success/failure status
@@ -32,7 +30,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v1.0
 
 ### Enhanced Features
 
-#### 📝 Bash Output Summarization
+#### Bash Output Summarization
 - Claude now intelligently summarizes verbose command outputs
 - Summaries are triggered for outputs over 5000 characters
 - Original output is preserved and can be viewed in verbose mode
@@ -52,19 +50,19 @@ Errors: None encountered
 Verbatim output: [key snippets preserved]
 ```
 
-#### 🎨 Spinner Tips
+#### Spinner Tips
 - Tips functionality has been made configurable
 - Tips are now fetched dynamically based on user preferences
 - Improved tip management system
 
 ### UI/UX Improvements
 
-#### 🎯 Enhanced Dialog Components
+#### Enhanced Dialog Components
 - New `bv1` component for better dialog presentation
 - Improved escape key handling with "Press Esc again to exit" confirmation
 - Consistent styling with rounded borders and proper spacing
 
-#### 🔧 OAuth Flow Improvements
+#### OAuth Flow Improvements
 - Added manual code entry support for OAuth authentication
 - Better error handling with retry options
 - Visual improvements during the authentication process
@@ -72,7 +70,7 @@ Verbatim output: [key snippets preserved]
 
 ### Technical Improvements
 
-#### 🛠️ Command System Enhancements
+#### ️ Command System Enhancements
 - New agent type system with built-in types:
   - `general-purpose`: General multi-step task handling
   - `context-collector`: Codebase exploration and metrics
@@ -88,14 +86,14 @@ Verbatim output: [key snippets preserved]
   - `documentation-specialist`: Comprehensive documentation
   - `style-fixer`: Code formatting and style
 
-#### 🔄 Aliases and Usability
+#### Aliases and Usability
 - `/clear` command now also responds to `/reset` alias
 - Improved permission handling for additional working directories
 - Better path resolution and validation
 
 ### Developer Experience
 
-#### 📊 Agent Creation Workflow
+#### Agent Creation Workflow
 1. **Choose location**: Project or personal agents directory
 2. **Creation method**: AI-generated or manual configuration
 3. **Define purpose**: Describe what the agent should do

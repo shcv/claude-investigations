@@ -1,10 +1,8 @@
 # Changelog for version 2.0.17
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.17 introduces MCPB file format support for distributing packaged MCP servers, adds SOCKS5 proxy support for enhanced network sandboxing, includes support for the new Haiku 4.5 model, and enhances Windows path security validation.
-
-## 🚀 New Features
 
 ### MCPB File Format Support
 
@@ -84,8 +82,6 @@ Automatic protection when Claude attempts to access files with suspicious paths.
 - Detects reserved device names (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
 - Applies to both read and write permission checks
 - **Evidence**: `ZMQ() at line 454449`, integrated into `b41() at line 454621` and `op() at line 454708` (function and security checks completely absent from v2.0.15)
-
-## Other changes
 
 ### Enhanced Changelog Fetch Respects Traffic Control
 

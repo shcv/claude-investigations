@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.68 Changelog
 
-## Changes
-
 ### Import Optimizations
 
 This release includes minor import optimizations that improve code efficiency:

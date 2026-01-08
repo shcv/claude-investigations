@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.60 Changelog
 
-## New Features
-
 ### Git Worktree Tips
 - **New contextual tip system**: Claude Code now provides helpful tips based on your usage patterns. The first tip encourages users to leverage git worktrees for running multiple Claude sessions in parallel.
   - The tip appears after 50+ startups when you have only 1 or 0 git worktrees configured
@@ -15,8 +13,6 @@
   - Whether you're in a git repository
   - Number of git worktrees configured
   - Memory usage patterns
-
-## Improvements
 
 ### Non-Interactive Mode (-p/--print)
 - **Improved transcript output**: When using `claude -p` for non-interactive mode, the transcript now filters out progress messages, providing cleaner output
@@ -31,8 +27,6 @@
 - Improved conversation compaction with better context handling:
   - Now properly clears file timestamps after compaction
   - Better integration with the conversation context system
-
-## Technical Changes
 
 ### Import Optimizations
 - Switched from default imports to named imports for better tree-shaking:
@@ -49,8 +43,6 @@
 
 - Fixed issues with non-interactive mode (-p) that were mentioned as resolved in v0.2.59
 - Improved error handling in the startup sequence
-
-## Usage Examples
 
 ### Running Claude in non-interactive mode with cleaner output:
 ```bash

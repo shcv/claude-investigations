@@ -1,9 +1,7 @@
 # Changelog for version 1.0.71
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.71 introduces a customizable statusLine feature for terminal display, simplifies memory management for better reliability, and adds protection against concurrent operations while improving overall performance through optimized imports and bug fixes.
-
-## 🚀 New Features
 
 ### StatusLine Display
 **What:** Customizable status line at the bottom of your terminal showing contextual information
@@ -66,8 +64,6 @@ Version 1.0.71 introduces a customizable statusLine feature for terminal display
 - Logs telemetry event `tengu_concurrent_onquery_detected`
 - Helps identify problematic usage patterns
 
-## 💪 Improvements
-
 ### Simplified Memory Management
 **What changed:** Complete rewrite of memory saving from AI-based merging to direct file append
 **Impact:** Memory operations are now 10-100x faster and much more reliable
@@ -82,8 +78,6 @@ Version 1.0.71 introduces a customizable statusLine feature for terminal display
 **Details:**
 - Updated context size limits to 13000/20000 tokens
 - Improved memory management for long-running sessions
-
-## 🐛 Bug Fixes
 
 ### Fixed: StatusLine Feature Was Non-Functional
 - **Issue:** StatusLine feature always returned false, making it completely unusable
@@ -107,8 +101,6 @@ Version 1.0.71 introduces a customizable statusLine feature for terminal display
 - **Issue:** Importing entire modules when only specific functions were needed
 - **Resolution:** Changed to named imports for crypto, stream, and process modules
 - **Affected users:** All users benefit from smaller bundle size
-
-## 📦 Dependencies & Technical
 
 ### Code Organization
 - Removed deprecated memory management functions (`AuB`, `lhB`, `l$8`)

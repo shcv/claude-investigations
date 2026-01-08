@@ -1,8 +1,5 @@
 # Changelog for version 0.2.50
 
-# Changelog for Claude Code v0.2.50
-
-## New Features
 
 ### MCP Server Project Scope
 - **New "project" scope for MCP servers**: You can now add MCP servers to `.mcp.json` files and commit them to your repository. This allows teams to share MCP server configurations as part of their project.
@@ -35,8 +32,6 @@
 ### Git Operation Tracking
 - **Automatic git operation analytics**: The CLI now tracks when you perform git commits and create pull requests through the bash tool, providing better insights into your workflow patterns.
 
-## Improvements
-
 ### File Path Handling
 - **Better support for files with spaces**: The bash tool now properly handles file paths containing spaces by automatically quoting them
   
@@ -52,8 +47,6 @@
 ### Token Usage Warnings
 - **New token threshold warnings**: The system now provides warnings when approaching token limits to help manage long conversations
 
-## Technical Changes
-
 ### Removed Features
 - Removed several internal memory management functions that were replaced by the new memory type selector
 - Removed unused debugging and configuration variables
@@ -63,8 +56,6 @@
 - Streamlined the CLAUDE.md file discovery system to support the new three-tier memory architecture
 - Improved error handling for file operations
 - Better organization of keyboard input handling code
-
-## Breaking Changes
 
 ### MCP Scope Naming (from v0.2.49)
 Note: The previous version (v0.2.49) renamed MCP server scopes:

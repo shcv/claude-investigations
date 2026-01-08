@@ -1,9 +1,7 @@
 # Changelog for version 2.0.66
 
-## 🎯 Highlights
+## Highlights
 This release introduces a new PID-based version locking system for more reliable updates, adds extra usage request capabilities for team/enterprise users, implements a prompt stash feature with `Ctrl+S`, and includes LSP (Language Server Protocol) server manager support for enhanced code intelligence.
-
-## 🚀 New Features
 
 ### Prompt Stash (`Ctrl+S`)
 **What:** Save your current prompt input and retrieve it later - useful when you want to temporarily switch to a different task without losing your in-progress prompt.
@@ -60,8 +58,6 @@ claude --no-chrome     # Prevent Chrome usage
 - Controls authentication and web-based flows
 - **Evidence**: `d85()` at line 16281-16282
 
-## ⚡ Improvements
-
 ### PID-Based Version Locking
 **What:** More reliable version lock system that tracks process IDs instead of just file modification times.
 **Details:**
@@ -117,8 +113,6 @@ claude --no-chrome     # Prevent Chrome usage
 - Supports edit, fix, and regenerate modes
 - Companion `/thinkback-play` command
 - **Evidence**: Command definitions at lines 16872-16995, skill invocation prompts at line 16846-16850
-
-## 🔧 Other Changes
 
 ### Message Management
 - Added `removeMessageByUuid()` function for removing specific messages from conversation history

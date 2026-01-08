@@ -2,8 +2,6 @@
 
 Based on the diff file analysis, here's the changelog for Claude Code version 0.2.93:
 
-## Claude Code v0.2.93 Changelog
-
 ### Removed Features
 
 #### Settings Management Functions Removed

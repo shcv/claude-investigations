@@ -5,8 +5,6 @@
 ## Summary
 Version 0.2.118 introduces minor refactoring changes focused on code organization and visual presentation. The main changes involve extracting attachment processing logic into a dedicated function and simplifying the thinking indicator UI.
 
-## Changes
-
 ### Code Organization Improvements
 
 #### New Attachment Processing Function

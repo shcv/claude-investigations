@@ -1,9 +1,7 @@
 # Changelog for version 1.0.82
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.82 introduces real-time validation for Claude Code settings files, simplifies the permission system by removing complex shortcuts, and adds internal infrastructure for upcoming beta features. This is primarily a quality and stability release focused on preventing configuration errors.
-
-## 🚀 New Features
 
 ### Settings File Validation
 **What:** Real-time validation when editing `.claude/settings.json` and `.claude/settings.local.json` files
@@ -21,8 +19,6 @@ claude edit .claude/settings.json
 - Shows specific field paths and error messages when validation fails
 - Provides the complete schema reference for troubleshooting
 - Prevents invalid configurations from being saved
-
-## 💪 Improvements
 
 ### Simplified Permission System
 **What changed:** Removed complex permission shortcuts and modes

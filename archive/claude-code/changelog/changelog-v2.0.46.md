@@ -1,9 +1,7 @@
 # Changelog for version 2.0.46
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.46 introduces **effort level configuration** - a new feature that allows users to control Claude's reasoning intensity through CLI flags, environment variables, or settings files. This release also includes internal improvements to image compression reliability and code modernization.
-
-## 🚀 New Features
 
 ### Effort Level Configuration
 **What:** Control Claude's reasoning effort/intensity for tasks through multiple configuration methods
@@ -33,8 +31,6 @@ claude
 - Integrates with Claude API's `output_config.effort` parameter using beta flag `effort-2025-11-24`
 - **Evidence**: New function `a10() at line 341081` retrieves configuration from multiple sources; function `nR3() at line 491217` sets API parameters; replaces empty stub `uR3() at line 491090` from v2.0.45
 
-## 🔧 Improvements
-
 ### Enhanced Image Compression Format Handling
 **What:** Image compression now explicitly passes the original file's media type to prevent format detection failures
 
@@ -55,8 +51,6 @@ claude
 - Previously stubbed in v2.0.45 (`vB9 = () => {} at line 458887`), now fully implemented
 - Part of date-fns Unicode token validation system
 - **Evidence**: Implementation added at `vB9() at line 458852`, used in format validation at line 458914
-
-## 📦 Internal Changes
 
 ### Import Statement Modernization
 - Migrated from default imports to named imports in multiple modules for better tree-shaking

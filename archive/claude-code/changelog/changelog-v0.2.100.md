@@ -1,7 +1,5 @@
 # Changelog for version 0.2.100
 
-## Claude Code v0.2.100 Changelog
-
 ### Database Availability Improvements
 
 **New database availability checking**

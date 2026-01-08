@@ -1,9 +1,7 @@
 # Changelog for version 1.0.115
 
-## 🎯 Highlights
+## Highlights
 This release adds rainbow color support to the color theme system and improves thinking detection toggle behavior to be more predictable and user-controlled.
-
-## 🚀 New Features
 
 ### Rainbow Color Palette
 **What:** Added a complete rainbow color palette to all theme variants (light, dark, and custom themes)
@@ -32,8 +30,6 @@ The system now includes:
 - The `m61(index, useShimmer)` function takes an index and optional shimmer flag, returning the appropriate rainbow color name
 - Uses modulo arithmetic to cycle through colors: `Q[A % Q.length]`
 - **Evidence**: `m61() at line 365993`, `Ew1() at line 365990`, `Cj9 at line 365972`, `Uj9 at line 365981`
-
-## ✨ Improvements
 
 ### Thinking Detection Toggle Behavior
 **What:** Improved how the thinking detection disabled state works when users toggle it on/off

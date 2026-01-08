@@ -1,8 +1,5 @@
 # Changelog for version 1.0.55
 
-# Changelog for Claude Code v1.0.55
-
-## New Features
 
 ### IDE Auto-Detection and Multi-IDE Support
 - **Enhanced IDE detection**: Claude Code now automatically detects running IDEs on your system and can suggest installing the appropriate extension
@@ -26,8 +23,6 @@
 - `autoInstallIdeExtension`: Control whether Claude Code automatically installs IDE extensions (defaults to true)
 - `hasIdeAutoConnectDialogBeenShown`: Tracks whether the auto-connect dialog has been shown
 
-## Improvements
-
 ### Better IDE Status Reporting
 - Enhanced `/ide` command output with more detailed connection status
 - Clearer error messages when IDE extensions fail to install
@@ -43,8 +38,6 @@
 - Spinner tips system foundation added (for future loading screen tips)
 - Better escape key handling in dialogs
 - More consistent dialog styling with rounded borders
-
-## Technical Changes
 
 ### Refactored IDE Detection System
 - Centralized IDE configuration in new `oc` object containing all IDE metadata

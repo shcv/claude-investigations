@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.74 Changelog
 
-## New Features
-
 ### Enhanced Caching System
 - Added a new caching mechanism with automatic refresh capabilities (`P$2` function)
   - Supports configurable TTL (default: 5 minutes)
@@ -21,8 +19,6 @@
 - Added `OV9` helper for extracting computed dimensions from Yoga layout nodes
   - Returns width and height from Yoga node computations
   - Provides safe fallback to 0 when node is unavailable
-
-## Technical Changes
 
 ### API Client Refactoring
 - Simplified API client initialization logic

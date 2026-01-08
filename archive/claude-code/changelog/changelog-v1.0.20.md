@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff, here is the changelog for version 1.0.20:
 
-## Claude Code v1.0.20 Changelog
-
 ### New Features
 
 #### Plan Mode

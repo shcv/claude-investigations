@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff file, here is the changelog for Claude Code version 1.0.21:
 
-## Claude Code v1.0.21 Changelog
-
 ### New Features
 
 #### MCP Prompts Support

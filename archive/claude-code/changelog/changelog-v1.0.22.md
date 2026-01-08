@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.22 Changelog
 
-## New Features
-
 ### MCP Resource Management Commands
 Two new commands have been added for working with MCP (Model Context Protocol) resources:
 
@@ -36,8 +34,6 @@ Claude Code now follows the XDG Base Directory specification for better organiza
 - **Executables**: `~/.local/bin/claude`
 
 The application will automatically migrate existing files from the old location (`~/.claude/`) to the new XDG-compliant locations on first run.
-
-## Improvements
 
 ### Jupyter Notebook Enhancements
 - **Cell ID Support**: Notebooks now support reading individual cells by their ID

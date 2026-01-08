@@ -1,9 +1,7 @@
 # Changelog for version 1.0.110
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.110 introduces enterprise MCP server management, WezTerm terminal configuration support, and OAuth token refresh capabilities. The release also includes significant improvements to command queue management, WebSocket reliability, and pipe command handling.
-
-## 🚀 New Features
 
 ### Enterprise MCP Server Management
 **What:** Centralized MCP server configuration for enterprise deployments
@@ -62,8 +60,6 @@ claude setup
 - Atomic operations ensure consistent queue state
 - **Evidence**: `yD() at line 421598`, `nrB() at line 436658`, `popAllForEditing() at line 421622`
 
-## 🔧 Improvements
-
 ### Enhanced WebSocket Reliability
 - Added ping/keepalive functionality with 10-second intervals
 - New close callback support for better connection lifecycle management
@@ -83,8 +79,6 @@ claude setup
 - Better separation of style definition from application
 - Improved text processing pipeline with integrated style support
 - **Evidence**: `UU1() at line 360092`, `internal_styles` property usage at `line 361236`
-
-## 📋 Other Changes
 
 ### Box Component Color Support
 Enhanced box component with theme-aware border colors using the new styling system

@@ -1,9 +1,7 @@
 # Changelog for version 2.0.42
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.42 introduces bidirectional LSP communication support, enhanced GitHub authentication, and improved LSP workspace initialization. The LSP system can now respond to server requests (not just send them), GitHub CLI authentication is more robust with JSON output parsing, and LSP servers receive proper workspace context from initialization.
-
-## 🚀 New Features
 
 ### LSP Request Handler Support
 **What:** LSP servers can now send requests back to Claude Code and receive responses, enabling full bidirectional communication required by the LSP protocol.
@@ -61,8 +59,6 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Integrated with VCS account linking in `QT2()` at line 426023, now includes `git_user_email` field
 - Used to associate git commits with Claude Code user accounts
 - **Evidence**: `Wi5() at line 426065`, `QT2() at line 426023`
-
-## 💎 Improvements
 
 ### LSP Workspace Initialization
 **What:** LSP servers now receive proper workspace root information during initialization instead of null values.
@@ -151,8 +147,6 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Commands now execute directly without environment variable manipulation
 - **Evidence**: `cc() at line 432214-432236`
 
-## 🐛 Bug Fixes
-
 ### Callback Hook Abort Handling
 **What:** Improved abort signal handling in callback hooks to prevent unhandled promise rejections.
 
@@ -161,8 +155,6 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Removed try-catch block that was catching and converting abort errors
 - Abort signals now handled by upstream code
 - **Evidence**: `jBI() at line 473754-473794`
-
-## 🔧 Internal Changes
 
 ### Import Reorganization
 - Consolidated `node:process` imports: Added `cwd as Xy0` at line 77734

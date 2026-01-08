@@ -1,8 +1,5 @@
 # Changelog for version 0.2.62
 
-# Changelog for v0.2.62
-
-## New Features
 
 ### IDE Integration Enhancement
 - **Enhanced IDE selection awareness**: Claude Code now detects and displays when text is selected in your IDE (when connected via MCP)
@@ -21,8 +18,6 @@
 - **Improved model selection**: Better handling of environment-specific model configurations
   - Automatically selects appropriate model variant based on your provider (Bedrock, Vertex, or First-party)
   - Respects `ANTHROPIC_SMALL_FAST_MODEL` environment variable for custom model selection
-
-## Improvements
 
 ### User Interface
 - **Queue command hint tracking**: Added `queuedCommandUpHintCount` to user preferences for better hint management

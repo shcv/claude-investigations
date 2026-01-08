@@ -1,10 +1,8 @@
 # Changelog for version 2.0.11
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.11 introduces support for structured outputs (a new Claude API feature in beta), adds a new Explore agent for faster codebase navigation, and includes various internal improvements and bug fixes.
-
-## 🚀 New Features
 
 ### Structured Outputs Support (Beta)
 
@@ -36,8 +34,6 @@ Version 2.0.11 introduces support for structured outputs (a new Claude API featu
 - Tools available: Glob, Grep, Read, Bash
 - **Evidence**: New agent definition `Ds5` at line 428791 in v2.0.11 with `agentType: "Explore"`
 
-## ✨ Improvements
-
 ### Enhanced Marketplace Operations
 
 **What:** Marketplace git operations now provide progress feedback during cloning and pulling
@@ -58,7 +54,7 @@ Version 2.0.11 introduces support for structured outputs (a new Claude API featu
 - Replaces inline `Math.floor(statSync().mtimeMs)` patterns throughout codebase
 - **Evidence**: New function `BK()` at line 441199 in v2.0.11
 
-## 🔧 Internal Changes
+## Internal Changes
 
 - Removed legacy teleport session validation functions (replaced by Sessions API implementation)
 - Simplified agent color assignment logic

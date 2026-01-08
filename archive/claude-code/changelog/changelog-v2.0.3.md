@@ -1,10 +1,8 @@
 # Changelog for version 2.0.3
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.3 contains internal code optimizations and refactoring improvements. There are no user-facing changes, new features, or bug fixes in this release.
-
-## Internal improvements
 
 ### Rendering function optimization
 The internal rendering function `BiQ()` at line 356972 was refactored to `AiQ()` at line 356971, removing unnecessary `rows` and `columns` parameters that were being passed through but not actively used by the core rendering logic. The function signature changed from accepting 4 parameters `(A, B, Q, Z)` to just 2 parameters `(A, B)`, and the return value no longer includes `rows` and `columns` fields.

@@ -1,10 +1,8 @@
 # Changelog for version 2.0.45
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.45 adds support for Azure AI Foundry deployments with Azure AD authentication, refactors the image processing system to use pure Sharp implementation for better reliability, and includes numerous internal improvements to terminal handling and error management.
-
-## 🚀 New Features
 
 ### Azure AI Foundry Support
 **What:** Claude Code now supports connecting to Claude models deployed on Azure AI Foundry with Azure AD token authentication
@@ -41,8 +39,6 @@ export ANTHROPIC_FOUNDRY_RESOURCE=your-resource-name
 - Can be disabled with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=true` environment variable
 - **Evidence**: `mq4() at line 86382`
 
-## 🔧 Improvements
-
 ### Image Processing System Refactored
 **What:** Replaced optional native image processor module with pure Sharp-based implementation for more reliable and consistent image handling
 
@@ -75,8 +71,6 @@ export ANTHROPIC_FOUNDRY_RESOURCE=your-resource-name
 - Ensures consistent behavior across different deployment environments
 - **Evidence**: `Y6Q() at line 86439` includes foundry environment check
 
-## 📦 Internal Changes
-
 ### LSP Server Manager Refactored
 - Language Server Protocol support remains fully functional with comprehensive code reorganization
 - Main manager function renamed and restructured for improved maintainability
@@ -99,7 +93,7 @@ export ANTHROPIC_FOUNDRY_RESOURCE=your-resource-name
 - Added graceful shutdown handler for telemetry operations
 - **Evidence**: `wj1() at line 148844`
 
-## 🏗️ Technical Notes
+## ️ Technical Notes
 
 - Structural similarity between v2.0.44 and v2.0.45: 89.7%
 - Total changes: 1,069 additions, 52 deletions, 24 modifications

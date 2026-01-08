@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.107 Changelog
 
-## New Features
-
 ### Enhanced Project-Level Memory (CLAUDE.md)
 - **Automatic project context loading**: Claude Code now automatically discovers and loads `CLAUDE.md` files from parent directories up to your home directory
 - **Nested memory attachments**: When working in subdirectories, Claude Code will now find and include all relevant `CLAUDE.md` files in the directory hierarchy
@@ -18,8 +16,6 @@
   ```
 - **Conditional extension management**: Extension installation prompts now only appear for supported IDEs (VS Code)
 
-## Technical Improvements
-
 ### Memory System Enhancements
 - Added `CX6` function for discovering CLAUDE.md files in parent directories
 - New `Ha5` function handles nested memory attachment triggers
@@ -29,8 +25,6 @@
 - Refactored stream imports to use named imports (`PassThrough` from "stream")
 - Consolidated process imports to use named imports (`cwd` from "node:process")
 - Added new variable `yU6` for improved code organization
-
-## Removed Features
 
 ### Database Warning Removal
 - Removed the persistent database unavailability warnings

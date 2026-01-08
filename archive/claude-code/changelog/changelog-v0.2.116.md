@@ -1,15 +1,13 @@
 # Changelog for version 0.2.116
 
-## Claude Code v0.2.116 Changelog
-
 ### New Features
 
-#### 🎯 Enhanced IDE Integration
+#### Enhanced IDE Integration
 - **New WebSocket IDE Transport**: Added support for WebSocket-based IDE connections, enabling more robust communication with IDEs like JetBrains
 - **Improved IDE Connection Management**: Better handling of IDE connections with automatic reconnection and timeout management
 - **IDE Extension Installation**: Enhanced automatic installation of IDE extensions with version checking and compatibility validation
 
-#### 🔧 Configuration & Management
+#### Configuration & Management
 - **Cleanup Period Configuration**: New `cleanupPeriodDays` setting in managed settings to control how long logs and project data are retained (default: 30 days)
   ```json
   {
@@ -19,23 +17,23 @@
 - **Automatic Log Cleanup**: Claude Code now automatically cleans up old log files and project data based on the configured cleanup period
 - **Enhanced Environment Control**: New `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` environment variable to disable telemetry, auto-updates, and error reporting
 
-#### 🔑 API Key Management
+#### API Key Management
 - **API Key Helper TTL**: New `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` environment variable to control API key caching duration
 - **Better Authentication Handling**: Improved handling of 401 authentication errors with automatic cache clearing
 
 ### Improvements
 
-#### 📝 Tool Enhancements
+#### Tool Enhancements
 - **Better Tool Descriptions**: Enhanced descriptions for Glob and Grep tools with clearer guidance on when to use each tool
 - **Multi-Edit Tool**: Improved documentation emphasizing preference for MultiEdit over single Edit operations
 - **Thinking Display**: Enhanced visual presentation of Claude's thinking process with better formatting and borders
 
-#### 🐛 Error Handling & Reliability
+#### Error Handling & Reliability
 - **Retry Logic**: Improved retry mechanism that handles authentication failures by refreshing credentials
 - **Error Reporting**: Added protection against recursive error reporting with a flag to prevent infinite loops
 - **Better Error Messages**: More descriptive error messages for IDE integration failures
 
-#### 🏗️ Project Management
+#### ️ Project Management
 - **Project Directory Structure**: New project storage location at `/projects` for better organization
 - **Environment Detection**: Added functions to detect production vs development environments
 - **External vs Internal Classification**: New system to classify whether code is running externally or internally

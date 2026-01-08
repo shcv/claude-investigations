@@ -1,9 +1,7 @@
 # Changelog for version 1.0.87
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.87 enhances the permission system with granular source tracking and new management operations, while improving session notes extraction to better filter system content. These internal improvements provide better debugging capabilities and more flexible permission control.
-
-## 💪 Improvements
 
 ### Enhanced Permission System with Source and Behavior Tracking
 **What changed:** Permission rules now include metadata about their origin and behavior type

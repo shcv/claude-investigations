@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.55 Changelog
 
-## New Features
-
 ### Enhanced Tool Permission System
 - **New permission checking functions** for file operations:
   - `d_()` - Validates read permissions before file access, providing clear error messages when permissions haven't been granted
@@ -25,8 +23,6 @@
   - Extracts and returns structured data: `{ inputTokens, maxTokens, contextLimit }`
   - Helps users understand token usage and adjust their requests accordingly
 
-## Configuration Changes
-
 ### MCP Tool Timeout
 - **New environment variable**: `MCP_TOOL_TIMEOUT`
   - Default: 100,000,000ms (increased from standard timeout)
@@ -38,8 +34,6 @@
   - Default: 30,000ms (30 seconds)
   - Now properly handles empty string values with fallback
 
-## UI Improvements
-
 ### Refactored Status Indicator System
 - **Centralized status theme logic** with `EL1()` function
   - Cleaner code for determining UI themes based on operation status
@@ -49,8 +43,6 @@
   - `im5()` - Returns appropriate spinner style for current status
   - `nm5()` - Returns color theme for current status
   - `am5()` - Returns message style for current status
-
-## Technical Improvements
 
 ### Stream Handling
 - Changed from default import to named import for Node.js streams

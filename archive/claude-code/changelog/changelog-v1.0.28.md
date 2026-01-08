@@ -1,7 +1,5 @@
 # Changelog for version 1.0.28
 
-## Claude Code v1.0.28 Changelog
-
 ### New Features
 
 #### Model Selection Command Menu

@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.73 Changelog
 
-## New Features
-
 ### Theme Command Alias
 The `/config` command now has a `/theme` alias, providing quick access to theme settings directly:
 ```bash
@@ -26,8 +24,6 @@ Claude Code now detects if you have the Anthropic MCP extension installed in sup
 ```
 ✓ Found [IDE name] extension • /config
 ```
-
-## Improvements
 
 ### TodoRead Tool Enhancement
 The `TodoRead` tool now has clearer usage instructions, explicitly stating that no parameters should be provided:

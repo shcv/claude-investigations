@@ -1,10 +1,8 @@
 # Changelog for version 1.0.122
 
-## 🎯 Highlights
+## Highlights
 
 Version 1.0.122 significantly enhances security and configurability with hardened macOS sandbox policies based on Chrome's security model, a new `--setting-sources` flag for controlling which configuration files are loaded, and improved slash command management to optimize context window usage.
-
-## 🚀 New Features
 
 ### Setting Sources Control
 
@@ -103,8 +101,6 @@ claude --setting-sources=
 - Agents can now come from "flagSettings" source (CLI configuration)
 - Includes validation with clear error messages for invalid definitions
 - **Evidence**: `QRB schema at line 434547`, `GRB() at line 434642`, `$K5() at line 434622`
-
-## ✨ Improvements
 
 ### Enhanced Sandbox Security (macOS)
 
@@ -221,8 +217,6 @@ claude --setting-sources=
 - Account information extraction refactored for reusability
 - **Evidence**: `Ey6() at line 411883` (new section), `My6() at line 411961` (refactored account display)
 
-## 🔧 Internal Improvements
-
 ### Session Quality Classification
 
 **What:** Internal analytics to detect user frustration and PR creation requests
@@ -265,8 +259,6 @@ claude --setting-sources=
 - Enables better handling of extended thinking responses
 - Internal optimization, no user-facing changes
 
-## 📊 Configuration Changes
-
 ### Breaking Changes
 
 1. **Sandbox `allowUnixSockets` configuration:**
@@ -291,13 +283,10 @@ claude --setting-sources=
 }
 ```
 
-## 🐛 Bug Fixes
-
 ### Duplicate `.gitignore` Entries
 
 Fixed checkpoint gitignore logic to check for existing patterns before appending, preventing duplicate `**/.claude/checkpoints` entries in `.gitignore` files.
 - **Evidence**: `aY1() at line 404121` now reads file content before appending
 
----
 
 **Note:** All line numbers reference `/home/shcv/projects/claude-investigations/archive/pretty/pretty-v1.0.122.js` unless otherwise specified.

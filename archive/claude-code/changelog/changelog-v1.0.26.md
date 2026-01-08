@@ -4,8 +4,6 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.26:
 
 # Claude Code v1.0.26 Changelog
 
-## New Features
-
 ### Resume Conversation Command
 - Added new `/resume` command to restore and continue previous conversations
 - When using `claude resume` or `/resume`, you'll see a list of your past conversations
@@ -28,8 +26,6 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.26:
   - Claude Pro (previously supported)
 - The CLI now properly identifies and displays your subscription type
 
-## Improvements
-
 ### IDE Extension Auto-Updates
 - Enhanced automatic updates for VS Code and JetBrains IDE extensions
 - Added support for Cursor and Windsurf editors alongside VS Code
@@ -45,8 +41,6 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.26:
 - Refined OAuth token handling for different subscription types
 - Improved organization type detection (enterprise, team, max, pro)
 - Better error messages for subscription-specific features
-
-## Technical Changes
 
 ### Performance
 - Added streaming support with PassThrough for better real-time responses

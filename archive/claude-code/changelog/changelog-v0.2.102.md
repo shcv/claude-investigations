@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.102 Changelog
 
-## New Features
-
 ### Enhanced Paste Reference System
 The paste functionality has been significantly improved with a new reference system that allows users to reference multiple pasted items (both text and images) within a single conversation.
 
@@ -30,8 +28,6 @@ function isDirEmptySync(path) {
 }
 ```
 
-## Improvements
-
 ### Command Execution Enhancement
 The slash command system now properly propagates the `shouldQuery` flag from command handlers. This allows custom commands to control whether their output should trigger a follow-up query to Claude.
 
@@ -52,8 +48,6 @@ The "thinking" feature detection has been improved to use proper word boundary r
 
 ### History Navigation Updates
 The command history system now properly tracks pasted content alongside commands, maintaining the association between prompts and their pasted attachments when navigating through history with arrow keys.
-
-## Technical Changes
 
 ### Import Optimizations
 - Removed unused `stream` import

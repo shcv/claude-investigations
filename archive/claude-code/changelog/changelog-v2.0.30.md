@@ -1,10 +1,8 @@
 # Changelog for version 2.0.30
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.30 introduces Language Server Protocol (LSP) support, enabling Claude to access code intelligence features like go-to-definition, find-references, and hover documentation. It also adds enhanced sandbox security controls and refactors the internal tool execution architecture for better concurrent processing.
-
-## 🚀 New Features
 
 ### LSP (Language Server Protocol) Tool
 
@@ -77,8 +75,6 @@ LSP servers can be configured in two ways:
 - **User communication:** Claude receives different system prompt instructions based on this setting (lines 208919-208942)
 - **Evidence**: Configuration schema at line 473000, getter function `XP8()` at line 208521
 
-## ⚡ Improvements
-
 ### Refactored Tool Execution Architecture
 
 **What changed:** Internal tool execution system migrated from function-based approach to a class-based queue system with better concurrent execution support.
@@ -107,8 +103,6 @@ LSP servers can be configured in two ways:
 
 **Evidence**: Function `SP()` at line 208476 (v2.0.30), existed as `whA()` at line 204320 (v2.0.29)
 
-## 📋 Other Changes
-
 ### TodoWrite Tool Documentation
 
 The TodoWrite tool documentation remains unchanged between v2.0.29 and v2.0.30. All guidance on when to use the tool, task states, and management practices are identical.
@@ -127,7 +121,7 @@ The ExitPlanMode tool continues to exist with the same functionality as in v2.0.
 - Added new internal error handling and validation classes for LSP protocol support
 - Tool execution helper functions renamed but functionality preserved for backward compatibility
 
-## 🔍 Summary Statistics
+## Summary Statistics
 
 - **Structural similarity:** 98.0% (minimal breaking changes)
 - **Declarations:** 8795 → 8948 (+153 net additions)

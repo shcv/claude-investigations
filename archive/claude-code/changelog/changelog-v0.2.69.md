@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.69 Changelog
 
-## New Features
-
 ### Enhanced Permission System
 - **Added deny permissions support**: The permission system now supports both `allow` and `deny` rules for tools, giving users more granular control over what tools can be used in their projects.
   
@@ -24,8 +22,6 @@
 
 - **Rule source tracking**: Permission rules now track their source (e.g., "projectSettings", "localSettings") and behavior type ("allow" or "deny"), making it easier to understand why a tool is allowed or denied.
 
-## Internal Improvements
-
 ### Code Organization
 - **Stream handling update**: Switched from default stream import to using named `PassThrough` import, improving code clarity and tree-shaking capabilities.
 
@@ -38,14 +34,10 @@
 
 - **Added `Ab5` function**: Checks if a specific tool is denied by any rule, returning the matching deny rule if found.
 
-## Bug Fixes
-
 ### Permission Rule Handling
 - **Fixed rule removal logic**: The `Pj2` function (formerly `Lj2`) now correctly handles both allow and deny rules when removing permissions from project settings. Previously, it only supported removing "allow" rules.
 
 - **Fixed rule addition logic**: The `Tj2` function now properly handles both allow and deny rules when adding new permissions, instead of throwing an error for non-allow rules.
-
-## Configuration Changes
 
 ### New Configuration Schema
 - The permission object schema (`Yb5`) now includes both `allow` and `deny` arrays:

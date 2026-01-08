@@ -2,11 +2,9 @@
 
 Based on my analysis of the diff between v0.2.35 and v0.2.36, here's the detailed changelog focusing on user-facing features:
 
-## Claude Code v0.2.36 Changelog
-
 ### New Features
 
-#### 🎯 Import MCP Servers from Claude Desktop
+#### Import MCP Servers from Claude Desktop
 A new command has been added to seamlessly import MCP server configurations from Claude Desktop:
 
 ```bash
@@ -34,7 +32,7 @@ This command:
   Space to select · Enter to confirm · Esc to cancel
 ```
 
-#### 🔧 Add MCP Servers as JSON Strings
+#### Add MCP Servers as JSON Strings
 You can now add MCP servers directly using JSON configuration:
 
 ```bash
@@ -45,7 +43,7 @@ This allows you to quickly configure servers by passing their JSON configuration
 
 ### Improvements
 
-#### ⚡ Auto-Compact Enhancement
+#### Auto-Compact Enhancement
 The `/compact` command has been significantly improved:
 - Better conversation summarization using a more sophisticated prompt template
 - Improved error handling with clearer user messages
@@ -63,32 +61,32 @@ The `/compact` command has been significantly improved:
 - "Conversation too long. Press esc to go up a few messages and try again." - when hitting API limits
 - "API Error: Request was aborted." - for network issues
 
-#### 🎨 Diff Display Improvements
+#### Diff Display Improvements
 The code diff display now supports:
 - Option to hide line numbers with the `hideLineNumbers` parameter
 - Option to skip unchanged lines with the `skipUnchanged` parameter
 - Enhanced word-level diff highlighting for better readability
 
-#### 🔍 File Reading Enhancements
+#### File Reading Enhancements
 - New token counting for file content to prevent API overload
 - Better error messages when files exceed size limits:
   - Size-based: "File content (XKB) exceeds maximum allowed size (YKB)"
   - Token-based: "File content (X tokens) exceeds maximum allowed tokens (Y)"
 - Improved handling of large file reads with streaming support
 
-#### 🐚 Shell Improvements
+#### Shell Improvements
 The persistent shell has been optimized:
 - Better tracking of working directory changes with a "dirty" flag
 - Reduced unnecessary `pwd` calls for better performance
 - Enhanced logging for debugging shell operations
 - Fixed initialization timeout for shell configuration loading
 
-#### 🔧 Platform Detection
+#### Platform Detection
 New environment detection capabilities:
 - `isWslEnvironment`: Detects if running in WSL
 - `isNpmFromWindowsPath`: Detects if npm is being run from Windows path in WSL
 
-#### 📝 Configuration
+#### Configuration
 New configuration option added:
 - `autoCompactEnabled`: Control automatic conversation compacting (default: true)
 

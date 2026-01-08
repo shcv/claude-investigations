@@ -4,8 +4,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v0.2
 
 # Claude Code v0.2.18 Changelog
 
-## New Features
-
 ### Config Management Enhancements
 - **New config array operations**: Added `config add` and `config rm` subcommands to manage configuration arrays
   - `claude config add <key> <value>` - Add an item to a config array
@@ -20,8 +18,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v0.2
 - Command output can now display images when detected (data URLs with base64 encoding)
 - When image data is detected in command output, it's sent to Claude and marked as "[Image data detected and sent to Claude]"
 
-## Improvements
-
 ### Project Configuration
 - Added `ignorePatterns` configuration option to specify patterns for files/directories to ignore
 - Improved ignore pattern handling with custom pattern support via `v_()` function
@@ -34,8 +30,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v0.2
 - Enhanced error reporting with additional context in the `Ib` function
 - Better error tracking with optional extra parameters
 
-## Bug Fixes
-
 ### Shell Environment
 - Fixed Fish shell syntax checking with proper flags (`--no-execute -c`)
 - Improved shell command validation for Fish shell compatibility
@@ -47,8 +41,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v0.2
 - Removed 12 deprecated functions/variables
 - Modified 12 existing functions with improvements
 - Structural similarity with v0.2.14: 99.2%
-
-## Usage Examples
 
 ### Managing Config Arrays
 ```bash

@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff for version 1.0.53, here is the detailed changelog:
 
-## Claude Code v1.0.53 Changelog
-
 ### New Features
 
 #### AWS Authentication Enhancements

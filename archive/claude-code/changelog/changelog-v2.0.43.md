@@ -1,10 +1,8 @@
 # Changelog for version 2.0.43
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.43 delivers a major internal refactoring of the sandbox subsystem, replacing the previous function-based architecture with a unified manager pattern. This release adds clickable hyperlink support in terminal output, enhances Linux sandboxing with seccomp filtering for Unix socket blocking, and introduces plan mode infrastructure for persistent task planning workflows.
-
-## 🚀 New Features
 
 ### Clickable Hyperlinks in Terminal Output
 **What:** Terminal output now supports clickable hyperlinks using the OSC 8 escape sequence standard, allowing tools to render URIs that users can click in compatible terminals.
@@ -48,8 +46,6 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `WNQ()` and `ETQ()` handle tool name overrides in plan context
 - Plan files persist across sessions for continuity
 - **Evidence**: `eO()`, `pm()`, `sx()`, `BnA()`, `INQ()`, `Zy6()` functions added for plan file management
-
-## 🔧 Improvements
 
 ### Sandbox Architecture Refactoring
 **What changed:** The sandbox implementation has been completely restructured from scattered individual functions into a centralized `dZ` manager object with a cleaner API.
@@ -145,8 +141,6 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Supports incremental file state tracking
 - **Evidence**: `Cc8()` function for checkpointing status check
 
-## 📝 Internal Changes
-
 ### Removed Legacy Code
 - Removed 41 sandbox-related functions from v2.0.42 as part of the architecture refactoring
 - Removed old macOS sandbox violation logging functions (`hUQ()`, `YMQ()`, `im8()`, `KQQ()`, `DQQ()`, `Zj1()`)
@@ -163,6 +157,5 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Better separation of concerns with centralized manager pattern
 - Improved maintainability through reduced function sprawl
 
----
 
 **Note on Feature Verification:** All features listed as "new" have been verified to not exist in v2.0.42 by searching both version files. Changes categorized as "improvements" existed in previous versions but have been enhanced or refactored. Line numbers reference the v2.0.43 source file.

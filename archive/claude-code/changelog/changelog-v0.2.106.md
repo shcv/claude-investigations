@@ -1,8 +1,5 @@
 # Changelog for version 0.2.106
 
-# Changelog for Claude Code v0.2.106
-
-## New Features
 
 ### External CLAUDE.md File Security
 - **Added security dialog for external file references**: When CLAUDE.md files reference files outside the current working directory, users now see a warning dialog asking for explicit permission. This enhances security by preventing unauthorized access to files outside the project.
@@ -26,8 +23,6 @@
 - **Better IDE detection on macOS**: Improved detection of Visual Studio Code, Cursor, and Windsurf when launched from their integrated terminals
   - Automatically finds the correct `code`, `cursor`, or `windsurf` command path
   - Works by traversing parent processes to find the IDE application
-
-## Improvements
 
 ### Code Quality
 - **Trimming improvements**: Added `trimKeepingFinalNewline` function to preserve final newlines while trimming trailing whitespace

@@ -1,9 +1,7 @@
 # Changelog for version 1.0.74
 
-## 🎯 Highlights
+## Highlights
 Claude Code 1.0.74 introduces Sonnet 4 with 1M token context for eligible organizations, a powerful new custom output modes system that lets you personalize how Claude communicates, and improved bash command handling with enhanced security controls.
-
-## 🚀 New Features
 
 ### Sonnet 4 with 1M Token Context
 **What:** Access to Claude Sonnet 4 with an extended 1 million token context window for processing large codebases and documents
@@ -55,8 +53,6 @@ claude /model
 - Provides optimal model selection based on the current operation mode
 - Automatically switches between models for planning vs implementation
 
-## 💪 Improvements
-
 ### Enhanced Bash Command Generation
 **What changed:** Improved handling of bash redirections and file descriptors
 **Impact:** More reliable command execution with complex shell redirections like `2>&1`, `1>/dev/null`, and file descriptor routing
@@ -76,8 +72,6 @@ claude /model
 ### Organization Feature Tracking
 **What changed:** Added first token date tracking and per-organization feature flag caching
 **Impact:** Better analytics and feature rollout capabilities for organization-specific features
-
-## 🐛 Bug Fixes
 
 ### Fixed: Process Import Issue
 - **Issue:** Incorrect import statement for process.cwd

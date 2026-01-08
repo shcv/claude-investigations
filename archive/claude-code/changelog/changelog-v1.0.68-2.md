@@ -2,23 +2,21 @@
 
 Based on my analysis of the diff file, here's the changelog for Claude Code version 1.0.68:
 
-## Claude Code v1.0.68 Changelog
-
 ### Major Changes
 
-#### 🚀 Enhanced Process Execution System
+#### Enhanced Process Execution System
 - **New subprocess handling architecture**: Complete overhaul of how Claude Code executes commands and processes
   - Improved process spawning with better error handling and resource management
   - Added support for advanced IPC (Inter-Process Communication) features
   - New streaming capabilities for subprocess I/O with proper backpressure handling
   
-#### 🔧 Improved Command Execution
+#### Improved Command Execution
 - **Better command parsing and escaping**: Enhanced security and reliability when executing shell commands
   - Automatic escaping of special characters in commands
   - Improved handling of command arguments with spaces and special characters
   - Better error messages showing both the original and escaped commands
 
-#### 📝 Process Communication Features
+#### Process Communication Features
 - **Advanced IPC support**: New capabilities for bidirectional communication with subprocesses
   - Support for structured clone serialization (default) and JSON serialization
   - Graceful cancellation of running processes with proper signal handling
@@ -27,19 +25,19 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 ### New Features
 
-#### 🎨 Enhanced Terminal Output
+#### Enhanced Terminal Output
 - **Colored output support**: Added comprehensive ANSI color code support for better terminal visualization
   - Support for bold, italic, underline, and various color combinations
   - Smart color detection based on terminal capabilities
   - New formatting functions for error messages, warnings, and success indicators
 
-#### ⚡ Performance Improvements
+#### Performance Improvements
 - **Concurrent stream handling**: Better performance when dealing with multiple I/O streams
   - Improved buffering strategies for large outputs
   - More efficient memory usage with streaming operations
   - Better handling of binary data in subprocess communications
 
-#### 🛡️ Error Handling Enhancements
+#### ️ Error Handling Enhancements
 - **More detailed error information**: Enhanced error reporting for failed commands
   - Shows command duration and timing information
   - Better distinction between different types of failures (timeout, signal, graceful cancel)
@@ -47,7 +45,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 ### API Improvements
 
-#### 📊 New Options and Configuration
+#### New Options and Configuration
 - **Timeout handling**: Improved timeout configuration with clearer error messages
   ```bash
   # Commands now show detailed timeout information
@@ -68,12 +66,12 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 ### Bug Fixes
 
-#### 🐛 Removed Features
+#### Removed Features
 - **Removed NotebookRead tool**: The separate NotebookRead functionality has been removed and integrated into the main Read tool
   - Jupyter notebooks (.ipynb files) are now handled automatically by the Read tool
   - Better integration with the existing file reading infrastructure
 
-#### 🔄 Process Management Fixes
+#### Process Management Fixes
 - Fixed race conditions in subprocess termination
 - Improved cleanup of file descriptors and streams
 - Better handling of zombie processes
@@ -81,24 +79,24 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 ### Developer Experience
 
-#### 🔍 Better Debugging
+#### Better Debugging
 - **Enhanced command visibility**: All executed commands now show both raw and escaped versions
 - **Timing information**: Each command execution includes detailed timing metrics
 - **Stream inspection**: Better tools for debugging I/O stream issues
 
-#### 📚 Improved Error Messages
+#### Improved Error Messages
 - Clearer error messages for common configuration mistakes
 - Better suggestions for fixing issues
 - More context in error stack traces
 
 ### Internal Improvements
 
-#### 🏗️ Architecture Changes
+#### ️ Architecture Changes
 - Modularized subprocess handling code for better maintainability
 - Improved separation of concerns between command parsing, execution, and result handling
 - Better abstraction for cross-platform compatibility
 
-#### 🧪 Testing Infrastructure
+#### Testing Infrastructure
 - Added comprehensive tests for new subprocess features
 - Better coverage for edge cases in command execution
 - Improved integration tests for IPC functionality

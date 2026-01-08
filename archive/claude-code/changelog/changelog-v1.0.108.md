@@ -1,9 +1,7 @@
 # Changelog for version 1.0.108
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.108 introduces comprehensive JSON reference parsing and YAML processing capabilities, adds enhanced error handling with the ono library, and removes experimental auto-updater functionality that was never exposed to users.
-
-## 🚀 New Features
 
 ### Enhanced Error Handling with ono Library
 **What:** Added the ono error handling library for better error creation, formatting, and categorization
@@ -46,8 +44,6 @@ claude read config.yaml  # Now parses YAML into structured data
 - Error reporting with precise line/column information
 - **Evidence**: `j11()` at line 248752, `y11()` at line 248788, `RF()` at line 248914
 
-## 🧹 Removed Features
-
 ### Experimental Auto-Updater System
 **What:** Removed the comprehensive auto-update infrastructure that was never enabled for users
 **Details:**
@@ -64,8 +60,6 @@ claude read config.yaml  # Now parses YAML into structured data
 - Feature was fully implemented but permanently disabled via feature flag
 - Removal represents cleanup of dead code with no user impact
 - **Evidence**: `aj6` removed from line 380692, `By1()` removed from line 369776
-
-## Other Changes
 
 ### Internal Code Improvements
 - Streamlined message filtering logic by removing unused content filtering functions

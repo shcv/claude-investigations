@@ -1,10 +1,8 @@
 # Changelog for version 0.2.51
 
-## Claude Code v0.2.51 Changelog
-
 ### New Features
 
-#### 🚀 Local Installation Migration Tool
+#### Local Installation Migration Tool
 A new command `migrate-installer` has been added to help users migrate from global npm installation to a local installation in their home directory. This provides better isolation and avoids global dependency conflicts.
 
 **Usage:**
@@ -19,7 +17,7 @@ This interactive command will:
 
 The migration process includes progress tracking and error handling, with telemetry to monitor success rates.
 
-#### 🔧 Enhanced Memory Management UI
+#### Enhanced Memory Management UI
 The memory management interface has been completely redesigned with a more user-friendly selection system:
 
 - **Visual improvements**: Better layout with clear descriptions and examples for each memory type
@@ -30,7 +28,7 @@ The memory management interface has been completely redesigned with a more user-
 - **Interactive selection**: Use arrow keys to navigate between options with visual feedback
 - **Helpful examples**: Each memory type now shows concrete usage examples
 
-#### 🔌 MCP Server Approval System
+#### MCP Server Approval System
 New security features for MCP (Model Context Protocol) servers detected in project `.mcp.json` files:
 
 - **Batch approval**: When multiple MCP servers are detected, users can select which ones to enable using a checkbox interface
@@ -46,26 +44,26 @@ New security features for MCP (Model Context Protocol) servers detected in proje
 
 ### Improvements
 
-#### 🔗 Enhanced URL Detection and Handling
+#### Enhanced URL Detection and Handling
 - **Improved URL extraction**: Now detects both full URLs and domain names (e.g., `example.com` will be converted to `https://example.com`)
 - **HTTP to HTTPS upgrade**: HTTP URLs are automatically upgraded to HTTPS for security
 - **Better redirect handling**: Only allows redirects that add "www." to the hostname for security
 - **Placeholder system**: URLs in content are replaced with placeholders during processing to avoid false matches
 
-#### 📊 WebFetch Tool Updates
+#### WebFetch Tool Updates
 - Added guidance to prefer MCP-provided web fetch tools when available
 - Updated security notes about URL validation
 - Improved error messages for domain restrictions
 
 ### Technical Changes
 
-#### 🏗️ Infrastructure Updates
+#### ️ Infrastructure Updates
 - Added proper handling for Node.js inspector/debugger detection
 - Improved telemetry for tracking migration success
 - Better error handling in the initialization process
 - Enhanced process exit handling with proper cleanup
 
-#### 🔐 Security Enhancements
+#### Security Enhancements
 - Stricter URL validation removing protocol restrictions (now accepts both HTTP and HTTPS)
 - Better domain validation for web fetching
 - Enhanced MCP server security with explicit user approval required

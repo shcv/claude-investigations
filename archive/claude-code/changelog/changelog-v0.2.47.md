@@ -2,26 +2,22 @@
 
 # Claude Code v0.2.47 Changelog
 
-## New Features
-
-### 🎯 Tab Completion for Files and Folders
+### Tab Completion for Files and Folders
 - **Press Tab** to auto-complete file and folder names while typing paths
 - Works in interactive mode when entering file paths
 - Speeds up navigation and reduces typing errors
 
-### ⚡ Auto-Accept Mode for File Edits
+### Auto-Accept Mode for File Edits
 - **Press Shift+Tab** to toggle auto-accept mode for file edits
 - When enabled, file edits are automatically accepted without confirmation prompts
 - Visual indicator shows when auto-accept is active: `⏵⏵ auto-accept edits on`
 - Particularly useful for workflows with many trusted file modifications
 
-### ♾️ Automatic Conversation Compaction
+### ️ Automatic Conversation Compaction
 - Conversations can now continue indefinitely without hitting token limits
 - Claude automatically compacts older messages when approaching token thresholds
 - Toggle this feature on/off using the `/config` command
 - Preserves conversation context while managing token usage efficiently
-
-## Enhancements
 
 ### Improved Thinking Mode Control
 - New environment variable `MAX_THINKING_TOKENS` allows precise control over thinking token allocation
@@ -54,8 +50,6 @@
 - Process imports now use `node:process` prefix for clarity
 - Removed unused imports and variables for cleaner codebase
 - Added fallback behavior for bug report title generation
-
-## Usage Examples
 
 ### Using Tab Completion
 ```bash

@@ -2,27 +2,25 @@
 
 Based on the diff analysis, here's the changelog for Claude Code v1.0.58:
 
-## Claude Code v1.0.58 Changelog
-
 ### New Features
 
-#### 🎨 Agent Color Coding
+#### Agent Color Coding
 - Agents now have color-coded identification in the interface
 - New color palette: `claude`, `success`, `bashBorder`, `planMode`, `autoAccept`, `warning`, `permission`, `error`
 - Color assignments persist per agent type for consistency
 - The `general-purpose` agent remains uncolored
 
-#### 📄 PDF File Support
+#### PDF File Support
 - Added native PDF reading capability to the Read tool
 - PDF files up to 32MB can now be processed directly
 - PDF content is displayed visually as Claude Code is multimodal
 
-#### 🔒 Enhanced Permission Messages
+#### Enhanced Permission Messages
 - New `DETAILED_PERMISSION_MESSAGES` environment variable
 - When enabled, provides more context about which specific commands are pre-approved
 - Permission prompts now show reminders of allowed commands for each tool type
 
-#### 🌐 OAuth 2.0 Client Authentication
+#### OAuth 2.0 Client Authentication
 - Added comprehensive OAuth 2.0 client authentication support
 - Supports multiple authentication methods:
   - `client_secret_basic` (HTTP Basic Auth)
@@ -30,7 +28,7 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.58:
   - `none` (public clients)
 - New error handling for OAuth flows with specific error types
 
-#### 🔧 Bash Command Prefix Support
+#### Bash Command Prefix Support
 - New `CLAUDE_CODE_BASH_PREFIX` environment variable
 - Allows prefixing all bash commands with custom wrapper scripts
 - Useful for sandboxing or monitoring command execution

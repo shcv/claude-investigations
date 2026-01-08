@@ -1,10 +1,8 @@
 # Changelog for version 2.0.27
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.27 brings significant performance improvements through lazy Yoga rendering library loading, an enhanced session resume interface with interactive search and filtering, and improved environment variable handling. The changes focus on faster startup times and better user experience when managing multiple coding sessions.
-
-## 🚀 New Features
 
 ### Interactive Session Resume with Search and Filtering
 **What:** When resuming previous sessions, you can now search through sessions and filter by git branch to quickly find what you're looking for.
@@ -49,8 +47,6 @@ claude
 - Improved code maintainability through extraction from inline implementation
 - **Evidence**: `iuA() at line 262768` (extracted from inline code in `Ps8()` at line 283329 in v2.0.26)
 
-## ⚡ Improvements
-
 ### Lazy Loading of Yoga Rendering Library
 **What:** The Yoga WASM rendering library is now loaded on-demand instead of during startup, significantly improving CLI startup time for non-rendering operations.
 
@@ -86,7 +82,7 @@ claude
 - Reduced code duplication through function extraction
 - Improved error messages and validation
 
-## 🔧 Technical Changes
+## Technical Changes
 
 - Import changes: Added `cwd as uL0` from `node:process` at line 70580
 - Import changes: Added `execSync as H9Q, spawn as _v8` from `node:child_process` at line 248770

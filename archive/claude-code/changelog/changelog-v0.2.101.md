@@ -2,8 +2,6 @@
 
 Based on the diff analysis, here is the changelog for Claude Code version 0.2.101:
 
-## Claude Code v0.2.101 Changelog
-
 ### New Features
 
 #### Model Selection and Configuration

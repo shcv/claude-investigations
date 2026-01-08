@@ -1,7 +1,5 @@
 # Changelog for version 0.2.14
 
-## Claude Code v0.2.14 Changelog
-
 ### New Features
 
 #### Dynamic Terminal Detection

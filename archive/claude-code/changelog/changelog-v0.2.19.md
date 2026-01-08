@@ -1,17 +1,15 @@
 # Changelog for version 0.2.19
 
-## Claude Code v0.2.19 Changelog
-
 ### New Features
 
-#### 🎯 Vim Mode Support
+#### Vim Mode Support
 - **New command**: `vim` - Toggle between vim and emacs editing modes
   - Usage: Simply type `vim` in the command prompt to switch modes
   - In vim mode: Use `Escape` key to toggle between INSERT and NORMAL modes
   - In emacs mode: Standard emacs-style keybindings are active
   - The editor mode preference is persisted in settings
 
-#### ⌨️ Enhanced Text Editing
+#### ️ Enhanced Text Editing
 - **Vim mode implementation** with full modal editing support:
   
   **Normal Mode Commands**:
@@ -34,12 +32,12 @@
 
 ### Improvements
 
-#### 🔧 Input Handling Refactoring
+#### Input Handling Refactoring
 - Improved paste handling with better chunking for large text inputs
 - Enhanced placeholder rendering with cursor display
 - Better separation of concerns between input state management and rendering
 
-#### 📦 Import Optimizations
+#### Import Optimizations
 - Streamlined Node.js imports:
   - Combined imports from `node:process` (env, cwd)
   - Combined imports from `node:stream` (PassThrough)

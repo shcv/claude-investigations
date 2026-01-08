@@ -4,8 +4,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 # Claude Code v1.0.65 Changelog
 
-## New Features
-
 ### Settings Schema Support
 - Added JSON Schema support for Claude Code settings files
 - Settings files can now include `$schema: "https://json.schemastore.org/claude-code-settings.json"` for validation and autocompletion in supported editors
@@ -24,8 +22,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Refactored settings file monitoring system for better performance
 - More efficient file watching with improved change detection
 - Better handling of file creation and deletion events
-
-## Improvements
 
 ### Performance Optimizations
 - Removed unnecessary diagnostic event handlers that could impact performance

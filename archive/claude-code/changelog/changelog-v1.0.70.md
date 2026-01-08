@@ -1,8 +1,6 @@
 # Changelog for version 1.0.70
 
-## Major Changes
-
-### 🎯 New Onboarding Experience
+### New Onboarding Experience
 Claude Code now features a comprehensive onboarding flow for first-time users:
 - **Interactive setup screens** guide you through initial configuration
 - **Theme selection** to personalize your experience from the start
@@ -14,19 +12,17 @@ When you first run Claude Code v1.0.70, you'll be greeted with setup screens tha
 - OAuth login or API key authentication  
 - Terminal-specific settings (e.g., Option+Enter for new lines in Apple Terminal)
 
-### 🔒 Enhanced Security Model
+### Enhanced Security Model
 - **Explicit permission dialogs** for MCP servers and hooks
 - **Trust management** for code execution permissions
 - **API key validation** with user confirmation for custom ANTHROPIC_API_KEY usage
 - Clear security notes displayed during onboarding about Claude's file system access
 
-### 🧹 Major Codebase Refactoring
+### Major Codebase Refactoring
 - **66.3% structural similarity** to v1.0.69 (significant reorganization)
 - **2,889 functions removed** and 2,257 new functions added
 - **Complete removal of Sentry telemetry** and error tracking for improved privacy
 - Reduced external dependencies and cleaner module structure
-
-## Privacy Improvements
 
 ### Removed Telemetry
 All Sentry integration has been removed, including:
@@ -37,8 +33,6 @@ All Sentry integration has been removed, including:
 - Browser and network instrumentation
 
 This means Claude Code no longer sends crash reports or usage data to external services, enhancing user privacy.
-
-## Technical Improvements
 
 ### Module System Updates
 - Added support for `createRequire` from Node.js native module system
@@ -56,8 +50,6 @@ Enhanced file system capabilities with new imports for:
 - Stream operations (`createReadStream`, `createWriteStream`)
 - Path handling for both POSIX and Windows systems
 
-## Developer Experience
-
 ### Terminal Integration
 - Automatic detection and optimization for different terminal emulators
 - Custom key binding recommendations based on your terminal
@@ -68,15 +60,11 @@ Enhanced file system capabilities with new imports for:
 - Better handling of custom API keys with validation
 - Streamlined OAuth login process
 
-## Breaking Changes
-
 ### Export Structure
 The main module now exports three functions:
 - `showSetupScreens` - Displays the onboarding flow
 - `setup` - Main initialization function
 - `completeOnboarding` - Marks onboarding as complete
-
-## Internal Changes
 
 ### Code Organization
 - Significant module restructuring for better maintainability

@@ -1,7 +1,5 @@
 # Changelog for version 0.2.31
 
-## Claude Code v0.2.31 Changelog
-
 ### New Features
 
 #### Custom Slash Commands

@@ -1,10 +1,8 @@
 # Changelog for version 2.0.5
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.5 adds extended thinking support for Claude Sonnet 4.5, allowing users to enable transparent reasoning via environment variables or configuration settings. This release also improves session persistence with deduplication and refines internal error handling.
-
-## 🚀 New Features
 
 ### Extended Thinking Support for Sonnet 4.5
 
@@ -27,8 +25,6 @@ MAX_THINKING_TOKENS=10000 claude
 - Provides visible reasoning steps during Claude's problem-solving process
 - **Evidence**: `hL1() at line 364041` in v2.0.5
 
-## Improvements
-
 ### Session Persistence Deduplication
 
 **What:** Session entries are now deduplicated before persistence, preventing redundant API calls when the same conversation entry is encountered multiple times.
@@ -49,8 +45,6 @@ MAX_THINKING_TOKENS=10000 claude
 - Improves Claude's understanding of how multiple tool calls are processed
 - **Evidence**: Glob tool description at line 12298 in v2.0.5
 
-## Bug Fixes
-
 ### Removed Obsolete Tool Concurrency Error
 
 **What:** Eliminated the "tool use concurrency issues" error message that instructed users to run `/rewind` to recover conversations.
@@ -60,8 +54,6 @@ MAX_THINKING_TOKENS=10000 claude
 - Suggests server-side fix has been implemented
 - Users will no longer encounter this specific error message
 - **Evidence**: Error handling removed from `fk1()` at lines 23711-23720 in v2.0.3
-
-## Internal Changes
 
 ### AWS Credential Handling Simplified
 

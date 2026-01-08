@@ -1,10 +1,8 @@
 # Changelog for version 2.0.0
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.0 introduces Claude Sonnet 4.5 as the new default model, completely redesigns the welcome screen with a new "Clawd" mascot and adaptive layout system, and adds a `/usage` command for subscription plan usage tracking. The thinking feature has been streamlined to use a simple "ultrathink" trigger, and the MultiEdit tool has been removed in favor of the existing Edit tool.
-
-## 🚀 New Features
 
 ### Claude Sonnet 4.5 Model
 **What:** New default model `claude-sonnet-4-5-20250929` with improved performance for daily coding tasks
@@ -123,8 +121,6 @@ claude
 - Updates automatically as you switch files
 - **Evidence**: `aLB()` function at line 423498 in v2.0.0
 
-## ✨ Improvements
-
 ### Notification System Enhancements
 **What:** Improved notification queue management with invalidation support
 
@@ -220,8 +216,6 @@ claude
 - Only shown to users with available subscriptions
 - **Evidence**: `MRB()` notification at line 430699, subscription check `sK5()` referenced in v2.0.0
 
-## 🔧 Changes
-
 ### Extended Thinking Simplification
 **What:** Streamlined from multilingual multi-level system to single trigger
 
@@ -271,8 +265,6 @@ claude
 - Now only "none" (text) and "high" (claude) colors
 - Matches simplified binary thinking system
 - **Evidence**: Variables `cT` and `aa` at lines 363617-363618 in v1.0.128 vs `LU1` and `$WA` at lines 363586-363587 in v2.0.0
-
-## 🗑️ Removed Features
 
 ### MultiEdit Tool
 **What:** The MultiEdit tool has been removed entirely
@@ -345,8 +337,6 @@ claude
 - Feedback mechanism still exists but implementation changed
 - **Evidence**: Function `kv1()` at line 397255 in v1.0.128 vs different implementation in v2.0.0
 
-## 🐛 Bug Fixes
-
 ### Session Persistence Deduplication
 **What:** Fixed duplicate session log entries when fetching history
 
@@ -366,8 +356,6 @@ claude
 - Fixed edge cases in path truncation
 - More accurate column calculations for multi-panel layouts
 - **Evidence**: Layout functions `SGB()` at line 405537, `yGB()` at line 405541 in v2.0.0
-
-## 📝 Developer Notes
 
 ### Breaking Changes
 1. **MultiEdit tool removed** - Extensions or scripts using MultiEdit must switch to Edit tool

@@ -2,8 +2,6 @@
 
 # Changelog v1.0.3
 
-## New Features
-
 ### Enhanced Image Type Detection
 - Added automatic image format detection from base64 data (`JQ0` function)
 - Supports detection of PNG, JPEG, GIF, and WebP formats based on file signatures
@@ -27,8 +25,6 @@
 - Improved handling of file descriptor redirections (`>&0`, `>&1`, `>&2`)
 - Better parsing and validation of shell commands with output redirection
 - Prevents unsafe command patterns while allowing legitimate redirections
-
-## Technical Improvements
 
 ### Process Information
 - Enhanced user agent string now includes the entrypoint information via `CLAUDE_CODE_ENTRYPOINT` environment variable

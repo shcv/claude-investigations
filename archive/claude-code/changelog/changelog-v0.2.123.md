@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff file for version 0.2.123, here is the detailed changelog:
 
-## Claude Code v0.2.123 Changelog
-
 ### 🆕 New Features
 
 #### Claude 3.7 Sonnet Model Support
@@ -48,7 +46,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - **Unified Rate Limit System**: New `unifiedRateLimitFallbackAvailable` flag for better rate limit management
 - **Quota Checking**: New `D65()` function to check API quota status
 
-### 🔧 Improvements
+### Improvements
 
 #### Permission System Enhancements
 - **Detailed Decision Reasons**: Permission prompts now show exactly why a permission was allowed or denied
@@ -67,7 +65,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - **Improved Error Messages**: New `RetryError` class provides better context for retry failures
 - **Enhanced Tooltips**: More descriptive tooltips for model selection and feature explanations
 
-### 🐛 Bug Fixes
+### Bug Fixes
 
 - Fixed duplicate imports and variable declarations
 - Removed unused model configuration functions
@@ -75,7 +73,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - Better error handling for AWS Bedrock model discovery
 - Fixed issues with diagnostic file path matching
 
-### 🔄 Internal Changes
+### Internal Changes
 
 - **New Utility Functions**:
   - `EU4()`: Combines and deduplicates arrays
@@ -86,7 +84,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - **Improved Tool Filtering**: Enhanced logic for filtering available tools based on permissions and MCP capabilities
 - **Code Organization**: Better separation of concerns for model management, diagnostics, and permissions
 
-### 📝 Notes for Developers
+### Notes for Developers
 
 - The native auto-updater is controlled by the `ENABLE_IDE_INTEGRATION` environment variable
 - AWS Bedrock integration requires proper AWS credentials configured

@@ -1,9 +1,7 @@
 # Changelog for version 1.0.118
 
-## 🎯 Highlights
+## Highlights
 This version temporarily disables the sandbox security system while adding SOCKS5 proxy infrastructure and fixing a symlink resolution bug in CLAUDE.md file processing.
-
-## 🚨 Critical Changes
 
 ### Sandbox System Temporarily Disabled
 **What:** The entire sandbox wrapping system has been disabled, causing all commands to run without filesystem or network restrictions.
@@ -17,8 +15,6 @@ This version temporarily disables the sandbox security system while adding SOCKS
 
 **Impact:** Users expecting sandboxed execution will have NO security isolation in this version. Commands run with full system privileges.
 
-## 🐛 Bug Fixes
-
 ### Fixed Symlink Resolution in CLAUDE.md Processing
 **What:** CLAUDE.md files accessed through symbolic links are now properly resolved to their real paths.
 
@@ -30,8 +26,6 @@ This version temporarily disables the sandbox security system while adding SOCKS
 - **Evidence**: `rd()` at line 399923 uses `uJ()` to resolve symlinks and tracks both paths in the visited set (lines 399947-399959)
 
 **Impact:** Users with symlinked CLAUDE.md files will no longer encounter incorrect behavior or infinite loops during file processing.
-
-## 🔧 Internal Improvements
 
 ### SOCKS5 Proxy Support Infrastructure Added
 **What:** Linux network bridge now supports both HTTP and SOCKS5 proxy ports for future sandbox use.
@@ -57,8 +51,6 @@ This version temporarily disables the sandbox security system while adding SOCKS
 - **Evidence**: `YC0()` at line 375687 changed from synchronous to async with Promise-based cleanup
 
 **Impact:** More reliable shutdown process with no leaked background processes.
-
-## 📦 Dependency Updates
 
 ### AWS Bedrock SDK Updated
 **What:** Internal AWS Bedrock SDK dependencies refreshed with updated function identifiers.

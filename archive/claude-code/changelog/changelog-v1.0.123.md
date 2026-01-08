@@ -1,19 +1,9 @@
 # Changelog for version 1.0.123
 
-Based on my analysis of the diff, this version contains **only internal code reorganization changes** with **no user-visible functionality changes**. The changes are:
 
-1. **Import statement reorganization** - Changed from importing the entire `stream` module and `node:process` module to importing only the specific named exports needed
-2. **No functional changes** - The same classes use the same functionality, just with more specific imports
-
-This is purely an internal refactoring for better tree-shaking and code optimization. There are no new features, improvements, or bug fixes that affect end users.
-
-# Changelog for version 1.0.123
-
-## 🎯 Highlights
+## Highlights
 
 This release contains internal code optimizations with no user-visible changes. The codebase has been refactored to use more specific imports for better tree-shaking and bundle optimization.
-
-## Internal Changes
 
 ### Code Optimization
 **What:** Refactored module imports to use named exports instead of namespace imports

@@ -1,9 +1,7 @@
 # Changelog for version 2.0.28
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.28 introduces marketplace branch/tag support for plugin repositories, enhanced cleanup when removing marketplaces, and several security and performance improvements including SSH pre-flight checks and agent transcript resumption capabilities.
-
-## 🚀 New Features
 
 ### Marketplace Branch/Tag Support
 **What:** Marketplaces can now be installed from specific branches, tags, or commit refs instead of only the default branch.
@@ -80,8 +78,6 @@ claude marketplace add owner/repo
 - Validates all tokens are alphanumeric or the `--help` flag
 - Immediately returns the full command as its own prefix
 - **Evidence**: New function `Yq8() at line 204259`; usage at line 204549
-
-## ✨ Improvements
 
 ### Enhanced Marketplace Removal Cleanup
 **What:** Removing a marketplace now automatically cleans up all references from settings files, preventing orphaned configuration entries.
@@ -219,8 +215,6 @@ claude marketplace remove my-marketplace
 - Falls back to bundled ripgrep if not set
 - **Evidence**: Modified function `To2() at line 3881` (was `Eo2()` in v2.0.27); checks `process.env.RIPGREP_NODE_PATH` at line 3882
 
-## 🔧 Internal Changes
-
 ### Refactored Functions
 - Session ID generation functions consolidated
 - Permission stream class methods reorganized
@@ -240,6 +234,5 @@ claude marketplace remove my-marketplace
 - Agent ID generation moved to dedicated `HrA()` function at line 393160
 - Transcript path functions reorganized (`bf2()` at line 465227, `PU()` at line 465250)
 
----
 
 **Note:** This changelog focuses on user-visible changes and significant internal improvements. Many variable and function names appear random due to the code being previously minified. Line numbers reference the prettified v2.0.28 source file.

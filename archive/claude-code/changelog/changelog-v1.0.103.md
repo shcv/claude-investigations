@@ -1,9 +1,7 @@
 # Changelog for version 1.0.103
 
-## 🎯 Highlights
+## Highlights
 This release introduces npm plugin support, allowing users to install and use Claude plugins directly from npm packages. It also enhances file security by expanding protection to include IDE configurations and shell files beyond just Git files.
-
-## 🚀 New Features
 
 ### npm Plugin Support
 **What:** Claude Code now supports loading plugins directly from npm packages using the `npm:` prefix in repository names
@@ -35,8 +33,6 @@ This release introduces npm plugin support, allowing users to install and use Cl
 - Claude will now request permission before editing these sensitive files
 - Consolidated security logic provides consistent protection across file types
 - **Evidence**: `UW9() at line 352933`
-
-## Other changes
 
 ### Plugin Loading Architecture
 Refactored plugin discovery system with improved error handling and conflict detection. Plugin names must now be unique across all repositories, with clear error messages for conflicts.

@@ -2,8 +2,6 @@
 
 Looking at this diff between Claude Code v0.2.55 and v0.2.56, here's the changelog:
 
-## Claude Code v0.2.56 Changelog
-
 ### New Features
 
 #### Enhanced Permission System

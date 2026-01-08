@@ -2,8 +2,6 @@
 
 Now, based on the diff analysis, I can generate a comprehensive changelog for version 1.0.7:
 
-## Claude Code v1.0.7 Changelog
-
 ### New Features
 
 #### Plan Mode

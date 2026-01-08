@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.27 Changelog
 
-## New Features
-
 ### Tool Permissions Management
 - **New `/approved-tools` command** - Manage which tools Claude can use during your session
   - View currently approved tools
@@ -22,8 +20,6 @@
   - No need to remember exact command names
   - Partial matches and typos are handled gracefully
   - Faster command entry with intelligent suggestions
-
-## Technical Improvements
 
 ### Better Process and Stream Handling
 - Switched to named imports for Node.js built-ins (`env`, `cwd`, `PassThrough`)

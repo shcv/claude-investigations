@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.8 Changelog
 
-## New Features
-
 ### MCP OAuth Authentication
 - Added support for OAuth authentication with MCP (Model Context Protocol) servers
 - New `mcp-auth` command for authenticating with servers that require OAuth
@@ -32,8 +30,6 @@
 - Simplified model detection for Pro vs Max subscriptions
 - Improved fallback model descriptions based on usage limits
 
-## User Interface Enhancements
-
 ### Keyboard Shortcuts
 - New `Ctrl+E` shortcut in transcript mode to toggle a feature (context-dependent)
 - Updated newline hints:
@@ -51,8 +47,6 @@
 claude "Rename all instances of 'oldVariable' to 'newVariable' in my code"
 # Claude will use replace_all: true when appropriate
 ```
-
-## Performance and Reliability
 
 ### Signal Handling
 - Improved process signal handling for SIGINT and SIGTERM

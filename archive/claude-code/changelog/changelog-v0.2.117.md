@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.117 Changelog
 
-## New Features
-
 ### Background Task Management 🚀
 A new `tasks` command has been added to list and manage background tasks. This allows you to:
 - View all running background tasks
@@ -53,8 +51,6 @@ claude --print --resume 550e8400-e29b-41d4-a716-446655440000 "Let's continue"
 claude --print --system-prompt "You are a Python expert" "Write a sorting algorithm"
 ```
 
-## Improvements
-
 ### Output Truncation
 Large command outputs are now intelligently truncated to prevent overwhelming the display:
 - Shows the first and last portions of output
@@ -64,13 +60,9 @@ Large command outputs are now intelligently truncated to prevent overwhelming th
 ### Stream Processing
 Added `PassThrough` stream support for better handling of streaming data in background tasks.
 
-## Bug Fixes
-
 ### Import Path Corrections
 - Fixed Node.js process import to use named imports (`import { cwd } from "node:process"`)
 - Properly scoped crypto imports for UUID generation
-
-## Internal Changes
 
 ### Code Organization
 - Removed obsolete functions (`A50`, `FZ6`) related to model override handling

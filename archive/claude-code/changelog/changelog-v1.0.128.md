@@ -1,9 +1,7 @@
 # Changelog for version 1.0.128
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.128 introduces a comprehensive plugin marketplace system enabling plugin discovery and installation from multiple sources (npm, GitHub, git repositories, and local paths). The release also enhances the notification system with priority-based queuing and adds Claude Agent SDK support to better track programmatic usage.
-
-## 🚀 New Features
 
 ### Plugin Marketplace System
 **What:** A complete plugin distribution and installation infrastructure that enables discovering and installing plugins from centralized marketplaces.
@@ -64,8 +62,6 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Still behind a feature flag for gradual rollout
 - **Evidence**: Activation function `u7()` at line 380874, UI controls at lines 400220-400237
 
-## ✨ Improvements
-
 ### Enhanced Notification System
 **What:** Replaced simple single-notification system with a sophisticated priority-based queue.
 
@@ -106,7 +102,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Semantic versioning support following semver.org specification
 - **Evidence**: Plugin manifest schema at lines 376570-376602, hooks schema at line 376603, commands schema at line 376631
 
-## 🔧 Internal Changes
+## Internal Changes
 
 - Refactored notification system architecture from component-local to global state management
 - Renamed minified function names as part of routine obfuscation (e.g., `BM()` → `IM()`, `m7()` → `u7()`)
@@ -115,8 +111,6 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Enhanced plugin loading with support for multiple command/agent paths via `commandsPaths` and `agentsPaths` arrays
 - Added helper functions for git operations, npm package installation, and directory copying
 - Improved error handling with specific error types like `cC` for invalid schemas
-
-## 🔍 Developer Notes
 
 ### Plugin Marketplace File Structure
 ```

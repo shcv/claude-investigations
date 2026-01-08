@@ -1,9 +1,7 @@
 # Changelog for version 1.0.93
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.93 introduces cross-platform network sandboxing with Linux support, MCP SDK server integration, and Git checkpointing for preserving work-in-progress. Security is enhanced with command validation to prevent shell injection attacks.
-
-## 🚀 New Features
 
 ### Linux Network Sandboxing
 **What:** Network isolation now available on Linux using bubblewrap (bwrap)
@@ -69,8 +67,6 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Consistent with system clipboard conventions
 - **Evidence**: `Eu variable at line 363750`
 
-## 🔧 Improvements
-
 ### Enhanced NO_PROXY Support
 **What:** Better proxy bypass logic for excluded hosts
 **Details:**
@@ -87,8 +83,6 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Improved proxy port management with parameterized functions
 - **Evidence**: `Er2() at line 370309` replaces platform-specific `Bs2()`
 
-## 🐛 Bug Fixes
-
 ### Permission Mode Persistence
 **What:** Fixed permission mode settings not persisting across sessions
 **Details:**
@@ -96,8 +90,6 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Permission modes now correctly persist when changed
 - Added helper function for cleaner source validation
 - **Evidence**: `setMode case at line 344856` now uses `defaultMode` consistently
-
-## 🔄 Other Changes
 
 ### Simplified Timeout Messages
 Error messages for request timeouts no longer include technical hints about API_TIMEOUT_MS, providing cleaner user experience.

@@ -1,9 +1,7 @@
 # Changelog for version 1.0.72
 
-## 🎯 Highlights
+## Highlights
 Claude Code 1.0.72 introduces a new `/statusline` command for customizing your terminal status line, enhances security with improved path validation, and provides clearer visual indicators for different operational modes.
-
-## 🚀 New Features
 
 ### Status Line Configuration Command
 **What:** New `/statusline` command for customizing Claude Code's status line UI
@@ -51,8 +49,6 @@ change directories to the allowed working directories for this session: [list]
 - Improved handling of relative paths with `..`
 - More specific error messages for each command type
 
-## 💪 Improvements
-
 ### Agent File Validation
 **What changed:** Better error reporting for invalid agent configuration files
 **Impact:** Clearer error messages when agent files are missing required fields or have invalid configurations, making it easier to debug custom agents
@@ -64,8 +60,6 @@ change directories to the allowed working directories for this session: [list]
 ### Background Shell Display
 **What changed:** New component for displaying running background shells in the UI
 **Impact:** Better visibility of background processes with indicators showing shell count and status
-
-## 🐛 Bug Fixes
 
 ### Fixed: Path validation edge cases
 - **Issue:** Certain path patterns with glob characters or parent directory references were not properly validated

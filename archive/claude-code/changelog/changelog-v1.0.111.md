@@ -1,10 +1,8 @@
 # Changelog for version 1.0.111
 
-## 🎯 Highlights
+## Highlights
 
 This release focuses on improving robustness and user experience with enhanced shell command parsing, model validation, and visual feedback for long-running operations. Key improvements include safer shell parsing with error handling, API-based model validation to prevent invalid models, and visual indicators when operations are taking longer than expected.
-
-## 🚀 New Features
 
 ### API-Based Model Validation
 **What:** The `/model` command now validates custom model names by making a test API request before accepting them.
@@ -71,8 +69,6 @@ This release focuses on improving robustness and user experience with enhanced s
 - Security enhancement to protect against potential configuration exploits
 - **Evidence**: `YCB` Set at lines 427822-427867, `WCB()` at line 427868
 
-## ✨ Improvements
-
 ### Compact Error Message Clarity
 The error message when conversations become too long now correctly instructs users to press escape twice instead of once:
 - Old: "Press esc to go up a few messages and try again"
@@ -103,8 +99,6 @@ Transcript mode now displays the model name used for each assistant response.
 Enhanced notification messages for tool permission requests to be more descriptive.
 - **Evidence**: `_f5()` at line 431409
 
-## 🐛 Bug Fixes
-
 ### TTY Detection Improvements
 Fixed handling of non-TTY environments by checking `stdout.isTTY` instead of using a global flag, improving compatibility with piped output and CI environments.
 - **Evidence**: Multiple locations including class `xU1` at line 361792
@@ -117,7 +111,7 @@ Added option to skip automatic working directory updates for certain shell opera
 Improved attachment normalization to handle background remote sessions and other new attachment types gracefully.
 - **Evidence**: `rn6()` at line 396057 with new cases at lines 402372-402381
 
-## 🔧 Internal Changes
+## Internal Changes
 
 - Refactored shell parsing to use centralized wrapper functions for consistency
 - Renamed and restructured ink rendering class from `A$1` to `xU1`
@@ -126,6 +120,5 @@ Improved attachment normalization to handle background remote sessions and other
 - Removed unused dependencies (onetime, signal-exit, stream imports)
 - Cleaned up unused functions and variables (19 removed total)
 
----
 
 **Note:** This changelog focuses on user-visible changes and significant improvements. Many internal refactorings and code reorganizations have been omitted for brevity.

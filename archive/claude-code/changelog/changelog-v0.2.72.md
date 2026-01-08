@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.72 Changelog
 
-## New Features
-
 ### Parallel Agent Execution
 - **New command**: `/parallel-agents [on|off|count]` - Toggle parallel agent execution or set the number of agents to run concurrently
   - `parallel-agents on` - Enable with default 3 agents
@@ -24,8 +22,6 @@
 - New human-readable file size formatting (e.g., "1.5MB" instead of "1572864 bytes")
 - Automatic unit conversion: bytes → KB → MB → GB
 
-## UI/UX Improvements
-
 ### Streamlined Command Output Display
 - Simplified display of command execution results
 - Cleaner separation of stdout and stderr output
@@ -40,8 +36,6 @@
 - Local settings now show: `On this machine in <path>`
 - Project settings now show: `Checked in at .claude/settings.json`
 - Clearer distinction between local and project-wide settings
-
-## Performance Improvements
 
 ### Parallel Agent Architecture
 When enabled, the Task tool can now:
@@ -63,8 +57,6 @@ Agent 2:
 Synthesis (combining results):
   [synthesis progress]
 ```
-
-## Technical Changes
 
 ### Stream Event Handling
 - New `stream_request_start` event type for better request lifecycle tracking

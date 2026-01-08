@@ -1,10 +1,8 @@
 # Changelog for version 1.0.124
 
-## 🎯 Highlights
+## Highlights
 
 Version 1.0.124 introduces sandboxed bash mode for enhanced security, protects `.git/hooks` directories from unauthorized modifications, and adds experimental server-controlled extended thinking capabilities. The API retry mechanism was refactored to provide real-time error feedback through the UI instead of console logging.
-
-## 🚀 New Features
 
 ### Sandboxed Bash Mode (`-sb/--sandboxed-bash`)
 **What:** A new permission mode that combines sandbox restrictions with automatic command approval for commands that comply with configured filesystem and network policies.
@@ -44,8 +42,6 @@ claude --sandboxed-bash
 - Thinking blocks are intelligently hidden when auto-enabled unless user explicitly requested thinking
 - Does not affect manual thinking triggers or `MAX_THINKING_TOKENS` environment variable
 - **Evidence**: Client data API in `TWA()` at line 361888, token allocation in `pT()` at line 362093, hiding logic at line 415872
-
-## ✨ Improvements
 
 ### Enhanced API Error Display
 **What:** API retry errors now appear as structured messages in the UI instead of console output, providing real-time feedback during retry attempts.
@@ -119,8 +115,6 @@ claude --sandboxed-bash
 - Logs list of available slash commands when generating tool description
 - Helps diagnose issues with command availability
 - **Evidence**: Logging in `w4B()` at line 413120
-
-## 🔧 Internal Improvements
 
 ### Prompt History Deduplication
 **What:** Prompt history now deduplicates pasted content to reduce storage usage.
@@ -206,8 +200,6 @@ claude --sandboxed-bash
 - Notification display logic integrated differently
 - **Evidence**: Function `mFB()` at line 427595
 
-## 🔄 Removed Features
-
 ### Rate Limit Pre-Check
 **What:** Removed the unified rate limit status check function `QQB()` that was called before each API request.
 
@@ -232,6 +224,5 @@ claude --sandboxed-bash
 - Replaced with more specific `PassThrough` import from "stream" at line 445118
 - **Evidence**: Removed import at line 338191 in v1.0.123, new import `Lt5` at line 445118
 
----
 
 **Note:** Many function and variable names changed in this release due to JavaScript minification/bundling. The functionality described above focuses on user-visible changes and meaningful internal improvements rather than cosmetic identifier changes.

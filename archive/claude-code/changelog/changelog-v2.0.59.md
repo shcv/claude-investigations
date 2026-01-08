@@ -1,10 +1,8 @@
 # Changelog for version 2.0.59
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces a new **Task management system** with tools for creating and tracking work items, adds **teammate mailbox messaging** for inter-agent communication, and includes a **post-compaction feedback survey**. The `/migrate-installer` command has been removed, and thinking mode support has been extended to claude-opus-4-5.
-
-## 🚀 New Features
 
 ### Task Management System
 **What:** A complete task tracking system with four new tools for managing work items during coding sessions.
@@ -66,8 +64,6 @@ Tasks are automatically created and managed by Claude during complex multi-step 
 - Enables more flexible agent customization
 - **Evidence**: 7 occurrences in v2.0.59, zero in v2.0.58
 
-## ⚡ Improvements
-
 ### Extended Thinking Mode for claude-opus-4-5
 **What:** Thinking mode now supports claude-opus-4-5 model via feature flag.
 
@@ -107,8 +103,6 @@ Tasks are automatically created and managed by Claude during complex multi-step 
 - Distinguishes between regular session feedback and post-compaction feedback
 - Enables better analytics segmentation
 
-## 🗑️ Removed Features
-
 ### `/migrate-installer` Command Removed
 **What:** The command to migrate from global npm installation to local installation has been removed.
 
@@ -129,8 +123,6 @@ Tasks are automatically created and managed by Claude during complex multi-step 
 **Details:**
 - Function was at line 233408 in v2.0.58
 - Simplified feature flag initialization flow
-
-## 🔧 Internal Changes
 
 ### Slash Command UI Components Refactored
 **What:** `/todos` and `/plan` commands converted to use new `local-jsx` rendering pattern.

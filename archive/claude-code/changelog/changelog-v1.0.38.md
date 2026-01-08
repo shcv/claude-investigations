@@ -2,11 +2,9 @@
 
 Based on my analysis of the diff file, here is the changelog for Claude Code version 1.0.38:
 
-## Claude Code v1.0.38 Changelog
-
 ### Major Features
 
-#### 🪝 Hook System (New)
+#### Hook System (New)
 - **Pre/Post Tool Hooks**: Execute custom commands before and after tool operations
   - `PreToolUse` - Run commands before tools execute (e.g., validation, logging)
   - `PostToolUse` - Run commands after tools complete (e.g., notifications, cleanup)
@@ -18,7 +16,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
   - JSON output parsing for structured hook responses
   - 60-second timeout with automatic cancellation
 
-#### 🔍 Enhanced Search Tool (Grep)
+#### Enhanced Search Tool (Grep)
 - **New Grep Tool**: Powerful search based on ripgrep with advanced features
   - Multiple output modes: `content`, `files_with_matches`, `count`
   - Context lines support with `-A`, `-B`, `-C` flags
@@ -33,34 +31,34 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 
 ### New Commands & Features
 
-#### 💾 Memory Management
+#### Memory Management
 - Enhanced memory system with support for adding memories to specific files
 - Memory updates preserve existing content and structure
 - Automatic section detection for organized memory storage
 
-#### 🖥️ Terminal Integration
+#### ️ Terminal Integration
 - **Ghostty Terminal Support**: Added configuration for Shift+Enter keybinding
 - Improved terminal setup for multiple environments
 - Better handling of paste operations with image detection
 
-#### 🛠️ IDE Detection
+#### ️ IDE Detection
 - Automatic detection of JetBrains IDEs when launched from within them
 - Supports: PyCharm, IntelliJ, WebStorm, PhpStorm, RubyMine, CLion, GoLand, Rider, DataGrip, AppCode, DataSpell, Aqua, Gateway, Fleet
 
 ### Improvements
 
-#### 🔐 Security & Privacy
+#### Security & Privacy
 - Enhanced API key redaction in logs
 - Support for AWS, GCP, and generic API key patterns
 - Better handling of authorization tokens and service accounts
 
-#### 📊 Performance & Reliability
+#### Performance & Reliability
 - Improved proxy configuration with AWS SDK
 - Better handling of aborted operations in hooks
 - Enhanced error messages for hook failures
 - Optimized file search with modification time sorting
 
-#### 🎨 UI/UX Enhancements
+#### UI/UX Enhancements
 - Visual indication when hooks are running
 - Better feedback for blocked operations
 - Improved diff view for file edits

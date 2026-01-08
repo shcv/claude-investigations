@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff, here's the changelog for Claude Code version 1.0.34:
 
-## Claude Code v1.0.34 Changelog
-
 ### New Features
 
 #### Improved Shell Alias Setup

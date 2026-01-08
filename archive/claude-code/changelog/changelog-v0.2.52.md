@@ -1,7 +1,5 @@
 # Changelog for version 0.2.52
 
-## Claude Code v0.2.52 Changelog
-
 ### Summary
 Version 0.2.52 includes minor internal refactoring with no user-facing changes. The update focuses on improving import specificity for better code organization.
 

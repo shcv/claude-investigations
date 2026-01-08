@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.53 Changelog
 
-## New Features
-
 ### Web Fetch Tool
 - **New capability**: Claude can now view URLs that you paste into the conversation
 - Simply paste a URL and Claude will fetch and analyze the content
@@ -22,8 +20,6 @@
 - Restores settings automatically if setup is interrupted
 - New setup process similar to existing iTerm2 integration
 
-## Improvements
-
 ### MCP Server Setup
 - Simplified command input: Now accepts full command with arguments and environment variables in a single step
 - Smart parsing of commands like `API_KEY=abc123 NODE_ENV=dev node server.js`
@@ -34,8 +30,6 @@
 - Added visual indicator for number of running background tasks in the prompt
 - New `hasSeenTasksHint` preference to track if user has been shown task shortcuts
 - Improved handling of backslash+return key combination tracking
-
-## Bug Fixes
 
 ### Image Detection
 - Fixed JPEG file extension detection

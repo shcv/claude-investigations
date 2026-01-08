@@ -1,7 +1,5 @@
 # Changelog for version 0.2.120
 
-## Changelog for Claude Code v0.2.120
-
 ### Tool Permission Handling Improvements
 
 #### Enhanced CLI Tool Filtering

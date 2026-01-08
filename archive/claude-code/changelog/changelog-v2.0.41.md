@@ -1,10 +1,8 @@
 # Changelog for version 2.0.41
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.41 introduces major improvements to git workflow management, including automatic tracking of uncommitted changes and unpushed commits, enhanced multi-agent planning with structured 4-phase workflows, and better terminal rendering with improved ANSI escape sequence handling and Unicode support.
-
-## 🚀 New Features
 
 ### Git Repository Status Tracking
 **What:** Comprehensive git status detection for branch management and workflow automation
@@ -57,9 +55,7 @@ git branch --set-upstream-to=origin/<branch> <branch>
 
 **How to use:**
 ```markdown
----
 paths: src/{components,utils}/{*.ts,*.tsx}
----
 ```
 
 Expands to:
@@ -113,8 +109,6 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Respects ignore patterns
 - Performance benefit for large codebases
 - **Evidence**: Feature flag check at line 483919 in pretty-v2.0.41.js (not in v2.0.37)
-
-## ✨ Improvements
 
 ### Enhanced Multi-Agent Plan Mode
 **What:** Structured 4-phase planning workflow with parallel agent coordination
@@ -227,8 +221,6 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Better understanding of command execution model
 - **Evidence**: Enhanced documentation at lines 96963-96982 in diff
 
-## 🔧 Other Changes
-
 ### MCP Tool Token Tracking
 Separate token usage tracking for MCP tools, distinguishing them from built-in tools in context window breakdown.
 **Evidence**: Token tracking at lines 97073-97152 in diff
@@ -249,6 +241,5 @@ Better warnings for truncated content, showing kilobytes removed for large tool 
 Enhanced thinking mode integration with better metadata passing and settings synchronization for `alwaysThinkingEnabled`.
 **Evidence**: `dwQ()`, `pwQ()` at lines 61382-61438, 3485-3486 in diff
 
----
 
 **Note:** This changelog covers changes from v2.0.37 to v2.0.41. All line numbers reference the prettified source files in the archive. Function names are from the minified/obfuscated source and may not reflect original implementation names.

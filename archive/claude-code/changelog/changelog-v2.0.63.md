@@ -1,10 +1,8 @@
 # Changelog for version 2.0.63
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces performance monitoring infrastructure to detect slow filesystem and shell operations, adds automatic retry logic for ripgrep EAGAIN errors, and optimizes settings writes to avoid unnecessary disk I/O.
-
-## 🚀 New Features
 
 ### Slow Operation Detection
 
@@ -39,8 +37,6 @@ When ripgrep fails with an EAGAIN error (common in high-concurrency environments
 - Telemetry event `tengu_ripgrep_eagain_retry` is logged when this occurs
 - **Evidence:** `lJ9()` function at line 17125, retry logic at lines 17163-17178
 
-## ⚡ Improvements
-
 ### Optimized OAuth Account Settings Writes
 
 **What:** Settings are now only written to disk when OAuth account information actually changes.
@@ -74,8 +70,6 @@ When ripgrep fails with an EAGAIN error (common in high-concurrency environments
 - New `vTA()` function to get registered hooks (line 2398)
 - New `jJA()` function to access plan slug cache (line 2401)
 - **Evidence:** Functions at lines 2395-2401
-
-## 🔧 Other Changes
 
 ### Internal Refactoring
 

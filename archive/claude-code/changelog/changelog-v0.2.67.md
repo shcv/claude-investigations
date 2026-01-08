@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.67 Changelog
 
-## New Features
-
 ### Project Settings Management
 - **New project permission system**: Added ability to manage tool permissions at the project level
   - The new `Pj2` function retrieves allowed tools from project settings
@@ -19,8 +17,6 @@
     ─────────────── Title ───────────────
     ```
 
-## Improvements
-
 ### Permission System
 - **Enhanced permission checking**: The permission removal function (`Lj2`, previously `Ej2`) now properly validates:
   - Ensures the rule source is `projectSettings`
@@ -32,8 +28,6 @@
 - **Improved admin detection**: The admin check function now handles cases where organization or workspace roles might be undefined
   - Returns `true` (admin access) when roles are not defined, providing a safer default
   - Previously would return `false` for undefined roles, potentially blocking legitimate access
-
-## Technical Changes
 
 ### Code Organization
 - Restructured imports for better modularity:

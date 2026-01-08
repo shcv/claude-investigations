@@ -1,7 +1,5 @@
 # Changelog for version 1.0.67
 
-## Claude Code v1.0.67 Changelog
-
 ### Import Optimizations
 
 **Improved module imports for better performance and specificity:**

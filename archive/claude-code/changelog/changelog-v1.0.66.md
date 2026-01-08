@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.66 Changelog
 
-## New Features
-
 ### Session Feedback System
 A new interactive feedback prompt has been added that appears during your coding sessions. When prompted, you can rate how Claude is performing:
 - Press `1` for "Bad"
@@ -15,8 +13,6 @@ The feedback system intelligently appears based on session duration and interact
 
 ### Session Bookmarking
 You can now bookmark important coding sessions for easy reference later. Bookmarked sessions are preserved and marked in the session history, making it easier to find and return to significant conversations.
-
-## Improvements
 
 ### Enhanced File Security
 - Added validation to prevent access to potentially sensitive file paths

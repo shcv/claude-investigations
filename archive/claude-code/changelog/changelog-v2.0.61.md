@@ -1,10 +1,8 @@
 # Changelog for version 2.0.61
 
-## 🎯 Highlights
+## Highlights
 
 This is a maintenance release containing internal code refactoring only. There are no user-facing changes, new features, or bug fixes in this version.
-
-## 🔧 Internal Changes
 
 ### Import Statement Modernization
 **What:** Internal code refactoring that reorganizes how Node.js modules are imported.
@@ -26,6 +24,5 @@ This is a maintenance release containing internal code refactoring only. There a
 - `https`
 - `stream`
 
----
 
 **Note:** Users do not need to take any action for this release. All existing commands, flags, and workflows continue to work identically to v2.0.60.

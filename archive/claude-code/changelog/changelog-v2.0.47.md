@@ -1,10 +1,8 @@
 # Changelog for version 2.0.47
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.47 introduces remote environment configuration for Teleport users, implements intelligent plan mode parallelism based on subscription tier, and adds automatic image compression to prevent API errors from oversized images.
-
-## 🚀 New Features
 
 ### Remote Environment Configuration
 **What:** New CLI command to configure default remote development environments for Teleport sessions
@@ -48,8 +46,6 @@ claude remote-env
 - State persists for the duration of the current session
 - **Evidence**: `qV0()` getter at line 2315, `og()` setter at line 2318
 
-## ⚡ Behavior Changes
-
 ### Plan Mode Parallelism Now Tier-Based
 **What changed:** Plan mode now adjusts parallel agent count based on subscription tier instead of using a fixed default
 
@@ -67,11 +63,9 @@ claude remote-env
 - Change encourages upgrade to paid tiers for better performance
 - **Evidence**: `JQ2()` at line 315736 (was `v62()` at line 316064 in v2.0.46)
 
-## 🐛 Bug Fixes
+## Bug Fixes
 
 None identified in this release.
-
-## 🔧 Technical Improvements
 
 ### OpenTelemetry Queue Configuration
 - Added explicit max queue size constant (8,192) for telemetry batching

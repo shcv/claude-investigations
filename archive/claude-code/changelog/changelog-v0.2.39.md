@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.39 Changelog
 
-## New Features
-
 ### Administrative Controls
 - **Bug Command Control**: Administrators can now disable the `bug` command via the `claude_code_disable_bug_command` configuration setting. When disabled, users will see the message "This command has been disabled by your administrator."
 
@@ -23,8 +21,6 @@
 - **Conditional Cost Warnings**: Cost threshold warnings are now only shown to users with appropriate roles (non-developer roles)
 - **Environment Variable Override**: Cost warnings can be disabled entirely via the `DISABLE_COST_WARNINGS` environment variable
 
-## Improvements
-
 ### Command Prefix Detection
 - **Enhanced Command Detection**: New logic to handle multiple subcommand prefixes when detecting available commands
 - **Better Error Handling**: Improved detection of command injection attempts with clearer validation
@@ -39,16 +35,12 @@
 ### Auto-updater Controls
 - **Auto-updater Opt-out**: Auto-updater functionality can be disabled via the `DISABLE_AUTOUPDATER` environment variable
 
-## API Changes
-
 ### New Configuration Storage
 - Added storage for auto-compact configuration with customizable token thresholds
 - New configuration key: `tengu_auto_compact_config`
 
 ### OAuth Endpoints
 - Added new endpoint for fetching user roles: `https://api.anthropic.com/api/oauth/claude_cli/roles`
-
-## Technical Improvements
 
 ### Performance
 - Optimized state management in the main UI component to reduce unnecessary re-renders

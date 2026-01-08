@@ -1,13 +1,11 @@
 # Changelog for version 2.0.64
 
-## 🎯 Highlights
+## Highlights
 This release contains two minor changes: the official plugins repository URL was updated to match its marketplace name, and screenshot copying now provides a clearer error message when running in builds without embedded font assets.
 
-## 🚀 New Features
+## New Features
 
 *No new features in this release.*
-
-## Other Changes
 
 ### Official Plugins Repository Renamed
 **What:** The GitHub repository URL for the official plugins marketplace was updated from `anthropics/claude-code-plugins` to `anthropics/claude-plugins-official`.

@@ -1,7 +1,5 @@
 # Changelog for version 0.2.40
 
-## Claude Code v0.2.40 Changelog
-
 ### New Features
 
 #### Interactive Confirmation Prompts

@@ -1,7 +1,5 @@
 # Changelog for version 0.2.125
 
-## Claude Code v0.2.125 Changelog
-
 ### New Features
 
 #### 🆕 File System Change Notifications
@@ -18,24 +16,24 @@ Example of how external file changes appear:
 </system-reminder>
 ```
 
-#### 🔧 Enhanced Error Handling
+#### Enhanced Error Handling
 - **Improved abort error detection**: Better handling of `AbortError` and `FetchRequestCanceledException` errors
 - **Enhanced error conversion**: New error utilities for converting various error types to proper Error objects with stack traces
 
-#### 🌐 Network and API Improvements
+#### Network and API Improvements
 - **Flexible fetch implementation**: Added runtime detection for fetch API availability with proper error messages
 - **ReadableStream polyfill support**: Better handling of environments without native ReadableStream support
 - **Enhanced URL encoding**: Improved URL path encoding for special characters
 
 ### Internal Improvements
 
-#### 🏗️ Architecture Changes
+#### ️ Architecture Changes
 - **UUID generation**: Added flexible UUID generation that uses native crypto.randomUUID when available, falling back to a custom implementation
 - **Platform detection**: Enhanced runtime environment detection (Deno, Edge Runtime, Node.js)
 - **Text encoding/decoding**: Optimized text encoder/decoder instances with caching
 - **Headers handling**: Improved header merging and normalization logic
 
-#### 🔐 Security & Privacy
+#### Security & Privacy
 - **Sanitized logging**: Added utilities to remove sensitive headers from logged requests
 - **Private class members**: Implemented proper private member access patterns using WeakMaps
 

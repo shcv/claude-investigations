@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.76 Changelog
 
-## New Features
-
 ### Enhanced Configuration Management
 The `claude config` command has been significantly improved with a full suite of subcommands for managing both project-level and global configurations:
 
@@ -65,15 +63,11 @@ New Model Context Protocol (MCP) support has been added:
   claude mcp serve
   ```
 
-## Improvements
-
 ### Theme Configuration Support
 The configuration system now explicitly supports theme customization, with dark theme available as a configuration option.
 
 ### Array Configuration Management
 Configuration values can now be arrays, with dedicated `add` and `remove` commands for managing list-based settings. This enables more flexible configuration of features like allowed domains, trusted sources, or custom command lists.
-
-## Technical Changes
 
 ### Code Structure Updates
 - Removed 86 functions and added 477 new functions, indicating significant internal refactoring

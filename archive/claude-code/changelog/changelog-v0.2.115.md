@@ -1,7 +1,5 @@
 # Changelog for version 0.2.115
 
-## Claude Code v0.2.115 Changelog
-
 ### New Features
 
 #### **Automatic Git Command Optimization**

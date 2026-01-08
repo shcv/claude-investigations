@@ -4,8 +4,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 # Claude Code v1.0.0 Changelog
 
-## 🎉 Major Release
-
 ### New Models
 
 #### Claude Opus 4
@@ -78,8 +76,6 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Fixed duplicate model selection issues
 - Improved error handling for overloaded servers
 - Better handling of rate limit resets with unified fallback
-
-## Usage Examples
 
 ### Setting Models
 ```bash

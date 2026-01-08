@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.36 Changelog
 
-## New Features
-
 ### Web Search Enhancement
 - **Improved date awareness**: Web search now accounts for "Today's date" in the environment context, ensuring searches use current year information rather than outdated dates
 
@@ -30,8 +28,6 @@
   - Permission problems for auto-updates
   - Configuration mismatches
   - Global installation update limitations
-
-## Improvements
 
 ### Token Usage Tracking
 - **Web search metrics**: Added `webSearchRequests` tracking to model usage statistics

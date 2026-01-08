@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.90 Changelog
 
-## New Features
-
 ### JetBrains IDE Integration Support
 Claude Code now supports integration with JetBrains IDEs! This major addition enables users to connect Claude Code with popular JetBrains development environments.
 
@@ -52,8 +50,6 @@ When Claude attempts to use a tool that requires permission, you'll see a prompt
 ### Enhanced Onboarding Flow
 The onboarding process now returns a boolean indicating whether onboarding was shown, allowing for better flow control in automated scenarios.
 
-## Improvements
-
 ### Better IDE Detection Logic
 - Consolidated IDE detection into a single `R86()` function for VS Code-like editors
 - Added comprehensive JetBrains IDE directory detection across macOS, Windows, and Linux
@@ -65,8 +61,6 @@ The onboarding process now returns a boolean indicating whether onboarding was s
 ### Path Resolution Updates
 - New path utilities imported: `extname`, `isAbsolute`, `relative`, and `resolve`
 - Better handling of absolute vs relative paths
-
-## Internal Changes
 
 ### Refactored Functions
 - `W56()` → `M86()`: IDE connection detection now includes additional safety check for `Ib` flag

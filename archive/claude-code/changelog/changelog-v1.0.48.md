@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff, here is the changelog for Claude Code version 1.0.48:
 
-## Claude Code v1.0.48 Changelog
-
 ### New Features
 
 #### Tool Permission Modes

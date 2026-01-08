@@ -1,9 +1,7 @@
 # Changelog for version 1.0.89
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.89 introduces powerful debug filtering, a new wizard-based UI framework for multi-step workflows, and significantly improves reliability with enhanced error handling, permission persistence, and extended timeout support for long-running operations.
-
-## 🚀 New Features
 
 ### Debug Output Filtering
 **What:** Filter debug messages by category using `--debug=pattern` syntax
@@ -74,8 +72,6 @@ diff file1.txt file2.txt
 - Provides clear descriptions when permission prompts appear
 - Enhances security by ensuring all file access is properly authorized
 
-## 💪 Improvements
-
 ### Ripgrep Error Recovery
 **What changed:** Ripgrep now recovers partial results when interrupted or hitting limits
 **Previous behavior:** Lost all results if ripgrep was terminated or hit buffer limits
@@ -126,8 +122,6 @@ diff file1.txt file2.txt
 **Previous behavior:** Fixed 10-second timeout for ripgrep operations
 **New behavior:** Uses BASH_DEFAULT_TIMEOUT_MS environment variable, defaulting to 120 seconds
 **Impact:** Allows adjustment for different system capabilities and codebase sizes
-
-## 🐛 Bug Fixes
 
 ### Fixed: Permanent permissions not persisting between sessions
 - **Issue:** When users granted "permanent" permissions through the UI, they weren't saved to disk

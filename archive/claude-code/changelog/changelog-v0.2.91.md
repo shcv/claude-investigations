@@ -1,7 +1,5 @@
 # Changelog for version 0.2.91
 
-## Claude Code v0.2.91 Changelog
-
 ### New Features
 
 #### 1. Conversation History Database Storage

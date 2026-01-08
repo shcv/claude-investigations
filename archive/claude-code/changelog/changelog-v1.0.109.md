@@ -1,9 +1,7 @@
 # Changelog for version 1.0.109
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.109 introduces asynchronous hook support, enabling long-running hooks to execute in the background without blocking conversation flow, along with improved API error tracking for better debugging.
-
-## 🚀 New Features
 
 ### Asynchronous Hook Execution
 **What:** Hooks can now run asynchronously in the background, allowing long-running operations without blocking the main conversation
@@ -30,8 +28,6 @@ Version 1.0.109 introduces asynchronous hook support, enabling long-running hook
 - Enhanced debugging capabilities for API failures
 - **Evidence**: `JE0() header extraction function`, `VE0() at line 393771` (renamed from `XE0`)
 
-## 🔧 Improvements
-
 ### Hook Registry Management
 Enhanced hook execution with background process tracking, timeout management, and response collection system for better reliability and performance.
 
@@ -40,8 +36,6 @@ Improved checkpoint and rewind interface with better display of code changes, ti
 
 ### Code Organization
 Function renaming and reorganization (`XE0` → `VE0`) as part of ongoing code maintenance and improved structure.
-
-## 🐛 Bug Fixes
 
 ### Stream Import Cleanup
 Removed redundant stream import (`o7Q`) that was no longer needed, reducing bundle size and potential conflicts.

@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.105 Changelog
 
-## New Features
-
 ### Enhanced Model Selection
 - **Simplified model selection UI**: The model selector now presents "Sonnet (recommended)" as the default option with clearer pricing information ($3/$15 per Mtok)
 - **New model display format**: Model names now show both the user-friendly name and the actual model ID (e.g., "sonnet (claude-3-7-sonnet)")
@@ -36,8 +34,6 @@ Example usage:
 - **Hierarchical memory display**: Memory panel now shows file relationships with indentation for better understanding of included files
 - **Parent-child file relationships**: Visual tree structure showing which files reference other files
 
-## Improvements
-
 ### Cost Tracking Enhancements
 - **Dual cost calculation**: Now tracks both "sticker price" and "final price" (with discounts applied)
 - **More accurate token pricing**: Refactored cost calculation to use a unified `SB6()` function with usage object
@@ -51,8 +47,6 @@ Example usage:
 - **Beta parameter support**: All API classes (Models, Completions) now properly handle `betas` parameter for accessing beta features
 - **Improved parameter handling**: Cleaner separation of beta headers from request body parameters
 
-## Bug Fixes
-
 ### GitHub Action Template
 - **Expanded event triggers**: GitHub action now responds to `edited` events on comments and reviews, not just `created` events
 - **Pull request review support**: Added support for triggering on pull request review submissions
@@ -61,8 +55,6 @@ Example usage:
 ### Error Handling
 - **Better installation error recovery**: IDE extension installation errors are now caught and displayed gracefully
 - **Improved notification error handling**: @-mention notifications include try-catch error handling
-
-## Technical Changes
 
 ### Code Organization
 - **New imports**: Added modular imports for `cwd`, `EOL`, `platform`, and `homedir` from Node.js

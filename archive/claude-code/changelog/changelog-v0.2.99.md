@@ -1,8 +1,5 @@
 # Changelog for version 0.2.99
 
-# Changelog for Claude Code v0.2.99
-
-## User-Facing Changes
 
 ### New Exit Confirmation in Transcript View
 When viewing the detailed transcript (accessed via Ctrl+R), users now see a two-step exit confirmation when pressing Ctrl+C:
@@ -20,8 +17,6 @@ Added a new tip that shows users the IDE integration hotkey:
 - **Other systems**: `Ctrl+Escape` to launch Claude in your IDE
 
 This tip appears periodically (every 15 sessions) when IDE integration is available.
-
-## Technical Improvements
 
 ### Improved Todo Tool Management
 The todo tool list generation now respects the user's todo feature preference more consistently. The `TodoRead` and `TodoWrite` tools are only included when the todo feature is explicitly enabled in settings.

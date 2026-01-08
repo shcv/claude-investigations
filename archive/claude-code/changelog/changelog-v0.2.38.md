@@ -7,8 +7,6 @@ Based on my analysis of the diff file for version 0.2.38, here is the changelog:
 ## Overview
 This release introduces XML/DOM parsing capabilities and makes minor adjustments to the conversation compacting feature. The structural similarity between versions is 98.9%, with 64 additions, 21 deletions, and 6 modifications.
 
-## New Features
-
 ### XML/DOM Support
 - **Added XML parsing and serialization capabilities**
   - New `DOMParser` class for parsing XML/HTML strings into DOM documents
@@ -22,8 +20,6 @@ This release introduces XML/DOM parsing capabilities and makes minor adjustments
   
   These features enable Claude Code to work with structured XML/HTML content internally, though they appear to be used for internal processing rather than exposed as user-facing commands.
 
-## Improvements
-
 ### Conversation Compacting Enhancement
 - **Modified the conversation compacting function signature** to accept an additional parameter
   - The compacting function now takes 7 parameters instead of 6
@@ -32,8 +28,6 @@ This release introduces XML/DOM parsing capabilities and makes minor adjustments
     - "Compacting conversation history…" message during the process
     - "Conversation successfully compacted! ✨" upon completion
     - Error messages for various failure scenarios (no summary, API error, prompt too long)
-
-## Internal Changes
 
 ### Code Cleanup
 - Removed several unused utility functions related to:
@@ -48,8 +42,6 @@ This release introduces XML/DOM parsing capabilities and makes minor adjustments
   - HTTP request/response handling
   - Cryptographic operations
   - UUID generation
-
-## Technical Details
 
 ### New XML/DOM Implementation
 The added XML functionality provides:

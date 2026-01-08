@@ -1,9 +1,7 @@
 # Changelog for version 1.0.125
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.125 enhances sandbox security and usability with selective command exemptions, improved macOS compatibility for temp folder access, better npm installation detection, and real-time visibility into blocked operations.
-
-## 🚀 New Features
 
 ### Sandbox Command Exemptions
 **What:** Configure specific commands to always bypass the sandbox, even when sandbox mode is enabled.
@@ -91,8 +89,6 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Only affects localhost (`127.0.0.1`), not external network access
 - **Evidence**: Schema at line 363371, `getAllowLocalBinding()` export at line 364464, sandbox profile generation at line 363908
 
-## ✨ Improvements
-
 ### Better npm Global Installation Detection
 **What:** Enhanced detection of npm global installations using `npm config get prefix`.
 
@@ -115,8 +111,6 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Prepares for future compact display options in constrained spaces
 - **Evidence**: `n$0({ context, flat })` at line 402096, flat rendering at lines 402107-402123
 
-## 🔒 Security Changes
-
 ### Removed Sandbox Bypass Shortcut
 **What:** Eliminated ability to bypass permission checks via sandbox flag.
 
@@ -127,7 +121,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Tightens sandbox security by closing potential bypass mechanism
 - **Evidence**: Code removed from `Uj2()` at line 380133 in v1.0.124, absent in `Lj2()` at line 380187 in v1.0.125
 
-## 📝 Internal Changes
+## Internal Changes
 
 The following changes are primarily internal refactoring with minimal user impact:
 
@@ -137,6 +131,5 @@ The following changes are primarily internal refactoring with minimal user impac
 - Multiple module reorganizations and minifier renamings
 - Removed unused stream and process imports
 
----
 
 **Note**: Line numbers reference the prettified v1.0.125.js source file for verification purposes.

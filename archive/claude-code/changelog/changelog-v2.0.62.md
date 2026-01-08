@@ -1,10 +1,8 @@
 # Changelog for version 2.0.62
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces model deprecation warnings for Claude 3 Opus and Claude 3.7 Sonnet, enhances session history search with fuzzy matching across message content, adds a new Slack app installation command, and improves the sandbox configuration with PTY and git config access options.
-
-## 🚀 New Features
 
 ### Model Deprecation Warnings
 **What:** Claude Code now displays proactive warnings when using models approaching retirement dates.
@@ -45,8 +43,6 @@ When installing a plugin via the UI, you can now choose:
 - Plugin installation now tracks scope in `installed_plugins_v2.json`
 - Supports migration from V1 plugin installation format
 - **Evidence**: `_G9()` at line 480734, `rE()` at line 483476, `eI9()` at line 483520, `Ez9()` at line 511472
-
-## ⚡ Improvements
 
 ### Enhanced Session History Search
 **What:** Session history search now supports fuzzy matching across actual message content, not just titles and summaries.
@@ -103,8 +99,6 @@ When installing a plugin via the UI, you can now choose:
 - Nodes now track dirty state to skip unchanged subtrees during render
 - Optimized style comparison to avoid unnecessary updates
 - **Evidence**: `ue()` at line 194210, `Vu1()` at line 194183, `Fu1()` at line 194187
-
-## 🔧 Other Changes
 
 ### Settings Source Tracking
 - Added `flagSettings` as a new settings scope for flag-based settings

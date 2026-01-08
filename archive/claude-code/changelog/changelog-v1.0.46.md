@@ -1,7 +1,5 @@
 # Changelog for version 1.0.46
 
-## Claude Code v1.0.46 Changelog
-
 ### New Features
 
 #### Environment Variable Expansion in MCP Server Configuration

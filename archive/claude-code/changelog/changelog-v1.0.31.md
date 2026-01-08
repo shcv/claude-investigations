@@ -4,9 +4,7 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
 
 # Claude Code v1.0.31 Changelog
 
-## New Features
-
-### 🚀 Native Installation Command
+### Native Installation Command
 - **New `claude install` command**: Install Claude Code's native build directly from the CLI
   - Usage: `claude install [options]`
   - Supports `--force` flag to override installation checks
@@ -14,7 +12,7 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
   - Provides visual feedback during installation process with status updates
   - Shows shell integration setup notes after successful installation
 
-### 📊 Enhanced Conversation Analytics
+### Enhanced Conversation Analytics
 - Added token usage tracking for conversations with detailed breakdowns:
   - Human vs assistant message tokens
   - Tool request and response tokens by tool type
@@ -23,20 +21,18 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
   - Local command output token tracking
   - Percentage breakdowns for all token categories
 
-### 🔒 Security Enhancements
+### Security Enhancements
 - New security-focused system prompt that emphasizes defensive security practices
 - Enhanced malicious code detection in file reading operations
 - Updated security instructions to refuse creating, modifying, or improving potentially malicious code
 
-## Improvements
-
-### 🛠️ Shell Integration
+### ️ Shell Integration
 - Improved shell alias management with better conflict resolution
 - Enhanced detection and cleanup of existing claude aliases
 - Support for ZDOTDIR environment variable for zsh configurations
 - Automatic removal of old/conflicting claude aliases during setup
 
-### 📝 Documentation Updates
+### Documentation Updates
 - Updated documentation URL structure with new sub-pages:
   - `quickstart`, `common-workflows`, `ide-integrations`
   - `mcp`, `github-actions`, `sdk`, `third-party-integrations`
@@ -44,19 +40,17 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
   - `llm-gateway`, `devcontainer`, `iam`, `monitoring-usage`
   - Expanded coverage for Extended thinking, image pasting, and `--resume` flag
 
-### 🗂️ Session Management
+### ️ Session Management
 - Improved transcript loading with better summary handling
 - Enhanced session file organization by working directory
 - More efficient duplicate message detection
 - Better handling of sidechain conversations
 
-### 🔧 Auto-updater Improvements
+### Auto-updater Improvements
 - Native installer now sets `autoUpdaterStatus` to "installed" after successful installation
 - Better error handling and retry logic for version locks
 - Enhanced cleanup of stale npm installations and symlinks
 - More robust directory creation for lock files
-
-## API Changes
 
 ### Stop Signal Support
 - Added "Stop" to the list of supported signal types for MCP (Message Control Protocol)
@@ -79,8 +73,6 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
 - Improved process cleanup with dedicated launcher symlink removal
 - Enhanced token counting algorithms for more accurate usage metrics
 - Better separation of concerns for installation and setup logic
-
-## Example Usage
 
 ### Installing Claude Code
 ```bash

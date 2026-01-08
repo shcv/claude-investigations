@@ -1,7 +1,5 @@
 # Changelog for version 1.0.61
 
-## Changelog for Claude Code v1.0.61
-
 ### New Features
 
 #### Enhanced Clipboard Integration for macOS

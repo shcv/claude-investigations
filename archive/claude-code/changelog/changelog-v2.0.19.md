@@ -1,9 +1,7 @@
 # Changelog for version 2.0.19
 
-## 🎯 Highlights
+## Highlights
 This is a maintenance release focused on internal code reorganization. Import statements have been restructured to use more specific destructured imports, and minified variable names have been updated throughout the codebase. No user-facing features or functionality changes in this release.
-
-## 🔧 Internal Changes
 
 ### Import Statement Reorganization
 **What:** The codebase has reorganized how Node.js core modules are imported, moving from default imports to more specific destructured imports in several locations.

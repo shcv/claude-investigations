@@ -1,10 +1,8 @@
 # Changelog for version 2.0.67
 
-## 🎯 Highlights
+## Highlights
 
 This is a maintenance release with internal code reorganization. There are no user-facing changes, new features, or bug fixes in this version.
-
-## Other Changes
 
 ### Internal Code Refactoring
 
@@ -16,6 +14,5 @@ This release consists entirely of internal housekeeping:
 
 **Evidence**: Diff header at lines 3-6 shows "Structural similarity: 99.9%" with "499 renames" and only "1 modifications" which upon inspection is purely variable renaming within the `Y65()` function at line 434496→434500.
 
----
 
 *No action required for users updating to this version.*

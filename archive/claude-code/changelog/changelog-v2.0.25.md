@@ -1,9 +1,7 @@
 # Changelog for version 2.0.25
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.25 introduces session-only plugin loading via `--plugin-dir`, adds session titles to memory templates for better organization, and enhances editor integration with Sublime Text wait flag support.
-
-## 🚀 New Features
 
 ### Session-Only Plugin Loading
 **What:** Load plugins from local directories for the current session without permanently installing them
@@ -37,8 +35,6 @@ _A short and distinctive 5-10 word descriptive title for the session. Super info
 - Makes it easier to identify and navigate between different work sessions
 - Complements the existing 7 sections (Task specification, Files and Functions, etc.)
 - **Evidence**: Template variable `ng8` at line 467211 in v2.0.25 (vs `dg8` at line 467131 in v2.0.24)
-
-## ✨ Improvements
 
 ### Environment Variable for Session Memory Model Selection
 **What:** Control which AI model handles session memory updates via environment variable
@@ -75,7 +71,7 @@ claude chat
 - Improves troubleshooting when multiple debug sessions exist
 - **Evidence**: `fc()` function at line 3821 used at lines 441483 and 441622 in v2.0.25
 
-## 🔧 Internal Improvements
+## Internal Improvements
 
 - Refactored Node.js module imports for better code organization
 - Separated session memory template structure from update instructions

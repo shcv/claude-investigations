@@ -5,8 +5,6 @@
 ## Breaking Changes
 None
 
-## Changes
-
 ### Model Token Limit Updates
 - **Removed Opus model-specific token limit**: The function that determines token limits for different Claude models no longer includes a special case for Opus models. Previously, Opus models had a 4096 token limit, but now they will use the default 20,000 token limit.
   

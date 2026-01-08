@@ -1,9 +1,7 @@
 # Changelog for version 1.0.102
 
-## 🎯 Highlights
+## Highlights
 Enhanced background task management with improved architecture, better user interface terminology, and new structured input/output parsing for background tasks.
-
-## 🚀 New Features
 
 ### Background Task Input/Output Parsing
 **What:** Added support for structured input/output in background tasks using XML-like tags
@@ -25,8 +23,6 @@ claude --some-command &
 - Shows "Creating background task…" message during task initialization
 - Provides better user awareness of task creation process
 - **Evidence**: New message at `line 429262` (not found in v1.0.100)
-
-## Improvements
 
 ### Enhanced Task Management Architecture
 **What:** Improved background task system with better state management and filtering

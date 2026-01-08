@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.46 Changelog
 
-## New Features
-
 ### Local Installation Support
 - **New `/migrate-installer` command**: Install Claude CLI locally to your home directory (`~/.claude/local`) to avoid npm permission issues
 - Automatically detects if you're running from a local installation
@@ -25,8 +23,6 @@
 - Write/Edit file confirmations now include "Yes, and don't ask again this session" option with Shift+Tab shortcut
 - More contextual scope descriptions in MCP server confirmations (e.g., "private to you in this project" vs "shared via .mcp.json")
 
-## Improvements
-
 ### Token Usage Monitoring
 - New token threshold system with warning levels:
   - 60% usage: Warning threshold
@@ -41,8 +37,6 @@
 ### MCP (Model Context Protocol)
 - Updated server configuration messages to be clearer about scope visibility
 - Better formatting of scope descriptions in success messages
-
-## Under the Hood
 
 ### Configuration
 - Added `env` field to configuration defaults for environment variable management

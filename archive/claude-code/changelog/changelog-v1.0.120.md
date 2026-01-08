@@ -1,10 +1,8 @@
 # Changelog for version 1.0.120
 
-## 🎯 Highlights
+## Highlights
 
 Version 1.0.120 introduces persistent file history across session resumes, a redesigned filesystem permissions model with simplified configuration, enhanced MCP server support with dynamic header generation, and critical security improvements for symlink handling.
-
-## 🚀 New Features
 
 ### File History Persistence Across Sessions
 
@@ -108,8 +106,6 @@ Or with specific paths:
 
 **Evidence**: `validateInput()` method at lines 425333-425369 in `X21` tool definition
 
-## 🔒 Security Improvements
-
 ### Symlink Resolution in Permission Checks
 
 **What:** File permission checks now resolve symlinks and verify that BOTH the symlink path AND its target are allowed, preventing permission bypass attacks via symlinks.
@@ -140,8 +136,6 @@ Or with specific paths:
 - More conservative approach to file permission pre-approval
 
 **Evidence**: Variable expansion detection at lines 382407-382412 in `Ng6()` function
-
-## 🔄 Changes to Existing Features
 
 ### Redesigned Filesystem Permissions Model
 
@@ -247,8 +241,6 @@ Or with specific paths:
 
 **Evidence**: `cRB()` function at line 438159, new parameter at line 438184
 
-## 🐛 Bug Fixes
-
 ### Removed Redundant Slash Command Execution Logic
 
 **What:** Removed duplicate condition check in slash command processing that always evaluated to true.
@@ -271,8 +263,6 @@ Or with specific paths:
 - Better tree-shaking support
 
 **Evidence**: Import statement change at line 443623
-
-## 🧹 Internal Changes
 
 ### File History Cleanup on Session Expiry
 
@@ -323,7 +313,7 @@ Or with specific paths:
 
 **Evidence**: Variables at lines 408499 and 408550
 
-## 📊 Verification Checklist
+## Verification Checklist
 
 - [x] File history persistence verified as NEW in v1.0.120 (did not exist in v1.0.119)
 - [x] Permissions model verified as completely redesigned, not enhanced

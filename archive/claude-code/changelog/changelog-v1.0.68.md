@@ -4,9 +4,7 @@ Based on my analysis of the diff file for version 1.0.68, here is the detailed c
 
 # Claude Code v1.0.68 Changelog
 
-## New Features
-
-### 🚀 Teleport - Resume Sessions Across Machines
+### Teleport - Resume Sessions Across Machines
 A powerful new `--teleport` feature allows you to resume Claude Code sessions from other machines or continue someone else's shared session.
 
 **Usage:**
@@ -29,7 +27,7 @@ claude --teleport https://claude.ai/chat/abc123def456
 - `TELEPORT_RESUME_URL`: Override the default URL for session resumption
 - `TELEPORT_HEADERS`: Pass custom headers as JSON (e.g., `export TELEPORT_HEADERS='{"Authorization": "Bearer token"}'`)
 
-### 🎨 Customizable Output Modes
+### Customizable Output Modes
 Configure how Claude Code communicates with you by selecting from different output modes.
 
 **Features:**
@@ -39,7 +37,7 @@ Configure how Claude Code communicates with you by selecting from different outp
 - Dynamic loading with "Loading output modes..." indicator
 - Each mode includes a description to help you choose
 
-### 🔧 Enhanced Hooks Management
+### Enhanced Hooks Management
 New global control over Claude Code's hook system for better troubleshooting and control.
 
 **New Capability:**
@@ -49,9 +47,7 @@ New global control over Claude Code's hook system for better troubleshooting and
   - Count of configured hooks that aren't running
   - Option to re-enable all hooks with one click
 
-## Improvements
-
-### 📝 Expanded Shell Command Support
+### Expanded Shell Command Support
 10 new commands added to the safe command whitelist, allowing execution without approval prompts:
 
 - `nl` - Number lines in files
@@ -65,19 +61,17 @@ New global control over Claude Code's hook system for better troubleshooting and
 - `base64` - Encode/decode base64 data
 - `file` - Determine file type
 
-### 🛡️ Better Error Handling
+### ️ Better Error Handling
 - Improved shell execution with `shell: true` option for better compatibility
 - Enhanced error messages with clearer explanations
 - Try-catch blocks added to critical command execution paths
 - Better timeout and cancellation handling for long-running commands
 
-### 🎯 UI/UX Enhancements
+### UI/UX Enhancements
 - Loading states with descriptive messages throughout the interface
 - Interactive prompts for git stash decisions during teleport
 - Clearer permission descriptions for tool access levels
 - Improved session selection UI when multiple sessions are available
-
-## Technical Changes
 
 ### Removed Features
 - Removed `NotebookRead` tool and related Jupyter notebook reading functionality

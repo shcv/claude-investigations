@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.66 Changelog
 
-## New Features
-
 ### Todo List Management Tools
 Added comprehensive todo list functionality with two new tools:
 
@@ -35,8 +33,6 @@ Example usage:
 - Added `stressTestingFraction` to user settings options
 - This appears to be for internal testing/debugging purposes
 
-## Improvements
-
 ### User Experience
 - Better visual formatting for permission prompts
 - Clearer distinction between local and project settings descriptions
@@ -46,8 +42,6 @@ Example usage:
 - Improved file handling for external tool integrations
 - Better error handling in file save operations
 - More robust command prefix detection and validation
-
-## Technical Updates
 
 ### New Dependencies
 - Added imports for `execSync`, `execFile`, and `spawn` from child_process

@@ -1,9 +1,7 @@
 # Changelog for version 2.0.1
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.1 focuses on platform compatibility improvements and welcome screen refinements. The key changes include proper handling of Bedrock/Vertex platform configurations during model migrations, enhanced Apple Terminal support with custom rendering, and streamlined onboarding that emphasizes keyboard shortcuts over changelog history.
-
-## 🚀 New Features
 
 ### Extended Thinking Detection for API Calls
 **What:** Added automatic detection of extended thinking content in conversation history to ensure accurate token counting and proper API parameter configuration.
@@ -28,8 +26,6 @@ Version 2.0.1 focuses on platform compatibility improvements and welcome screen 
 - Uses simplified character graphics (▗, ▖) for better rendering compatibility
 - Early detection ensures custom banner appears before standard theme processing
 - **Evidence**: `Pc1() at line 441323` checks `hA.terminal === "Apple_Terminal"`, custom banner rendered via `Ot5() at line 441581`
-
-## 🔧 Improvements
 
 ### Streamlined Welcome Screen
 The welcome screen now focuses on keyboard shortcuts rather than recent changelog entries. Instead of displaying the latest features from the changelog, new users immediately see the most important keyboard shortcuts for getting started.
@@ -63,8 +59,6 @@ Updated ASCII art rendering to use consistent color naming throughout the welcom
 - Improves code maintainability and semantic clarity
 
 **Evidence**: Color changes in `Pc1() at lines 441437, 441462, 441474` and corresponding dark theme locations
-
-## 🐛 Bug Fixes
 
 ### Import Statement Cleanup
 Removed unused import statements and reorganized dependencies for cleaner code organization:

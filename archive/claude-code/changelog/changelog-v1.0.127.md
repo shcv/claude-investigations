@@ -1,10 +1,8 @@
 # Changelog for version 1.0.127
 
-## 🎯 Highlights
+## Highlights
 
 Version 1.0.127 focuses on internal code refactoring and improvements with 98.9% structural similarity to v1.0.126. The main user-facing changes include enhanced sandbox command filtering capabilities, improved UI text clarity for history search and file restoration, and updated color scheme implementation using ANSI color names.
-
-## 🚀 New Features
 
 ### Enhanced Sandbox Command Filtering
 
@@ -32,8 +30,6 @@ The sandbox now supports two methods for disabling commands:
 - Displays insertions (+) and deletions (-) with appropriate colors
 - Simplifies the restore UI presentation
 - **Evidence**: `kGB()` component at line 413123 (new in v1.0.127, did not exist in v1.0.126)
-
-## ✨ Improvements
 
 ### Clearer History Search Prompts
 
@@ -81,8 +77,6 @@ The sandbox now supports two methods for disabling commands:
 - Callback functions extracted for cleaner separation of concerns
 - No functional changes to user experience
 - **Evidence**: Functions `bK5()` and `mK5()` at lines 435315 and 435411 in v1.0.127
-
-## 🔧 Internal Changes
 
 ### Code Refactoring
 

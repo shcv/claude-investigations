@@ -1,9 +1,7 @@
 # Changelog for version 2.0.33
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.33 introduces Segment analytics telemetry alongside existing Statsig tracking, enhances LSP file synchronization with four new lifecycle management methods, adds native support for Homebrew installations, and strengthens security with three new protections against path resolution bypass attacks.
-
-## 🚀 New Features
 
 ### Segment Analytics Telemetry
 **What:** Dual telemetry system that sends all events to both Statsig and Segment analytics platforms
@@ -31,7 +29,7 @@ brew upgrade claude-code
 # Claude Code will detect this and show appropriate instructions
 claude update
 # Output: "Claude is managed by Homebrew."
-#         "To update, run: brew upgrade claude-code"
+# "To update, run: brew upgrade claude-code"
 ```
 **Details:**
 - Detects Homebrew installations by checking for `/Caskroom/` in executable path
@@ -88,8 +86,6 @@ cat file > /etc/$(whoami)/config        # Command substitution in path
 - All three checks use `"ask"` behavior (require approval) rather than `"deny"` to allow legitimate use cases
 - **Evidence**: Shell expansion check in `tP1()` at line 254131, dollar sign check in `TYQ()` at line 253932, cd detection in `Fe8()` at line 253997
 
-## 📊 Improvements
-
 ### Better Update Experience
 - Update notifications now appear during active sessions (previously only when running `claude update`)
 - Installation type detection improved with specific handling for development, native, npm-local, npm-global, and package-manager installations
@@ -107,8 +103,6 @@ cat file > /etc/$(whoami)/config        # Command substitution in path
 - Previously directed users to "check logs" without immediate visibility
 - **Evidence**: Improved error at line 5173-5177 in diff
 
-## 🔧 Internal Changes
-
 ### Code Organization
 - Removed unused imports: `stream`, `node:child_process`, `node:os` 
 - Removed internal UI class `dR0` for cursor management
@@ -123,10 +117,8 @@ cat file > /etc/$(whoami)/config        # Command substitution in path
 
 # Changelog for version 2.0.33
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.33 introduces Segment analytics telemetry alongside existing Statsig tracking, enhances LSP file synchronization with four new lifecycle management methods, adds native support for Homebrew installations, and strengthens security with three new protections against path resolution bypass attacks.
-
-## 🚀 New Features
 
 ### Segment Analytics Telemetry
 **What:** Dual telemetry system that sends all events to both Statsig and Segment analytics platforms
@@ -157,7 +149,7 @@ brew upgrade claude-code
 # Claude Code will detect this and show appropriate instructions
 claude update
 # Output: "Claude is managed by Homebrew."
-#         "To update, run: brew upgrade claude-code"
+# "To update, run: brew upgrade claude-code"
 ```
 
 **Details:**
@@ -195,8 +187,6 @@ cat file > /etc/$(whoami)/config        # Command substitution in path
 - CD with write operations: Compound commands using `cd` + write operations require approval
 - All checks use `"ask"` behavior (require approval) rather than `"deny"`
 - **Evidence**: `tP1()` at line 254131, `TYQ()` at line 253932, `Fe8()` at line 253997
-
-## 📊 Improvements
 
 ### Better Update Experience
 - Update notifications now appear during active sessions

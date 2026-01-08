@@ -1,10 +1,8 @@
 # Changelog for version 2.0.51
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces **Opus 4.5 model support** for first-party API users, adds the new **EnterPlanMode tool** enabling Claude to proactively request plan mode, and significantly improves **rate limit warnings** with utilization percentages and smart thresholds. Multiple UX enhancements including grouped agent display and trailing thinking block filtering improve the overall experience.
-
-## 🚀 New Features
 
 ### Opus 4.5 Model Support
 **What:** Opus 4.5 is now available as the most capable model for complex work, replacing Opus 4.1 as the default for first-party API users.
@@ -77,8 +75,6 @@ Running 3 agents… (ctrl+o to expand)
 - Same-type agents show grouped label (e.g., "Running 3 investigator agents…")
 - **Evidence**: Main renderer `i49()` at line 469450, item renderer `g49()` at line 469102
 
-## 🔧 Improvements
-
 ### Extra Usage Integration Enhanced
 The extra usage feature now has deeper integration with account state and re-authentication flows.
 - Added `hasExtraUsageEnabled` account property tracked via OAuth
@@ -119,8 +115,6 @@ Max and Team subscribers now default to Opus 4.5 instead of requiring manual mod
 - Cloud provider (Bedrock/Vertex) users continue with Opus 4.1
 - Respects `ANTHROPIC_DEFAULT_OPUS_MODEL` environment variable override
 - **Evidence**: Function `PnA()` at line 224154, `QUA()` at line 224121
-
-## 🐛 Bug Fixes
 
 ### Model Detection Extended
 The model detection functions now correctly recognize Opus 4.5 model IDs.

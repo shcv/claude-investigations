@@ -4,8 +4,6 @@ Based on the analysis, here's the changelog for Claude Code v1.0.57:
 
 # Claude Code v1.0.57 Changelog
 
-## New Features
-
 ### pr-comments Prompt Optimization
 The `pr-comments` prompt feature now uses Claude 3.5 Haiku model for improved performance when fetching and analyzing GitHub pull request comments. This optimization provides faster responses while maintaining quality for this specific use case.
 

@@ -1,10 +1,8 @@
 # Changelog for version 1.0.24
 
-## Claude Code v1.0.24 Changelog
-
 ### New Features
 
-#### 🎣 Tool Execution Hooks
+#### Tool Execution Hooks
 Version 1.0.24 introduces a powerful hooks system that allows you to run custom commands before and after tool executions. This feature enables advanced workflows, custom validations, and integrations.
 
 **Configuration:** Add hooks to your `~/.claude/claude.json` file:
@@ -60,7 +58,7 @@ Version 1.0.24 introduces a powerful hooks system that allows you to run custom 
 - Custom linting or formatting checks
 - Integration with external systems
 
-#### 🔐 OAuth Flow Improvements
+#### OAuth Flow Improvements
 The OAuth authentication flow now provides better visibility into the authorization process:
 
 - The authorization URL is now accessible programmatically during the flow

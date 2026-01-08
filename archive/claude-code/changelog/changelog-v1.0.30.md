@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.30 Changelog
 
-## New Features
-
 ### Theme System Overhaul
 - **New theme management system**: Claude Code now supports dynamic theme switching through a new theme context provider
 - **New `theme` command-line argument**: Users can now set the theme when launching Claude Code
@@ -22,8 +20,6 @@
 - **New timestamp display**: When in transcript mode, assistant messages now show timestamps in 24-hour format (HH:MM)
 - **Example**: Assistant responses will show `14:35` next to messages when transcript mode is enabled
 
-## Improvements
-
 ### Better Tool Execution Status Colors
 - Tool execution status indicators now use semantic color names instead of hardcoded RGB values
 - Status colors are now consistent across all themes:
@@ -40,8 +36,6 @@
 - Consolidated imports and removed duplicate process imports
 - Better separation of concerns with dedicated theme management
 
-## Bug Fixes
-
 ### Dialog Color Consistency
 - Fixed hardcoded colors in various dialogs (bypass permissions, MCP server, external includes)
 - All dialogs now properly respect the current theme
@@ -51,14 +45,10 @@
 - The welcome message now uses the proper theme-aware color system
 - The Claude star icon (`✻`) properly inherits the claude brand color
 
-## Breaking Changes
-
 ### For Theme/Plugin Developers
 - Color object structure has changed - nested `diff` object properties are now flat
 - `S` component replaced with `P` component - update any custom components
 - Direct color value access (e.g., `X1().error`) replaced with color name strings (e.g., `"error"`)
-
-## Technical Details
 
 ### New Theme Context
 The theme system now uses React context for global theme state:

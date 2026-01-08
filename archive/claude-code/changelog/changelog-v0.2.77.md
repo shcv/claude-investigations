@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.77 Changelog
 
-## New Features
-
 ### Enhanced IDE Selection Integration
 The IDE integration now supports a new **"Add to Prompt"** capability. When working with code selections from your IDE:
 
@@ -23,8 +21,6 @@ Added support for Server-Sent Events (SSE) based IDE connections:
 ```
 
 This enables real-time communication with IDEs that support SSE protocols.
-
-## Improvements
 
 ### File Watching and Change Detection
 Claude Code now actively monitors files you've previously read and notifies you of changes:
@@ -51,8 +47,6 @@ When IDE selections are auto-included in prompts, the formatting has been improv
 - Selections with file context: `"The current selection is in [filename]:\n[selected code]"`
 - Selections without file context: `"The current selection is:\n[selected code]"`
 - File-only context: `"Currently viewing [filename]"`
-
-## Technical Improvements
 
 ### Import Optimizations
 - Replaced full module imports with targeted imports for better performance:

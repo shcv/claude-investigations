@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff between versions 0.2.81 and 0.2.83, here is the changelog:
 
-## Claude Code v0.2.83 Changelog
-
 ### Version Update
 - Updated from version 0.2.81 to 0.2.83
 

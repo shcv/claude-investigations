@@ -5,8 +5,6 @@
 ## Summary
 This release includes minor improvements to AWS Bedrock model discovery, better error handling, and updates to the CLI launcher script.
 
-## Changes
-
 ### Improved AWS Bedrock Model Discovery
 The model discovery function has been enhanced with better error handling and a more efficient implementation:
 

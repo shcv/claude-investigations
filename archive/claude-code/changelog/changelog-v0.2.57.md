@@ -4,9 +4,7 @@ Based on my analysis of the diff file for version 0.2.57 of Claude Code CLI, her
 
 # Claude Code CLI v0.2.57 Changelog
 
-## New Features
-
-### 🎯 Project-Level Tool Permissions
+### Project-Level Tool Permissions
 - **Project settings support**: You can now configure allowed tools at the project level using `.claude/settings.json`
 - Permissions can be defined in three scopes:
   - CLI arguments (`cliArg`)
@@ -14,7 +12,7 @@ Based on my analysis of the diff file for version 0.2.57 of Claude Code CLI, her
   - **NEW**: Project settings (`projectSettings`)
 - Project-level permissions are automatically loaded and respected when working in a project directory
 
-### 🎨 Enhanced User Experience
+### Enhanced User Experience
 
 #### Improved Spinner Animations
 - **Haiku-powered spinners**: The loading spinner now generates contextual, whimsical verbs based on your input
@@ -26,25 +24,23 @@ Based on my analysis of the diff file for version 0.2.57 of Claude Code CLI, her
 - New `eT` error class for better error content handling
 - Improved truncation of long error messages in bug reports
 
-### 🛠️ Shell Improvements
+### ️ Shell Improvements
 - **Shell snapshot creation**: Automatically creates snapshots of shell configuration for better session persistence
 - Improved shell detection and compatibility checking
 - Better handling of shell configuration files (`.bashrc`, `.zshrc`, `.profile`)
 - New `tT` function for setting the current working directory with validation
 
-### 📊 Enhanced Output Display
+### Enhanced Output Display
 - **(ctrl+r to expand)** indicator for truncated tool results
 - Cleaner output formatting for tools with image detection
 - Improved visual hierarchy with better spacing and layout
 
-### 🔧 Developer Tools
+### Developer Tools
 - New background task management system with improved task classes:
   - `FL1`: Base task class with status tracking
   - `Kb2`: Background tasks using PersistentShell
   - `Fb2`: Background tasks using new shell command system
 - Better task output streaming and management
-
-## Improvements
 
 ### Performance & Efficiency
 - Repository listing now warns when content exceeds 40,000 characters
@@ -60,8 +56,6 @@ Based on my analysis of the diff file for version 0.2.57 of Claude Code CLI, her
 - Cleaner configuration panel with better visual organization
 - Improved theme labels in settings (e.g., "Light text" instead of just "dark")
 - Tab key now works alongside Enter/Space for changing settings
-
-## Technical Updates
 
 ### Dependencies & Imports
 - New imports for better file handling: `basename`, `extname`, `dirname`, `join`, `resolve`

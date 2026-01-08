@@ -2,8 +2,6 @@
 
 Based on the diff analysis, here's the changelog for version 0.2.32:
 
-## Claude Code v0.2.32 Changelog
-
 ### New Features
 
 #### Interactive MCP Setup Wizard

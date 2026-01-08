@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.17 Changelog
 
-## User-Facing Changes
-
 ### Enhanced Status Command
 The `claude status` command has been refactored to use React hooks for better performance and reliability. The status display now loads asynchronously and updates dynamically as information becomes available.
 
@@ -12,8 +10,6 @@ The automatic update and fallback mechanism has been streamlined. The launcher s
 
 ### State Management Improvements
 The application now uses a centralized state management hook (`k3()`) instead of separate state calls, providing more consistent behavior across the interface.
-
-## Technical Improvements
 
 ### MCP (Model Context Protocol) Integration
 - MCP clients, tools, commands, and resources are now managed through a centralized state object

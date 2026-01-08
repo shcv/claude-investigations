@@ -2,11 +2,9 @@
 
 Based on my analysis of the diff, here's the detailed changelog for Claude Code v1.0.68:
 
-## Claude Code v1.0.68 Changelog
-
 ### Major Changes
 
-#### 🚫 Removed Features
+#### Removed Features
 
 1. **NotebookRead Tool Removed**
    - The `NotebookRead` tool for extracting and reading source code from Jupyter notebooks has been completely removed
@@ -21,7 +19,7 @@ Based on my analysis of the diff, here's the detailed changelog for Claude Code 
    - The automatic shell alias setup helper function has been removed
    - This previously helped users set up the `claude` alias in their shell configuration files
 
-#### ✨ New Features
+#### New Features
 
 1. **Enhanced Process Execution Library (Execa)**
    - Added comprehensive process execution capabilities with the Execa library

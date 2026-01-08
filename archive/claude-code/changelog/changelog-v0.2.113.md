@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff, here's the changelog for Claude Code version 0.2.113:
 
-## Claude Code v0.2.113 Changelog
-
 ### Token Usage Tracking Enhancements
 - **Per-Model Token Tracking**: Improved token usage tracking with breakdown by model instead of aggregated totals
   - New display format shows token usage for each model separately

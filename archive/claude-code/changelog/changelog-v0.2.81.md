@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.81 Changelog
 
-## Model Pricing System Overhaul
-
 ### New Dynamic Pricing Calculation
 - **Added pricing configuration system** that maps model names to token costs
 - **New `Fi1` function** calculates total costs based on input/output tokens and prompt cache usage
@@ -16,8 +14,6 @@
 ### Model Name Extraction
 - **New `Kg` function** extracts model identifiers from strings using pattern matching
 - Recognizes Claude model naming format: `claude-X-Y-name`
-
-## Extension Management Updates
 
 ### VSCode Extension Renamed
 - Extension filename changed from `mcp.vsix` to `claude-code.vsix`
@@ -38,8 +34,6 @@ code --install-extension /path/to/vendor/mcp.vsix
 code --install-extension /path/to/vendor/claude-code.vsix
 ```
 
-## Code Cleanup
-
 ### Removed Constants
 - Removed hardcoded pricing values (`fR2`, `e53`, `G63`, `I63`, `W63`, `vR2`, `R63`)
 - Removed unused model identifier `MN9` (claude-3-7-sonnet-20250219)
@@ -49,8 +43,6 @@ code --install-extension /path/to/vendor/claude-code.vsix
 ### Import Optimizations
 - Consolidated stream imports to use named imports from "stream" module
 - Replaced direct process import with named import from "node:process"
-
-## Technical Improvements
 
 ### New Variables
 - `LS2`: Added to track array length (appears to be `pn1.length`)

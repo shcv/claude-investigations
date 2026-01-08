@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.122 Changelog
 
-## New Features
-
 ### Co-Authorship Attribution
 - **Added automatic co-authorship credits** for Claude-generated commits and pull requests
   - When Claude helps create commits, it now automatically adds a "Co-Authored-By: Claude <noreply@anthropic.com>" line to the commit message
@@ -18,8 +16,6 @@
   
   Co-Authored-By: Claude <noreply@anthropic.com>
   ```
-
-## Technical Changes
 
 ### Import Optimizations
 - Replaced generic `stream` import with more specific `PassThrough` import from the stream module

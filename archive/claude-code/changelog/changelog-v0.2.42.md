@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.42 Changelog
 
-## New Features
-
 ### Batch Tool Execution (Call Tool)
 A powerful new tool that allows executing multiple tools in a single request for improved performance:
 
@@ -62,8 +60,6 @@ A powerful new tool that allows executing multiple tools in a single request for
     - Terminal supporting backslash: `\⏎ for newline`
     - Default: `Backslash (\) + Return (⏎) for newline`
 
-## Improvements
-
 ### WebFetch Security Enhancement
 - Updated security requirement: URLs must be provided directly by the user (removed "in the current or a previous message" qualifier)
 - Strengthens security by requiring explicit user-provided URLs
@@ -74,14 +70,10 @@ A powerful new tool that allows executing multiple tools in a single request for
 - Improved error messages with HTTP status codes
 - Better content length limiting with `maxContentLength`
 
-## Bug Fixes
-
 ### Release Notes Update
 - Added v0.2.41 release notes documenting:
   - MCP server startup timeout configuration via MCP_TIMEOUT
   - Non-blocking MCP server startup behavior
-
-## Technical Changes
 
 ### Code Organization
 - Renamed internal functions and variables for consistency

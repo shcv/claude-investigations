@@ -1,22 +1,9 @@
 # Changelog for version 1.0.117
 
-Based on my analysis of the diff and verification of both versions, I can see that version 1.0.117 contains only internal import restructuring changes with no user-facing impact. The changes are:
 
-1. **Removed**: `import YJQ from "stream"` - The full default import of the stream module
-2. **Added**: `import { PassThrough as Jn5 } from "stream"` - A named import for just PassThrough
-
-3. **Removed**: `import oAQ from "node:process"` - The full default import of node:process
-4. **Added**: `import { cwd as fNA } from "node:process"` - A named import for just the cwd function
-
-These are purely code optimization changes - moving from importing entire modules to importing only the specific exports needed. The functionality remains identical.
-
-# Changelog for version 1.0.117
-
-## 🎯 Highlights
+## Highlights
 
 Version 1.0.117 contains internal code optimizations with no user-visible changes or new features. This is a maintenance release focused on improving the efficiency of module imports.
-
-## Internal Changes
 
 ### Import Optimization
 

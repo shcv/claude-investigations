@@ -1,10 +1,8 @@
 # Changelog for version 2.0.70
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces a new feature discovery system to help users explore Claude Code's capabilities, adds the MCPSearch tool for better MCP tool management, and improves the teleport experience with a visual progress indicator.
-
-## 🚀 New Features
 
 ### Feature Discovery System (`/discover`)
 **What:** A new interactive feature discovery interface that helps users explore and track their usage of Claude Code's capabilities across organized categories.
@@ -72,8 +70,6 @@ When teleporting to a session, you'll now see a multi-step progress display:
 - Tracks coaching tips shown per session via `coachingTipsThisSession`
 - Controlled via `coachingMode` setting (can be set to "off")
 - **Evidence**: `coachingMode` getter at line 368908; `coachingTipsThisSession` at line 368906
-
-## Other Changes
 
 ### Enhanced Marketplace Auto-Installation
 The official Anthropic marketplace auto-installation now includes improved retry logic with exponential backoff:

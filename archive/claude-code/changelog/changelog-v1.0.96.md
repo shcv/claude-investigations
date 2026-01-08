@@ -1,9 +1,7 @@
 # Changelog for version 1.0.96
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.96 introduces privacy controls that allow users to manage whether their usage data helps improve Claude, along with updated Consumer Terms and Privacy Policy notifications. This update also removes some internal telemetry code and makes minor improvements to the codebase.
-
-## 🚀 New Features
 
 ### Privacy Settings Command
 **What:** New `privacy-settings` command to view and manage data privacy preferences
@@ -42,8 +40,6 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Automatically marks notice as viewed to prevent repeated displays
 - **Evidence**: `zgB()` function at line 410212, called in `$pB()` startup flow
 
-## 🔧 Improvements
-
 ### Startup Flow Enhancement
 **What:** Integrated privacy consent into the onboarding and startup process
 **Details:**
@@ -52,8 +48,6 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Graceful handling of escape/cancellation with proper telemetry tracking
 - **Evidence**: Modified `NS5()` function at line 434069 (previously `DS5()`)
 
-## 🗑️ Removed Features
-
 ### Statsig Analytics Removal
 **What:** Removed Statsig telemetry client initialization code
 **Details:**
@@ -61,8 +55,6 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Cleaned up related imports and dependencies
 - Statsig tracking appears to be replaced with internal telemetry for privacy choices
 - **Evidence**: Removed functions at lines 409748-409785 in v1.0.95
-
-## 🔍 Technical Changes
 
 ### New Telemetry Events
 The following analytics events were added for privacy feature tracking:

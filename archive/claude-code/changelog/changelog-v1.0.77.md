@@ -1,9 +1,7 @@
 # Changelog for version 1.0.77
 
-## 🎯 Highlights
+## Highlights
 Claude Code 1.0.77 introduces WebSocket support for real-time communication with Claude's SDK servers, enhanced permission explanations that show exactly why actions require confirmation, and improved security with sophisticated shell command escaping to prevent injection attacks.
-
-## 🚀 New Features
 
 ### WebSocket Transport for SDK Communication
 **What:** Added support for persistent WebSocket connections as an alternative to stdin/stdout communication
@@ -75,8 +73,6 @@ Summarizing last 5 of 10 messages (~2500 tokens)
 - Uses efficient Haiku model with prompt caching for fast summarization
 - Generates concise 5-10 word titles for easy conversation browsing
 
-## 💪 Improvements
-
 ### Server-Delivered Spinner Tips
 **What changed:** Spinner tips are now managed server-side instead of being fetched by the client
 **Impact:** Eliminates network latency for tip loading, provides more contextual and personalized tips with sophisticated rotation logic to prevent repetition
@@ -88,8 +84,6 @@ Summarizing last 5 of 10 messages (~2500 tokens)
 ### Enhanced Connection Resilience
 **What changed:** WebSocket transport includes automatic reconnection and message replay capabilities
 **Impact:** More reliable real-time communication that can survive temporary network disruptions without losing messages or state
-
-## 🐛 Bug Fixes
 
 ### Fixed: Permission Requests Lacking Context
 - **Issue:** Users didn't understand why specific actions required permission

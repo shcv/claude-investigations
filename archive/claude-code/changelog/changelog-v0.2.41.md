@@ -1,7 +1,5 @@
 # Changelog for version 0.2.41
 
-## Claude Code 0.2.41 Changelog
-
 ### New Features
 
 #### MCP (Model Context Protocol) Status Command

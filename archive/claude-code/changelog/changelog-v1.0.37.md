@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.37 Changelog
 
-## New Features
-
 ### Print Mode Support
 - Added support for `-p` / `--print` command-line flags and automatic detection of non-TTY output
 - When running `claude -p` or `claude --print`, or when output is piped/redirected, Claude will operate in print mode
@@ -34,8 +32,6 @@
 ### Agent Plan Rejection Handling
 - Added proper error messaging when an agent's proposed plan is rejected by the user
 - Provides clearer feedback in the interactive workflow
-
-## Technical Improvements
 
 ### Error Handling
 - Added new `AbortError` class for better error categorization and handling of aborted operations

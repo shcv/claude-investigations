@@ -1,10 +1,8 @@
 # Changelog for version 2.0.23
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.23 is a maintenance release focused on internal code improvements and a new experimental security feature for API requests.
-
-## 🔒 New Features
 
 ### Additional Protection Mode for API Requests
 
@@ -22,8 +20,6 @@ claude --prompt "your prompt here"
 - This is an experimental security feature that may provide enhanced request validation
 - Only affects requests to Anthropic's API (not Bedrock or Vertex)
 - **Evidence**: Added at `bU() at line 203031-203032` in the API client initialization function
-
-## 🔧 Internal Improvements
 
 ### Session Persistence Optimization
 

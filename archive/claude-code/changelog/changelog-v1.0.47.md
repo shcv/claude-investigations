@@ -1,8 +1,5 @@
 # Changelog for version 1.0.47
 
-# Changelog for Claude Code v1.0.47
-
-## Import Optimizations
 
 ### Changed
 - **Optimized Node.js module imports** - The codebase now uses more specific imports instead of importing entire modules:

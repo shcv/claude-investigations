@@ -1,7 +1,5 @@
 # Changelog for version 0.2.84
 
-## Changelog for Claude Code v0.2.84
-
 ### Technical Updates
 
 #### Import Refactoring

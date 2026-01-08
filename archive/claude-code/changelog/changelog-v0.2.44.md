@@ -2,25 +2,21 @@
 
 # Claude Code v0.2.44 Changelog
 
-## New Features
-
-### 🧠 Thinking Mode ("Think Harder")
+### Thinking Mode ("Think Harder")
 - **New thinking mode activation**: Simply say "think", "think harder", or even "ultrathink" to have Claude make a plan before executing
 - Claude will enter a planning mode where it thinks through the implementation steps before coding
 - After presenting the plan, you'll be prompted to exit plan mode and proceed with implementation
 
-### 📝 Enhanced Autocomplete System
+### Enhanced Autocomplete System
 - **Improved file path autocomplete**: The autocomplete system now provides intelligent file path suggestions as you type
 - **Fuzzy file search**: File paths are matched using fuzzy search with relevance scoring
 - **Directory navigation**: Autocomplete shows parent directories and supports navigating through the file tree
 - **Smart filtering**: Test files are deprioritized in autocomplete results
 - **Visual improvements**: Better formatting and scrolling for autocomplete suggestions with a maximum of 10 visible items
 
-### 🔐 macOS Keychain Security Enhancement
+### macOS Keychain Security Enhancement
 - Added `gd2()` function to delete API keys from macOS Keychain when needed
 - Improved security for API key management on macOS
-
-## User Interface Improvements
 
 ### Autocomplete UI
 - **New suggestion types**: Supports both command suggestions (starting with `/`) and file path suggestions
@@ -60,6 +56,5 @@
 - Refactored suggestion system to use a more modular architecture
 - Improved TypeScript/JavaScript code analysis for better language detection
 
----
 
 **Note**: This version focuses heavily on improving the interactive experience with intelligent autocomplete and the new thinking mode for better planning before implementation.

@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.39 Changelog
 
-## New Features
-
 ### Activity Tracking System
 - Added comprehensive activity tracking to monitor user and CLI operation timings
 - New `cp` class tracks active operations and distinguishes between user activity and CLI activity
@@ -28,8 +26,6 @@
   - `vBA()` - Set client type
 - Client types supported: "cli", "github-action", "sdk-typescript", "sdk-cli"
 
-## Improvements
-
 ### Model Support
 - Enhanced model name display in `Cj()` function
 - Now properly displays names for all Claude models:
@@ -50,8 +46,6 @@
 ### Version Update
 - Updated to version 0.55.1 (internal version tracking)
 - Main version updated to 1.0.39
-
-## Technical Changes
 
 ### New Dependencies
 - Added several internal utility modules for HTTP handling, base64 encoding, and query string building

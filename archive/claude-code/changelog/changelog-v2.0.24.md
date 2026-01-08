@@ -1,10 +1,8 @@
 # Changelog for version 2.0.24
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.24 introduces intelligent auto-approval for sandboxed bash commands, increases Haiku 4.5's output capacity from 8K to 32K tokens, and adds experimental model default configurations for Pro plan users. The release also includes keyboard event propagation control for better UI interactivity and several optimizations for SDK usage.
-
-## 🚀 New Features
 
 ### Auto-Allow Bash Commands in Sandbox Mode
 **What:** When sandboxing is enabled and you're in "accept edits" mode, safe bash commands now execute automatically without permission prompts.
@@ -72,8 +70,6 @@ claude
 - Provides visual authentication feedback
 - **Evidence**: New `uhQ()` initialization function at line 465179, called during startup at line 475285 in pretty-v2.0.24.js
 
-## ✨ Improvements
-
 ### Increased Haiku 4.5 Output Capacity
 Haiku 4.5 (`claude-haiku-4-5-20251001`) can now generate responses up to 32,000 tokens instead of being capped at 8,192 tokens. Claude 3.5 Haiku remains at 8,192 tokens.
 
@@ -97,8 +93,6 @@ Pro plan users may be assigned to experiments that change default model selectio
 These are A/B tests controlled by feature flags and not visible to all users.
 
 **Evidence**: New functions `r_1()` at line 144169 and `QH0()` at line 144180 in pretty-v2.0.24.js
-
-## 🔧 Internal Improvements
 
 ### Enhanced Error Diagnostics
 Added telemetry for tool_use/tool_result mismatch errors to help engineers debug message normalization issues. This internal tracking does not affect user experience but helps improve reliability.

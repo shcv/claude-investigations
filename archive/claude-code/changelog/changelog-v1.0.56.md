@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff for version 1.0.56, here's the changelog:
 
-## Claude Code v1.0.56 Changelog
-
 ### New Features and Improvements
 
 #### Enhanced AWS SDK Integration

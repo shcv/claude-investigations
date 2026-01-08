@@ -4,8 +4,6 @@ Based on my comprehensive analysis of the diff file, here is the detailed change
 
 # Claude Code v1.0.69 Changelog
 
-## 🎯 Major Features
-
 ### 1. **Security Review Command** (New)
 A powerful new `/security-review` command that performs automated security analysis of code changes:
 
@@ -55,8 +53,6 @@ Added support for the new Claude Opus 4.1 model:
 - Available across first-party, Bedrock, and Vertex AI platforms
 - Enhanced region support with `VERTEX_REGION_CLAUDE_4_1_OPUS` environment variable
 
-## 🔧 Improvements
-
 ### **Autocheckpointing Enhancements**
 - Better checkpoint management with improved state handling
 - Async initialization for better performance
@@ -78,14 +74,12 @@ Added support for the new Claude Opus 4.1 model:
 - Improved error messages when permission stream is closed
 - More robust pending request management
 
-## 🐛 Bug Fixes
+## Bug Fixes
 
 - Fixed issue where input stream closure could leave pending permission requests hanging
 - Improved cleanup of background shells on process termination
 - Better handling of shell completion status notifications
 - Fixed race conditions in background task management
-
-## 📝 Technical Changes
 
 ### **New Functions Added:**
 - `fnB` - Generate timestamped file names for prompts
@@ -106,8 +100,6 @@ Added support for the new Claude Opus 4.1 model:
 - Enhanced `hS0` class (previously `PS0`) with better stream closure handling
 - Updated model selection logic to support Opus 4.1
 - Improved shell management class `U01` with cleanup on exit
-
-## 💡 Usage Examples
 
 ### Security Review:
 ```bash
@@ -141,20 +133,19 @@ claude --model claude-opus-4-1-20250805
 export ANTHROPIC_MODEL=claude-opus-4-1-20250805
 ```
 
-## 🚀 Performance Improvements
+## Performance Improvements
 
 - Async checkpoint initialization reduces startup time
 - Better resource cleanup prevents memory leaks
 - Improved background task management reduces CPU usage
 - More efficient file search with optimized glob patterns
 
-## 🔒 Security Enhancements
+## Security Enhancements
 
 - New security review tool helps identify vulnerabilities early
 - Better handling of untrusted input in shell commands
 - Improved permission management for tool execution
 - Enhanced cleanup of sensitive data in background processes
 
----
 
 This release focuses on security, background task management, and overall stability improvements, making Claude Code more powerful for real-world development workflows.

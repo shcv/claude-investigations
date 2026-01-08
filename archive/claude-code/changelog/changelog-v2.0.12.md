@@ -1,10 +1,8 @@
 # Changelog for version 2.0.12
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.12 is a maintenance release focused on internal code reorganization and plugin system enhancements. The primary changes involve plugin command configuration improvements and minor UI refinements. Most of the 12,384-line increase is due to bundler regeneration with different variable names (~6,898 renames), not new functionality.
-
-## 🚀 New Features
 
 ### Mode Commands System
 **What:** Commands can now be designated as "mode commands" for specialized, multi-phase workflows
@@ -12,10 +10,8 @@ Version 2.0.12 is a maintenance release focused on internal code reorganization 
 **How to use:**
 Add `mode: true` to command frontmatter in your `.claude/commands/*.md` files:
 ```markdown
----
 mode: true
 description: Guided workflow for complex refactoring
----
 
 Your command content here...
 ```
@@ -55,8 +51,6 @@ In your plugin's `marketplace-manifest.json`:
 - Old array-of-paths format still supported for backward compatibility
 - **Evidence**: Command schema with `content` field at lines 42750-42775 in schema definition, inline content processing in plugin loader at lines 48817-48850
 
-## ✨ Improvements
-
 ### Enhanced Plugin Command Validation
 Better error handling when plugin manifests contain invalid command entries. The system now:
 - Validates that array-format commands contain only strings
@@ -80,8 +74,6 @@ Significant internal restructuring for improved maintainability:
 - ~6,898 variable renames throughout codebase (no functional impact)
 - **Evidence**: Entry point refactoring at lines 461763-461773 in `az8()` function, ripgrep module relocation to lines 3856-3869
 
-## 🔧 Technical Details
-
 ### Bundle Changes
 - File size increased from 449,389 to 461,773 lines (+2.7%)
 - Structural similarity: 75.0% (25% appears different due to variable renaming)
@@ -97,7 +89,7 @@ Significant internal restructuring for improved maintainability:
 - No new error handling or validation for end users
 - No changes to core CLI functionality
 
-## 📝 Notes for Plugin Developers
+## Notes for Plugin Developers
 
 If you maintain Claude Code plugins, you can now:
 1. Use `mode: true` frontmatter to designate workflow commands

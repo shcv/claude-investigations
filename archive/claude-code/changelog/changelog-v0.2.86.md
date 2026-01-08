@@ -1,7 +1,5 @@
 # Changelog for version 0.2.86
 
-## Claude Code v0.2.86 Changelog
-
 ### New Features
 
 #### Managed Settings Support

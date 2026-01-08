@@ -1,10 +1,8 @@
 # Changelog for version 2.0.35
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.35 significantly strengthens security around network path access and file attachments. The update adds comprehensive UNC path detection to prevent unauthorized network resource access, implements file size limits for at-mention attachments, and introduces an optional auto-exit feature for idle sessions. Additionally, slash command search performance was improved through better indexing.
-
-## 🔒 Security Enhancements
 
 ### Enhanced UNC Path Detection
 
@@ -49,8 +47,6 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Regular Read tool usage (without at-mention) is unaffected and can still handle large files with offset/limit parameters
 - **Evidence**: `npA() at line 481542`, `ob1() at line 313340` (size check at lines 313344-313349)
 
-## ⚡ Performance Improvements
-
 ### Optimized Slash Command Search
 
 **What:** Improved slash command autocomplete performance through better data structure indexing.
@@ -71,8 +67,6 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Default threshold: 25KB (25,000 tokens)
 - **Evidence**: `rk1() at line 276879`
 
-## 🔧 Configuration Changes
-
 ### Simplified Permission System
 
 **What:** Migrated `ignorePatterns` configuration to unified permissions system.
@@ -83,8 +77,6 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Runtime file access checking now uses unified `xC()` permission function instead of separate `GN()` ignore checker
 - Behavior remains the same - patterns still block file access, just through the permissions infrastructure
 - **Evidence**: `u6A() at line 474347` (simplified from `IsA()`), `se2() at line 487463` (migration with cleanup at line 487480)
-
-## 🆕 New Features
 
 ### Optional Auto-Exit on Idle
 
@@ -116,8 +108,6 @@ claude
 - Improves compatibility with certain API responses or model name formats
 - **Evidence**: `ce5() at line 466959`
 
-## 🐛 Bug Fixes
-
 ### Fixed Assistant Message Handling
 
 **What:** Improved reliability of assistant message extraction from streaming responses.
@@ -138,7 +128,7 @@ claude
 - More accurate error messages about why files cannot be read
 - **Evidence**: `t4.validateInput(F, B) at line 313355` in v2.0.35 (previously missing context parameter)
 
-## 📝 Internal Improvements
+## Internal Improvements
 
 - Refactored permission checking for read operations to use consistent code paths
 - Added IDE selection context filtering to respect file permissions
@@ -146,6 +136,5 @@ claude
 - Improved stream handling with consistent PassThrough stream usage across modules
 - Better separation of initialization logic from runtime functionality
 
----
 
 **Note:** This changelog focuses on user-visible changes and security improvements. Many internal function renamings due to code minification are not included unless they represent functional changes.

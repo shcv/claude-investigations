@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.30 Changelog
 
-## Performance and Architecture Improvements
-
 ### New File Management System
 - **Introduced `AM` class** for temporary file management with automatic cleanup
   - Provides methods for writing, reading, checking existence, and getting file size
@@ -22,8 +20,6 @@
   - Checks `__CFBundleIdentifier` environment variable for more accurate IDE detection
   - Better support for development environments beyond traditional terminals
 
-## New User-Facing Features
-
 ### Package Manager Detection
 - **New automatic package manager discovery**
   - `OX4`: Detects available Node.js package managers (npm, yarn, pnpm)
@@ -38,8 +34,6 @@
   - Falls back to configuration file storage on other platforms
   - Improved security for API key handling
 
-## Performance Metrics and Monitoring
-
 ### New Tracking Functions
 - **`XM()`**: Tracks API usage costs and duration metrics
 - **`Dj()`**: Returns total lines removed during operations
@@ -50,8 +44,6 @@
 - **New `Oz()` function** filters out progress messages from conversation history
   - Improves performance by removing non-essential messages
   - Keeps conversation focused on actual content
-
-## Configuration Updates
 
 ### Token Efficiency
 - Updated internal flag from `token-efficient-tools-2024-12-11` to `token-efficient-tools-2025-02-19`

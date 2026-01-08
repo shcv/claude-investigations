@@ -1,7 +1,5 @@
 # Changelog for version 0.2.70
 
-## Claude Code v0.2.70 Changelog
-
 ### New Features
 
 #### Enhanced Conversation Management

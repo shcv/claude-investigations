@@ -1,10 +1,8 @@
 # Changelog for version 2.0.52
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.52 introduces persistent storage for large tool outputs (saving them to disk instead of truncating), adds a new `CLAUDE_ENV_FILE` environment variable for custom session configuration, and includes extra usage visibility in the `/usage` display for Pro/Max users. Internal improvements include buffered logging for better performance and enhanced telemetry for GitHub Actions workflows.
-
-## 🚀 New Features
 
 ### Tool Result Persistence
 **What:** Large tool outputs (>400KB) are now saved to disk instead of being truncated, allowing Claude to access the full data later.
@@ -84,8 +82,6 @@ claude
 - Part of environment detection module
 - **Evidence:** `OV6()` at line 228083
 
-## ⚡ Improvements
-
 ### Buffered Debug Logging
 **What:** Debug logging now uses intelligent buffering instead of direct filesystem writes.
 
@@ -131,8 +127,6 @@ claude <command>
 - New `Mq()` function parses tool names with optional rule content in format `toolName(ruleContent)`
 - Enhanced permission system flexibility
 - **Evidence:** `Wt8()` at line 190167, `Mq()` at line 502273
-
-## 🔧 Internal Changes
 
 ### Progress Indicator Architecture Refactored
 **What:** The ConEmu/Ghostty progress reporting system was refactored from an independent side-channel to an integrated render pipeline.

@@ -7,8 +7,6 @@ Based on the diff analysis, here's the changelog for Claude Code version 0.2.89:
 ## Overview
 This update significantly restructures the internal codebase, removing 1,130 declarations and adding 176 new ones, resulting in a more streamlined implementation with 84.3% structural similarity to v0.2.86.
 
-## New Features
-
 ### AWS Credential Chain Management
 - **New `createCredentialChain()` function**: Provides enhanced credential chain management for AWS SDK operations
   - **`expireAfter()` method**: Allows setting custom expiration times for credentials
@@ -24,8 +22,6 @@ This update significantly restructures the internal codebase, removing 1,130 dec
   - Automatically tries next provider in chain if current provider fails with `tryNextLink` flag
   - Throws the last error if all providers fail
 
-## Improvements
-
 ### Stream API Support
 - Enhanced stream transformation capabilities with better error handling
 - Added validation for `TransformStream` API availability
@@ -34,8 +30,6 @@ This update significantly restructures the internal codebase, removing 1,130 dec
 ### Error Handling
 - Better error messages for unsupported APIs
 - Specific guidance for React Native users regarding fetch streaming limitations
-
-## Removed Features
 
 ### AWS Configuration Components
 The following AWS SDK configuration modules were removed in favor of the new credential chain system:
@@ -56,8 +50,6 @@ The following AWS SDK configuration modules were removed in favor of the new cre
 ### UUID Generation
 - Removed UUID v1, v3, v4, v5 generation utilities
 - Removed UUID parsing and validation functions
-
-## Internal Changes
 
 ### Code Organization
 - Consolidated credential provider functionality into new chain-based architecture

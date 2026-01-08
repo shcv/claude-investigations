@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.63 Changelog
 
-## New Features
-
 ### Output Mode Selection
 A new output mode system has been introduced that changes how Claude Code communicates with users. Users can now choose between different interaction styles:
 
@@ -33,8 +31,6 @@ New visual indicators for MCP (Model Context Protocol) server status have been a
 
 These indicators automatically disappear after 5 seconds to avoid cluttering the interface.
 
-## Improvements
-
 ### Better Error Handling in Print Mode
 The `--print` mode now has improved error handling and exit codes. The exit code properly reflects whether an error occurred during execution, making it more reliable for scripting and automation.
 
@@ -44,8 +40,6 @@ Local commands now include checkpoint information in their responses, ensuring t
 ### Cleaner Message Filtering
 The message selector now has improved filtering logic to exclude command output messages (stdout/stderr from local commands and bash commands) from the selectable message list, providing a cleaner interface for jumping between actual user messages.
 
-## Bug Fixes
-
 ### Removed Duplicate Imports
 Fixed issues with duplicate stream imports that were causing potential conflicts.
 
@@ -54,8 +48,6 @@ Removed the `parallelTasksCount` configuration option which was causing issues w
 
 ### IDE Auto-connection Improvements
 Enhanced the IDE auto-connection logic to better handle WebSocket and Server-Sent Events connections, with improved authentication token handling and Windows compatibility detection.
-
-## Technical Changes
 
 ### Stream Processing Updates
 - Replaced direct stream imports with more specific imports from `node:stream`
@@ -69,8 +61,6 @@ Enhanced the IDE auto-connection logic to better handle WebSocket and Server-Sen
 - New `w$B` function for extracting control sequences from user messages
 - Added `B68` function for handling output mode metadata
 - Implemented `$Z1` for finding checkpoint IDs in message sequences
-
-## API Changes
 
 ### Control Response Handling
 New `tH8` function handles initialization requests with improved error handling and command discovery for external integrations.

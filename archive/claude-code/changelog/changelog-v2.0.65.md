@@ -1,10 +1,8 @@
 # Changelog for version 2.0.65
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces a new `/tag` command for organizing sessions with searchable labels, a unified `TaskOutput` tool replacing previous separate agent/bash output tools, and enhanced MCP tool support with deferred loading capabilities for improved token efficiency. It also adds git worktree detection, remote settings synchronization infrastructure, and headless profiling metrics.
-
-## 🚀 New Features
 
 ### Session Tagging with `/tag` Command
 **What:** A new command to add searchable tags to your sessions for better organization and retrieval.
@@ -105,8 +103,6 @@ claude plugin update <name> --scope local
 - Generates URLs in format: `https://claude.ai/code/{sessionId}`
 - CLI command format: `claude --teleport {sessionId}`
 - **Evidence**: `TtB()` at line 369714, `_tB()` at line 369717
-
-## Other changes
 
 ### Task Status Attachments
 Background tasks now include delta summaries in attachments for smoother conversation flow. New function `o78()` at line 358386 handles task status attachment generation with status, description, and delta summary fields.

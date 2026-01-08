@@ -1,10 +1,8 @@
 # Changelog for version 2.0.58
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces improved concurrent tool error handling that gracefully aborts sibling tools when one fails, adds inline feedback input when rejecting file edits, and includes a redesigned guest passes UI with visual pass cards. Session management gets significant enhancements including direct resume by session ID, a preview mode, and infrastructure for hierarchical session grouping.
-
-## 🚀 New Features
 
 ### Direct Session Resume via `/resume [session-id]`
 **What:** Resume sessions directly by providing a session ID or title as an argument to the `/resume` command, bypassing the interactive picker.
@@ -80,8 +78,6 @@ claude --betas context-1m-2025-08-07
 - Uses "▼" and "▶" indicators for group state
 - **Evidence**: `QV9()` at line 496553, `h_3()` grouping at line 497146, `xg()` flag at line 513608 in v2.0.58
 
-## 🔧 Improvements
-
 ### Concurrent Tool Error Propagation
 **What:** When one tool in a concurrent execution fails, sibling tools are now gracefully aborted with a clear "Sibling tool call errored" message instead of continuing independently.
 
@@ -132,8 +128,6 @@ claude --betas context-1m-2025-08-07
 **Details:**
 - Provides flexibility for enterprise deployments
 - **Evidence**: `gw` function at line 511827 in v2.0.58
-
-## 🐛 Bug Fixes
 
 ### Time Display "60s" Rollover Fix
 **What:** Fixed an edge case where time durations could display as "60s" or "60m" instead of properly rolling over to the next unit.

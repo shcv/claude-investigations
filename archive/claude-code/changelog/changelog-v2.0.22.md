@@ -1,10 +1,8 @@
 # Changelog for version 2.0.22
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.22 removes the Development Partner Program data sharing functionality, introduces comprehensive user configuration support for MCP servers with interactive setup, adds session environment hooks for shell customization, and implements enterprise allowlist/blocklist controls for MCP server management.
-
-## 🚀 New Features
 
 ### MCP Server User Configuration Support
 **What:** Plugins can now request user-provided configuration values (API keys, paths, settings) through structured schemas defined in their manifest files.
@@ -32,7 +30,6 @@ claude mcp configure my-plugin server-name
 - Validation ensures required fields are provided and types match schema
 - **Evidence**: `CF1()` at line 280192, `q7B()` at line 280048, `fOQ()` at line 447320
 
----
 
 ### Session Environment Hooks
 **What:** Shell environment can now be customized per session through hook scripts that persist throughout the session lifecycle.
@@ -55,7 +52,6 @@ claude mcp configure my-plugin server-name
 - Cache invalidation supported for dynamic updates
 - **Evidence**: `bNA()` at line 72216, `Vh1()` at line 247855, `ia0()` at line 454456
 
----
 
 ### Enterprise MCP Server Controls
 **What:** Enterprise administrators can now restrict which MCP servers users are allowed to enable through allowlist and blocklist configurations.
@@ -81,7 +77,6 @@ claude mcp configure my-plugin server-name
 - Loaded servers automatically filtered by policy before being returned
 - **Evidence**: `eR0()` at line 280589, `y7B()` at line 280584, `Ni()` at line 280640, `YP()` at line 280843
 
----
 
 ### Tool Permission Auto-Grant from Configuration
 **What:** Tools can now be automatically approved via configuration, bypassing interactive permission prompts.
@@ -92,8 +87,6 @@ claude mcp configure my-plugin server-name
 - Applies to both built-in and MCP tools
 - **Evidence**: `QwQ()` at line 436163
 
-## ✨ Improvements
-
 ### SessionStart Hook Responses Now Visible
 **What:** SessionStart hook output is now displayed in interactive sessions, making it easier to see what environment setup is occurring.
 
@@ -103,7 +96,6 @@ claude mcp configure my-plugin server-name
 - Improves visibility into session initialization process
 - **Evidence**: `MT8()` at lines 5737-5743 in v2.0.22
 
----
 
 ### SDK Control for Max Thinking Tokens
 **What:** SDK users can now dynamically change the maximum thinking tokens limit mid-session.
@@ -123,7 +115,6 @@ claude mcp configure my-plugin server-name
 - Useful for adjusting reasoning depth based on task complexity
 - **Evidence**: `MT8()` at lines 5859-5862 in v2.0.22
 
----
 
 ### Better Non-Interactive Session Tracking
 **What:** Improved internal consistency for tracking non-interactive sessions throughout the codebase.
@@ -134,8 +125,6 @@ claude mcp configure my-plugin server-name
 - Affects web fetch, conversation summarization, bug reporting, and command extraction
 - **Evidence**: `Zn6()` at line 295359, `lGQ()` at line 408663, `cSQ()` at line 466310
 
-## 🐛 Bug Fixes
-
 ### Fixed Tool Permission Checking Edge Case
 **What:** Fixed potential crash when tools array is undefined during permission checking.
 
@@ -145,7 +134,6 @@ claude mcp configure my-plugin server-name
 - Improves robustness of permission system
 - **Evidence**: `$NQB()` at lines 1281-1285 in v2.0.22
 
----
 
 ### Fixed Escape Key Handling in History Search
 **What:** Escape key now properly exits history search mode without cancelling the main session.
@@ -155,8 +143,6 @@ claude mcp configure my-plugin server-name
 - Escape key handling now controlled by parent component
 - Prevents unintended session cancellation when closing search
 - **Evidence**: `mEQ()` at line 435476, `AwQ()` at line 436119
-
-## 🗑️ Removed Features
 
 ### Development Partner Program Data Sharing
 **What:** All functionality related to the Development Partner Program and automatic session data sharing with Anthropic has been removed.

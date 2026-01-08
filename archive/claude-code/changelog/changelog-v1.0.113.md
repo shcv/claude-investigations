@@ -1,9 +1,7 @@
 # Changelog for version 1.0.113
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.113 enhances security with workspace trust validation for OpenTelemetry helpers, improves prompt caching with per-model control via new environment variables, and refines user experience by filtering out error sessions and improving alias detection to preserve custom configurations.
-
-## 🚀 New Features
 
 ### Per-Model Prompt Caching Control
 **What:** Fine-grained control over prompt caching for individual model families
@@ -63,8 +61,6 @@ export DISABLE_PROMPT_CACHING=true
 - Used when combining usage stats from multiple API responses
 - **Evidence**: `hYB()` function at line 395825 with `cache_creation` object structure
 
-## ✨ Improvements
-
 ### Workspace Trust Validation for OpenTelemetry Helpers
 **What changed:** OpenTelemetry headers from project/local settings now require workspace trust
 **Why it matters:** Prevents arbitrary code execution from untrusted project configurations
@@ -120,8 +116,6 @@ export DISABLE_PROMPT_CACHING=true
 - Shows in UI hints as "(ctrl+o to expand)" instead of "(ctrl+r to expand)"
 - Note: Ctrl+R still used for error retry functionality (separate feature)
 - **Evidence**: Variable `F2B` at line 372920 replaces `B2B` at line 372904 in v1.0.112
-
-## 🔧 Internal Improvements
 
 ### Refactored Authentication Helper
 - New `uzB()` function at line 412641 extracts common authentication logic

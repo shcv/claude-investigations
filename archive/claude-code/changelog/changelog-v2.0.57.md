@@ -1,10 +1,8 @@
 # Changelog for version 2.0.57
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.57 introduces a new versioned plugin caching system (behind a feature flag), adds guest passes promotional UI to help users discover the sharing feature, and includes important shell execution improvements for reliability and security.
-
-## 🚀 New Features
 
 ### Versioned Plugin System (Experimental)
 **What:** A comprehensive plugin versioning and caching system that stores plugins by version in a dedicated cache directory, supporting multiple installation scopes (user/project).
@@ -52,8 +50,6 @@ The feature is controlled by the `tengu_enable_versioned_plugins` experiment fla
 - Errors are silently suppressed to avoid breaking command execution
 - **Evidence**: New function `NO6()` at line 244643, integrated at line 244719
 
-## 🔒 Security Improvements
-
 ### Output Redirection with cd Command Protection
 **What:** Commands that combine directory changes (`cd`) with output redirection (`>`, `>>`) now require explicit user approval.
 
@@ -63,8 +59,6 @@ The feature is controlled by the `tengu_enable_versioned_plugins` experiment fla
 - Applies to compound commands like `cd /tmp && echo "data" > file.txt`
 - Single commands without `cd` or without redirection are unaffected
 - **Evidence**: Enhanced function `j85()` at line 310479, new parameter `G` for cd detection
-
-## Other Changes
 
 ### Removed /init Onboarding Modal
 The first-run dialog that prompted users to set up CLAUDE.md has been removed. The `/init` command remains available for manual use.

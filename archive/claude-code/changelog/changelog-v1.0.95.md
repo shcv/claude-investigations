@@ -1,9 +1,7 @@
 # Changelog for version 1.0.95
 
-## 🎯 Highlights
+## Highlights
 This is a maintenance release with internal code refactoring. No new features, improvements, or bug fixes affect user functionality.
-
-## Internal Changes Only
 
 ### Code Refactoring
 This version contains only internal minification updates:

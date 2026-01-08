@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.96 Changelog
 
-## New Features
-
 ### Data Sharing and Development Partner Program
 - **Development Partner Program Integration**: Organizations enrolled in the Development Partner Program now have their Claude Code sessions shared with Anthropic for service improvement and model training
   - New UI components display enrollment status and information
@@ -17,8 +15,6 @@
   - 9% discount on prompt cache read tokens
   - Additional 12.5% discount on prompt cache write tokens
   - Applies to first-party Anthropic models only
-
-## Enhanced Permission System
 
 ### Rule-Based File Access Control
 - **Granular Permission Rules**: New pattern-based permission system for file operations
@@ -42,8 +38,6 @@ claude code --allow-read "/src/**" --allow-edit "/docs/*.md"
 - File ignore patterns from project settings now properly integrated with the permission system
 - Automatic merging of ignore patterns with permission rules
 
-## Technical Improvements
-
 ### Database Repair Mechanism
 - **Automatic SQLite Recovery**: If the conversation database fails to open, Claude Code now:
   1. Detects the corruption
@@ -54,8 +48,6 @@ claude code --allow-read "/src/**" --allow-edit "/docs/*.md"
 ### OAuth Scope Changes
 - **Always Request Full Permissions**: The `user:inference` scope is now always included in OAuth requests, regardless of environment
 - Simplified authentication flow with consistent permission requests
-
-## Bug Fixes
 
 ### Stream Handling
 - Fixed missing stream import that could cause issues with certain operations
@@ -69,8 +61,6 @@ claude code --allow-read "/src/**" --allow-edit "/docs/*.md"
 - Improved path resolution for permission rules
 - Better handling of relative vs absolute paths in permission checks
 
-## Removed Features
-
 ### Domain Whitelist for WebFetch
 - Removed the hardcoded whitelist of allowed domains for web fetching
 - WebFetch tool no longer restricts domains to a predefined list
@@ -79,8 +69,6 @@ claude code --allow-read "/src/**" --allow-edit "/docs/*.md"
 ### Deprecated Functions
 - Removed several internal utility functions related to the old permission system
 - Cleaned up unused domain validation logic
-
-## Internal Changes
 
 ### Cache Management
 - Added comprehensive cache clearing function (`k10`) that clears all tool caches

@@ -4,57 +4,49 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 
 # Claude Code v0.2.25 Changelog
 
-## New Features
-
-### 🎯 Fuzzy Matching for Commands
+### Fuzzy Matching for Commands
 - Introduced fuzzy matching for slash commands (`/commands`), making it easier to find and execute commands without typing the exact name
 - This feature was initially added in v0.2.21 and is now included in this release
 
-### 🔧 Approved Tools Management
+### Approved Tools Management
 - Added new `/approved-tools` command to manage pre-approved tools
 - View, edit, and delete tools that Claude Code can use without asking for permission each time
 - Interactive interface shows which specific Bash commands or command patterns are approved
 - Provides clear visual indication when editing approved tools with delete/cancel options
 
-### 🚪 Exit Command Aliases
+### Exit Command Aliases
 - Added `/exit` and `/quit` commands to exit the REPL
 - These provide more intuitive ways to close the application compared to using Ctrl+C
 
-### 🔒 Enhanced Tool Validation
+### Enhanced Tool Validation
 - Implemented `validateInput` functionality for tools to ensure input parameters are valid before execution
 - Tool requests are now validated before being sent to the API, preventing invalid tool usage
 
-## Improvements
-
-### 🌐 Web Authentication Check
+### Web Authentication Check
 - Added connectivity check to `claude.ai/code` and Anthropic's API endpoints
 - Improved error handling for authentication and network connectivity issues
 
-### 📊 Session Metrics Tracking
+### Session Metrics Tracking
 - Enhanced session tracking with new metrics:
   - `totalCost` - tracks API usage costs
   - `totalAPIDuration` - measures total API call duration
   - `lastInteractionTime` - monitors user activity
   - `readFileAllowedDirectories` and `writeFileAllowedDirectories` - tracks file system permissions
 
-### 🔄 Refactored Error Handling
+### Refactored Error Handling
 - Simplified error logging function (renamed from `V0` to `A0`)
 - Improved error message formatting and timestamp tracking
 
-## Internal Changes
-
-### 🏗️ Code Reorganization
+### ️ Code Reorganization
 - Removed NPM prefix configuration functionality (`hQ2`, `xQ2`, `cQ2`, `iQ2` functions)
 - Cleaned up unused imports and variables
 - Updated SDK version references from 0.37.0 to 0.36.3
 - Refactored global state management into a centralized `eA4()` function
 
-### 🔍 New Utilities
+### New Utilities
 - Added comprehensive fuzzy search implementation using the Fuse.js algorithm
 - Implemented string manipulation utilities (`PX`, `hY9`, `xY9`, `eC`, `nU2`, etc.)
 - Added countdown timer component (`Qf2`) for UI timing displays
-
-## Usage Examples
 
 ### Managing Approved Tools
 ```bash

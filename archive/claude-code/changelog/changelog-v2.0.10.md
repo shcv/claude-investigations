@@ -1,10 +1,8 @@
 # Changelog for version 2.0.10
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.10 introduces intelligent shell completion for Bash commands, MCP server management in the command palette, enhanced plugin error tracking, and several improvements to model switching and telemetry handling. The release also includes internal rendering system refactoring for better maintainability.
-
-## 🚀 New Features
 
 ### Shell Completion Support
 **What:** Added intelligent tab-completion for bash and zsh shells when typing commands in the Bash tool
@@ -96,8 +94,6 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Reduces repeated API calls to Statsig
 - Improves initial render performance
 - **Evidence**: `cachedDynamicConfigs` at line 440962, `B2Q()` at line 441924, `Q2Q()` at line 441937 in v2.0.10 (did not exist in v2.0.9)
-
-## ✨ Improvements
 
 ### Enhanced Plugin Error Tracking
 **What changed:** Plugin loading failures are now tracked individually with structured error information instead of failing silently
@@ -210,8 +206,6 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Helps users understand when plan mode has changed their model
 - **Evidence**: `Yr5()` at line 431964 in v2.0.10 (was simpler `zz5()` at line 431016 in v2.0.9)
 
-## 🐛 Bug Fixes
-
 ### Console Patching Behavior
 **What:** Console.log and console.error now route through global error handlers instead of internal write methods
 
@@ -232,8 +226,6 @@ This is automatic. Config values are returned immediately from cache while fresh
 - `tXQ()` (throttle) - throttles function calls with configurable timing at line 337236
 - These replace or supplement existing implementations for better compatibility
 - **Evidence**: Added functions at lines 335238-337246 in v2.0.10 (partial or missing in v2.0.9)
-
-## 📦 Internal Changes
 
 ### State Management Updates
 - Added `mainLoopModelForSession: null` to initial state for session-scoped model overrides
@@ -275,6 +267,5 @@ This is automatic. Config values are returned immediately from cache while fresh
 ### Thinking Feature Constants
 - Added `Ny2 = "tmp-preserve-thinking-2025-10-01"` constant at line 376351
 
----
 
 This changelog represents a careful analysis of v2.0.10, distinguishing between truly new features, enhancements to existing functionality, and internal refactoring. All claims have been verified against both versions with specific line number references.

@@ -1,9 +1,7 @@
 # Changelog for version 2.0.8
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.8 focuses on cleanup and simplification, removing experimental features and completing the migration period for the new permissions system. The beta GitHub Actions workflow template has been removed, the migration helper for legacy settings has been retired, and internal session handling has been streamlined.
-
-## 🗑️ Removed Features
 
 ### Migration Helper for Legacy Settings Removed
 **What:** The automatic migration from old-style `allowedTools` and `ignorePatterns` arrays to the new `.claude/settings.local.json` permissions format has been removed.
@@ -19,7 +17,6 @@ Version 2.0.8 focuses on cleanup and simplification, removing experimental featu
 
 **Evidence:** Migration functions `WdQ() at line 351945`, `JdQ() at line 351955`, and `l4A() at line 351970` in v2.0.5 are not called in v2.0.8
 
----
 
 ### Beta GitHub Actions Template Removed
 **What:** The beta version workflow template for GitHub Actions integration has been removed. Only the stable `@v1` template remains.
@@ -34,7 +31,6 @@ Only the stable `@v1` template is offered during setup, simplifying the decision
 
 **Evidence:** Beta template found at lines 407475-407659 in v2.0.5, completely absent in v2.0.8 which only contains the v1 template at lines 398115-398165
 
----
 
 ### Non-Functional customNotifyCommand Stub Removed
 **What:** Removed dead code for custom notification commands that was never actually implemented.
@@ -45,8 +41,6 @@ The `customNotifyCommand` configuration option was introduced in v0.2.115 but ne
 **User impact:** Zero. The feature never worked, so removing it doesn't change behavior.
 
 **Evidence:** Stub function `pb6() at line 406840` present in v2.0.5, removed completely in v2.0.8 (notification function `H01() at line 397504` no longer checks for customNotifyCommand)
-
-## 🔧 Internal Changes
 
 ### Session Persistence Deduplication Simplified
 **What:** Removed client-side duplicate checking before persisting session entries, relying entirely on server-side validation.
@@ -61,7 +55,6 @@ In v2.0.5, the persist function (`K8B() at line 397234`) checked a local Map (`D
 
 **Evidence:** Duplicate checking logic at lines 397235-397240 in v2.0.5 is absent from the v2.0.8 persist function
 
----
 
 ### Billing Type Information Added to Telemetry
 **What:** Internal telemetry now includes the organization's billing type alongside subscription type.
@@ -72,8 +65,6 @@ The function that gathers subscription information (`nC0() at line 397096` in v2
 **User impact:** None visible—this is purely for internal analytics.
 
 **Evidence:** Line 23953 in diff shows addition: `if (B?.organization?.billing_type !== void 0) G.billingType = B.organization.billing_type;`
-
-## 📚 Documentation Improvements
 
 ### Updated GitHub Actions Documentation Links
 **What:** Documentation URLs in GitHub Actions workflow template comments now point to the dedicated CLI reference instead of the generic SDK page.
@@ -88,7 +79,6 @@ The updated documentation provides more specific guidance for CLI usage in GitHu
 
 **Evidence:** Updated at lines 398162 and 398261 in v2.0.8 (formerly lines 407707 and 407765 in v2.0.5)
 
----
 
 ### Simplified GitHub Actions Example
 **What:** The example `claude_args` in the workflow template is now clearer and more focused.
@@ -107,6 +97,6 @@ The updated documentation provides more specific guidance for CLI usage in GitHu
 
 **Evidence:** Line 398163 in v2.0.8 shows simplified example (compare to line 407708 in v2.0.5)
 
-## 🔍 Version Notes
+## Version Notes
 
 This changelog compares v2.0.5 to v2.0.8. Versions 2.0.6 and 2.0.7 are not present in the available archive, so changes may have occurred incrementally across these intermediate releases.

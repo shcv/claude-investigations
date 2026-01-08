@@ -1,9 +1,7 @@
 # Changelog for version 1.0.116
 
-## 🎯 Highlights
+## Highlights
 Version 1.0.116 introduces reverse search history (Ctrl+R) for the interactive prompt, refactors the sandbox system with a centralized manager and flexible security policies, and adds support for environment-specific OAuth credentials to prevent developers from accidentally overwriting production tokens.
-
-## 🚀 New Features
 
 ### Reverse Search History (Ctrl+R)
 **What:** Interactive command history search similar to bash's reverse-i-search
@@ -71,8 +69,6 @@ export USE_LOCAL_OAUTH=1
 - Will enable enhanced teleport functionality when activated
 - **Evidence**: `P55() at line 413749`, `S55() at line 413999`, `j55() at line 413991`
 
-## 🔧 Improvements
-
 ### Refactored Sandbox System
 **What:** Complete architectural overhaul of the sandboxing implementation
 
@@ -117,8 +113,6 @@ export USE_LOCAL_OAUTH=1
 - Uses formatted error messages when available
 - **Evidence**: `bzB() at line 413552` (previously `o65() at line 413908` in v1.0.115)
 
-## 🐛 Bug Fixes
-
 ### Sandbox Configuration Deep Cloning
 **What:** Prevents mutation of original sandbox configuration
 
@@ -126,8 +120,6 @@ export USE_LOCAL_OAUTH=1
 - Uses deep clone when processing sandbox config
 - Prevents unexpected side effects when adding recommended defaults
 - **Evidence**: `EBB.cloneDeep(A) at line 374849` in `Zx6()`
-
-## 🔄 Internal Changes
 
 ### Renamed Functions and Variables
 - OAuth config selector: `D6()` → `L4()`
@@ -146,7 +138,7 @@ export USE_LOCAL_OAUTH=1
 - Production: `OAUTH_FILE_SUFFIX: ""`
 - Local: `OAUTH_FILE_SUFFIX: "-local-oauth"`
 
-## 📝 Notes
+## Notes
 
 - The Sessions API integration is implemented but disabled by feature flag
 - Sandbox recommended defaults include paths for npm, yarn, pnpm, cargo, rustup, homebrew

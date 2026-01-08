@@ -1,10 +1,8 @@
 # Changelog for version 2.0.26
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.26 introduces a persistent plugin registry system to track plugin installation metadata, improves external editor integration by eliminating UI flicker, and enhances the `/sandbox` command with clearer error messages. Additionally, this release removes the experimental "always thinking" feature and simplifies internal architecture by removing redundant parameter passing across multiple functions.
-
-## 🚀 New Features
 
 ### Plugin Registry System
 **What:** A persistent metadata tracking system for installed plugins using `installed_plugins.json`
@@ -19,8 +17,6 @@ The system automatically creates and maintains a registry file that tracks each 
 - Automatically syncs on startup if registry is missing or outdated
 - Distinguishes between local marketplace plugins and external plugins
 - **Evidence**: New functions `ck2()` at line 445175, `W5A()` at line 445178, `is1()` at line 445223, `pk2()` at line 445255, `ns1()` at line 445260, and 10 additional registry management functions in pretty-v2.0.26.js
-
-## ✨ Improvements
 
 ### Flicker-Free External Editor Integration
 **What:** External text editors (vim, nano, code, etc.) no longer cause terminal UI flickering
@@ -73,8 +69,6 @@ Before attempting to enable sandboxing, Claude Code validates that your platform
 - `resume()` method re-enables rendering and triggers immediate render
 - Render loop checks `isPaused` flag before executing
 - **Evidence**: Modified Ink class `BOA` at line 71631 (was `DO1()` at line 71390 in v2.0.25, 93.4% similarity)
-
-## 🔧 Other Changes
 
 ### Editor Detection
 Added automatic detection of editor commands (code, subl, atom, gedit, notepad++, notepad) to apply appropriate flags like `--wait` when invoking external editors.

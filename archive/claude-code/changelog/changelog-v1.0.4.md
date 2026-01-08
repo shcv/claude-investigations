@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.4 Changelog
 
-## New Features
-
 ### Enhanced Model Support
 - **New Model Recognition**: Added support for recognizing additional Claude models including:
   - Claude Sonnet 4
@@ -54,8 +52,6 @@ curl https://api.example.com
 
 ### Custom Command Title Detection
 - **Smart command titles**: Custom slash commands now extract titles from markdown headers in the command content, limiting to 100 characters for better display
-
-## Improvements
 
 ### File Operations
 - **Symlink resolution**: The `cd` command now resolves symlinks using `realpath`, ensuring you navigate to the actual directory location

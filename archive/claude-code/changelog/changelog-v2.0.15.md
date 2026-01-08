@@ -1,10 +1,8 @@
 # Changelog for version 2.0.15
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to ask multiple-choice questions during execution, enhances async hook support with stderr capture, and improves marketplace plugin error handling with structured error tracking.
-
-## 🚀 New Features
 
 ### AskUserQuestion Tool
 **What:** A new tool that enables Claude to ask users multiple-choice questions during task execution to gather preferences, clarify ambiguity, or make implementation decisions.
@@ -33,8 +31,6 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Includes navigation UI with question progress indicators
 - Questions have a header (max 12 characters) for display in the progress bar
 - **Evidence:** New tool definition at `T6Q = "AskUserQuestion"` at line 404665, tool implementation at line 405857 in function `Tn1()`
-
-## 📈 Improvements
 
 ### Async Hook Stderr Capture
 **What:** Async hooks now capture and track stderr output separately from stdout, providing better visibility into hook errors and warnings.
@@ -97,8 +93,6 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Multi-select component `_GB` at line 282823 supports input options with checkboxes
 - **Evidence:** Function `TA()` at line 145236 now handles `type: "input"` options (checks at lines 145558, 145643, 145723)
 
-## 🐛 Bug Fixes
-
 ### Command Flag Obfuscation Detection
 **What:** Fixed quote handling in command security checks to properly detect obfuscated flags with escaped characters.
 
@@ -118,8 +112,6 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Function `r40()` at line 72973 uses named parameters: `{ hookInput, matchQuery, signal, timeoutMs }`
 - Replaces positional parameters with descriptive object properties
 - **Evidence:** v2.0.14 used positional parameters `HX9(A, B, Q, Z)` at line 73080 and `S40(A, B, Q, Z)` at line 72895
-
-## 🔧 Internal Improvements
 
 ### Permission UI Component Refactoring
 **What:** Tool permission confirmation component optimized with React hooks for better performance.

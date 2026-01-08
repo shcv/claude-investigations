@@ -1,7 +1,5 @@
 # Changelog for version 1.0.51
 
-## Claude Code v1.0.51 Changelog
-
 ### New Features
 
 #### Setup Notes Display

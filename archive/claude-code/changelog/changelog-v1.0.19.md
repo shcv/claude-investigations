@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.19 Changelog
 
-## New Features
-
 ### MCP Resource Support (@mentions)
 - **New @mention syntax for MCP resources**: You can now reference MCP (Model Context Protocol) resources directly in your messages using the `@server:resource` syntax
   - Example: `@myserver:config.json` to reference a config file from an MCP server
@@ -34,8 +32,6 @@
   - `deleteToLogicalLineEnd()`: Delete from cursor to end of logical line
 
 These commands are useful when working with long lines that wrap in the terminal, allowing navigation based on actual line breaks in the text rather than visual line wrapping.
-
-## Improvements
 
 ### Shell Command Execution
 - **Background process management**: Enhanced support for running commands in the background

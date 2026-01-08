@@ -1,10 +1,8 @@
 # Changelog for version 2.0.49
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.49 introduces significant infrastructure improvements including a new GrowthBook feature flag system for dynamic feature control, unrestricted model access for Foundry users, and enhanced terminal rendering for emoji and Unicode characters.
-
-## 🚀 New Features
 
 ### GrowthBook Feature Flag Integration
 **What:** Complete integration of GrowthBook SDK (v1.6.1) for remote feature management and A/B testing
@@ -31,8 +29,6 @@ This feature works automatically when you work with GitHub repositories. It enab
 - Enables better multi-repository workflow support
 - Stored in `githubRepoPaths` field in user settings
 - **Evidence**: `lX9()` at line 507265, `iX9()` at line 507276
-
-## ⚡ Improvements
 
 ### Unrestricted Model Access for Foundry Users
 **What:** Foundry deployment users now have access to all Claude models without version restrictions
@@ -72,8 +68,6 @@ When working in a subdirectory, Claude Code now denies write access to parent wo
 - Enables clearer error messages when tool is used incorrectly
 - Supports both `inputSchema` (Zod) and `inputJSONSchema` (JSON Schema)
 - **Evidence**: `UM3()` at line 497621 vs `r$3()` at line 494892 in v2.0.47
-
-## 🔧 Technical Changes
 
 ### Code Organization
 - Refactored text segmentation functions for better emoji handling (`y44()` at line 76651, `k44()` at line 76643)

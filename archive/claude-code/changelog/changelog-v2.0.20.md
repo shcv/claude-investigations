@@ -1,10 +1,8 @@
 # Changelog for version 2.0.20
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.20 brings significant improvements to plugin management, hook execution visibility, and CLI automation capabilities. The most notable additions include new CLI commands for managing plugins (`install`, `uninstall`, `enable`, `disable`), full implementation of the Skill tool for executing skills directly from conversations, and enhanced real-time feedback during hook execution with detailed progress tracking.
-
-## 🚀 New Features
 
 ### Plugin Management CLI Commands
 
@@ -165,8 +163,6 @@ Set the environment variable in your GitHub workflow:
 - Enables GitHub Action-specific behavior and logging
 - **Evidence**: `yT8()` at line 469210, `jA()` validation at line 3336
 
-## 💡 Improvements
-
 ### Enhanced Bash Security Checks
 
 **What:** Improved detection of backtick command substitution with escape-aware parsing
@@ -205,7 +201,7 @@ Set the environment variable in your GitHub workflow:
 - Added fourth parameter for improved context handling
 - More robust permission decision-making
 
-## 🔧 Internal Changes
+## Internal Changes
 
 - Removed stub Skill tool implementation (`ld0` at v2.0.19:410872)
 - Removed deprecated hook progress renderer (`aO5` at v2.0.19:366835, `sO5` at v2.0.19:366851)

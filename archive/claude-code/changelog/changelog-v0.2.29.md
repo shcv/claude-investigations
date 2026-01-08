@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.29 Changelog
 
-## New Features
-
 ### Enhanced `.gitignore` Support for LS Command
 The `ls` command now respects `.gitignore` patterns when listing files and directories. This provides a cleaner view of your project by automatically filtering out ignored files.
 
@@ -28,8 +26,6 @@ The command suggestion interface has been redesigned to be more responsive and i
 
 ### Vim Mode Indicator
 For users with Vim as their `$EDITOR`, Claude Code now displays a `-- INSERT --` indicator when in insert mode, providing a familiar experience for Vim users.
-
-## Improvements
 
 ### Tool Comparison Enhancement
 The tool comparison logic now supports custom `inputsEqual` methods for tools, allowing for more sophisticated comparison of tool inputs. This improves the accuracy of determining when tools need to be re-executed.

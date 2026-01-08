@@ -2,8 +2,6 @@
 
 # Claude Code v0.2.108 Changelog
 
-## New Features
-
 ### Attachment System Enhancement
 - **New attachment types support**: The update introduces a comprehensive attachment handling system that supports multiple types:
   - **Queued commands**: Execute commands passed as attachments with `type: "queued_command"`
@@ -28,8 +26,6 @@
 - **Refusal handling**: When Claude refuses a request, users now get a helpful message: "This request was refused by the model. Please double-press esc to go back in history and try again with a different prompt."
 - **Queue serialization**: New `xJ6` function ensures async operations are properly serialized to prevent race conditions
 
-## Improvements
-
 ### File Editing
 - **Enhanced edit validation**: The `ph` function now checks if `old_string` is a substring of any previous `new_string` to prevent conflicting edits
 - **Better whitespace handling**: Added note in Write tool description: "Do not add trailing whitespace to lines (a newline at the end of a file is fine)"
@@ -41,8 +37,6 @@
 ### Performance Optimizations
 - **Serialized memory operations**: Memory save operations are now queued and processed sequentially using `bJ6`
 - **Better attachment rendering**: New `LJ6` function provides cleaner rendering of different attachment types
-
-## Technical Changes
 
 ### Process Management
 - Added `_p0` function to track first start time for analytics

@@ -1,7 +1,5 @@
 # Changelog for version 1.0.32
 
-## Claude Code v1.0.32 Changelog
-
 ### New Features
 
 #### Plan Mode

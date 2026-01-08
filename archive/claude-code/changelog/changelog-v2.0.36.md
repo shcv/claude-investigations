@@ -1,9 +1,7 @@
 # Changelog for version 2.0.36
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.36 introduces session-scoped hooks for temporary automation, adds telemetry infrastructure for monitoring, and improves plugin reliability with duplicate hook detection. Pro and Max users gain quick access to usage settings via a new command.
-
-## 🚀 New Features
 
 ### Extra Usage Command
 **What:** New command for Pro and Max subscribers to quickly access Claude AI usage settings
@@ -56,8 +54,6 @@ claude extra-usage
 - Events include session context, environment details, and custom metadata
 - **Evidence**: `IB0 class at lines 477676-477751`, initialization `or2() at line 477773`, event emission `ZB0() at line 477761`
 
-## 💡 Improvements
-
 ### Enhanced Plugin Hook Loading
 **What:** Plugin loading now detects and prevents duplicate hook file loading
 **How it works:**
@@ -99,8 +95,6 @@ claude extra-usage
 - Ensures reviews run when draft PRs become ready for review and when closed PRs reopen
 - **Evidence**: Workflow template `yp2 at line 452368`, trigger definition at line 452314
 
-## 🔧 Internal Changes
-
 ### Query Handler Refactoring
 - Function identifier `iS2` repurposed: old agent definitions renderer moved to `Fy2() at line 437284`
 - New `iS2() at line 436183` is async query handler managing user input processing, checkpointing, message preparation, and queue processing
@@ -118,6 +112,5 @@ claude extra-usage
 - Used by telemetry exporters for consistent event formatting
 - **Evidence**: Function `Hp2(A, B = {})` at line 451872
 
----
 
 *This changelog reflects changes from v2.0.35 to v2.0.36 based on structural diff analysis and source code verification.*

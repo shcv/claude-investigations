@@ -1,10 +1,8 @@
 # Changelog for version 2.0.9
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.9 introduces Skills support for the plugin system, allowing developers to create reusable AI behaviors. Additionally, post-tool-hook feedback is now properly surfaced to the AI model as user messages, improving context awareness and response quality.
-
-## 🚀 New Features
 
 ### Skills Support for Plugins
 
@@ -40,8 +38,6 @@ Version 2.0.9 introduces Skills support for the plugin system, allowing develope
 - Primarily used internally but enables advanced customization scenarios
 - **Evidence**: `fF() at line 376120`, fetch override usage at lines 411360 and 432771
 
-## ✨ Improvements
-
 ### Enhanced Post-Tool-Hook Feedback Handling
 
 **What:** Feedback from post-tool-use hooks is now properly converted to user messages, making it visible to the AI model for improved context awareness.
@@ -72,7 +68,7 @@ Version 2.0.9 introduces Skills support for the plugin system, allowing develope
 - Allows for more aggressive communication of important announcements after initial grace period
 - **Evidence**: `GBB() at line 407802` (previously `m2B() at line 407357` in v2.0.8), new grace period check at line 407805
 
-## 🔧 Internal Changes
+## Internal Changes
 
 - Updated AWS Bedrock SDK client code with new type definitions
 - Refactored helper functions including `DFB()` (replaces `tXB()`) for local command message checking

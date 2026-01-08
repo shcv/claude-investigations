@@ -1,10 +1,8 @@
 # Changelog for version 2.0.18
 
-## 🎯 Highlights
+## Highlights
 
 Version 2.0.18 adds **OpenTelemetry distributed tracing infrastructure** (disabled by default), introduces **settings source restriction** capability for enterprise use cases, and includes a **background task summarization fix** that prevents unnecessary processing.
-
-## 🚀 New Features
 
 ### OpenTelemetry Tracing Support (Opt-In)
 
@@ -76,8 +74,6 @@ export OTEL_LOG_MODEL_RESPONSE=true   # Log model responses in traces
 - Likely to be exposed via command-line flags or environment variables in future versions
 - **Evidence**: `s0A() at line 3770`
 
-## 🐛 Bug Fixes
-
 ### Background Task Summarization Guard
 
 **What:** Fixed unnecessary processing when background task summarization is disabled.
@@ -87,8 +83,6 @@ export OTEL_LOG_MODEL_RESPONSE=true   # Log model responses in traces
 - Prevents wasted CPU cycles and potential side effects
 - Improves performance for users who don't use background task features
 - **Evidence**: Check added in `tjQ()` function (formerly `bRQ`)
-
-## ✨ Improvements
 
 ### Skills Display Enhancement
 
@@ -100,7 +94,7 @@ export OTEL_LOG_MODEL_RESPONSE=true   # Log model responses in traces
 - Improves UI consistency and helps users understand the difference between commands and skills
 - **Evidence**: `JoB() at line 3143` (formerly `pnB`), checks for "The " prefix
 
-## 🔧 Internal Changes
+## Internal Changes
 
 The following changes have no user-visible impact:
 
@@ -112,6 +106,5 @@ The following changes have no user-visible impact:
 - **Plan editing UI**: Infrastructure added for future plan editing capability (not yet active)
 - **Dead code removal**: Removed unused rendering function `HqQ`
 
----
 
 **Note for Enterprise Users:** The new telemetry infrastructure provides deep observability into Claude Code's behavior and performance. When enabled, it can help diagnose issues, track API usage patterns, and monitor system health in production deployments. All telemetry respects privacy by default through content redaction controls.

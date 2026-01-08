@@ -2,8 +2,6 @@
 
 Based on my analysis of the diff file, here is the changelog for Claude Code v1.0.35:
 
-## Claude Code v1.0.35 Changelog
-
 ### Bug Fixes & Improvements
 
 - **Fixed Function Permission Handling**: Removed the `oU5` function that was handling tool permission messages for allowed/denied tools and workspace access

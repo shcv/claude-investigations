@@ -1,9 +1,7 @@
 # Changelog for version 2.0.34
 
-## 🎯 Highlights
+## Highlights
 Version 2.0.34 introduces experimental MCP CLI tooling for direct interaction with Model Context Protocol servers, adds a Skills API for skill management, implements passive LSP diagnostics collection, and enhances sandbox configuration with granular override controls.
-
-## 🚀 New Features
 
 ### MCP CLI Command Interface
 **What:** A new command-line interface for interacting with MCP (Model Context Protocol) servers directly from bash commands within Claude Code sessions.
@@ -99,8 +97,6 @@ await client.beta.skills.delete(skillId);
 - Documentation link: docs.claude.com/en/docs/claude-code/sandboxing#configure-sandboxing
 - **Evidence**: Component `bn2()` at line 465885, policy check `Fs2()` at line 472000 in `pretty-v2.0.34.js`
 
-## ✨ Improvements
-
 ### Enhanced Wide Character Rendering
 **What:** Improved handling of emoji and CJK characters in terminal output through explicit width tracking in the screen buffer.
 
@@ -182,8 +178,6 @@ await client.beta.skills.delete(skillId);
 - Only fires when at least one session has multiple branches (max > 1)
 - Helps understand user exploration patterns
 - **Evidence**: Function `f1I()` at line 474125 in `pretty-v2.0.34.js`
-
-## 🔧 Internal Changes
 
 ### Telemetry Architecture Refactoring
 - Old `j1()` function replaced with `ZA()` (sync) and `uw()` (async)

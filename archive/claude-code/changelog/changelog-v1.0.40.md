@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.40 Changelog
 
-## New Features
-
 ### Enhanced Web Search Date Awareness
 The WebSearch tool now includes improved guidance for handling date-sensitive queries. When searching for the latest documentation or time-sensitive content, the tool will now properly account for the current date provided in the environment context.
 

@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.43 Changelog
 
-## Theme Management Enhancements
-
 ### New Theme Preview Feature
 Version 1.0.43 introduces a major enhancement to the theme management system with the ability to preview themes before applying them permanently.
 
@@ -42,8 +40,6 @@ When using Claude Code, you might interact with themes like this:
 - Preview a theme temporarily to see how it looks
 - If you like it, save the preview to make it permanent
 - If not, the preview is discarded and your original theme remains
-
-## Technical Improvements
 
 ### Stream Handling Updates
 - Migrated from generic stream imports to more specific `PassThrough` imports

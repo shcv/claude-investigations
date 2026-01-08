@@ -1,8 +1,5 @@
 # Changelog for version 1.0.62
 
-# Changelog for Claude Code v1.0.62
-
-## New Features
 
 ### 🆕 Enhanced `/add-dir` Command
 The `/add-dir` command has been completely redesigned with an interactive UI and persistent storage options:
@@ -43,9 +40,7 @@ Added intelligent directory path completion that:
 - Filters hidden directories (starting with `.`)
 - Caches results for 5 minutes for better performance
 
-## Improvements
-
-### 🔧 Tool Selection UI Enhancements
+### Tool Selection UI Enhancements
 The tool selection interface has been significantly improved:
 
 - **MCP Server Grouping**: MCP tools are now grouped by server for easier management
@@ -61,41 +56,35 @@ The tool selection interface has been significantly improved:
 - **Better Navigation**: Header sections are now non-interactive and properly skipped during keyboard navigation
 - **Escape to Cancel**: Press `Esc` to cancel tool selection and use initial tools
 
-### 🔧 Ripgrep Integration Improvements
+### Ripgrep Integration Improvements
 - Centralized ripgrep path resolution with better quoting for paths containing spaces
 - More robust handling of bundled vs system ripgrep
 - Improved alias generation in shell snapshots with proper escaping
 
-### 🔧 Settings Watcher Optimization
+### Settings Watcher Optimization
 The settings file watcher has been streamlined:
 - Removed redundant state tracking
 - Simplified change detection logic
 - More efficient memory usage
 - Better event handling for file changes
 
-## Technical Improvements
-
-### 🔨 Performance Enhancements
+### Performance Enhancements
 - Connection check interval increased to 30 seconds (from 1 second on non-Mac platforms)
 - Added caching for directory listing operations (5-minute TTL)
 - Optimized settings watcher to reduce memory footprint
 
-### 🔨 Code Quality
+### Code Quality
 - Better error handling for agent mentions
 - Improved type safety with centralized MCP tool detection
 - More consistent path resolution across the codebase
 - Enhanced stream handling with proper PassThrough imports
 
-## Bug Fixes
-
-### 🐛 Fixed
+### Fixed
 - Proper handling of spaces in ripgrep paths on all platforms
 - Correct escaping of quotes in shell snapshot generation
 - Better error messages for invalid session IDs in `--print` mode
 
-## Internal Changes
-
-### 🏗️ Architecture
+### ️ Architecture
 - New `SessionStart` hook type added to the hook system
 - Centralized MCP tool identification with `Is1()` function
 - Improved modularity for agent mention processing

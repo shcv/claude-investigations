@@ -2,8 +2,6 @@
 
 # Claude Code v1.0.49 Changelog
 
-## New Features
-
 ### Windows Git Bash Integration
 - **Automatic Git Bash detection**: Claude Code now automatically detects and configures Git Bash on Windows systems
 - **Custom Git Bash path**: Set `CLAUDE_CODE_GIT_BASH_PATH` environment variable to specify a custom Git Bash location
@@ -19,8 +17,6 @@
 - **Improved error messages**: More helpful validation errors with specific suggestions for configuration issues
 - **Field-specific tips**: Added contextual help for configuration errors (e.g., apiKeyHelper format)
 - **Documentation links**: Automatic documentation links for configuration fields like permissions, env, and hooks
-
-## Improvements
 
 ### Path Handling
 - **Cross-platform support**: Better handling of Windows paths with proper normalization
@@ -44,8 +40,6 @@
 - Added new utility functions: `ls2`, `TfA`, `P29`, `IlA`, `ZlA`, `GlA`, `FlA`, `R79`, `YlA`, `WlA`
 - New classes: `HlA` (recursive directory reader), `hy1` (Node.js file system handler), `jlA` (directory watcher), `ylA` (watch helper), `dy1` (main watcher)
 - Removed obsolete functions: `M3`, `jQ`, `F9Q`, `hK`, `KuQ`, `jx6`, `sx6`, `Nh2`, `ox6`, `tx6`, `ex6`
-
-## Configuration
 
 ### New Environment Variables
 - `CLAUDE_CODE_GIT_BASH_PATH`: Specify custom Git Bash location on Windows

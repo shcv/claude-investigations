@@ -1,10 +1,8 @@
 # Changelog for version 2.0.50
 
-## 🎯 Highlights
+## Highlights
 
 This release introduces cross-project conversation resume, a new MCP CLI endpoint for external tool integration, mandatory source citations for web search results, and human-friendly session naming using memorable word combinations like "fluffy-bouncing-bunny".
-
-## 🚀 New Features
 
 ### Cross-Project Conversation Resume
 **What:** View and resume conversations from any project directory, not just the current one.
@@ -97,8 +95,6 @@ response = client.run(
 - Validates all outputs against the schema throughout the session
 - Works via both SDK initialization and CLI `--json-schema` flag
 - **Evidence**: `$D0()` at line 2327, `$G1()` at line 470974 in v2.0.50
-
-## Improvements
 
 ### WebSearch Tool Now Requires Source Citations
 **What:** Claude must now include a "Sources:" section with hyperlinked references when using web search.

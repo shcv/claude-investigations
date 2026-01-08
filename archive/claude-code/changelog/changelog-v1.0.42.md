@@ -4,8 +4,6 @@ Based on my analysis of the diff for version 1.0.42, here's the detailed changel
 
 # Claude Code v1.0.42 Changelog
 
-## New Features
-
 ### Enhanced Configuration File Locking
 - **Improved multi-instance handling**: Added file locking mechanism when saving configuration to prevent conflicts between multiple Claude instances
   - Automatically acquires a lock on the config file (`config.json.lock`) before modifications
@@ -21,8 +19,6 @@ Based on my analysis of the diff for version 1.0.42, here's the detailed changel
 - **Better symlink handling**: Enhanced detection and handling of symbolic links in file paths
   - Shows where symlinks point to in debug messages
   - More robust handling of symlinked configuration files
-
-## Technical Improvements
 
 ### Enhanced URL and URLSearchParams Implementation
 - **Standards-compliant URL handling**: Updated internal URL and URLSearchParams implementations
@@ -41,8 +37,6 @@ Based on my analysis of the diff for version 1.0.42, here's the detailed changel
   - Shows lock acquisition timing
   - Indicates when config is re-read after acquiring lock
   - Logs atomic write operations for configuration files
-
-## Usage Examples
 
 ### Working with Multiple Instances
 If you're running multiple Claude Code instances, you'll now see helpful debug messages:
