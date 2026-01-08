@@ -133,6 +133,146 @@ Classify each change by user impact:
 
 **Test**: "Would a user typing at the CLI notice any difference?" If no → exclude.
 
+## Feature Enablement Status (Critical)
+
+New code doesn't always mean new functionality! Features can be shipped in various states:
+
+### Enablement States
+
+1. **Fully Enabled**: Code is active and accessible to all users
+2. **Feature-Flagged**: Controlled by a `tengu_*` flag (server-controlled rollout)
+3. **Disabled/Stubbed**: Infrastructure exists but hardcoded to return false/empty
+4. **Dark-Launched**: Full implementation present but trigger mechanism disabled
+
+### Detection Patterns
+
+**Stubbed/Disabled Features** - Look for:
+```javascript
+// Parser/detector always returns false
+function detectFeature(input) {
+  return { isFeature: !1, data: "" };  // !1 means false - DISABLED
+}
+
+// Regex exists but detector ignores it
+var featureRegex = /^keyword\b/gi;  // Pattern defined
+function checkFeature(A) {
+  return { detected: !1 };  // But always returns false
+}
+```
+
+**Feature-Flagged Features** - Look for:
+```javascript
+// Server-controlled gate
+if (oG("tengu_feature_name")) { ... }  // oG = get feature flag
+if (aG("tengu_feature", "enabled", !1)) { ... }  // aG with default false
+if (await jX("tengu_feature")) { ... }  // jX = async feature check
+```
+
+**Enabled Features** - Look for:
+```javascript
+// Direct implementation without gates
+if (input.startsWith("/command")) { handleCommand(input); }
+
+// Feature flag defaulting to true
+if (aG("tengu_feature", "enabled", !0)) { ... }  // Default true = enabled
+```
+
+### Classification Guidelines
+
+When documenting a feature, specify its status:
+
+| Status | Label | User Impact |
+|--------|-------|-------------|
+| Fully enabled | *(default, no label needed)* | Users can use it now |
+| Feature-flagged | **[Gradual Rollout]** | Some users may not have access yet |
+| Disabled/Stubbed | **[In Development]** | Infrastructure only, not usable |
+| Has broken tip | **[In Development]** (Note: tip exists) | May confuse users who see the tip |
+
+### Example Analysis
+
+```
+Feature: BTW Side Questions
+- Regex defined: /^btw\b/gi ✓
+- Parser function: returns { isBtw: !1 } (always false) ✗
+- UI component: exists ✓
+- Tip about feature: exists and shows to users ✓
+- Side question API call infrastructure: exists ✓
+
+Status: [In Development] - Full infrastructure added but parser is stubbed out.
+Note: Users may see tip "Start with 'btw' to ask a quick side question" but
+the feature does not work yet.
+
+VERDICT: MUST DOCUMENT in "In Development" section!
+- This is a fascinating upcoming feature
+- Users deserve to know what "btw" will do when enabled
+- The orphaned tip needs to be flagged as potentially confusing
+- Shows Anthropic is working on conversational side-threads
+```
+
+**Wrong approach**: Skip BTW because it's disabled
+**Right approach**: Document BTW in "In Development" with full details about what it will do
+
+### Tips as Feature Discovery
+
+The tips system is a goldmine for changelog analysis! Tips describe features in plain,
+user-facing language and can reveal:
+
+1. **New features** - A new tip often means a new feature
+2. **Orphaned tips** - Tips for disabled features (user confusion risk)
+3. **Feature descriptions** - How Anthropic intends users to use features
+
+**How to use tips for analysis:**
+
+1. Search for tip definitions (look for `id:` and `content:` patterns in tip arrays)
+2. For each NEW tip added in this version:
+   - Extract the feature it describes
+   - Verify the feature actually works (trace the code path)
+   - If disabled → document in "In Development" AND flag the orphaned tip
+   - If enabled → document in "New Features"
+
+**Example tip structure:**
+```javascript
+{
+  id: "btw-side-question",
+  content: async () => "Start with 'btw' to ask a quick side question...",
+  cooldownSessions: 15,
+  isRelevant: async () => !0,  // Always shows!
+}
+```
+
+**Red flag pattern:** `isRelevant: async () => !0` (always true) combined with a
+disabled feature = users WILL see this tip but the feature won't work.
+
+### Verification Steps
+
+For any new user-facing feature:
+
+1. Find the entry point (command parser, input handler, etc.)
+2. Trace whether the feature can actually be triggered
+3. Check for hardcoded false returns or unreachable code paths
+4. Look for feature flags gating the functionality
+5. **Search for related tips** - do any tips mention this feature?
+6. **If tip exists but feature is disabled** - flag as orphaned tip in changelog
+
+**ALWAYS document [In Development] features** - these are often the MOST interesting
+items in a changelog! They reveal what's coming next and give readers early insight
+into the product roadmap. Do NOT skip them just because they're disabled.
+
+### Why In-Development Features Matter
+
+1. **Roadmap visibility**: Shows what Anthropic is working on
+2. **Early awareness**: Users can prepare for upcoming changes
+3. **Technical insight**: Reveals architectural decisions before launch
+4. **Community interest**: Dark-launched features generate discussion and anticipation
+
+### Rule: If infrastructure exists, document it
+
+Even if a feature is completely disabled:
+- Document WHAT it will do when enabled
+- Note WHY it's currently disabled (stubbed, feature-flagged, etc.)
+- Flag any visible artifacts (tips, help text) that might confuse users
+- Speculate briefly on when/why it might be enabled (if evidence exists)
+
 ## Hard Exclusions
 
 NEVER include these in the changelog:
@@ -203,7 +343,7 @@ For verified new/improved features:
 
 ## Output Format
 
-Use this exact structure (no emoji in headers):
+Use this exact structure (no emoji in headers, no horizontal rules):
 
 ```markdown
 # Changelog for version X.X.X
@@ -228,7 +368,8 @@ claude [command or flag example]
 
 **Evidence**: `functionName()` at line N (description, contains `"searchable string"`)
 
----
+### [Another Feature Name]
+...
 
 ## Improvements
 
@@ -237,24 +378,41 @@ claude [command or flag example]
 
 **Evidence**: `functionName()` at line N (description, `"searchable string"`)
 
----
-
 ## Bug Fixes
 
 - [Fix description] (`functionName()` at line N, `"searchable string"`)
 
----
+## In Development
+
+Features with infrastructure added but not yet enabled. These are shipped "dark" and
+may become available in future versions.
+
+### [Feature Name] [In Development]
+**What**: Description of the intended capability.
+
+**Status**: [Stubbed/Feature-flagged/Dark-launched]
+
+**Details**:
+- What infrastructure exists
+- What's missing or disabled
+
+**Orphaned Tip**: ⚠️ Users may see: "[tip text]" - but the feature doesn't work yet.
+*(Include this field only if a tip exists for this disabled feature)*
+
+**Evidence**: `functionName()` at line N (returns `!1` / gated by `tengu_flag`)
 
 ## Notes
 
 [Migration guidance if any breaking changes. Otherwise omit this section.]
 ```
 
-### Emoji Guidelines
+### Formatting Rules
 
 - Do NOT use emoji in section headers (##)
+- Do NOT use horizontal rules (`---`) — Discord doesn't render them properly
 - Emoji may be used sparingly in body text for emphasis if genuinely helpful
-- Prefer clear writing over decorative emoji
+- Prefer clear writing over decorative elements
+- Use blank lines between sections for visual separation instead of `---`
 
 ## Quality Checklist
 
@@ -266,6 +424,9 @@ Before submitting, verify:
 - [ ] Evidence uses searchable strings, not just mangled function names
 - [ ] No duplicate reporting across sections
 - [ ] Breaking changes have migration guidance
+- [ ] **Features verified as actually enabled** (not stubbed/disabled)
+- [ ] **Disabled features moved to "In Development" section** with status noted
+- [ ] **Tips/help for disabled features flagged** as potential user confusion
 - [ ] Output starts with `# Changelog for version X.X.X`
 
 ## CRITICAL: Output Format Rules
