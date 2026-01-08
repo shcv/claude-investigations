@@ -36,3 +36,9 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Ignore post tracking files
+.last_posted_version_claude-code
+.last_posted_version_codex
+.upload_state_claude-code.json
+.upload_state_codex.json

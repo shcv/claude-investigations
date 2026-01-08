@@ -126,10 +126,15 @@ def get_project_root() -> Path:
     """Find the project root directory"""
     current = Path.cwd()
     while current != current.parent:
+        # Check for various archive structures
         if (current / "archive" / "changelog").exists():
             return current
+        if (current / "archive" / "claude-code" / "changelog").exists():
+            return current
+        if (current / "tools" / "post.py").exists():
+            return current
         current = current.parent
-    raise RuntimeError("Could not find project root (no archive/changelog directory found)")
+    raise RuntimeError("Could not find project root")
 
 
 def load_upload_state(project_root: Path, project_name: Optional[str] = None) -> dict:
@@ -233,30 +238,198 @@ def save_last_posted_version(project_root: Path, ver: version.Version, project_n
     last_posted_file.write_text(str(ver) + "\n")
 
 
+def parse_changelog_sections(content: str) -> List[Tuple[str, str]]:
+    """
+    Parse a changelog into semantic sections.
+
+    Returns a list of (section_type, content) tuples where section_type is:
+    - 'title': The # heading
+    - 'summary': ## Summary section
+    - 'section': ## New Features, ## Improvements, etc.
+    - 'feature': ### Feature Name subsection
+    - 'content': Non-header content belonging to previous section
+    """
+    sections = []
+    lines = content.split('\n')
+    current_section = []
+    current_type = 'content'
+
+    for line in lines:
+        # Check what type of line this is
+        if line.startswith('# ') and not line.startswith('## '):
+            # Title (# Changelog for version X.X.X)
+            if current_section:
+                sections.append((current_type, '\n'.join(current_section)))
+            current_section = [line]
+            current_type = 'title'
+        elif line.startswith('## '):
+            # Major section header
+            if current_section:
+                sections.append((current_type, '\n'.join(current_section)))
+            current_section = [line]
+            if 'Summary' in line:
+                current_type = 'summary'
+            else:
+                current_type = 'section'
+        elif line.startswith('### '):
+            # Feature/subsection header
+            if current_section:
+                sections.append((current_type, '\n'.join(current_section)))
+            current_section = [line]
+            current_type = 'feature'
+        elif line.strip() == '---':
+            # Horizontal rule - end of feature, include with current section
+            current_section.append(line)
+            sections.append((current_type, '\n'.join(current_section)))
+            current_section = []
+            current_type = 'content'
+        else:
+            # Regular content line
+            current_section.append(line)
+
+    # Don't forget the last section
+    if current_section:
+        sections.append((current_type, '\n'.join(current_section)))
+
+    return sections
+
+
+def smart_chunk_changelog(content: str, max_length: int = MAX_MESSAGE_LENGTH) -> List[str]:
+    """
+    Split a changelog into chunks at logical boundaries.
+
+    Strategy:
+    1. Parse into semantic sections (title, summary, features, etc.)
+    2. Keep title + summary together in first chunk
+    3. Start new chunks at major section headers (## headers)
+    4. Split features to keep chunks focused but not too small
+    5. Combine small trailing sections (Bug Fixes, Notes)
+    """
+    sections = parse_changelog_sections(content)
+
+    if not sections:
+        return [content] if content else []
+
+    # Filter out empty content sections
+    sections = [(t, c) for t, c in sections if c.strip()]
+
+    chunks = []
+    current_chunk_parts = []
+    current_length = 0
+
+    def flush_chunk():
+        nonlocal current_chunk_parts, current_length
+        if current_chunk_parts:
+            chunk_text = '\n'.join(current_chunk_parts).strip()
+            if chunk_text:
+                chunks.append(chunk_text)
+        current_chunk_parts = []
+        current_length = 0
+
+    for i, (section_type, section_content) in enumerate(sections):
+        section_length = len(section_content) + 1  # +1 for newline
+
+        # If this single section is too long, we need to split it
+        if section_length > max_length:
+            flush_chunk()
+
+            # Fall back to line-by-line splitting for this oversized section
+            lines = section_content.split('\n')
+            for line in lines:
+                line_length = len(line) + 1
+                if current_length + line_length > max_length:
+                    flush_chunk()
+                current_chunk_parts.append(line)
+                current_length += line_length
+            continue
+
+        # Decide whether to start a new chunk based on section type and size
+        should_break = False
+
+        # Title always starts the first chunk (don't break before it)
+        # Summary should stay with title if they fit together
+        if section_type == 'title':
+            should_break = False
+        elif section_type == 'summary':
+            # Keep summary with title if possible
+            should_break = False
+        elif section_type == 'section':
+            # Major section headers (## New Features, ## Bug Fixes, etc.)
+            # Break before them UNLESS the current chunk is small
+            # This allows combining small trailing sections
+            if current_chunk_parts and current_length > max_length * 0.25:
+                should_break = True
+        elif section_type == 'feature':
+            # Features (### Feature Name)
+            # Break if current chunk is getting large (>50% full)
+            if current_length > max_length * 0.5:
+                should_break = True
+
+        # Always break if adding this would exceed the limit
+        if current_length + section_length > max_length:
+            should_break = True
+
+        if should_break:
+            flush_chunk()
+
+        current_chunk_parts.append(section_content)
+        current_length += section_length
+
+    # Flush any remaining content
+    flush_chunk()
+
+    # Post-process: merge very small trailing chunks
+    if len(chunks) > 1:
+        merged_chunks = []
+        i = 0
+        while i < len(chunks):
+            chunk = chunks[i]
+
+            # If this is a small chunk and we can merge with next
+            while (i + 1 < len(chunks) and
+                   len(chunk) < max_length * 0.3 and
+                   len(chunk) + len(chunks[i + 1]) + 2 <= max_length):
+                chunk = chunk + '\n\n' + chunks[i + 1]
+                i += 1
+
+            merged_chunks.append(chunk)
+            i += 1
+
+        chunks = merged_chunks
+
+    return chunks
+
+
 def chunk_message(content: str, max_length: int = MAX_MESSAGE_LENGTH) -> List[str]:
-    """Split message into chunks that fit within Discord's character limit"""
+    """
+    Split message into chunks that fit within Discord's character limit.
+
+    For changelogs (detected by '# Changelog' header), uses smart semantic splitting.
+    For other content, falls back to simple line-based splitting.
+    """
     if len(content) <= max_length:
         return [content]
 
+    # Use smart chunking for changelogs
+    if content.strip().startswith('# Changelog'):
+        return smart_chunk_changelog(content, max_length)
+
+    # Fall back to simple line-based splitting for non-changelogs
     chunks = []
     current_chunk = ""
 
-    # Split by lines to avoid breaking in the middle of code blocks or sentences
     lines = content.split("\n")
 
     for line in lines:
         # If a single line is too long, we need to split it
         if len(line) > max_length:
-            # If we have content in current chunk, save it first
             if current_chunk:
                 chunks.append(current_chunk)
                 current_chunk = ""
 
-            # Split the long line into chunks
             for i in range(0, len(line), max_length):
                 chunks.append(line[i:i + max_length])
         else:
-            # Check if adding this line would exceed the limit
             if len(current_chunk) + len(line) + 1 > max_length:
                 chunks.append(current_chunk)
                 current_chunk = line
@@ -266,7 +439,6 @@ def chunk_message(content: str, max_length: int = MAX_MESSAGE_LENGTH) -> List[st
                 else:
                     current_chunk = line
 
-    # Don't forget the last chunk
     if current_chunk:
         chunks.append(current_chunk)
 
