@@ -1,0 +1,261 @@
+#+TITLE: Claude Code Teleport Feature - Technical Analysis
+#+DATE: 2026-01-07
+
+* Overview
+
+Teleport is a session continuity feature in Claude Code that enables users to resume sessions across different machines, share sessions with others, and seamlessly continue work started on the Claude.ai web interface. Introduced in v1.0.68, it bridges local CLI usage with cloud-based Claude Code sessions.
+
+* Core Concepts
+
+** Session Model
+Claude Code sessions are identified by unique session IDs (UUIDs) and associated with:
+- Conversation history (messages, tool calls, results)
+- Repository context (URL of the GitHub repository)
+- Git branch information
+- Session title (AI-generated or user-provided)
+- Tags (user-added searchable labels, v2.0.65+)
+
+** Teleport vs Resume
+| Feature | ~--continue~ / ~--resume~ | ~--teleport~ |
+|---------+---------------------------+--------------|
+| Scope | Local sessions only | Remote/cloud sessions |
+| Storage | Local SQLite database | Anthropic's sessions API |
+| Auth | None required | Claude.ai account required |
+| Branch | Stays on current branch | Switches to session's branch |
+| Sharing | Not shareable | Shareable via URL or ID |
+
+* Usage
+
+** Basic Commands
+
+#+begin_src bash
+# Resume by session ID (interactive selector if ID omitted)
+claude --teleport
+claude --teleport abc123def456
+
+# Resume from a URL
+claude --teleport https://claude.ai/code/abc123def456
+
+# Create a remote session with a description
+claude --remote "Fix authentication bug in user service"
+#+end_src
+
+** Interactive Mode
+
+Running ~claude --teleport~ without a session ID launches an interactive session selector that:
+1. Fetches your available remote sessions from the API
+2. Displays sessions with titles, timestamps, and tags
+3. Filters to show sessions matching the current repository
+4. Allows selection with keyboard navigation
+
+** Web Integration
+
+Sessions created on ~claude.ai/code~ can be resumed locally:
+1. Visit ~https://claude.ai/code/{sessionId}~ to view
+2. Run ~claude --teleport {sessionId}~ to continue locally
+3. The CLI fetches conversation history and resumes
+
+* Technical Implementation
+
+** State Management
+
+Teleport session state is tracked globally:
+
+#+begin_src javascript
+// Global state (line 2283-2291 in v2.1.1)
+teleportedSessionInfo: {
+  isTeleported: true,
+  hasLoggedFirstMessage: false,
+  sessionId: "abc123..."
+}
+#+end_src
+
+** Repository Validation
+
+Teleport enforces repository matching to prevent context misalignment:
+
+#+begin_src javascript
+// Validation logic (line 355099-355105)
+function checkRepoMatch(sessionUrl, currentRepo) {
+  if (!currentRepo) return { status: "not_in_repo" };
+  if (currentRepo.toLowerCase() === sessionRepo.toLowerCase())
+    return { status: "match" };
+  return { status: "mismatch", sessionRepo, currentRepo };
+}
+#+end_src
+
+Error conditions:
+- ~not_in_repo~: Must run from a checkout of the session's repository
+- ~mismatch~: Current repo doesn't match session's repo
+
+** Branch Switching
+
+When teleporting, Claude Code:
+1. Detects the branch associated with the session
+2. Warns about uncommitted changes
+3. Offers to stash changes before switching
+4. Checks out and tracks the remote branch
+
+#+begin_src javascript
+// Branch handling (line 355072-355086)
+async function setupBranch(targetBranch) {
+  let currentBranch = await getCurrentBranch();
+  if (targetBranch) {
+    await switchToBranch(targetBranch);
+    await setUpstreamTracking(targetBranch);
+  }
+}
+#+end_src
+
+** Git Stash Integration
+
+If uncommitted changes exist, the UI presents options:
+- Stash changes and continue
+- Continue without stashing (risk losing changes)
+- Cancel the teleport operation
+
+#+begin_src javascript
+// Stash prompt (line 354255-354260)
+"Stashing changes before teleport..."
+await gitStash("Teleport auto-stash");
+#+end_src
+
+* Prerequisites
+
+** Authentication
+
+Teleport requires a Claude.ai account (not API-only auth):
+
+#+begin_src text
+"Claude Code web sessions require authentication with a Claude.ai account.
+API key authentication is not sufficient.
+Please run /login to authenticate."
+#+end_src
+
+** Remote Environment
+
+Users must have completed Claude.ai/code onboarding to have a remote environment:
+
+#+begin_src text
+"No environments available, please ensure you've gone through
+onboarding at claude.ai/code"
+#+end_src
+
+** Git Repository
+
+The working directory must be a git repository (initialized and clean or with stash option).
+
+** GitHub Only
+
+Teleport currently only supports GitHub repositories. The URL parsing logic explicitly matches ~github.com~ URLs:
+
+#+begin_src javascript
+// Line 354365 - Only github.com is recognized
+B = /github\.com[:/]([^/]+)\/([^/]+)$/
+#+end_src
+
+Supported formats:
+- ~https://github.com/owner/repo~
+- ~git@github.com:owner/repo~
+- ~github.com/owner/repo.git~
+- Bare ~owner/repo~ shorthand
+
+*Not supported*: GitLab, Bitbucket, Azure DevOps, self-hosted Git servers, or any non-GitHub hosting.
+
+* Environment Variables
+
+| Variable | Purpose |
+|----------+---------|
+| ~TELEPORT_RESUME_URL~ | Override the default session resumption URL |
+| ~TELEPORT_HEADERS~ | Pass custom headers as JSON (e.g., for auth proxies) |
+
+Example:
+#+begin_src bash
+export TELEPORT_HEADERS='{"X-Custom-Auth": "token123"}'
+#+end_src
+
+* Related Features
+
+** ~/remote-env~ Command
+
+Configure the default remote environment for teleport sessions:
+#+begin_src bash
+/remote-env  # Interactive environment selector
+#+end_src
+
+This setting affects which cloud environment is used when creating remote sessions.
+
+** ~/tag~ Command (v2.0.65+)
+
+Add searchable tags to sessions for organization:
+#+begin_src bash
+/tag bugfix      # Add tag
+/tag bugfix      # Remove tag (toggle)
+#+end_src
+
+Tags appear in the teleport session selector and are searchable.
+
+** Background Tasks
+
+Creating remote sessions with ~--remote~ enables:
+- Long-running tasks in the cloud
+- Disconnect and reconnect without losing progress
+- View via web while running locally
+
+* Telemetry Events
+
+| Event | Trigger |
+|-------+---------|
+| ~tengu_teleport_started~ | Teleport flow initiated |
+| ~tengu_teleport_resume_session~ | Session selected for resume |
+| ~tengu_teleport_cancelled~ | User cancelled teleport |
+| ~tengu_teleport_first_message_success~ | First message after teleport |
+| ~tengu_teleport_first_message_error~ | Error on first post-teleport message |
+| ~tengu_teleport_error_*~ | Various error conditions |
+| ~tengu_teleport_print~ | Session printed to stdout |
+| ~tengu_remote_create_session~ | New remote session created |
+
+* Error Handling
+
+** Common Errors
+
+| Error | Cause | Solution |
+|-------+-------+----------|
+| ~not_in_repo~ | Not in a git repo | Run from a checkout of the session's repo |
+| ~mismatch~ | Wrong repository | Clone the correct repo first |
+| ~no_access_token~ | Not logged in | Run ~/login~ |
+| ~session_not_found_404~ | Invalid session ID | Verify the session ID |
+| ~git_not_clean~ | Uncommitted changes | Commit, stash, or use --force |
+
+** Retry Logic
+
+The teleport API implements retry with exponential backoff:
+#+begin_src javascript
+// Retry delays (line 354403-354414)
+const retryDelays = [2000, 4000, 8000];  // milliseconds
+const maxAttempts = 4;
+#+end_src
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v1.0.68 | Initial teleport feature release |
+| v2.0.41 | Git status tracking, uncommitted changes UI |
+| v2.0.65 | Teleport URL infrastructure, session tagging |
+| v2.1.0+ | Continued refinements |
+
+* Source References
+
+All line numbers reference ~archive/claude-code/pretty/pretty-v2.1.1.js~:
+
+| Function/Area | Line |
+|---------------+------|
+| Teleport state management | 2283-2294 |
+| Repository validation | 355099-355105 |
+| Session resume logic | 355107-355175 |
+| Branch switching | 355072-355086 |
+| Error types | 355001-355007 |
+| Session fetch | 355216-355242 |
+| URL generation | 355601-355604 |
+| CLI option parsing | 537183-537186 |

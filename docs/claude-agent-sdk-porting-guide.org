@@ -1,0 +1,613 @@
+#+TITLE: Claude Agent SDK Porting Guide
+#+DATE: 2026-01-07
+
+* Overview
+
+The Claude Agent SDK provides programmatic access to Claude Code's agentic
+capabilities. Both the official Python and TypeScript SDKs are thin wrappers
+around the Claude Code CLI, communicating via bidirectional JSON streaming
+over subprocess stdin/stdout.
+
+This document captures the technical details necessary to port the SDK to a
+new language.
+
+* Architecture
+
+** High-Level Design
+
+#+begin_example
+┌─────────────────────────────────────────────────────────────────┐
+│                      Your Application                           │
+├─────────────────────────────────────────────────────────────────┤
+│                        SDK Layer                                │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
+│  │   query()    │  │ SDKClient    │  │ In-Process MCP Server │  │
+│  │  (one-shot)  │  │ (sessions)   │  │   (custom tools)      │  │
+│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
+├─────────────────────────────────────────────────────────────────┤
+│                   Transport Layer                               │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              SubprocessCLITransport                      │   │
+│  │  - CLI discovery & version checking                      │   │
+│  │  - Process spawning & lifecycle                          │   │
+│  │  - stdin writer (with lock)                              │   │
+│  │  - stdout reader (JSON line parser)                      │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                    stdin/stdout (JSON lines)
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Claude Code CLI                              │
+│                  (bundled or system)                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                         HTTPS API
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Anthropic API                               │
+└─────────────────────────────────────────────────────────────────┘
+#+end_example
+
+** Design Rationale
+
+The CLI wrapper approach provides several benefits:
+
+1. *Feature parity* - Inherits all Claude Code capabilities without reimplementation
+2. *Consistent behavior* - Same tool execution, permissions, and safety features
+3. *Simpler maintenance* - CLI updates automatically benefit SDK users
+4. *Proven implementation* - Leverages battle-tested agentic infrastructure
+
+* CLI Discovery and Spawning
+
+** Discovery Order
+
+The SDK should locate the Claude Code CLI in this order:
+
+1. Bundled CLI (packaged within the SDK distribution)
+2. Explicit =cli_path= option provided by user
+3. =claude= in system PATH
+4. Common installation locations:
+   - =~/.npm-global/bin/claude=
+   - =/usr/local/bin/claude=
+   - Platform-specific paths
+
+** Version Checking
+
+Before spawning, verify CLI version compatibility:
+
+#+begin_src shell
+claude --version
+#+end_src
+
+The SDK should define minimum and maximum supported CLI versions.
+
+** Spawn Command
+
+The CLI is invoked with streaming JSON mode:
+
+#+begin_src shell
+claude --input-format stream-json --output-format stream-json
+#+end_src
+
+** Platform-Specific Considerations
+
+*** Windows
+- Use =windowsHide: true= (or equivalent) to prevent console window popup
+- Handle different path separators
+
+*** Unix
+- Ensure proper signal handling for child process cleanup
+
+* JSON Line Protocol
+
+** Format
+
+Communication uses newline-delimited JSON (JSON Lines / NDJSON):
+
+- Each message is a single line of valid JSON
+- Lines are terminated by =\n=
+- Messages flow bidirectionally over stdin (SDK→CLI) and stdout (CLI→SDK)
+
+** Stdin Writing
+
+Stdin requires a write lock to prevent concurrent writes causing interleaved
+JSON that would corrupt the stream.
+
+#+begin_src python
+# Pseudocode
+async with stdin_write_lock:
+    stdin.write(json.dumps(message) + "\n")
+    stdin.flush()
+#+end_src
+
+** Stdout Reading
+
+Stdout requires buffering and JSON reassembly:
+
+#+begin_src python
+# Pseudocode
+buffer = ""
+max_buffer_size = 10_000_000  # 10MB safety limit
+
+async for chunk in stdout:
+    buffer += chunk
+    while "\n" in buffer:
+        line, buffer = buffer.split("\n", 1)
+        if line.strip():
+            message = json.loads(line)
+            yield parse_message(message)
+
+    if len(buffer) > max_buffer_size:
+        raise BufferOverflowError()
+#+end_src
+
+* Message Types
+
+** SDK → CLI Messages
+
+*** Initial Query
+
+#+begin_src json
+{
+  "type": "user_message",
+  "content": "What files are in this directory?",
+  "session_id": "optional-session-id",
+  "options": {
+    "model": "claude-sonnet-4-20250514",
+    "max_turns": 10,
+    "system_prompt": "optional custom system prompt",
+    "allowed_tools": ["Read", "Glob", "Grep"],
+    "mcp_servers": {},
+    "working_directory": "/path/to/project"
+  }
+}
+#+end_src
+
+*** Control Response (SDK responding to CLI request)
+
+#+begin_src json
+{
+  "type": "control_response",
+  "request_id": "uuid-from-cli-request",
+  "result": { ... }
+}
+#+end_src
+
+** CLI → SDK Messages
+
+*** Assistant Message
+
+#+begin_src json
+{
+  "type": "assistant",
+  "message": {
+    "id": "msg_xxx",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "I'll list the files..."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_xxx",
+        "name": "Glob",
+        "input": {
+          "pattern": "*"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-20250514",
+    "stop_reason": "tool_use"
+  },
+  "session_id": "session-xxx"
+}
+#+end_src
+
+*** Tool Result Message
+
+#+begin_src json
+{
+  "type": "tool_result",
+  "tool_use_id": "toolu_xxx",
+  "content": "file1.txt\nfile2.txt\nREADME.md"
+}
+#+end_src
+
+*** Result Message (Final)
+
+#+begin_src json
+{
+  "type": "result",
+  "result": {
+    "success": true,
+    "session_id": "session-xxx",
+    "cost_usd": 0.0234,
+    "duration_ms": 5432,
+    "num_turns": 3
+  }
+}
+#+end_src
+
+*** Control Request (CLI requesting SDK action)
+
+#+begin_src json
+{
+  "type": "control_request",
+  "request_id": "uuid",
+  "request_type": "can_use_tool",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf /tmp/test"
+  }
+}
+#+end_src
+
+* Control Request Types
+
+The CLI may send control requests that require SDK response. The SDK must
+track pending requests by =request_id= and send responses.
+
+** initialize
+
+Capability negotiation at session start.
+
+#+begin_src json
+// Request
+{
+  "type": "control_request",
+  "request_id": "xxx",
+  "request_type": "initialize",
+  "protocol_version": "1.0"
+}
+
+// Response
+{
+  "type": "control_response",
+  "request_id": "xxx",
+  "result": {
+    "protocol_version": "1.0",
+    "capabilities": ["hooks", "mcp_servers", "can_use_tool"]
+  }
+}
+#+end_src
+
+** can_use_tool
+
+Permission callback - allows SDK to approve/deny tool execution.
+
+#+begin_src json
+// Request
+{
+  "type": "control_request",
+  "request_id": "xxx",
+  "request_type": "can_use_tool",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "npm install"
+  }
+}
+
+// Response - Allow
+{
+  "type": "control_response",
+  "request_id": "xxx",
+  "result": {
+    "allowed": true
+  }
+}
+
+// Response - Deny
+{
+  "type": "control_response",
+  "request_id": "xxx",
+  "result": {
+    "allowed": false,
+    "reason": "Bash commands require explicit approval"
+  }
+}
+#+end_src
+
+** hook_callback
+
+Lifecycle hook execution at specific agent loop points.
+
+Hook types:
+- =PreToolUse= - Before a tool is executed
+- =PostToolUse= - After a tool completes
+- =Stop= - Agent is about to stop
+
+#+begin_src json
+// Request
+{
+  "type": "control_request",
+  "request_id": "xxx",
+  "request_type": "hook_callback",
+  "hook_type": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": { ... }
+}
+
+// Response
+{
+  "type": "control_response",
+  "request_id": "xxx",
+  "result": {
+    "proceed": true,
+    "modified_input": null
+  }
+}
+#+end_src
+
+** mcp_message
+
+In-process MCP server tool call.
+
+#+begin_src json
+// Request
+{
+  "type": "control_request",
+  "request_id": "xxx",
+  "request_type": "mcp_message",
+  "server_name": "my-tools",
+  "method": "tools/call",
+  "params": {
+    "name": "greet",
+    "arguments": {
+      "name": "Alice"
+    }
+  }
+}
+
+// Response
+{
+  "type": "control_response",
+  "request_id": "xxx",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Hello, Alice!"
+      }
+    ]
+  }
+}
+#+end_src
+
+* Session Management
+
+** Session IDs
+
+Sessions allow multi-turn conversations with preserved context.
+
+- Sessions are identified by =session_id= string
+- Omit =session_id= for one-shot queries
+- Include previous =session_id= to continue conversation
+
+** Session Lifecycle
+
+#+begin_example
+1. Create session → SDK sends initial message, CLI returns session_id
+2. Continue session → SDK sends message with session_id
+3. End session → Session times out or explicitly closed
+#+end_example
+
+* In-Process MCP Servers
+
+Custom tools can be registered as in-process MCP servers, eliminating the
+need for separate subprocess MCP servers.
+
+** Registration
+
+#+begin_src python
+# Pseudocode
+options = {
+    "mcp_servers": {
+        "my-tools": {
+            "type": "in-process",
+            "tools": [
+                {
+                    "name": "greet",
+                    "description": "Greet a user",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"}
+                        },
+                        "required": ["name"]
+                    },
+                    "handler": greet_function
+                }
+            ]
+        }
+    },
+    "allowed_tools": ["mcp__my-tools__greet"]
+}
+#+end_src
+
+** Tool Name Format
+
+MCP tools use the format: =mcp__<server-name>__<tool-name>=
+
+** Handler Signature
+
+#+begin_src python
+async def tool_handler(arguments: dict) -> dict:
+    """
+    Arguments: Parsed from tool input schema
+    Returns: MCP tool result with content array
+    """
+    return {
+        "content": [
+            {"type": "text", "text": "Result text"}
+        ]
+    }
+#+end_src
+
+* Hooks System
+
+Hooks allow application-side logic at specific points in the agent loop.
+
+** Hook Configuration
+
+#+begin_src python
+options = {
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",  # Tool name or regex
+                "handler": pre_bash_hook
+            }
+        ],
+        "PostToolUse": [...],
+        "Stop": [...]
+    }
+}
+#+end_src
+
+** Hook Handler Signature
+
+#+begin_src python
+async def hook_handler(
+    input_data: dict,      # Tool input or context
+    tool_use_id: str,      # ID of the tool use
+    context: dict          # Additional context
+) -> dict:
+    """
+    Returns dict with:
+    - proceed: bool - Whether to continue
+    - modified_input: dict | None - Optional modified tool input
+    - stop_reason: str | None - If proceed=False, why
+    """
+    return {
+        "proceed": True,
+        "modified_input": None
+    }
+#+end_src
+
+* Error Handling
+
+** Error Types
+
+| Error Type           | Cause                                        |
+|----------------------+----------------------------------------------|
+| CLINotFoundError     | CLI binary not found in any location         |
+| CLIVersionError      | CLI version incompatible with SDK            |
+| CLIConnectionError   | Failed to start or connect to CLI process    |
+| ProcessError         | CLI subprocess exited unexpectedly           |
+| CLIJSONDecodeError   | Failed to parse JSON from CLI output         |
+| MessageParseError    | JSON parsed but doesn't match expected schema|
+| TimeoutError         | Operation exceeded timeout                   |
+| BufferOverflowError  | stdout buffer exceeded max size              |
+
+** Graceful Shutdown
+
+On shutdown:
+
+1. Stop sending new messages
+2. Close stdin (signals CLI to finish)
+3. Wait for final =result= message with timeout
+4. Terminate process if timeout exceeded
+5. Clean up resources
+
+* Configuration Options
+
+** Core Options
+
+| Option            | Type     | Description                          |
+|-------------------+----------+--------------------------------------|
+| cli_path          | string   | Explicit path to CLI binary          |
+| model             | string   | Model to use (e.g., claude-sonnet-4-20250514) |
+| max_turns         | int      | Maximum agent loop iterations        |
+| system_prompt     | string   | Custom system prompt                 |
+| working_directory | string   | Working directory for file ops       |
+| timeout_ms        | int      | Overall operation timeout            |
+
+** Tool Configuration
+
+| Option        | Type     | Description                              |
+|---------------+----------+------------------------------------------|
+| allowed_tools | string[] | Whitelist of tools Claude can use        |
+| blocked_tools | string[] | Blacklist of tools                       |
+| mcp_servers   | object   | MCP server configurations                |
+
+** Environment Variables
+
+| Variable          | Description                           |
+|-------------------+---------------------------------------|
+| ANTHROPIC_API_KEY | API key (passed to CLI)               |
+| MCP_TOOL_TIMEOUT  | Timeout for MCP tool execution (60s)  |
+
+* Implementation Checklist
+
+** Transport Layer
+- [ ] CLI discovery (bundled → path → PATH → common locations)
+- [ ] Version checking
+- [ ] Subprocess spawning with correct arguments
+- [ ] stdin write lock
+- [ ] stdout JSON line parser with buffering
+- [ ] stderr capture for debugging
+- [ ] Process lifecycle management
+- [ ] Graceful shutdown
+
+** Message Handling
+- [ ] Message type definitions (structs/classes)
+- [ ] JSON serialization/deserialization
+- [ ] Message routing by type
+- [ ] Control request/response correlation by request_id
+
+** Public API
+- [ ] =query()= - One-shot async iterator
+- [ ] =SDKClient= - Session-based client
+- [ ] =create_session()= - Create new session
+- [ ] =resume_session()= - Continue existing session
+- [ ] Async iteration over response messages
+
+** Advanced Features
+- [ ] In-process MCP server registration
+- [ ] Hook system (PreToolUse, PostToolUse, Stop)
+- [ ] =can_use_tool= callback support
+- [ ] Custom tool definition helpers (@tool decorator equivalent)
+
+** Error Handling
+- [ ] Typed error classes
+- [ ] JSON parse error with raw line capture
+- [ ] Process exit handling
+- [ ] Timeout handling
+- [ ] Buffer overflow protection
+
+** Platform Support
+- [ ] Windows (windowsHide, path handling)
+- [ ] macOS
+- [ ] Linux
+- [ ] CLI bundling strategy for distribution
+
+* Testing Strategy
+
+** Unit Tests
+- Message serialization/deserialization
+- JSON line parsing edge cases
+- Error type construction
+
+** Integration Tests
+- CLI spawning and communication
+- Simple query execution
+- Multi-turn sessions
+- Tool execution flow
+- Hook execution
+
+** Mock CLI
+Consider building a mock CLI for testing that:
+- Responds to known prompts with canned responses
+- Simulates control requests
+- Tests error conditions
+
+* References
+
+- [[https://github.com/anthropics/claude-agent-sdk-python][Python SDK Repository]]
+- [[https://github.com/anthropics/claude-agent-sdk-typescript][TypeScript SDK Repository]]
+- [[https://platform.claude.com/docs/en/agent-sdk/python][Python SDK Documentation]]
+- [[https://deepwiki.com/anthropics/claude-agent-sdk-python][DeepWiki Python SDK Analysis]]

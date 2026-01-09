@@ -1,5 +1,5 @@
 #+TITLE: Claude Code Skills
-#+DATE: 2025-10-16
+#+DATE: 2026-01-08
 
 * Overview
 
@@ -419,9 +419,100 @@ Skills do not appear in command lists or autocomplete. They are invisible until 
 3. Add missing tools to ~allowed-tools~ list
 4. Consider if tool restriction is too limiting for skill's purpose
 
+* Skills in Subagents (Task Tool)
+
+When launching a subagent via the Task tool, skills have important limitations:
+
+** Subagents Do NOT Get Dynamic Skill Access
+
+- The =commands= array is explicitly set to =[]= (empty)
+- Subagents cannot invoke the Skill tool
+- Subagents cannot dynamically discover or use skills
+
+** Preloading Skills via Agent Frontmatter
+
+However, agents can have skills "baked in" at launch time:
+
+#+begin_src yaml
+# In agent definition frontmatter
+---
+skills:
+  - commit
+  - review-pr
+---
+#+end_src
+
+When an agent with preloaded skills starts:
+1. Each listed skill is validated
+2. Skill prompts are injected as initial messages
+3. The agent starts with that context already loaded
+4. But it still cannot invoke NEW skills dynamically
+
+** Practical Implications
+
+| Capability                    | Main Conversation | Subagent |
+|-------------------------------+-------------------+----------|
+| See available skills          | ✓                 | ✗        |
+| Invoke Skill tool             | ✓                 | ✗        |
+| Have preloaded skill context  | ✓                 | ✓        |
+| Dynamically load new skills   | ✓                 | ✗        |
+
+* Skill Tool Schema
+
+The =Skill= tool is how Claude invokes skills programmatically:
+
+#+begin_src javascript
+{
+  name: "Skill",
+  inputSchema: {
+    skill: string  // Just the skill name, no arguments
+  },
+  outputSchema: {
+    success: boolean,
+    commandName: string,
+    allowedTools: string[] | undefined,
+    model: string | undefined
+  }
+}
+#+end_src
+
+* Skill Filtering Logic
+
+A skill appears in the Skill tool's available skills list only if ALL conditions are met:
+
+#+begin_src javascript
+skill.type === "prompt" &&
+skill.isSkill === true &&
+!skill.disableModelInvocation &&
+skill.source !== "builtin" &&
+(skill.hasUserSpecifiedDescription || skill.whenToUse)
+#+end_src
+
+Key points:
+- Must be prompt-based (not a script or function)
+- Must have =isSkill= flag
+- Must not have =disable-model-invocation: true=
+- Must not be a builtin skill
+- Must have either a custom description OR =when_to_use= field
+
+* Base Directory Injection
+
+When a skill is invoked, its content is automatically prefixed with:
+
+#+begin_example
+Base directory for this skill: /home/user/.claude/skills/my-skill
+
+[rest of skill content]
+#+end_example
+
+This allows skills to:
+- Reference relative file paths
+- Know their own location
+- Work with local resources in their directory
+
 * Implementation Details
 
-** Code Locations (v2.0.20)
+** Code Locations (v2.0.20, v2.0.66)
 
 | Function | Line | Purpose |
 |----------+------+---------|
