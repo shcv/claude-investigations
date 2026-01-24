@@ -1,0 +1,760 @@
+#+TITLE: Claude Code Task Management System
+#+DATE: 2026-01-24
+
+* Overview
+
+Claude Code includes a built-in task management system for tracking progress on complex, multi-step tasks. This system serves two primary purposes:
+
+1. *Session Organization* - Helps Claude track and display progress on multi-step work
+2. *Team Coordination* - Enables task assignment when using swarm mode with multiple agents
+
+Tasks are stored in =~/.claude/tasks/{team-name}/= when working in a team context.
+
+* When to Use Task Management
+
+** Good Use Cases
+
+- Complex multi-step tasks requiring 3+ distinct steps
+- Non-trivial tasks requiring careful planning
+- Work in plan mode that needs tracking
+- When user explicitly requests a todo list
+- When user provides multiple tasks (numbered or comma-separated)
+
+** When NOT to Use
+
+- Single, straightforward tasks
+- Trivial tasks with <3 steps
+- Purely conversational or informational queries
+
+* The Four Task Tools
+
+** TaskCreate
+
+Creates a new task in the task list.
+
+*** Parameters
+
+| Parameter     | Type   | Required | Description                                                    |
+|---------------+--------+----------+----------------------------------------------------------------|
+| =subject=     | string | Yes      | Brief, actionable title in imperative form                     |
+| =description= | string | Yes      | Detailed description with context and acceptance criteria      |
+| =activeForm=  | string | No       | Present continuous form shown in spinner (e.g., "Running tests") |
+| =metadata=    | object | No       | Arbitrary metadata to attach to the task                       |
+
+*** Subject vs ActiveForm
+
+The =subject= should be imperative (command form), while =activeForm= should be present continuous:
+
+| Subject            | activeForm            |
+|--------------------+-----------------------|
+| "Run tests"        | "Running tests"       |
+| "Fix login bug"    | "Fixing login bug"    |
+| "Add validation"   | "Adding validation"   |
+
+*** Example Usage
+
+#+begin_example
+TaskCreate:
+  subject: "Implement user authentication"
+  description: "Add JWT-based authentication to the API. Include login, logout, and token refresh endpoints. Use bcrypt for password hashing."
+  activeForm: "Implementing user authentication"
+#+end_example
+
+** TaskGet
+
+Retrieves full details of a specific task by its ID.
+
+*** Parameters
+
+| Parameter | Type   | Required | Description              |
+|-----------+--------+----------+--------------------------|
+| =taskId=  | string | Yes      | The ID of the task to retrieve |
+
+*** Returns
+
+- =subject= - Task title
+- =description= - Detailed requirements and context
+- =status= - One of: 'pending', 'in_progress', or 'completed'
+- =blocks= - Tasks waiting on this one to complete
+- =blockedBy= - Tasks that must complete before this one can start
+- =owner= - Agent ID if assigned
+- =metadata= - Any attached metadata
+
+*** Example Usage
+
+#+begin_example
+TaskGet:
+  taskId: "task-123"
+#+end_example
+
+** TaskUpdate
+
+Updates an existing task's status, details, or dependencies.
+
+*** Parameters
+
+| Parameter      | Type     | Required | Description                                           |
+|----------------+----------+----------+-------------------------------------------------------|
+| =taskId=       | string   | Yes      | The ID of the task to update                          |
+| =status=       | string   | No       | New status: 'pending', 'in_progress', or 'completed'  |
+| =subject=      | string   | No       | New subject for the task                              |
+| =description=  | string   | No       | New description for the task                          |
+| =activeForm=   | string   | No       | New spinner text for in_progress state                |
+| =owner=        | string   | No       | New owner (agent name) for the task                   |
+| =metadata=     | object   | No       | Metadata keys to merge (set key to null to delete)    |
+| =addBlocks=    | string[] | No       | Task IDs that this task blocks                        |
+| =addBlockedBy= | string[] | No       | Task IDs that block this task                         |
+
+*** Status Workflow
+
+#+begin_src
+pending → in_progress → completed
+#+end_src
+
+- *pending* - Task is waiting to be started
+- *in_progress* - Task is actively being worked on
+- *completed* - Task has been finished
+
+*** Example Usage
+
+Mark a task as in progress:
+#+begin_example
+TaskUpdate:
+  taskId: "task-123"
+  status: "in_progress"
+#+end_example
+
+Set up task dependencies:
+#+begin_example
+TaskUpdate:
+  taskId: "task-456"
+  addBlockedBy: ["task-123", "task-124"]
+#+end_example
+
+Mark complete after finishing:
+#+begin_example
+TaskUpdate:
+  taskId: "task-123"
+  status: "completed"
+#+end_example
+
+** TaskList
+
+Lists all tasks with summary information.
+
+*** Parameters
+
+None required.
+
+*** Returns
+
+For each task:
+- =id= - Task identifier
+- =subject= - Brief description
+- =status= - Current status
+- =owner= - Agent ID if assigned, empty if available
+- =blockedBy= - List of blocking task IDs
+
+*** Example Usage
+
+#+begin_example
+TaskList
+#+end_example
+
+* Task Dependencies
+
+Tasks can have dependencies on other tasks using the =blocks= and =blockedBy= relationships.
+
+** Setting Up Dependencies
+
+Use =TaskUpdate= with =addBlocks= or =addBlockedBy=:
+
+#+begin_example
+# Task 2 cannot start until Task 1 completes
+TaskUpdate:
+  taskId: "task-2"
+  addBlockedBy: ["task-1"]
+
+# Alternatively, from Task 1's perspective:
+TaskUpdate:
+  taskId: "task-1"
+  addBlocks: ["task-2"]
+#+end_example
+
+** Checking Blocked Status
+
+When calling =TaskList=, check the =blockedBy= field:
+- Empty =blockedBy= list → Task can be worked on
+- Non-empty =blockedBy= list → Must wait for those tasks to complete
+
+* Team Coordination
+
+When working in swarm mode with multiple agents, tasks become the primary coordination mechanism.
+
+** Task Ownership
+
+- Tasks are assigned using =TaskUpdate= with the =owner= parameter
+- The owner should be the agent's name (not UUID)
+- Any agent can set or change task ownership
+
+** Teammate Workflow
+
+1. After completing current task, call =TaskList= to find available work
+2. Look for tasks with:
+   - status: 'pending'
+   - no owner
+   - empty =blockedBy=
+3. Claim task with =TaskUpdate= (set =owner= to your name)
+4. Work on the task
+5. Mark completed with =TaskUpdate=
+6. Repeat from step 1
+
+** Task Storage
+
+- Team tasks stored in: =~/.claude/tasks/{team-name}/=
+- Teams have 1:1 correspondence with task lists (Team = Project = TaskList)
+
+* Best Practices
+
+** Creating Effective Tasks
+
+1. *Clear subjects* - Use imperative form: "Add X", "Fix Y", "Update Z"
+2. *Detailed descriptions* - Include enough context for another agent to understand
+3. *Always provide activeForm* - Improves user experience during execution
+4. *Set dependencies early* - Prevents race conditions in team scenarios
+
+** Status Management
+
+1. Mark task =in_progress= BEFORE starting work
+2. Only mark =completed= when FULLY accomplished
+3. If blocked or erroring, keep as =in_progress= and create blocking task
+4. Never mark completed if:
+   - Tests are failing
+   - Implementation is partial
+   - Unresolved errors exist
+
+** Avoiding Anti-Patterns
+
+- Don't create tasks for single, trivial operations
+- Don't forget to mark tasks completed (clutters the list)
+- Don't mark tasks completed prematurely
+- Don't create duplicate tasks - check =TaskList= first
+- Don't leave stale =in_progress= tasks when work is done
+
+* Example Session
+
+Here's a complete example of using task management for a feature implementation:
+
+#+begin_example
+# 1. Create tasks for the feature
+TaskCreate:
+  subject: "Add user registration endpoint"
+  description: "Create POST /api/register endpoint with email/password validation"
+  activeForm: "Adding registration endpoint"
+
+TaskCreate:
+  subject: "Add email verification"
+  description: "Send verification email after registration, add verify endpoint"
+  activeForm: "Adding email verification"
+
+TaskCreate:
+  subject: "Write registration tests"
+  description: "Unit and integration tests for registration flow"
+  activeForm: "Writing registration tests"
+
+# 2. Set up dependencies
+TaskUpdate:
+  taskId: "task-2"
+  addBlockedBy: ["task-1"]
+
+TaskUpdate:
+  taskId: "task-3"
+  addBlockedBy: ["task-1", "task-2"]
+
+# 3. Start working on first task
+TaskUpdate:
+  taskId: "task-1"
+  status: "in_progress"
+
+# ... do the work ...
+
+# 4. Complete first task
+TaskUpdate:
+  taskId: "task-1"
+  status: "completed"
+
+# 5. Check what's available
+TaskList
+# → task-2 is now unblocked
+
+# 6. Continue with next task
+TaskUpdate:
+  taskId: "task-2"
+  status: "in_progress"
+#+end_example
+
+* Integration with Plan Mode
+
+When in plan mode, task management can track planned implementation steps:
+
+1. Enter plan mode with =EnterPlanMode=
+2. Create tasks for each implementation step
+3. Set up dependencies between steps
+4. Exit plan mode with =ExitPlanMode=
+5. Execute tasks in dependency order
+
+This ensures the plan is captured in a structured, trackable format.
+
+* TodoWrite vs Task Tools
+
+** Historical Context
+
+*Important*: =TodoWrite= and Task tools both exist in the codebase but are *mutually exclusive* at runtime. They share a feature flag with opposite logic:
+
+- =TodoWrite= - Original tool, enabled in *non-interactive* sessions (SDK, headless)
+- Task tools - Added in v2.1.16, enabled in *interactive* CLI sessions
+
+The =CLAUDE_CODE_ENABLE_TASKS= environment variable can override the default behavior.
+
+In v2.1.16, the Agent Swarms feature was introduced, requiring a more sophisticated task management system that could:
+
+- Support multi-agent coordination
+- Handle task dependencies
+- Track task ownership across teammates
+- Persist tasks to the filesystem for team sharing
+
+** TodoWrite vs Task Tools Comparison
+
+Both systems remain active in v2.1.19. Here's how they differ:
+
+*** Architecture Comparison
+
+| Aspect              | TodoWrite (old)                    | Task Tools (new)                           |
+|---------------------+------------------------------------+--------------------------------------------|
+| Tool count          | 1 tool                             | 4 tools (TaskCreate, TaskGet, TaskUpdate, TaskList) |
+| Storage             | Filesystem (~/.claude/todos/)      | Filesystem (~/.claude/tasks/{team-name}/)  |
+| File naming         | ={sessionId}-agent-{agentId}.json= | ={taskId}.json= (slug-based IDs)           |
+| Multi-agent         | Not supported                      | Full support with ownership                |
+| Dependencies        | Not supported                      | =blocks=/=blockedBy= relationships         |
+| Unique IDs          | Sequential integers or custom      | Auto-generated three-word slugs            |
+
+*** Data Model Comparison
+
+**** Old TodoWrite Item Schema
+
+#+begin_src javascript
+{
+  content: string,     // Task description (required)
+  status: "pending" | "in_progress" | "completed",
+  activeForm: string   // Spinner text (required)
+}
+#+end_src
+
+**** New Task Schema
+
+#+begin_src javascript
+{
+  id: string,          // Auto-generated unique ID
+  subject: string,     // Brief title (required)
+  description: string, // Detailed description (required)
+  activeForm: string,  // Spinner text (optional)
+  status: "pending" | "in_progress" | "completed",
+  owner: string,       // Agent name (for swarms)
+  blocks: string[],    // Task IDs this blocks
+  blockedBy: string[], // Task IDs blocking this
+  metadata: object     // Arbitrary key-value data
+}
+#+end_src
+
+*** Key Differences
+
+**** 1. Atomic Operations vs Bulk Replacement
+
+Old TodoWrite:
+#+begin_example
+# Replace entire todo list with new state
+TodoWrite:
+  todos:
+    - content: "Task 1"
+      status: "completed"
+      activeForm: "..."
+    - content: "Task 2"
+      status: "in_progress"
+      activeForm: "..."
+    - content: "Task 3"
+      status: "pending"
+      activeForm: "..."
+#+end_example
+
+New Task Tools:
+#+begin_example
+# Create individual tasks
+TaskCreate:
+  subject: "Task 1"
+  description: "..."
+
+# Update specific task
+TaskUpdate:
+  taskId: "1"
+  status: "completed"
+#+end_example
+
+**** 2. Subject vs Content
+
+- Old: =content= field combined title and description
+- New: Separate =subject= (brief title) and =description= (detailed context)
+
+**** 3. Task Dependencies
+
+Old: No dependency support - tasks were independent
+
+New: Full dependency graph support
+#+begin_example
+TaskUpdate:
+  taskId: "3"
+  addBlockedBy: ["1", "2"]
+#+end_example
+
+**** 4. Task Ownership
+
+Old: No ownership concept - single agent only
+
+New: Tasks can be owned by specific agents
+#+begin_example
+TaskUpdate:
+  taskId: "1"
+  owner: "worker-1"
+#+end_example
+
+** When to Use Which
+
+- *Single-agent sessions*: Either system works; TodoWrite is simpler
+- *Swarm/team mode*: Must use Task tools for coordination
+- *Complex dependencies*: Task tools support =blocks=/=blockedBy=
+- *Task assignment*: Task tools support =owner= field
+
+** Comparison Examples
+
+*** Simple Task List
+
+TodoWrite approach:
+#+begin_example
+TodoWrite:
+  todos:
+    - content: "Fix login bug"
+      status: "in_progress"
+      activeForm: "Fixing login bug"
+    - content: "Add tests"
+      status: "pending"
+      activeForm: "Adding tests"
+#+end_example
+
+Task tools approach:
+#+begin_example
+TaskCreate:
+  subject: "Fix login bug"
+  description: "Fix the authentication issue in the login flow"
+  activeForm: "Fixing login bug"
+
+TaskCreate:
+  subject: "Add tests"
+  description: "Add unit tests for the login fix"
+  activeForm: "Adding tests"
+
+TaskUpdate:
+  taskId: "1"
+  status: "in_progress"
+
+TaskUpdate:
+  taskId: "2"
+  addBlockedBy: ["1"]
+#+end_example
+
+*** Marking Task Complete
+
+TodoWrite approach:
+#+begin_example
+# Must rewrite entire list with updated status
+TodoWrite:
+  todos:
+    - content: "Fix login bug"
+      status: "completed"
+      activeForm: "Fixing login bug"
+    - content: "Add tests"
+      status: "in_progress"
+      activeForm: "Adding tests"
+#+end_example
+
+Task tools approach:
+#+begin_example
+# Update only the specific task
+TaskUpdate:
+  taskId: "1"
+  status: "completed"
+#+end_example
+
+** Why Task Tools Were Added
+
+The Task tools were necessary for Agent Swarms (v2.1.16+):
+
+1. *Multi-agent coordination* - Multiple agents need to see and claim tasks
+2. *Race condition prevention* - Atomic updates avoid conflicts
+3. *Dependency ordering* - Ensures work happens in correct sequence
+4. *Persistence* - Filesystem storage survives agent restarts
+5. *Scalability* - Better suited for large, complex projects
+
+TodoWrite was kept for backward compatibility and simpler single-agent scenarios where the overhead of separate create/update/list operations isn't needed.
+
+** Tool Availability (Feature Flags)
+
+*Important*: TodoWrite and Task tools are *mutually exclusive* - they use the same feature flag with opposite logic.
+
+From source code (=pretty-v2.1.19.js=):
+
+#+begin_src javascript
+// Line 159122-159127: The feature flag function
+function ew() {
+  if ($2(process.env.CLAUDE_CODE_ENABLE_TASKS)) return !1;  // env=false → false
+  if (E1(process.env.CLAUDE_CODE_ENABLE_TASKS)) return !0;  // env=true → true
+  if (h7()) return !1;  // non-interactive → false
+  return !0;            // interactive default → true
+}
+
+// Line 420119-420120: TaskCreate
+isEnabled() { return ew(); }
+
+// Line 159342-159343: TodoWrite
+isEnabled() { return !ew(); }  // NEGATED!
+#+end_src
+
+*** Availability Matrix
+
+| Session Type                       | =ew()= | Task Tools | TodoWrite |
+|------------------------------------+--------+------------+-----------|
+| Interactive (CLI default)          | =true= | ✓ Enabled  | ✗ Disabled |
+| Non-interactive (SDK/headless)     | =false= | ✗ Disabled | ✓ Enabled |
+| =CLAUDE_CODE_ENABLE_TASKS=true=    | =true= | ✓ Enabled  | ✗ Disabled |
+| =CLAUDE_CODE_ENABLE_TASKS=false=   | =false= | ✗ Disabled | ✓ Enabled |
+
+*** Implications
+
+1. *You will only see one system at a time* - never both
+2. *Interactive CLI users* get Task tools by default (since v2.1.16)
+3. *SDK/non-interactive users* get TodoWrite for simpler single-tool usage
+4. *Override with env var* if needed: =CLAUDE_CODE_ENABLE_TASKS=true/false=
+
+This explains why my current session (interactive CLI) has Task tools but not TodoWrite.
+
+*** Configuring via settings.json
+
+Instead of setting shell environment variables, you can configure =CLAUDE_CODE_ENABLE_TASKS= in your settings file.
+
+**** Location
+
+- User settings: =~/.claude/settings.json=
+- Project settings: =.claude/settings.json= (in project root)
+
+**** Format
+
+#+begin_src json
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_TASKS": "true"
+  }
+}
+#+end_src
+
+**** Examples
+
+Force Task tools in non-interactive/SDK mode:
+#+begin_src json
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_TASKS": "true"
+  }
+}
+#+end_src
+
+Force TodoWrite in interactive CLI:
+#+begin_src json
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_TASKS": "false"
+  }
+}
+#+end_src
+
+**** Notes
+
+- Environment variable values must be *strings* (use ="true"= not =true=)
+- Keys should follow standard env var naming: uppercase with underscores
+- Settings are applied at session start
+- Schema reference: =https://json.schemastore.org/claude-code-settings.json=
+- Documentation: https://code.claude.com/docs/en/settings#environment-variables
+
+** Source Code References
+
+From =pretty-v2.1.19.js=:
+
+Task tools:
+- TaskCreate tool definition: Lines 420006-420105
+- TaskGet tool definition: Lines 420169-420250
+- TaskUpdate tool definition: Lines 420300-420420
+- TaskList tool definition: Lines 420620-420700
+- Task schema (Zod): Lines 159275-159287
+- Task storage functions: Lines 159245-159289
+- Team/task directory: =~/.claude/tasks/{team-name}/=
+
+TodoWrite (still present):
+- TodoWrite tool definition: Lines 159298-159380
+- TodoWrite name constant: Line 158973 (=var BF = "TodoWrite"=)
+- Todo reminder logic: Lines 449478-449498
+
+From =pretty-v2.1.15.js= (last version with TodoWrite only):
+
+- TodoWrite definition: Lines 158332-158792
+- Todo item schema: Lines 158520-158525
+- AppState storage: Line 158779 (=setAppState=)
+- Filesystem storage functions: Lines 316372-316420
+  - Directory: =~/.claude/todos/= (line 316373)
+  - File naming: ={sessionId}-agent-{agentId}.json= (line 316378)
+  - Read function: =Gx()= → =ZO7()= (line 316382)
+  - Write function: =z7A()= → =GO7()= (line 316385)
+
+* Implementation Details (v2.1.19)
+
+This section documents internal implementation details discovered from source code analysis.
+
+** Task ID Generation
+
+Task IDs are auto-generated using a three-word slug pattern from curated adjective/noun lists:
+
+#+begin_src javascript
+// From LO6() - Slug generator
+function AbA() {
+  let A = CO6(z77),  // Random adjective (e.g., "fuzzy")
+      K = CO6(H77),  // Random noun (e.g., "phoenix")
+      q = CO6(w77);  // Random verb (e.g., "dancing")
+  return `${A}-${K}-${q}`;
+}
+#+end_src
+
+Example generated IDs: =fuzzy-phoenix-dancing=, =bright-meadow-running=
+
+** Task Storage Structure
+
+Tasks are stored as JSON files in the team's task directory:
+
+#+begin_example
+~/.claude/tasks/{team-name}/
+├── fuzzy-phoenix-dancing.json
+├── bright-meadow-running.json
+└── ...
+#+end_example
+
+Each task file contains the full task schema with all fields.
+
+** Task Schema (Zod Validation)
+
+From the source code at line 159277:
+
+#+begin_src javascript
+Sm3 = U.object({
+  id: U.string(),
+  subject: U.string(),
+  description: U.string(),
+  activeForm: U.string().optional(),
+  owner: U.string().optional(),
+  status: w8A,  // enum: ["pending", "in_progress", "completed"]
+  blocks: U.array(U.string()),
+  blockedBy: U.array(U.string()),
+  metadata: U.record(U.string(), U.unknown()).optional(),
+})
+#+end_src
+
+** Reminder System
+
+Both old and new systems include reminder functionality to prompt task tool usage:
+
+#+begin_src javascript
+// Old system (TodoWrite)
+const Y = `The TodoWrite tool hasn't been used recently...`
+
+// New system (Task tools)
+const reminder = `The task tools haven't been used recently...`
+#+end_src
+
+Reminders are triggered based on:
+- Turns since last tool use
+- Turns between reminders (cooldown)
+
+** Concurrency Safety
+
+From tool definitions (all return =!0= which is =true=):
+
+| Tool       | =isConcurrencySafe()= |
+|------------+-----------------------|
+| TaskCreate | =true=                |
+| TaskGet    | =true=                |
+| TaskUpdate | =true=                |
+| TaskList   | =true=                |
+
+All Task tools are marked as concurrent-safe in the source code. The filesystem operations use file locking (via =proper-lockfile=) to handle concurrent access safely.
+
+** Tool Result Messages
+
+TaskCreate success:
+#+begin_example
+Task #1 created: Fix login bug
+#+end_example
+
+TaskUpdate on completion:
+#+begin_example
+Task completed. Call TaskList now to find your next available task
+or see if your work unblocked others.
+#+end_example
+
+** Teammate Unassignment
+
+When a teammate shuts down, their tasks are automatically unassigned:
+
+#+begin_src javascript
+// From line 159245
+for (let X of w) S0A(A, X.id, { owner: void 0, status: "pending" });
+if (w.length > 0) h(`[Tasks] Unassigned ${w.length} task(s) from ${q}`);
+#+end_src
+
+The leader receives a notification like:
+#+begin_example
+worker-1 has shut down. 2 task(s) were unassigned: #1 "Fix login", #2 "Add tests".
+Use TaskList to check availability and TaskUpdate with owner to reassign them.
+#+end_example
+
+* Summary
+
+The task management system provides:
+
+| Feature              | Benefit                                        |
+|----------------------+------------------------------------------------|
+| Structured tracking  | Clear visibility into multi-step work          |
+| Dependency management | Ensures correct ordering of operations        |
+| Team coordination    | Enables parallel work in swarm mode            |
+| Progress indication  | Shows users what's happening via =activeForm=  |
+| Persistence          | Tasks survive across agent interactions        |
+
+Use it for complex, multi-step work to maintain organization and provide clear progress feedback to users.
+
+* Version History
+
+| Version | Changes                                                      |
+|---------+--------------------------------------------------------------|
+| v2.1.15 | Last version with TodoWrite only                             |
+| v2.1.16 | Introduced TaskCreate, TaskGet, TaskUpdate, TaskList         |
+|         | Added alongside TodoWrite (both coexist)                     |
+|         | Added filesystem persistence for team coordination           |
+|         | Added task dependencies (blocks/blockedBy)                   |
+|         | Added task ownership for swarm support                       |
+|         | Agent Swarms feature release                                 |
+| v2.1.19 | Current version analyzed                                     |
+|         | Both TodoWrite and Task tools present in source              |
+|         | Task tools fully documented in system prompts                |
