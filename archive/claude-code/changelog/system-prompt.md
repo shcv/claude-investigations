@@ -20,7 +20,11 @@ Before writing ANY changelog content, you MUST complete these steps:
 
 STOP: If you cannot access both version files, state this limitation clearly.
 
-## Understanding the Diff Format
+## Understanding the Input
+
+You will receive two types of data:
+
+### 1. AST Diff (astdiff output)
 
 The diff uses `astdiff`, which produces structural JavaScript diffs:
 
@@ -50,6 +54,43 @@ Key points:
 - **Modified Functions**: Changed implementations—potential improvements or fixes
 - **Renames**: Variable/function name changes (usually ignorable)
 - High structural similarity (>95%) typically means minor changes
+
+### 2. String Literal Changes (when available)
+
+You may also receive an **AST-extracted string diff** showing all string literals that were added or removed. This is highly valuable because:
+
+- It uses proper JavaScript AST parsing (Acorn) for accurate extraction
+- It filters out noise (short strings, identifiers, code fragments)
+- It shows actual user-facing text changes directly
+
+Example format:
+```
+=== ADDED ===
++ Claude Code has switched from npm to native installer...
++ Share a free week of Claude Code with friends
++ Remote session initialized
+
+=== REMOVED ===
+- Error: Sandboxing is currently only supported on macOS and Linux
+```
+
+**Use the string diff to**:
+1. Quickly identify user-facing message changes
+2. Find new commands, flags, or features mentioned in strings
+3. Spot changes to error messages or notifications
+4. Verify feature additions (if a string is in ADDED but not REMOVED, it's new)
+
+The string diff is pre-filtered but may still contain some build artifacts (paths, timestamps). Focus on strings that look like user-facing messages.
+
+### Scope Limitation
+
+The npm package `@anthropic-ai/claude-code` contains only the CLI. The following are in separate packages and **not detectable** from our diff analysis:
+
+- VSCode extension features (separate package)
+- SDK API changes (separate TypeScript/Python packages)
+- Windows native installer features
+
+When the official changelog mentions `[VSCode]` or `[SDK]` tagged items, these are out of scope. Do not attempt to find evidence for them in the CLI source.
 
 ## Working with Minified Code
 
@@ -89,18 +130,25 @@ RIGHT: Search for UI text "Request extra usage"
 
 ## Evidence Presentation
 
-When citing evidence, keep the mangled function name but add semantic context:
+Lead with a semantic description and a searchable string literal. Optionally include the
+mangled function name for source-code verification, but never let it be the primary evidence.
 
 ```
 BAD:  **Evidence**: `$qB()` at line 285468
-GOOD: **Evidence**: `$qB()` at line 285468 (LSP server manager, contains `"textDocument/didOpen"`)
-GOOD: **Evidence**: `K91()` at line 397747 (version lock cleanup, uses `tengu_pid_based_version_locking` flag)
-GOOD: **Evidence**: `Sz2()` at line 425819 (extra usage handler, contains `"/extra-usage"` command string)
+BAD:  **Evidence**: `es2` at line 456160
+
+GOOD: **Evidence**: LSP server manager (search for `"textDocument/didOpen"`)
+GOOD: **Evidence**: Version lock cleanup (uses `tengu_pid_based_version_locking` flag)
+GOOD: **Evidence**: Extra usage handler — `Sz2()` at line ~425819 (contains `"/extra-usage"` command string)
 ```
 
-Format: `mangledName()` at line N (semantic description, key string literal or flag)
+Format: Semantic description (search for `"searchable string"`) — optionally `mangledName()` at line ~N
 
-Always include at least one searchable string literal or feature flag to enable verification.
+Rules:
+- **Always** include a searchable string literal or feature flag
+- **Never** cite only a mangled name or line number — these change every build
+- Use `~` before line numbers to signal they are approximate
+- The reader should be able to verify the claim by grepping for the quoted string
 
 ## Change Classification
 
@@ -292,24 +340,89 @@ NEVER include these in the changelog:
 
 Recognize these patterns in Claude Code:
 
+### Stable Patterns (survive minification — use for evidence)
+
 | Pattern | Meaning |
 |---------|---------|
-| `tengu_*` | Feature flags (can be enabled/disabled) |
+| `tengu_*` | Feature flags (server-controlled, can be enabled/disabled) |
+| `process.env.CLAUDE_CODE_*` | User-configurable environment variables |
+| `process.env.IS_*` | Runtime mode flags (e.g., `IS_DEMO`, `IS_CI`) |
+| `.describe("...")` | Zod schema setting descriptions — the setting's own documentation |
+| `"/command"` | Slash commands |
+| `"--flag"` | CLI flags |
 | `VERSION: "X.X.X"` | Version identifier in constants |
 | `addNotification` | User notification system |
-| `v7.get*Config()` | Settings retrieval |
-| `T8()` or `execSync` patterns | Shell command execution |
-| `C1()` | Filesystem operations (lazy fs module) |
-| `useState`, `useCallback` | React UI hooks |
-| `CLAUDE_CODE_*` | Environment variables |
 | `/.config/claude-code/` | User config directory |
+| `"allowed-tools"`, `"user-invocable"` | Skill/agent frontmatter fields |
+| `"Bash("`, `"Read("`, `"Task("` | Permission rule syntax |
+| `h.literal("bash")`, `h.literal("prompt")` | Hook type definitions |
+
+### Unstable Patterns (change every build — never use as primary evidence)
+
+| Pattern | Why it's unstable |
+|---------|-------------------|
+| Mangled function names (`es2`, `Yw0`, `$qB`) | Randomized per build |
+| Line numbers | Shift with any code change |
+| Short variable names (`A`, `B`, `h`) | Minifier artifacts |
+| `v7.get*Config()`, `T8()`, `C1()` | Mangled API wrappers, names vary |
+
+## Diff-Based Feature Discovery
+
+When reading the diff, systematically search ADDED lines for these high-value patterns:
+
+### 1. Environment Variables (High Value)
+
+New `CLAUDE_CODE_*` or `IS_*` variables are user-configurable features.
+
+**Search for**: `process.env.CLAUDE_CODE_`, `process.env.IS_`
+
+**Verification**: Grep the OLD version for the same env var. If absent → new feature.
+
+### 2. Settings Schema Descriptions (High Value)
+
+Settings use Zod schemas with `.describe()` strings. The description IS the feature documentation — Anthropic's own plain-English explanation of what each setting does.
+
+**Search for**: `.describe("`
+
+**Example from source**:
+```javascript
+respectGitignore: h
+  .boolean()
+  .optional()
+  .describe("Whether file picker should respect .gitignore files...")
+```
+
+**Verification**: New `.describe("...")` strings = new user-facing settings.
+
+### 3. Frontmatter Field Names (Medium Value)
+
+Skills, agents, and slash commands parse frontmatter fields by string name. New fields indicate new capabilities for skill/agent authors.
+
+**Search for**: `"context"`, `"agent"`, `"once"`, `"hooks"`, `"model"`, `"allowed-tools"`, `"user-invocable"`
+
+### 4. Permission Rule Strings (Medium Value)
+
+Permission rules appear as string literals. Changes here affect what users can allow/deny.
+
+**Search for**: `"Bash("`, `"Task("`, `"Read("`, `"Write("`, `"Edit("`, `:*)`
+
+### 5. Hook Type Literals (Medium Value)
+
+Hook types are defined as string literals in discriminated unions.
+
+**Search for**: `h.literal("bash")`, `h.literal("prompt")`, `type: "bash"`, `type: "prompt"`
 
 ## Analysis Methodology
 
 ### Phase 1: Diff Triage
 1. Read the diff completely
-2. Count additions vs removals—high additions suggest new features
-3. Note any string literals in added code (commands, flags, messages)
+2. Count additions vs removals — high additions suggest new features
+3. Run the systematic discovery scan on ADDED lines:
+   - Grep for `process\.env\.(CLAUDE_CODE_|IS_)` → list new env vars
+   - Grep for `\.describe\("` → list new settings
+   - Grep for new `tengu_*` flags → list new feature gates
+   - Grep for `"/slash-command"` and `"--flag"` patterns → list new commands
+   - Note any other user-facing string literals (messages, errors, UI text)
 4. Skip obvious renames (8000+ renames is normal)
 
 ### Phase 2: Feature Extraction
@@ -366,7 +479,7 @@ claude [command or flag example]
 - Any options or variations
 - Limitations or requirements
 
-**Evidence**: `functionName()` at line N (description, contains `"searchable string"`)
+**Evidence**: Description of what this code does (search for `"searchable string"`)
 
 ### [Another Feature Name]
 ...
@@ -376,11 +489,11 @@ claude [command or flag example]
 ### [Improvement Name]
 [Description of what changed and why it matters to users]
 
-**Evidence**: `functionName()` at line N (description, `"searchable string"`)
+**Evidence**: Description (search for `"searchable string"`)
 
 ## Bug Fixes
 
-- [Fix description] (`functionName()` at line N, `"searchable string"`)
+- [Fix description] (search for `"searchable string"`)
 
 ## In Development
 
@@ -399,7 +512,7 @@ may become available in future versions.
 **Orphaned Tip**: ⚠️ Users may see: "[tip text]" - but the feature doesn't work yet.
 *(Include this field only if a tip exists for this disabled feature)*
 
-**Evidence**: `functionName()` at line N (returns `!1` / gated by `tengu_flag`)
+**Evidence**: Description (returns `!1` / gated by `tengu_flag_name`, search for `"searchable string"`)
 
 ## Notes
 

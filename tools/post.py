@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 import requests
@@ -74,12 +75,171 @@ def print_info(message: str):
     print(colored(f"ℹ {message}", Colors.CYAN))
 
 
+# Webhook configuration
+@dataclass
+class WebhookConfig:
+    """Configuration for a Discord webhook"""
+    name: str                           # Identifier for this webhook (e.g., "main", "volvox")
+    url: str                            # Discord webhook URL
+    channels: List[str]                 # Channel names this webhook subscribes to
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'WebhookConfig':
+        """Create WebhookConfig from dictionary"""
+        return cls(
+            name=data['name'],
+            url=data['url'],
+            channels=data['channels'],
+        )
+
+
+# Channel configuration
+@dataclass
+class ChannelConfig:
+    """Configuration for a content channel"""
+    name: str                           # Channel identifier
+    type: str                           # Channel type (e.g., "changelog")
+    directory: Path                     # Path to content directory
+    last_posted_version: Optional[str]  # Last posted version for this channel
+
+    @classmethod
+    def from_dict(cls, name: str, data: dict) -> 'ChannelConfig':
+        """Create ChannelConfig from dictionary"""
+        return cls(
+            name=name,
+            type=data['type'],
+            directory=Path(data['directory']),
+            last_posted_version=data.get('last_posted_version'),
+        )
+
+
+def get_config_path() -> Path:
+    """Get the path to the config.py file"""
+    return Path(__file__).parent / "config.py"
+
+
+def load_webhook_configs() -> List[WebhookConfig]:
+    """
+    Load webhook configurations from config.py file.
+
+    Returns:
+        List of WebhookConfig objects, or empty list if file doesn't exist
+    """
+    try:
+        # Try to import the config module
+        import importlib.util
+        config_path = get_config_path()
+
+        if not config_path.exists():
+            print_warning(f"Config file not found: {config_path}")
+            print_info("Create config.py from config.py.example")
+            return []
+
+        # Load the config module
+        spec = importlib.util.spec_from_file_location("discord_config", config_path)
+        config_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config_module)
+
+        # Get the WEBHOOKS list
+        if not hasattr(config_module, 'WEBHOOKS'):
+            print_error("config.py must define a WEBHOOKS list")
+            return []
+
+        webhooks = config_module.WEBHOOKS
+        return [WebhookConfig.from_dict(wh) for wh in webhooks]
+
+    except ImportError as e:
+        print_error(f"Failed to import config: {e}")
+        return []
+    except KeyError as e:
+        print_error(f"Missing required field in webhook config: {e}")
+        return []
+    except Exception as e:
+        print_error(f"Failed to load webhook config: {e}")
+        return []
+
+
+def load_channels() -> dict[str, ChannelConfig]:
+    """
+    Load channel configurations from config.py file.
+
+    Returns:
+        Dictionary mapping channel name to ChannelConfig
+    """
+    try:
+        import importlib.util
+        config_path = get_config_path()
+
+        if not config_path.exists():
+            return {}
+
+        # Load the config module
+        spec = importlib.util.spec_from_file_location("discord_config", config_path)
+        config_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config_module)
+
+        # Get the CHANNELS dict
+        if not hasattr(config_module, 'CHANNELS'):
+            print_error("config.py must define a CHANNELS dict")
+            return {}
+
+        channels_dict = config_module.CHANNELS
+        return {
+            name: ChannelConfig.from_dict(name, data)
+            for name, data in channels_dict.items()
+        }
+
+    except Exception as e:
+        print_error(f"Failed to load channels: {e}")
+        return {}
+
+
+def save_channel_version(channel_name: str, version_str: str):
+    """
+    Save the last posted version for a channel back to config.py file.
+
+    Args:
+        channel_name: Name of the channel
+        version_str: Version string to save
+    """
+    try:
+        config_path = get_config_path()
+
+        if not config_path.exists():
+            print_error("Config file not found, cannot save state")
+            return
+
+        # Read the current config file
+        content = config_path.read_text()
+
+        # Use regex to find and update the specific channel's last_posted_version
+        import re
+
+        # Pattern to match the channel block and its last_posted_version line
+        pattern = rf'("{channel_name}":\s*\{{[^}}]*"last_posted_version":\s*)([^,\n]*)'
+
+        def replacement(match):
+            prefix = match.group(1)
+            # Replace with the new version string
+            return f'{prefix}"{version_str}"'
+
+        new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+
+        # Write back to file
+        config_path.write_text(new_content)
+
+    except Exception as e:
+        print_error(f"Failed to save channel version: {e}")
+
 # Constants
-WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
 MAX_MESSAGE_LENGTH = 2000
 LAST_POSTED_FILE = ".last_posted_version"
 UPLOAD_STATE_FILE = ".upload_state.json"
-CHANGELOG_DIR = Path("archive/changelog")
+POST_HISTORY_FILE = ".post_history.json"
+
+# Deduplication: minimum seconds between posting the same version to same webhook
+# This prevents duplicate posts when the script runs twice in quick succession
+DEDUP_WINDOW_SECONDS = 300  # 5 minutes
 
 # Discord webhook rate limit: 5 requests per 2 seconds
 # We'll be conservative and use 4 requests per 2 seconds to be safe
@@ -185,6 +345,65 @@ def update_version_state(state: dict, version_str: str, thread_id: str, chunks_p
     }
 
 
+# Post history tracking for deduplication
+def load_post_history(project_root: Path) -> dict:
+    """
+    Load the post history from JSON file.
+    Structure: {webhook_name: {version_str: timestamp}}
+    """
+    history_file = project_root / POST_HISTORY_FILE
+    if not history_file.exists():
+        return {}
+    try:
+        return json.loads(history_file.read_text())
+    except Exception as e:
+        print_warning(f"Could not load post history: {e}")
+        return {}
+
+
+def save_post_history(project_root: Path, history: dict):
+    """Save the post history to JSON file"""
+    history_file = project_root / POST_HISTORY_FILE
+    try:
+        history_file.write_text(json.dumps(history, indent=2) + "\n")
+    except Exception as e:
+        print_error(f"Could not save post history: {e}")
+
+
+def was_recently_posted(history: dict, webhook_name: str, version_str: str) -> bool:
+    """
+    Check if a version was recently posted to a webhook (within DEDUP_WINDOW_SECONDS).
+    Returns True if the version should be skipped to avoid duplicates.
+    """
+    if webhook_name not in history:
+        return False
+    if version_str not in history[webhook_name]:
+        return False
+
+    posted_time = history[webhook_name][version_str]
+    elapsed = time.time() - posted_time
+    return elapsed < DEDUP_WINDOW_SECONDS
+
+
+def record_post(history: dict, webhook_name: str, version_str: str):
+    """Record that a version was posted to a webhook"""
+    if webhook_name not in history:
+        history[webhook_name] = {}
+    history[webhook_name][version_str] = time.time()
+
+
+def cleanup_old_history(history: dict, max_age_seconds: int = 86400):
+    """Remove entries older than max_age_seconds (default: 24 hours)"""
+    now = time.time()
+    for webhook_name in list(history.keys()):
+        webhook_history = history[webhook_name]
+        for version_str in list(webhook_history.keys()):
+            if now - webhook_history[version_str] > max_age_seconds:
+                del webhook_history[version_str]
+        if not webhook_history:
+            del history[webhook_name]
+
+
 def extract_version_from_filename(filename: str) -> Optional[str]:
     """Extract version string from changelog filename"""
     match = re.match(r"changelog-v?(.+)\.md$", filename)
@@ -213,7 +432,12 @@ def get_all_changelogs(changelog_dir: Path) -> List[Tuple[version.Version, Path]
 
 
 def get_last_posted_version(project_root: Path, project_name: Optional[str] = None) -> Optional[version.Version]:
-    """Read the last posted version from tracking file"""
+    """
+    Read the last posted version from tracking file.
+
+    NOTE: This is used by sync.py for single-project automation.
+    For multi-channel posting via post.py, use channel.last_posted_version from config.py instead.
+    """
     if project_name:
         last_posted_file = project_root / f".last_posted_version_{project_name}"
     else:
@@ -230,7 +454,12 @@ def get_last_posted_version(project_root: Path, project_name: Optional[str] = No
 
 
 def save_last_posted_version(project_root: Path, ver: version.Version, project_name: Optional[str] = None):
-    """Save the last posted version to tracking file"""
+    """
+    Save the last posted version to tracking file.
+
+    NOTE: This is used by sync.py for single-project automation.
+    For multi-channel posting via post.py, use save_channel_version() instead.
+    """
     if project_name:
         last_posted_file = project_root / f".last_posted_version_{project_name}"
     else:
@@ -452,6 +681,7 @@ def post_to_discord(
     version_str: str,
     upload_state: dict,
     project_root: Path,
+    webhook_url: str,
     dry_run: bool = False,
     resume_thread_id: Optional[str] = None,
     resume_from_chunk: int = 0,
@@ -467,9 +697,11 @@ def post_to_discord(
         version_str: Version string for tracking
         upload_state: Current upload state dictionary
         project_root: Project root path
+        webhook_url: Discord webhook URL to post to
         dry_run: If True, don't actually post (just simulate)
         resume_thread_id: Thread ID to resume posting to (if resuming)
         resume_from_chunk: Chunk index to resume from (0-based)
+        project_name: Optional project/webhook name for state tracking
 
     Returns:
         Tuple of (success, thread_id, chunks_posted)
@@ -500,7 +732,7 @@ def post_to_discord(
             }
 
             response = requests.post(
-                f"{WEBHOOK_URL}?wait=true",
+                f"{webhook_url}?wait=true",
                 json=first_payload,
                 headers={"Content-Type": "application/json"}
             )
@@ -526,7 +758,7 @@ def post_to_discord(
 
             chunk_payload = {"content": chunks[i]}
             chunk_response = requests.post(
-                f"{WEBHOOK_URL}?thread_id={thread_id}",
+                f"{webhook_url}?thread_id={thread_id}",
                 json=chunk_payload,
                 headers={"Content-Type": "application/json"}
             )
@@ -553,16 +785,30 @@ def post_changelog(
     rate_limiter: RateLimiter,
     upload_state: dict,
     project_root: Path,
+    webhook_url: str,
     dry_run: bool = False,
-    project_name: Optional[str] = None
+    project_name: Optional[str] = None,
+    post_history: Optional[dict] = None
 ) -> bool:
-    """Post a single changelog file to Discord, resuming if partially uploaded"""
+    """
+    Post a single changelog file to Discord, resuming if partially uploaded.
+
+    Args:
+        post_history: Optional dict for deduplication tracking. If provided,
+                      will skip versions posted recently to the same webhook.
+    """
     ver_str = extract_version_from_path(file_path)
     if not ver_str:
         print_error(f"Could not extract version from {file_path.name}")
         return False
 
     thread_name = f"v{ver_str}"
+
+    # Deduplication check: skip if recently posted to this webhook
+    if post_history is not None and project_name and not dry_run:
+        if was_recently_posted(post_history, project_name, ver_str):
+            print_warning(f"Skipping {thread_name} - already posted to {project_name} within {DEDUP_WINDOW_SECONDS}s")
+            return True  # Return True to not break the posting loop
 
     try:
         content = file_path.read_text()
@@ -595,6 +841,7 @@ def post_changelog(
         ver_str,
         upload_state,
         project_root,
+        webhook_url,
         dry_run,
         resume_thread_id,
         resume_from_chunk,
@@ -606,6 +853,11 @@ def post_changelog(
         mark_version_complete(upload_state, ver_str)
         save_upload_state(project_root, upload_state, project_name)
         print_success(f"Posted {thread_name} ({chunks_posted} chunks)")
+
+        # Record in post history for deduplication
+        if post_history is not None and project_name and not dry_run:
+            record_post(post_history, project_name, ver_str)
+            save_post_history(project_root, post_history)
     else:
         print_error(f"Failed to complete {thread_name} (posted {chunks_posted} chunks)")
 
@@ -631,30 +883,100 @@ def parse_version_arg(arg: str, changelog_dir: Path) -> Optional[Path]:
     return None
 
 
+def get_webhook_configs(all_configs: List[WebhookConfig], discord_names: Optional[List[str]] = None) -> List[WebhookConfig]:
+    """
+    Get webhook configurations to use.
+
+    Args:
+        all_configs: All available webhook configurations
+        discord_names: If provided, only return webhooks with these names
+
+    Returns:
+        List of WebhookConfig objects
+    """
+    if discord_names:
+        configs = [wh for wh in all_configs if wh.name in discord_names]
+        # Check for invalid names
+        found_names = {wh.name for wh in configs}
+        invalid_names = set(discord_names) - found_names
+        if invalid_names:
+            print_error(f"Unknown Discord server(s): {', '.join(invalid_names)}")
+            available = ', '.join(wh.name for wh in all_configs)
+            print_info(f"Available Discord servers: {available}")
+        return configs
+    return all_configs
+
+
+def filter_changelogs_by_version_range(
+    changelogs: List[Tuple[version.Version, Path]],
+    from_version: Optional[str] = None,
+    to_version: Optional[str] = None
+) -> List[Tuple[version.Version, Path]]:
+    """
+    Filter changelogs based on CLI version range.
+
+    Args:
+        changelogs: List of (version, path) tuples
+        from_version: Optional minimum version (CLI)
+        to_version: Optional maximum version (CLI)
+
+    Returns:
+        Filtered list of changelogs
+    """
+    if not from_version and not to_version:
+        return changelogs
+
+    filtered = []
+
+    # Parse CLI version constraints
+    min_ver = version.parse(from_version) if from_version else None
+    max_ver = version.parse(to_version) if to_version else None
+
+    for ver, path in changelogs:
+        # Check minimum version
+        if min_ver and ver < min_ver:
+            continue
+
+        # Check maximum version
+        if max_ver and ver > max_ver:
+            continue
+
+        filtered.append((ver, path))
+
+    return filtered
+
+
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
         description="Post Claude Code changelogs to Discord forum channel",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Environment Variables:
-  DISCORD_WEBHOOK_URL    Discord webhook URL for posting (required)
+Configuration:
+  Configure Discord servers in tools/config.py (see config.py.example)
+  URLs are stored directly in config.py (gitignored)
 
 Examples:
-  # Set webhook URL
-  export DISCORD_WEBHOOK_URL='https://discord.com/api/webhooks/...'
-
-  # Post specific changelog files
-  %(prog)s archive/changelog/changelog-v1.0.67.md
-
-  # Post specific versions
-  %(prog)s v1.0.67 v1.0.68
-
-  # Post all new changelogs since last posted version
+  # Post all new changelogs to all configured Discord servers (all channels)
   %(prog)s --new
 
-  # Post all changelogs (careful!)
-  %(prog)s --all
+  # Post all new changelogs for a specific channel only
+  %(prog)s --new --project claude-code
+
+  # Post to specific Discord server only (all its subscribed channels)
+  %(prog)s --new --discord context-lobotomy
+
+  # Post to multiple specific Discord servers
+  %(prog)s --new --discord context-lobotomy --discord volvox
+
+  # Post a version range to specific Discord server (e.g., catch up a new server)
+  %(prog)s --all --discord volvox --from-version 2.1.0 --to-version 2.1.15
+
+  # Post specific versions to all Discord servers (all channels)
+  %(prog)s v1.0.67 v1.0.68
+
+  # Post only codex changelogs to servers subscribed to codex
+  %(prog)s --new --project codex
 
   # Dry run (don't actually post)
   %(prog)s --dry-run --new
@@ -691,16 +1013,36 @@ Examples:
         help="Disable colored output"
     )
 
+    parser.add_argument(
+        "--discord",
+        action="append",
+        dest="discord",
+        metavar="NAME",
+        help="Post to specific Discord server(s) by name (can be used multiple times). If not specified, posts to all configured Discord servers."
+    )
+
+    parser.add_argument(
+        "--from-version",
+        metavar="VERSION",
+        help="Post versions from this version onwards (inclusive)"
+    )
+
+    parser.add_argument(
+        "--to-version",
+        metavar="VERSION",
+        help="Post versions up to this version (inclusive)"
+    )
+
+    parser.add_argument(
+        "--project",
+        metavar="CHANNEL",
+        help="Filter to specific channel (e.g., claude-code, codex). Only posts for this channel across all subscribed servers."
+    )
+
     args = parser.parse_args()
 
     if args.no_color or not sys.stdout.isatty():
         Colors.disable()
-
-    # Check for webhook URL
-    if not WEBHOOK_URL:
-        print_error("DISCORD_WEBHOOK_URL environment variable not set")
-        print_info("Set it with: export DISCORD_WEBHOOK_URL='your-webhook-url'")
-        return 1
 
     # Find project root
     try:
@@ -709,85 +1051,208 @@ Examples:
         print_error(str(e))
         return 1
 
-    changelog_dir = project_root / CHANGELOG_DIR
+    # Load Discord server configurations from file
+    all_webhook_configs = load_webhook_configs()
+    if not all_webhook_configs:
+        print_error("No Discord server configurations found")
+        return 1
 
-    # Determine which changelogs to post
-    files_to_post: List[Tuple[version.Version, Path]] = []
+    # Get webhook configurations to use
+    webhook_configs = get_webhook_configs(all_webhook_configs, args.discord)
+    if not webhook_configs:
+        print_error("No valid Discord servers specified")
+        return 1
 
-    if args.all:
-        # Post all changelogs
-        print_header("Posting All Changelogs")
-        files_to_post = get_all_changelogs(changelog_dir)
+    # Filter by project/channel if specified
+    if args.project:
+        # Filter webhooks to only include those subscribed to this project
+        webhook_configs = [wh for wh in webhook_configs if args.project in wh.channels]
+        if not webhook_configs:
+            print_error(f"No Discord servers configured for channel: {args.project}")
+            # Collect all unique channels
+            all_channels = set()
+            for wh in all_webhook_configs:
+                all_channels.update(wh.channels)
+            print_info(f"Available channels: {', '.join(sorted(all_channels))}")
+            return 1
 
-    elif args.new:
-        # Post changelogs newer than last posted
-        print_header("Posting New Changelogs")
-        last_posted = get_last_posted_version(project_root)
-        all_changelogs = get_all_changelogs(changelog_dir)
+    # Load channel configurations
+    channels = load_channels()
+    if not channels:
+        print_error("No channels configured")
+        return 1
 
-        if last_posted is None:
-            print_info("No last posted version found, will post all changelogs")
-            files_to_post = all_changelogs
-        else:
-            print_info(f"Last posted version: v{last_posted}")
-            files_to_post = [(v, p) for v, p in all_changelogs if v > last_posted]
+    # Validate Discord webhook URLs are set
+    missing_webhooks = []
+    for wh in webhook_configs:
+        if not wh.url:
+            missing_webhooks.append(wh.name)
 
-    elif args.versions:
-        # Post specific versions
-        print_header("Posting Specific Changelogs")
-        for ver_arg in args.versions:
-            file_path = parse_version_arg(ver_arg, changelog_dir)
-            if file_path:
-                ver_str = extract_version_from_path(file_path)
-                if ver_str:
-                    try:
-                        ver = version.parse(ver_str)
-                        files_to_post.append((ver, file_path))
-                    except Exception as e:
-                        print_error(f"Could not parse version from {file_path}: {e}")
-            else:
-                print_error(f"Could not find changelog for: {ver_arg}")
+    if missing_webhooks:
+        print_error("Missing Discord webhook URL(s) for:")
+        for wh_name in missing_webhooks:
+            print_error(f"  {wh_name}")
+        return 1
 
-    else:
+    # Check that a posting mode was specified
+    if not (args.all or args.new or args.versions):
         parser.print_help()
         return 0
 
-    if not files_to_post:
-        print_info("No changelogs to post")
-        return 0
+    # Track overall success and statistics
+    all_success = True
+    total_posted = 0
+    total_webhooks_processed = 0
 
-    # Sort by version
-    files_to_post.sort(key=lambda x: x[0])
+    # Load and clean up post history for deduplication
+    post_history = load_post_history(project_root)
+    cleanup_old_history(post_history)
 
-    print_info(f"Will post {len(files_to_post)} changelog(s)")
+    # Process each Discord server
+    for webhook_idx, webhook in enumerate(webhook_configs, 1):
+        print_header(f"Discord Server {webhook_idx}/{len(webhook_configs)}: {webhook.name}")
+        total_webhooks_processed += 1
 
-    # Load upload state
-    upload_state = load_upload_state(project_root)
+        webhook_url = webhook.url
 
-    # Create rate limiter
-    rate_limiter = RateLimiter(RATE_LIMIT_REQUESTS, RATE_LIMIT_PERIOD)
+        # Load webhook-specific upload state for resume capability
+        upload_state = load_upload_state(project_root, webhook.name)
 
-    # Post each changelog
-    posted_count = 0
-    last_posted_ver = None
+        # Filter channels if --project specified
+        channels_to_process = webhook.channels
+        if args.project:
+            channels_to_process = [ch for ch in webhook.channels if ch == args.project]
 
-    for ver, file_path in files_to_post:
-        if post_changelog(file_path, rate_limiter, upload_state, project_root, dry_run=args.dry_run):
-            posted_count += 1
-            last_posted_ver = ver
-        else:
-            print_error(f"Failed to post {file_path.name}, stopping")
-            break
+        if not channels_to_process:
+            print_info(f"No matching channels for {webhook.name}")
+            continue
 
-    # Update last posted version
-    if last_posted_ver and not args.dry_run:
-        save_last_posted_version(project_root, last_posted_ver)
-        print_success(f"Updated last posted version to v{last_posted_ver}")
+        print_info(f"Channels: {', '.join(channels_to_process)}")
+
+        # Create rate limiter for this webhook (shared across all channels)
+        rate_limiter = RateLimiter(RATE_LIMIT_REQUESTS, RATE_LIMIT_PERIOD)
+
+        # Process each channel this webhook subscribes to
+        for channel_name in channels_to_process:
+            print_header(f"  Channel: {channel_name}")
+
+            # Get channel configuration
+            if channel_name not in channels:
+                print_error(f"Unknown channel: {channel_name}")
+                print_info(f"Available channels: {', '.join(channels.keys())}")
+                all_success = False
+                continue
+
+            channel = channels[channel_name]
+            changelog_dir = project_root / channel.directory
+
+            if not changelog_dir.exists():
+                print_warning(f"Changelog directory not found: {changelog_dir}")
+                continue
+
+            # Determine which changelogs to consider (before webhook-specific filtering)
+            base_changelogs: List[Tuple[version.Version, Path]] = []
+
+            if args.all:
+                # Post all changelogs
+                base_changelogs = get_all_changelogs(changelog_dir)
+
+            elif args.new:
+                # Post changelogs newer than last posted (will be filtered per webhook)
+                base_changelogs = get_all_changelogs(changelog_dir)
+
+            elif args.versions:
+                # Post specific versions
+                for ver_arg in args.versions:
+                    file_path = parse_version_arg(ver_arg, changelog_dir)
+                    if file_path:
+                        ver_str = extract_version_from_path(file_path)
+                        if ver_str:
+                            try:
+                                ver = version.parse(ver_str)
+                                base_changelogs.append((ver, file_path))
+                            except Exception as e:
+                                print_error(f"Could not parse version from {file_path}: {e}")
+                    else:
+                        print_error(f"Could not find changelog for: {ver_arg}")
+
+            else:
+                # Should not reach here due to earlier checks
+                continue
+
+            if not base_changelogs:
+                print_info(f"No changelogs found for {channel_name}")
+                continue
+
+            # Sort by version
+            base_changelogs.sort(key=lambda x: x[0])
+
+            # Determine changelogs for this channel
+            if args.new:
+                # Filter based on last posted version for this channel
+                last_posted_str = channel.last_posted_version
+                if last_posted_str is None:
+                    print_info(f"No last posted version for {channel_name}, will post all (within range)")
+                    channel_changelogs = base_changelogs
+                else:
+                    try:
+                        last_posted = version.parse(last_posted_str)
+                        print_info(f"Last posted version for {channel_name}: v{last_posted}")
+                        channel_changelogs = [(v, p) for v, p in base_changelogs if v > last_posted]
+                    except Exception as e:
+                        print_warning(f"Could not parse last posted version '{last_posted_str}': {e}")
+                        channel_changelogs = base_changelogs
+            else:
+                channel_changelogs = base_changelogs
+
+            # Apply version range filters
+            channel_changelogs = filter_changelogs_by_version_range(
+                channel_changelogs,
+                args.from_version,
+                args.to_version
+            )
+
+            if not channel_changelogs:
+                print_info(f"No changelogs to post for {channel_name}")
+                continue
+
+            print_info(f"Will post {len(channel_changelogs)} {channel_name} changelog(s)")
+
+            # Post each changelog
+            posted_count = 0
+            last_posted_ver = None
+
+            for ver, file_path in channel_changelogs:
+                if post_changelog(
+                    file_path,
+                    rate_limiter,
+                    upload_state,
+                    project_root,
+                    webhook_url,
+                    dry_run=args.dry_run,
+                    project_name=webhook.name,
+                    post_history=post_history
+                ):
+                    posted_count += 1
+                    total_posted += 1
+                    last_posted_ver = ver
+                else:
+                    print_error(f"Failed to post {file_path.name} to {webhook.name}, stopping this channel")
+                    all_success = False
+                    break
+
+            # Update last posted version for this channel
+            if last_posted_ver and not args.dry_run:
+                save_channel_version(channel_name, str(last_posted_ver))
+                print_success(f"Updated last posted version for {channel_name} to v{last_posted_ver}")
+
+            if posted_count > 0:
+                print_success(f"Posted {posted_count} {channel_name} changelog(s) to {webhook.name}")
 
     print_header("Summary")
-    print_success(f"Posted {posted_count} of {len(files_to_post)} changelog(s)")
+    print_success(f"Posted {total_posted} total changelog(s) across {total_webhooks_processed} Discord server(s)")
 
-    return 0 if posted_count == len(files_to_post) else 1
+    return 0 if all_success else 1
 
 
 if __name__ == "__main__":

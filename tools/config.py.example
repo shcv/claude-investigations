@@ -1,0 +1,46 @@
+"""
+Discord Server Configuration for Changelog Posting
+
+Copy this file to config.py and configure your Discord servers.
+The config.py file is gitignored and stays local to your machine.
+
+IMPORTANT: This file contains webhook URLs which are secrets.
+Keep this file secure and never commit it to version control.
+"""
+
+# Channel configurations
+# Define all available channels and their properties
+# Each channel has:
+#   - type: Channel type (currently only "changelog")
+#   - directory: Path to the changelog directory (relative to project root)
+#   - last_posted_version: Last version posted to this channel (automatically updated)
+
+CHANNELS = {
+    "claude-code": {
+        "type": "changelog",
+        "directory": "archive/claude-code/changelog",
+        "last_posted_version": None,  # Automatically updated by post.py
+    },
+    "codex": {
+        "type": "changelog",
+        "directory": "archive/codex/changelog",
+        "last_posted_version": None,  # Automatically updated by post.py
+    },
+}
+
+# Discord webhook configurations
+# Each webhook subscribes to one or more channels
+# Webhooks receive updates for all subscribed channels
+
+WEBHOOKS = [
+    {
+        "name": "main",
+        "url": "https://discord.com/api/webhooks/...",
+        "channels": ["claude-code"],  # Subscribe to claude-code changelogs only
+    },
+    {
+        "name": "all-updates",
+        "url": "https://discord.com/api/webhooks/...",
+        "channels": ["claude-code", "codex"],  # Subscribe to both projects
+    },
+]

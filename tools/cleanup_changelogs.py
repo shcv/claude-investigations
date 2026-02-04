@@ -16,38 +16,36 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-# ANSI color codes
-class Colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    BLUE = "\033[94m"
-    CYAN = "\033[96m"
-    BOLD = "\033[1m"
-    END = "\033[0m"
+from colors import Colors, colored, print_success, print_warning, print_error
 
-    @classmethod
-    def disable(cls):
-        cls.RED = cls.GREEN = cls.YELLOW = cls.BLUE = cls.CYAN = cls.BOLD = cls.END = ""
-
-
-def colored(text: str, color: str) -> str:
-    return f"{color}{text}{Colors.END}"
-
-
-def print_success(msg: str):
-    print(colored(f"✓ {msg}", Colors.GREEN))
-
-
-def print_warning(msg: str):
-    print(colored(f"⚠ {msg}", Colors.YELLOW))
-
-
-def print_error(msg: str):
-    print(colored(f"✗ {msg}", Colors.RED), file=sys.stderr)
+# Shared patterns that identify LLM meta-commentary (not changelog content).
+# Used by both pre-heading and post-heading preamble removal.
+LLM_META_PATTERNS = [
+    r'(?i)now\s+i\s+have\s+enough\s+information',
+    r'(?i)let\s+me\s+summarize',
+    r'(?i)let\s+me\s+analyze',
+    r'(?i)based\s+on\s+(the\s+)?diff',
+    r'(?i)i\'ll\s+analyze',
+    r'(?i)i\s+will\s+analyze',
+    r'(?i)here\'s\s+(the\s+)?changelog',
+    r'(?i)here\s+is\s+(the\s+)?changelog',
+    r'(?i)after\s+reviewing',
+    r'(?i)after\s+analyzing',
+    r'(?i)looking\s+at\s+the\s+diff',
+    r'(?i)that\'?s\s+the\s+complete',
+    r'(?i)that\'?s\s+my\s+analysis',
+    r'(?i)this\s+completes\s+the',
+    r'(?i)i\'?ve\s+completed',
+    r'(?i)i\s+have\s+completed',
+    r'(?i)i\'?ve\s+analyzed',
+    r'(?i)i\s+have\s+analyzed',
+    r'(?i)the\s+above\s+covers',
+    r'(?i)this\s+is\s+(the\s+)?complete',
+]
 
 
 def print_info(msg: str):
+    """Print a cyan info message with info symbol prefix"""
     print(colored(f"ℹ {msg}", Colors.CYAN))
 
 
@@ -78,18 +76,7 @@ def remove_preamble(content: str) -> Tuple[str, bool]:
     preamble_content = '\n'.join(lines[:h1_index]).strip()
 
     # Common LLM preamble patterns
-    preamble_patterns = [
-        r'(?i)now\s+i\s+have\s+enough\s+information',
-        r'(?i)let\s+me\s+summarize',
-        r'(?i)let\s+me\s+analyze',
-        r'(?i)based\s+on\s+the\s+diff',
-        r'(?i)i\'ll\s+analyze',
-        r'(?i)i\s+will\s+analyze',
-        r'(?i)here\'s\s+the\s+changelog',
-        r'(?i)here\s+is\s+the\s+changelog',
-        r'(?i)after\s+reviewing',
-        r'(?i)after\s+analyzing',
-        r'(?i)looking\s+at\s+the\s+diff',
+    preamble_patterns = LLM_META_PATTERNS + [
         r'(?i)^\*\*new\s+features?\*\*',  # Markdown bold summary headers
         r'(?i)^\*\*internal',
         r'(?i)^\*\*improvements?\*\*',
@@ -154,6 +141,67 @@ def remove_duplicate_headers(content: str, version: str) -> Tuple[str, bool]:
         return '\n'.join(cleaned_lines), True
 
     return content, False
+
+
+def remove_post_heading_preamble(content: str) -> Tuple[str, bool]:
+    """
+    Remove LLM meta-commentary that appears AFTER the H1 heading.
+
+    This handles the case where sync.py prepends "# Changelog for version X"
+    and the LLM output starts with meta-commentary like "That's the complete
+    analysis..." before any ## section, or between the H1 and first H2.
+    """
+    lines = content.split('\n')
+
+    # Find H1 and first sub-heading (## or ### or deeper)
+    h1_index = None
+    sub_heading_index = None
+    h1_pattern = re.compile(r'^#\s+(?!#)')
+    sub_heading_pattern = re.compile(r'^#{2,}\s+')
+
+    for i, line in enumerate(lines):
+        if h1_index is None and h1_pattern.match(line):
+            h1_index = i
+        elif h1_index is not None and sub_heading_pattern.match(line):
+            sub_heading_index = i
+            break
+
+    if h1_index is None:
+        return content, False
+
+    # Get content between H1 and first sub-heading (or end of file)
+    end_index = sub_heading_index if sub_heading_index is not None else len(lines)
+    between_lines = lines[h1_index + 1:end_index]
+    between_content = '\n'.join(between_lines).strip()
+
+    if not between_content:
+        return content, False
+
+    # Check if content starts with meta-commentary
+    if not any(re.search(pat, between_content) for pat in LLM_META_PATTERNS):
+        return content, False
+
+    if sub_heading_index is not None:
+        # Has structured sections after — strip meta-text between H1 and first section
+        cleaned_lines = lines[:h1_index + 1] + [''] + lines[sub_heading_index:]
+        return '\n'.join(cleaned_lines), True
+
+    # No sub-headings at all — content is an unstructured paragraph
+    # Strip the leading meta sentence, keep factual content
+    sentence_split = re.split(r'\.\s+', between_content, maxsplit=1)
+    if len(sentence_split) > 1:
+        stripped = sentence_split[1].strip()
+    else:
+        stripped = ''
+
+    if stripped:
+        # Wrap surviving factual content in a ## Summary section
+        cleaned_lines = lines[:h1_index + 1] + ['', '## Summary', '', stripped, '']
+    else:
+        # Nothing left — keep just the heading
+        cleaned_lines = lines[:h1_index + 1] + ['']
+
+    return '\n'.join(cleaned_lines), True
 
 
 def remove_emoji_from_headers(content: str) -> Tuple[str, bool]:
@@ -302,6 +350,7 @@ def cleanup_changelog(content: str, version: str) -> Tuple[str, bool]:
     transformations = [
         ('preamble', remove_preamble),
         ('duplicate headers', lambda c: remove_duplicate_headers(c, version)),
+        ('post-heading preamble', remove_post_heading_preamble),
         ('emoji in headers', remove_emoji_from_headers),
         ('empty sections', collapse_empty_sections),
         ('trailing separators', remove_trailing_separators),

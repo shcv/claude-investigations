@@ -1,17 +1,14 @@
 # Claude Code archive data
-# Only commit changelogs to git, ignore the actual source files
+# Only commit changelogs, changes, and prompts to git
 
-# Ignore original downloaded files
-archive/original/
+# Ignore original downloaded files (multi-GB)
+**/original/
 
-# Ignore prettified files
-archive/pretty/
+# Ignore prettified files (multi-GB)
+**/pretty/
 
-# Ignore diff files
-archive/diff/
-
-# Keep changelog directory (will be committed)
-# archive/changelog/ is NOT ignored
+# Ignore diff files (hundreds of MB)
+**/diff/
 
 # Temp directory for sync tool
 .sync-temp/
@@ -19,14 +16,23 @@ archive/diff/
 # Environment variables
 .env
 
+# Local configuration (contains secrets)
+tools/config.py
+
 # Discord posting tracking
 .last_posted_version
+.last_posted_version_*
 .upload_state.json
+.upload_state_*.json
+.post_history.json
 
 # Python cache
 __pycache__/
 *.pyc
 *.pyo
+
+# Node modules
+node_modules/
 
 # Emacs backup files
 *~
@@ -37,8 +43,5 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Ignore post tracking files
-.last_posted_version_claude-code
-.last_posted_version_codex
-.upload_state_claude-code.json
-.upload_state_codex.json
+# Temporary analysis outputs
+dry-run

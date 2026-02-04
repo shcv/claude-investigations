@@ -29,6 +29,7 @@ import re
 import shutil
 import sys
 import tarfile
+from dataclasses import dataclass
 import tempfile
 from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
@@ -44,13 +45,7 @@ except ImportError:
     # python-dotenv not installed, skip loading .env file
     pass
 
-# Try to import Claude SDK
-try:
-    from claude import Claude
-
-    CLAUDE_SDK_AVAILABLE = True
-except ImportError:
-    CLAUDE_SDK_AVAILABLE = False
+# Claude changelog generation uses the claude CLI tool (Claude Code SDK)
 
 
 class ProjectConfig:
@@ -67,6 +62,7 @@ class ProjectConfig:
         changes_prompt: Optional[str] = None,
         webhook_env_var: Optional[str] = None,
         source_subdir: Optional[str] = None,
+        extract_files: Optional[List[Tuple[str, str]]] = None,
     ):
         self.name = name
         self.npm_package = npm_package
@@ -77,10 +73,23 @@ class ProjectConfig:
         self.changes_prompt = changes_prompt
         self.webhook_env_var = webhook_env_var
         self.source_subdir = source_subdir  # Subdirectory containing main source (e.g., "codex-rs")
-
+        # Files to extract: list of (archive_path, output_prefix) tuples
+        # e.g., [("cli.js", "cli"), ("sdk.mjs", "sdk")] -> cli-v1.0.0.js, sdk-v1.0.0.mjs
+        # If None, defaults to [("cli.js", "cli"), ("cli.mjs", "cli")] for backwards compat
+        self.extract_files = extract_files
+        # Primary file prefix for diff/changelog generation (first one if not specified)
         # Validate that at least one source is specified
         if not npm_package and not github_repo:
             raise ValueError(f"Project {name} must specify either npm_package or github_repo")
+
+        self._primary_prefix = None
+        if extract_files:
+            self._primary_prefix = extract_files[0][1]  # Use first file's prefix as primary
+
+    @property
+    def primary_file_prefix(self) -> str:
+        """Get the primary file prefix for diffs/changelogs"""
+        return self._primary_prefix or "cli"
 
     @property
     def is_npm_based(self) -> bool:
@@ -101,6 +110,17 @@ PROJECTS = {
         use_astdiff=True,  # Use astdiff for minified Claude Code
         webhook_env_var="DISCORD_WEBHOOK_URL",  # Uses existing env var
     ),
+    "claude-agent-sdk": ProjectConfig(
+        name="claude-agent-sdk",
+        npm_package="@anthropic-ai/claude-agent-sdk",
+        use_astdiff=True,  # Use astdiff for bundled SDK code
+        webhook_env_var="DISCORD_WEBHOOK_URL_AGENT_SDK",
+        # Extract both CLI and SDK module files
+        extract_files=[
+            ("cli.js", "cli"),      # cli-v0.2.23.js
+            ("sdk.mjs", "sdk"),     # sdk-v0.2.23.mjs
+        ],
+    ),
     "codex": ProjectConfig(
         name="codex",
         github_repo="openai/codex",
@@ -112,74 +132,31 @@ PROJECTS = {
 }
 
 
-# ANSI color codes for output
-class Colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    BLUE = "\033[94m"
-    PURPLE = "\033[95m"
-    CYAN = "\033[96m"
-    BOLD = "\033[1m"
-    END = "\033[0m"
+from colors import Colors, colored, print_header, print_success, print_warning, print_error, print_info
 
-    @classmethod
-    def disable(cls):
-        """Disable colors for non-TTY output"""
-        cls.RED = cls.GREEN = cls.YELLOW = cls.BLUE = cls.PURPLE = cls.CYAN = (
-            cls.BOLD
-        ) = cls.END = ""
+# Common regex patterns
+RE_DIFF_VERSION = re.compile(r"v([0-9.]+)(?:-\d+)?\.diff$")
+RE_FILE_PREFIX_VERSION = re.compile(r"([a-z]+)-v([0-9.]+)\.[a-z]+$")
 
 
-def colored(text: str, color: str) -> str:
-    """Apply color to text"""
-    return f"{color}{text}{Colors.END}"
-
-
-def print_header(title: str):
-    """Print a colored section header"""
-    print(f"\n{colored('=== ' + title + ' ===', Colors.BOLD + Colors.BLUE)}")
-
-
-def print_success(message: str):
-    """Print a green success message"""
-    print(colored(f"✓ {message}", Colors.GREEN))
-
-
-def print_warning(message: str):
-    """Print a yellow warning message"""
-    print(colored(f"⚠ Warning: {message}", Colors.YELLOW))
-
-
-def print_error(message: str):
-    """Print a red error message"""
-    print(colored(f"✗ Error: {message}", Colors.RED), file=sys.stderr)
-
-
-def print_info(message: str):
-    """Print a cyan info message"""
-    print(colored(message, Colors.CYAN))
-
-
+@dataclass
 class SyncStats:
     """Track sync operation statistics"""
-
-    def __init__(self):
-        self.total_versions = 0
-        self.downloaded_count = 0
-        self.prettified_count = 0
-        self.diff_generated_count = 0
-        self.changelog_generated_count = 0
-        self.download_failures = 0
-        self.prettier_failures = 0
-        self.diff_generation_failures = 0
-        self.changelog_generation_failures = 0
-        self.changes_generated_count = 0
-        self.changes_generation_failures = 0
-        self.changelogs_cleaned_count = 0
-        self.changelog_cleanup_failures = 0
-        self.changelogs_posted_count = 0
-        self.changelog_post_failures = 0
+    total_versions: int = 0
+    downloaded_count: int = 0
+    prettified_count: int = 0
+    diff_generated_count: int = 0
+    changelog_generated_count: int = 0
+    download_failures: int = 0
+    prettier_failures: int = 0
+    diff_generation_failures: int = 0
+    changelog_generation_failures: int = 0
+    changes_generated_count: int = 0
+    changes_generation_failures: int = 0
+    changelogs_cleaned_count: int = 0
+    changelog_cleanup_failures: int = 0
+    changelogs_posted_count: int = 0
+    changelog_post_failures: int = 0
 
 
 class ClaudeCodeSync:
@@ -319,6 +296,15 @@ Return a JSON object with this structure:
                 )
                 sys.exit(1)
 
+    def _is_before_since(self, version_str: str) -> bool:
+        """Return True if version_str is before the --since cutoff."""
+        if not self.since:
+            return False
+        try:
+            return version.parse(version_str.lstrip("v")) < version.parse(self.since.lstrip("v"))
+        except Exception:
+            return False
+
     def get_github_releases(self) -> List[str]:
         """Get all available releases from GitHub, sorted oldest first by default"""
         print_info(f"Fetching all available releases from {self.project.github_repo}...")
@@ -353,24 +339,9 @@ Return a JSON object with this structure:
             )
             self.stats.total_versions = len(sorted_versions)
 
-            # Filter versions if --since is specified
             if self.since:
-                since_version = self.since.lstrip("v")
-                try:
-                    since_parsed = version.parse(since_version)
-                    filtered_versions = []
-                    for v in sorted_versions:
-                        v_clean = v.lstrip("v")
-                        if version.parse(v_clean) >= since_parsed:
-                            filtered_versions.append(v)
-
-                    print_info(
-                        f"Filtered to {len(filtered_versions)} versions since {self.since}"
-                    )
-                    return filtered_versions
-                except Exception as e:
-                    print_warning(f"Invalid --since version '{self.since}': {e}")
-                    print_info("Processing all versions...")
+                sorted_versions = [v for v in sorted_versions if not self._is_before_since(v)]
+                print_info(f"Filtered to {len(sorted_versions)} versions since {self.since}")
 
             return sorted_versions
 
@@ -400,24 +371,9 @@ Return a JSON object with this structure:
             )
             self.stats.total_versions = len(sorted_versions)
 
-            # Filter versions if --since is specified
             if self.since:
-                since_version = self.since.lstrip("v")  # Remove 'v' prefix if present
-                try:
-                    since_parsed = version.parse(since_version)
-                    filtered_versions = []
-                    for v in sorted_versions:
-                        v_clean = v.lstrip("v")
-                        if version.parse(v_clean) >= since_parsed:
-                            filtered_versions.append(v)
-
-                    print_info(
-                        f"Filtered to {len(filtered_versions)} versions since {self.since}"
-                    )
-                    return filtered_versions
-                except Exception as e:
-                    print_warning(f"Invalid --since version '{self.since}': {e}")
-                    print_info("Processing all versions...")
+                sorted_versions = [v for v in sorted_versions if not self._is_before_since(v)]
+                print_info(f"Filtered to {len(sorted_versions)} versions since {self.since}")
 
             return sorted_versions
 
@@ -426,16 +382,35 @@ Return a JSON object with this structure:
             sys.exit(1)
 
     def get_existing_originals(self) -> Set[str]:
-        """Get set of versions that already exist in original directory"""
-        existing = set()
+        """Get set of versions that already exist in original directory.
 
-        for file_path in self.original_dir.glob("cli-v*.js"):
-            # Extract version from filename: cli-v1.0.63.js -> 1.0.63
-            match = re.match(r"cli-v([0-9.]+)\.js$", file_path.name)
+        For projects with multiple extract_files, a version is only considered
+        'existing' if ALL required files are present.
+        """
+        # Determine which file prefixes we need
+        extract_files = self.project.extract_files
+        if extract_files is None:
+            # Default: just need cli file
+            required_prefixes = ["cli"]
+        else:
+            required_prefixes = [prefix for _, prefix in extract_files]
+
+        # Count how many files exist for each version
+        version_files: dict = {}  # version -> set of prefixes found
+
+        for file_path in self.original_dir.glob("*-v*.*"):
+            # Extract prefix and version from filename: cli-v1.0.63.js -> ("cli", "1.0.63")
+            match = RE_FILE_PREFIX_VERSION.match(file_path.name)
             if match:
-                existing.add(match.group(1))
+                prefix, ver = match.groups()
+                if prefix in required_prefixes:
+                    if ver not in version_files:
+                        version_files[ver] = set()
+                    version_files[ver].add(prefix)
 
-        return existing
+        # Return versions that have ALL required files
+        required_set = set(required_prefixes)
+        return {ver for ver, found in version_files.items() if found >= required_set}
 
     def download_version(self, version_str: str) -> bool:
         """Download a specific version from npm. Returns True on success."""
@@ -461,41 +436,50 @@ Return a JSON object with this structure:
             response = requests.get(tarball_url, stream=True)
             response.raise_for_status()
 
-            tgz_file = self.temp_dir / f"claude-code-{version_str}.tgz"
+            tgz_file = self.temp_dir / f"{self.project.name}-{version_str}.tgz"
             with open(tgz_file, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-            # Extract CLI file
-            print_info("Extracting CLI file...")
-            cli_file = None
+            # Determine files to extract
+            extract_files = self.project.extract_files
+            if extract_files is None:
+                # Default behavior: extract cli.js or cli.mjs
+                extract_files = [("cli.js", "cli"), ("cli.mjs", "cli")]
+
+            # Extract and save files
+            print_info("Extracting files...")
+            files_extracted = 0
 
             with tarfile.open(tgz_file, "r:gz") as tar:
-                # Try to extract cli.js first, then cli.mjs
-                for filename in ["package/cli.js", "package/cli.mjs"]:
+                for archive_name, output_prefix in extract_files:
+                    archive_path = f"package/{archive_name}"
                     try:
-                        member = tar.getmember(filename)
+                        member = tar.getmember(archive_path)
                         tar.extract(member, self.temp_dir)
-                        cli_file = self.temp_dir / filename
-                        break
+                        extracted_file = self.temp_dir / archive_path
+
+                        # Determine output extension from archive name
+                        ext = Path(archive_name).suffix or ".js"
+                        original_file = self.original_dir / f"{output_prefix}-v{version_str}{ext}"
+                        print_info(f"Saving: {original_file.name}")
+                        shutil.copy2(extracted_file, original_file)
+                        files_extracted += 1
                     except KeyError:
+                        # File not in archive, skip (only warn if no files extracted at end)
                         continue
 
-            if not cli_file or not cli_file.exists():
-                print_warning(f"No CLI file found in tarball for version {version_str}")
+            if files_extracted == 0:
+                print_warning(f"No files found in tarball for version {version_str}")
                 tgz_file.unlink(missing_ok=True)
+                shutil.rmtree(self.temp_dir / "package", ignore_errors=True)
                 return False
-
-            # Save original file
-            original_file = self.original_dir / f"cli-v{version_str}.js"
-            print_info(f"Saving original file: cli-v{version_str}.js")
-            shutil.copy2(cli_file, original_file)
 
             # Clean up temp files
             tgz_file.unlink(missing_ok=True)
             shutil.rmtree(self.temp_dir / "package", ignore_errors=True)
 
-            print_success(f"Downloaded version {version_str}")
+            print_success(f"Downloaded version {version_str} ({files_extracted} file(s))")
             return True
 
         except Exception as e:
@@ -564,9 +548,11 @@ Return a JSON object with this structure:
 
             # Also download the previous version for diff generation
             if self.diff and len(all_versions) > 1:
-                versions_to_check = [latest_version, all_versions[1]]
+                # Get the second-latest version (versions are sorted oldest first)
+                previous_version = all_versions[-2] if not self.new_first else all_versions[1]
+                versions_to_check = [latest_version, previous_version]
                 print_info(
-                    f"Also checking previous version for diff: {all_versions[1]}"
+                    f"Also checking previous version for diff: {previous_version}"
                 )
             else:
                 versions_to_check = [latest_version]
@@ -602,60 +588,83 @@ Return a JSON object with this structure:
         """Get list of original files that need prettification"""
         files_to_prettify = []
 
-        # Get all original files sorted by version (oldest first by default, newest first if --new-first)
-        original_files = list(self.original_dir.glob("cli-v*.js"))
-        original_files.sort(
-            key=lambda p: version.parse(
-                re.match(r"cli-v([0-9.]+)\.js$", p.name).group(1)
-            ),
-            reverse=self.new_first,
-        )
-
-        if self.latest and original_files:
-            # For --latest, only check the most recent version
-            files_to_check = [original_files[0]]
-            # Also check previous version for diff
-            if self.diff and len(original_files) > 1:
-                files_to_check.append(original_files[1])
+        # Determine file patterns based on extract_files config
+        extract_files = self.project.extract_files
+        if extract_files is None:
+            # Legacy mode: use old naming convention (pretty-v*.js without prefix)
+            patterns = [("cli-v*.js", r"cli-v([0-9.]+)\.js$", None)]  # None prefix = old naming
         else:
-            files_to_check = original_files
+            # New mode: use prefix-based naming (pretty-{prefix}-v*.js)
+            patterns = []
+            for archive_name, prefix in extract_files:
+                ext = Path(archive_name).suffix or ".js"
+                pattern = f"{prefix}-v*{ext}"
+                regex = rf"{prefix}-v([0-9.]+){re.escape(ext)}$"
+                patterns.append((pattern, regex, prefix))
 
-        for original_file in files_to_check:
-            # Extract version from filename
-            match = re.match(r"cli-v([0-9.]+)\.js$", original_file.name)
-            if not match:
-                continue
+        for glob_pattern, regex_pattern, prefix in patterns:
+            # Get all original files sorted by version
+            original_files = list(self.original_dir.glob(glob_pattern))
+            original_files.sort(
+                key=lambda p, r=regex_pattern: version.parse(
+                    re.match(r, p.name).group(1) if re.match(r, p.name) else "0"
+                ),
+                reverse=self.new_first,
+            )
 
-            version_str = match.group(1)
+            if self.latest and original_files:
+                # For --latest, only check the most recent version
+                files_to_check = [original_files[0]]
+                # Also check previous version for diff
+                if self.diff and len(original_files) > 1:
+                    files_to_check.append(original_files[1])
+            else:
+                files_to_check = original_files
 
-            # Filter by --since if specified
-            if self.since:
-                since_version = self.since.lstrip("v")
-                try:
-                    if version.parse(version_str) < version.parse(since_version):
-                        continue
-                except Exception:
-                    pass  # If version parsing fails, include the file
+            for original_file in files_to_check:
+                # Extract version from filename
+                match = re.match(regex_pattern, original_file.name)
+                if not match:
+                    continue
 
-            pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
+                version_str = match.group(1)
 
-            # Check if pretty version already exists
-            if not pretty_file.exists():
-                files_to_prettify.append(original_file)
+                # Filter by --since if specified
+                if self._is_before_since(version_str):
+                    continue
+
+                # Determine pretty file name based on prefix mode
+                if prefix is None:
+                    # Legacy mode: pretty-v{version}.js
+                    pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
+                else:
+                    # New mode: pretty-{prefix}-v{version}.js
+                    pretty_file = self.pretty_dir / f"pretty-{prefix}-v{version_str}.js"
+
+                # Check if pretty version already exists
+                if not pretty_file.exists():
+                    files_to_prettify.append(original_file)
 
         return files_to_prettify
 
     def prettify_file(self, original_file: Path) -> bool:
         """Prettify a single file. Returns True on success."""
-        # Extract version from filename
-        match = re.match(r"cli-v([0-9.]+)\.js$", original_file.name)
+        # Extract prefix and version from filename: cli-v1.0.63.js -> ("cli", "1.0.63")
+        match = RE_FILE_PREFIX_VERSION.match(original_file.name)
         if not match:
             return False
 
-        version_str = match.group(1)
-        pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
+        prefix, version_str = match.groups()
 
-        print(f"\n--- Prettifying version {version_str} ---")
+        # Determine naming mode: legacy (no extract_files) vs new (with extract_files)
+        if self.project.extract_files is None:
+            # Legacy mode: pretty-v{version}.js
+            pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
+            print(f"\n--- Prettifying version {version_str} ---")
+        else:
+            # New mode: pretty-{prefix}-v{version}.js
+            pretty_file = self.pretty_dir / f"pretty-{prefix}-v{version_str}.js"
+            print(f"\n--- Prettifying {prefix} version {version_str} ---")
 
         try:
             # Run prettier with babel parser and custom ignore-path to handle gitignored files
@@ -747,13 +756,8 @@ Return a JSON object with this structure:
                 newer_version = sorted_versions[i + 1]
 
                 # Filter by --since if specified (check newer version)
-                if self.since:
-                    since_version = self.since.lstrip("v")
-                    try:
-                        if version.parse(newer_version) < version.parse(since_version):
-                            continue
-                    except Exception:
-                        pass
+                if self._is_before_since(newer_version):
+                    continue
 
                 diff_file = self.diff_dir / f"v{newer_version}.diff"
                 if not diff_file.exists():
@@ -769,15 +773,25 @@ Return a JSON object with this structure:
         """Get list of consecutive version pairs that need diffs generated"""
         files_to_diff = []
 
-        # Get all pretty files sorted by version (oldest first for pairing)
-        pretty_files = list(self.pretty_dir.glob("pretty-v*.js"))
+        # Determine naming mode based on extract_files config
+        if self.project.extract_files is None:
+            # Legacy mode: use pretty-v*.js
+            pretty_files = list(self.pretty_dir.glob("pretty-v*.js"))
+            regex_pattern = r"pretty-v([0-9.]+)\.js$"
+        else:
+            # New mode: use pretty-{prefix}-v*.js with primary prefix
+            prefix = self.project.primary_file_prefix
+            pretty_files = list(self.pretty_dir.glob(f"pretty-{prefix}-v*.js"))
+            regex_pattern = rf"pretty-{prefix}-v([0-9.]+)\.js$"
+
         if len(pretty_files) < 2:
             return files_to_diff
 
         # Sort by version (oldest first)
         pretty_files.sort(
             key=lambda p: version.parse(
-                re.match(r"pretty-v([0-9.]+)\.js$", p.name).group(1)
+                re.match(regex_pattern, p.name).group(1)
+                if re.match(regex_pattern, p.name) else "0"
             )
         )
 
@@ -787,7 +801,7 @@ Return a JSON object with this structure:
                 older_file = pretty_files[-2]
                 newer_file = pretty_files[-1]
 
-                newer_match = re.match(r"pretty-v([0-9.]+)\.js$", newer_file.name)
+                newer_match = re.match(regex_pattern, newer_file.name)
                 if newer_match:
                     newer_version = newer_match.group(1)
                     diff_file = self.diff_dir / f"v{newer_version}.diff"
@@ -801,8 +815,8 @@ Return a JSON object with this structure:
                 newer_file = pretty_files[i + 1]
 
                 # Extract versions
-                older_match = re.match(r"pretty-v([0-9.]+)\.js$", older_file.name)
-                newer_match = re.match(r"pretty-v([0-9.]+)\.js$", newer_file.name)
+                older_match = re.match(regex_pattern, older_file.name)
+                newer_match = re.match(regex_pattern, newer_file.name)
 
                 if not older_match or not newer_match:
                     continue
@@ -810,13 +824,8 @@ Return a JSON object with this structure:
                 newer_version = newer_match.group(1)
 
                 # Filter by --since if specified (check newer version)
-                if self.since:
-                    since_version = self.since.lstrip("v")
-                    try:
-                        if version.parse(newer_version) < version.parse(since_version):
-                            continue
-                    except Exception:
-                        pass  # If version parsing fails, include the file
+                if self._is_before_since(newer_version):
+                    continue
 
                 diff_file = self.diff_dir / f"v{newer_version}.diff"
 
@@ -879,15 +888,24 @@ Return a JSON object with this structure:
         self, older_file: Path, newer_file: Path, iteration: int = 1
     ) -> bool:
         """Generate diff between two consecutive versions. Returns True on success."""
+        # Determine naming mode based on extract_files config
+        if self.project.extract_files is None:
+            # Legacy mode
+            regex_pattern = r"pretty-v([0-9.]+)\.js$"
+        else:
+            # New mode
+            prefix = self.project.primary_file_prefix
+            regex_pattern = rf"pretty-{prefix}-v([0-9.]+)\.js$"
+
         # Extract version from newer file
-        match = re.match(r"pretty-v([0-9.]+)\.js$", newer_file.name)
+        match = re.match(regex_pattern, newer_file.name)
         if not match:
             return False
 
         newer_version = match.group(1)
 
         # Extract version from older file
-        older_match = re.match(r"pretty-v([0-9.]+)\.js$", older_file.name)
+        older_match = re.match(regex_pattern, older_file.name)
         if not older_match:
             return False
 
@@ -939,6 +957,68 @@ Return a JSON object with this structure:
             print_warning(f"Diff generation failed for v{newer_version}: {e}")
             diff_file.unlink(missing_ok=True)
             return False
+
+    def generate_string_diff(self, version_str: str) -> Optional[str]:
+        """
+        Generate a string diff for a version using the AST-based string_diff.js tool.
+        Returns the diff output as a string, or None if it fails.
+        """
+        # Find the string_diff.js tool - it's in the same directory as this script
+        tools_dir = Path(__file__).parent
+        string_diff_tool = tools_dir / "string_diff.js"
+
+        if not string_diff_tool.exists():
+            print_warning("string_diff.js not found, skipping string diff")
+            return None
+
+        # The string_diff.js tool has a built-in 'compare' command that handles version lookup
+        try:
+            result = run(
+                ["node", str(string_diff_tool), "compare", version_str.lstrip("v"), "--filter"],
+                capture_output=True,
+                text=True,
+                cwd=str(tools_dir.parent),  # Run from project root so paths resolve correctly
+            )
+
+            if result.returncode == 0:
+                return result.stdout
+            else:
+                # If compare fails, try using the pretty_dir directly
+                current_file = self.pretty_dir / f"pretty-v{version_str}.js"
+                if not current_file.exists():
+                    return None
+
+                # Find previous version
+                all_pretty_files = sorted(
+                    self.pretty_dir.glob("pretty-v*.js"),
+                    key=lambda p: version.parse(
+                        re.match(r"pretty-v([0-9.]+)\.js$", p.name).group(1)
+                    ),
+                )
+                prev_file = None
+                for i, f in enumerate(all_pretty_files):
+                    if f == current_file and i > 0:
+                        prev_file = all_pretty_files[i - 1]
+                        break
+
+                if not prev_file:
+                    return None
+
+                result = run(
+                    ["node", str(string_diff_tool), "diff", str(prev_file), str(current_file), "--filter"],
+                    capture_output=True,
+                    text=True,
+                )
+
+                if result.returncode == 0:
+                    return result.stdout
+                else:
+                    print_warning(f"String diff failed: {result.stderr}")
+                    return None
+
+        except Exception as e:
+            print_warning(f"String diff generation failed: {e}")
+            return None
 
     def phase_3_generate_diffs(self, all_versions: Optional[List[str]] = None):
         """Phase 3: Generate diffs between consecutive versions"""
@@ -995,59 +1075,59 @@ Return a JSON object with this structure:
                 f"{self.stats.diff_generation_failures} diff generations failed."
             )
 
-    def get_versions_to_changelog(self) -> List[str]:
-        """Get list of versions that need changelogs generated"""
-        versions_to_changelog = []
+    def _get_versions_needing_output(self, output_dir: Path, filename_template: str) -> List[str]:
+        """Get list of versions that have diffs but no corresponding output file.
+
+        Args:
+            output_dir: Directory to check for existing output files
+            filename_template: Template with {version} placeholder, e.g. "changelog-v{version}.md"
+        """
+        versions_needed = []
 
         # Get all diff files
         diff_files = list(self.diff_dir.glob("v*.diff"))
 
         if self.latest and diff_files:
             # For --latest, only check the most recent diff
-            # Filter out files that don't match our pattern first
-            valid_diff_files = []
-            for f in diff_files:
-                if re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name):
-                    valid_diff_files.append(f)
+            valid_diff_files = [
+                f for f in diff_files
+                if RE_DIFF_VERSION.match(f.name)
+            ]
 
             if valid_diff_files:
                 valid_diff_files.sort(
                     key=lambda p: version.parse(
-                        re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", p.name).group(1)
+                        RE_DIFF_VERSION.match(p.name).group(1)
                     ),
                     reverse=True,
-                )  # Always get the latest for --latest flag
+                )
                 diff_files = [valid_diff_files[0]]
             else:
                 diff_files = []
 
         for diff_file in diff_files:
-            # Extract version from filename (handle both v1.0.69.diff and v1.0.69-2.diff)
-            match = re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", diff_file.name)
+            match = RE_DIFF_VERSION.match(diff_file.name)
             if not match:
                 continue
 
             version_str = match.group(1)
 
-            # Filter by --since if specified
-            if self.since:
-                since_version = self.since.lstrip("v")
-                try:
-                    if version.parse(version_str) < version.parse(since_version):
-                        continue
-                except Exception:
-                    pass  # If version parsing fails, include the file
+            if self._is_before_since(version_str):
+                continue
 
-            changelog_file = self.changelog_dir / f"changelog-v{version_str}.md"
+            output_file = output_dir / filename_template.format(version=version_str)
 
-            # Check if changelog already exists
-            if not changelog_file.exists():
-                versions_to_changelog.append(version_str)
+            if not output_file.exists():
+                versions_needed.append(version_str)
 
-        # Sort by version (oldest first by default, newest first if --new-first)
-        versions_to_changelog.sort(key=version.parse, reverse=self.new_first)
+        versions_needed.sort(key=version.parse, reverse=self.new_first)
+        return versions_needed
 
-        return versions_to_changelog
+    def get_versions_to_changelog(self) -> List[str]:
+        """Get list of versions that need changelogs generated"""
+        return self._get_versions_needing_output(
+            self.changelog_dir, "changelog-v{version}.md"
+        )
 
     def cleanup_single_changelog(self, changelog_file: Path, version_str: str) -> bool:
         """Clean up a single changelog file. Returns True on success."""
@@ -1084,55 +1164,47 @@ Return a JSON object with this structure:
             return False
 
     def post_single_changelog(self, changelog_file: Path, version_str: str) -> bool:
-        """Post a single changelog to Discord. Returns True on success."""
+        """
+        Post a single changelog to Discord using multi-webhook config.
+        Returns True on success.
+
+        NOTE: This posts immediately after generating each changelog (inline mode).
+        The version is posted to all webhooks subscribed to this project's channel.
+        """
         try:
-            import importlib.util
-            import os
+            import subprocess
             post_script = self.base_dir / "tools" / "post.py"
 
             if not post_script.exists():
                 print_warning("post.py not found, skipping post")
                 return False
 
-            # Get project-specific webhook URL
-            webhook_url = ""
-            if self.project.webhook_env_var:
-                webhook_url = os.getenv(self.project.webhook_env_var, "")
+            # Post this specific version to all configured webhooks for this project
+            cmd = [
+                str(post_script),
+                f"v{version_str}",  # Post this specific version
+                "--project", self.project.name,
+            ]
 
-            if not webhook_url:
-                print_warning(f"{self.project.webhook_env_var} not set, skipping post")
-                return False
+            if self.dry_run:
+                cmd.append("--dry-run")
 
-            # Import the post module
-            spec = importlib.util.spec_from_file_location("post", post_script)
-            post_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(post_module)
+            result = subprocess.run(
+                cmd,
+                cwd=str(self.base_dir),
+                capture_output=True,
+                text=True,
+                check=False
+            )
 
-            # Override the webhook URL with project-specific one
-            post_module.WEBHOOK_URL = webhook_url
-
-            # Load upload state (create if needed)
-            if not hasattr(self, 'upload_state'):
-                self.upload_state = post_module.load_upload_state(self.base_dir, self.project.name)
-
-            # Create rate limiter (create if needed)
-            if not hasattr(self, 'rate_limiter'):
-                self.rate_limiter = post_module.RateLimiter(
-                    post_module.RATE_LIMIT_REQUESTS,
-                    post_module.RATE_LIMIT_PERIOD
-                )
-
-            # Post the changelog
-            if post_module.post_changelog(changelog_file, self.rate_limiter, self.upload_state, self.base_dir, dry_run=self.dry_run, project_name=self.project.name):
+            if result.returncode == 0:
                 self.stats.changelogs_posted_count += 1
-                # Update last posted version
-                from packaging import version
-                ver = version.parse(version_str)
-                post_module.save_last_posted_version(self.base_dir, ver, self.project.name)
                 print_success(f"Posted {changelog_file.name} to Discord")
                 return True
             else:
                 self.stats.changelog_post_failures += 1
+                if result.stderr:
+                    print_warning(f"post.py error: {result.stderr.strip()}")
                 return False
 
         except Exception as e:
@@ -1172,59 +1244,61 @@ Return a JSON object with this structure:
             with open(diff_file, "r", encoding="utf-8") as f:
                 diff_content = f.read()
 
+            # Generate string diff for additional context
+            string_diff_output = self.generate_string_diff(version_str)
+            if string_diff_output:
+                print_info("Generated string diff for additional context")
+
             # Ensure system prompt file exists and read it
             self.ensure_changelog_prompt()
             system_prompt_file = self.changelog_dir / "system-prompt.md"
             with open(system_prompt_file, "r", encoding="utf-8") as f:
                 system_prompt = f.read()
 
-            # Use Claude SDK to generate changelog
-            if CLAUDE_SDK_AVAILABLE:
-                claude = Claude()
+            # Use claude CLI to generate changelog
+            claude_result = run(["which", "claude"], capture_output=True)
+            if claude_result.returncode != 0:
+                print_warning("claude CLI not found. Cannot generate changelog.")
+                return False
 
-                # Prepare the prompt
-                prompt = f"Generate a changelog for version {version_str} based on this diff:\n\n{diff_content}"
+            try:
+                # Build prompt with optional string diff
+                cli_prompt_parts = [f"Generate a changelog for version {version_str} based on this diff: @{diff_file}"]
 
-                # Generate changelog
-                response = claude.completions.create(
-                    prompt=prompt,
-                    system=system_prompt,
-                    max_tokens_to_sample=4000,
-                    model="sonnet",
+                if string_diff_output:
+                    cli_prompt_parts.append(f"""
+
+## String Literal Changes (AST-Extracted)
+
+The following shows all string literals that were added or removed between versions.
+This uses AST parsing for accuracy and filters out noise (identifiers, code fragments).
+Use this to identify user-facing message changes.
+
+{string_diff_output}
+""")
+
+                cli_prompt = "".join(cli_prompt_parts)
+
+                result = run(
+                    [
+                        "claude",
+                        "--print",
+                        "--system-prompt",
+                        system_prompt,
+                        cli_prompt,
+                    ],
+                    capture_output=True,
+                    text=True,
                 )
 
-                changelog_content = response.completion
-            else:
-                # Fallback: use claude CLI if available
-                claude_result = run(["which", "claude"], capture_output=True)
-                if claude_result.returncode == 0:
-                    try:
-                        # Use claude CLI with --system-prompt and file reference
-                        prompt = f"Generate a changelog for version {version_str} based on this diff: @{diff_file}"
-
-                        result = run(
-                            [
-                                "claude",
-                                "--print",
-                                "--system-prompt",
-                                system_prompt,
-                                prompt,
-                            ],
-                            capture_output=True,
-                            text=True,
-                        )
-
-                        if result.returncode == 0:
-                            changelog_content = result.stdout
-                        else:
-                            print_warning(f"Claude CLI failed: {result.stderr}")
-                            return False
-                    except Exception as e:
-                        print_warning(f"Claude CLI execution failed: {e}")
-                        return False
+                if result.returncode == 0:
+                    changelog_content = result.stdout
                 else:
-                    print_warning("Neither Claude SDK nor claude CLI is available")
+                    print_warning(f"Claude CLI failed: {result.stderr}")
                     return False
+            except Exception as e:
+                print_warning(f"Claude CLI execution failed: {e}")
+                return False
 
             # Write changelog
             with open(changelog_file, "w", encoding="utf-8") as f:
@@ -1249,7 +1323,7 @@ Return a JSON object with this structure:
             return False
 
     def phase_4_generate_changelogs(self):
-        """Phase 4: Generate changelogs using Claude SDK"""
+        """Phase 4: Generate changelogs using claude CLI"""
         if not self.changelog:
             return
 
@@ -1258,18 +1332,13 @@ Return a JSON object with this structure:
         # Ensure the system prompt file exists
         self.ensure_changelog_prompt()
 
-        # Check if Claude is available
-        if not CLAUDE_SDK_AVAILABLE:
-            # Check for claude CLI as fallback
-            claude_result = run(["which", "claude"], capture_output=True)
-            if claude_result.returncode != 0:
-                print_warning(
-                    "Claude SDK not installed and claude CLI not found. Skipping changelog generation."
-                )
-                print_info(
-                    "Install with: pip install claude-sdk or ensure claude CLI is in PATH"
-                )
-                return
+        # Check if Claude CLI is available
+        claude_result = run(["which", "claude"], capture_output=True)
+        if claude_result.returncode != 0:
+            print_warning(
+                "claude CLI not found in PATH. Skipping changelog generation."
+            )
+            return
 
         print_info("Checking for changelogs to generate...")
 
@@ -1300,57 +1369,9 @@ Return a JSON object with this structure:
 
     def get_versions_to_changes(self) -> List[str]:
         """Get list of versions that need changes files generated"""
-        versions_to_changes = []
-
-        # Get all diff files
-        diff_files = list(self.diff_dir.glob("v*.diff"))
-
-        if self.latest and diff_files:
-            # For --latest, only check the most recent diff
-            # Filter out files that don't match our pattern first
-            valid_diff_files = []
-            for f in diff_files:
-                if re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name):
-                    valid_diff_files.append(f)
-
-            if valid_diff_files:
-                valid_diff_files.sort(
-                    key=lambda p: version.parse(
-                        re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", p.name).group(1)
-                    ),
-                    reverse=True,
-                )
-                diff_files = [valid_diff_files[0]]
-            else:
-                diff_files = []
-
-        for diff_file in diff_files:
-            # Extract version from filename (handle both v1.0.69.diff and v1.0.69-2.diff)
-            match = re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", diff_file.name)
-            if not match:
-                continue
-
-            version_str = match.group(1)
-
-            # Filter by --since if specified
-            if self.since:
-                since_version = self.since.lstrip("v")
-                try:
-                    if version.parse(version_str) < version.parse(since_version):
-                        continue
-                except Exception:
-                    pass
-
-            changes_file = self.changes_dir / f"changes-v{version_str}.diff"
-
-            # Check if changes file already exists
-            if not changes_file.exists():
-                versions_to_changes.append(version_str)
-
-        # Sort by version
-        versions_to_changes.sort(key=version.parse, reverse=self.new_first)
-
-        return versions_to_changes
+        return self._get_versions_needing_output(
+            self.changes_dir, "changes-v{version}.diff"
+        )
 
     def generate_changes(self, version_str: str, iteration: int = 1) -> bool:
         """Generate changes file for a specific version. Returns True on success."""
@@ -1603,27 +1624,36 @@ Return a JSON object with this structure:
         # Create CLAUDE.md in the project's archive directory
         claude_md_path = self.archive_dir / "CLAUDE.md"
 
-        # Get the latest version from all pretty files
-        pretty_files = list(self.pretty_dir.glob("pretty-v*.js"))
+        # Determine naming mode based on extract_files config
+        if self.project.extract_files is None:
+            # Legacy mode: pretty-v*.js
+            pretty_files = list(self.pretty_dir.glob("pretty-v*.js"))
+            regex_pattern = r"pretty-v([0-9.]+)\.js$"
+            file_prefix = "pretty-v"
+        else:
+            # New mode: pretty-{prefix}-v*.js
+            prefix = self.project.primary_file_prefix
+            pretty_files = list(self.pretty_dir.glob(f"pretty-{prefix}-v*.js"))
+            regex_pattern = rf"pretty-{prefix}-v([0-9.]+)\.js$"
+            file_prefix = f"pretty-{prefix}-v"
+
         if pretty_files:
             # Sort by version to find the actual latest
             pretty_files.sort(
                 key=lambda p: version.parse(
-                    re.match(r"pretty-v([0-9.]+)\.js$", p.name).group(1)
+                    re.match(regex_pattern, p.name).group(1)
+                    if re.match(regex_pattern, p.name) else "0"
                 ),
                 reverse=True,
             )
             latest_file = pretty_files[0]
-            latest_match = re.match(r"pretty-v([0-9.]+)\.js$", latest_file.name)
+            latest_match = re.match(regex_pattern, latest_file.name)
             if latest_match:
                 latest_version = latest_match.group(1)
             else:
                 latest_version = version_str
         else:
             latest_version = version_str
-
-        # Use the latest version for the file path
-        latest_pretty_file_path = self.pretty_dir / f"pretty-v{latest_version}.js"
 
         # Project display name
         project_display = self.project.name.replace("-", " ").title()
@@ -1637,7 +1667,7 @@ This file provides guidance to Claude Code when working with the {self.project.n
 
 The latest prettified version available for analysis is **v{latest_version}**.
 
-File location: `pretty/pretty-v{latest_version}.js`
+File location: `pretty/{file_prefix}{latest_version}.js`
 
 ## Archive Structure
 
@@ -1650,7 +1680,7 @@ File location: `pretty/pretty-v{latest_version}.js`
 ## Latest Version Information
 
 When analyzing {project_display}'s source, please use the prettified version at:
-`pretty/pretty-v{latest_version}.js`
+`pretty/{file_prefix}{latest_version}.js`
 
 Package: `{self.project.npm_package}`
 """
@@ -1681,44 +1711,18 @@ Package: `{self.project.npm_package}`
             print_info("No changelogs to clean up")
             return
 
-        import importlib.util
-        cleanup_script = self.base_dir / "tools" / "cleanup_changelogs.py"
-
-        if not cleanup_script.exists():
-            print_error("cleanup_changelogs.py not found")
-            return
-
-        # Import the cleanup module
-        spec = importlib.util.spec_from_file_location("cleanup_changelogs", cleanup_script)
-        cleanup_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(cleanup_module)
-
         print_info(f"Processing {len(changelog_files)} changelog(s)...")
 
         for changelog_file in changelog_files:
-            try:
-                content = changelog_file.read_text()
-                ver_str = re.match(r'changelog-v?(.+)\.md$', changelog_file.name)
-                version = ver_str.group(1) if ver_str else "unknown"
-
-                cleaned_content, was_modified = cleanup_module.cleanup_changelog(content, version)
-
-                if was_modified:
-                    changelog_file.write_text(cleaned_content)
-                    self.stats.changelogs_cleaned_count += 1
-                    orig_lines = len(content.split('\n'))
-                    new_lines = len(cleaned_content.split('\n'))
-                    print_success(f"Cleaned {changelog_file.name} ({orig_lines - new_lines} lines removed)")
-
-            except Exception as e:
-                print_error(f"Failed to clean {changelog_file.name}: {e}")
-                self.stats.changelog_cleanup_failures += 1
+            ver_match = re.match(r'changelog-v?(.+)\.md$', changelog_file.name)
+            version_str = ver_match.group(1) if ver_match else "unknown"
+            self.cleanup_single_changelog(changelog_file, version_str)
 
         if self.stats.changelogs_cleaned_count > 0:
             print_success(f"Cleaned {self.stats.changelogs_cleaned_count} changelog(s)")
 
     def phase_7_post_changelogs(self):
-        """Phase 7: Post changelogs to Discord"""
+        """Phase 7: Post changelogs to Discord using multi-webhook config"""
         if not self.post:
             return
 
@@ -1729,86 +1733,44 @@ Package: `{self.project.npm_package}`
 
         print_header("Phase 7: Posting Changelogs to Discord")
 
-        import importlib.util
-        import os
+        import subprocess
         post_script = self.base_dir / "tools" / "post.py"
 
         if not post_script.exists():
             print_error("post.py not found")
             return
 
-        # Get project-specific webhook URL
-        webhook_url = ""
-        if self.project.webhook_env_var:
-            webhook_url = os.getenv(self.project.webhook_env_var, "")
+        # Use post.py with --new flag to post to all configured webhooks
+        # that subscribe to this project's channel
+        try:
+            cmd = [
+                str(post_script),
+                "--new",
+                "--project", self.project.name,
+            ]
 
-        if not webhook_url:
-            print_error(f"{self.project.webhook_env_var} environment variable not set")
-            print_info(f"Set it with: export {self.project.webhook_env_var}='your-webhook-url'")
-            return
+            if self.dry_run:
+                cmd.append("--dry-run")
 
-        # Import the post module
-        spec = importlib.util.spec_from_file_location("post", post_script)
-        post_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(post_module)
+            print_info(f"Running: {' '.join(cmd)}")
 
-        # Override the webhook URL with project-specific one
-        post_module.WEBHOOK_URL = webhook_url
+            result = subprocess.run(
+                cmd,
+                cwd=str(self.base_dir),
+                capture_output=False,  # Let output go directly to terminal
+                check=False
+            )
 
-        # Load upload state
-        upload_state = post_module.load_upload_state(self.base_dir, self.project.name)
-
-        # Create rate limiter
-        rate_limiter = post_module.RateLimiter(
-            post_module.RATE_LIMIT_REQUESTS,
-            post_module.RATE_LIMIT_PERIOD
-        )
-
-        # Get all changelogs to post (using --new logic from post.py)
-        last_posted = post_module.get_last_posted_version(self.base_dir, self.project.name)
-        all_changelogs = post_module.get_all_changelogs(self.changelog_dir)
-
-        if last_posted is None:
-            print_info("No last posted version found, will post all changelogs")
-            files_to_post = all_changelogs
-        else:
-            print_info(f"Last posted version: v{last_posted}")
-            files_to_post = [(v, p) for v, p in all_changelogs if v > last_posted]
-
-        if not files_to_post:
-            print_info("No new changelogs to post")
-            return
-
-        # Sort by version
-        files_to_post.sort(key=lambda x: x[0])
-
-        print_info(f"Will post {len(files_to_post)} changelog(s)")
-
-        posted_count = 0
-        last_posted_ver = None
-
-        for ver, file_path in files_to_post:
-            try:
-                if post_module.post_changelog(file_path, rate_limiter, upload_state, self.base_dir, dry_run=self.dry_run, project_name=self.project.name):
-                    posted_count += 1
-                    last_posted_ver = ver
-                    self.stats.changelogs_posted_count += 1
-                else:
-                    print_error(f"Failed to post {file_path.name}, stopping")
-                    self.stats.changelog_post_failures += 1
-                    break
-            except Exception as e:
-                print_error(f"Error posting {file_path.name}: {e}")
+            if result.returncode == 0:
+                print_success("Successfully posted changelogs via post.py")
+                # Note: post.py handles its own statistics and version tracking
+            else:
+                print_error(f"post.py exited with code {result.returncode}")
                 self.stats.changelog_post_failures += 1
-                break
 
-        # Update last posted version
-        if last_posted_ver:
-            post_module.save_last_posted_version(self.base_dir, last_posted_ver, self.project.name)
-            print_success(f"Updated last posted version to v{last_posted_ver}")
-
-        if posted_count > 0:
-            print_success(f"Posted {posted_count} changelog(s)")
+        except Exception as e:
+            print_error(f"Failed to run post.py: {e}")
+            self.stats.changelog_post_failures += 1
 
     def cleanup(self):
         """Clean up temporary files"""
@@ -1951,7 +1913,7 @@ Package: `{self.project.npm_package}`
         available_versions = []
         for f in diff_files:
             # Extract version from diff filename (handle both v1.0.69.diff and v1.0.69-2.diff)
-            match = re.match(r"v([0-9.]+)(?:-\d+)?\.diff$", f.name)
+            match = RE_DIFF_VERSION.match(f.name)
             if match:
                 ver = match.group(1)
                 if ver not in available_versions:
@@ -2064,7 +2026,12 @@ Package: `{self.project.npm_package}`
                 if self.project.is_github_based:
                     # GitHub mode: use git tags
                     # Find all versions to determine the previous one
-                    all_versions_sorted = sorted(available_versions, key=version.parse)
+                    diff_versions = []
+                    for f in self.diff_dir.glob("v*.diff"):
+                        match = RE_DIFF_VERSION.match(f.name)
+                        if match and match.group(1) not in diff_versions:
+                            diff_versions.append(match.group(1))
+                    all_versions_sorted = sorted(diff_versions, key=version.parse)
                     try:
                         version_index = all_versions_sorted.index(version_str)
                         if version_index > 0:
