@@ -25,11 +25,18 @@ This directory contains detailed technical investigations of Claude Code's featu
 - [[file:background-shells.org][Background Shells]] - Parallel command execution and background task management
 - [[file:queued-prompts.org][Queued Prompts]] - Prompt queuing and sequential execution system
 
+** Memory Systems
+
+- [[file:memory-overview.org][Memory Overview]] - Disambiguation of all five memory systems (start here)
+- [[file:session-memory.org][Session Memory]] - Automatic per-session background note-taking
+- [[file:auto-memory.org][Auto Memory]] - Persistent cross-session MEMORY.md (tengu_oboe)
+- [[file:agent-memory.org][Agent Memory]] - Per-subagent persistent memory with configurable scopes
+- [[file:ultraclaude-md.org][ULTRACLAUDE.md]] - Experimental critical user preferences file
+
 ** User Experience
 
 - [[file:output-styles.org][Output Styles]] - Customizable response formatting and presentation modes
 - [[file:conversation-search.org][Conversation Search]] - Search functionality for chat history and conversations
-- [[file:session-memory.org][Session Memory]] - Conversation persistence and memory management
 - [[file:spinner-words.org][Spinner Words]] - Customizable loading spinner messages
 - [[file:thinking.org][Thinking]] - Claude's thinking process visualization
 

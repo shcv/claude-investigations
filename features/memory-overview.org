@@ -1,0 +1,227 @@
+#+TITLE: Memory Systems in Claude Code - Overview & Disambiguation
+#+DATE: 2026-02-07
+
+* Overview
+
+Claude Code has accumulated multiple distinct "memory" systems over its evolution,
+each serving different purposes with different storage, lifetime, and control
+mechanisms. This document disambiguates them and links to detailed reports.
+
+The word "memory" is overloaded across at least five subsystems. The key
+distinctions are: *who writes* (user vs Claude), *when it persists* (within a
+session vs across sessions), and *what scope it applies to* (global, project,
+agent).
+
+* Quick Reference
+
+| System              | Storage Location                              | Who Writes    | Lifetime       | Scope           | Feature Flag              | Since   |
+|---------------------+-----------------------------------------------+---------------+----------------+-----------------+---------------------------+---------|
+| CLAUDE.md           | =./CLAUDE.md=, =~/.claude/CLAUDE.md=          | User (manual) | Permanent      | Project or User | None (always on)          | v0.2.x  |
+| Session Memory      | =~/.claude/session-memory/[uuid].md=          | Claude (auto) | Per-session     | Session         | =tengu_session_memory=    | v1.0.85 |
+| Auto Memory         | =~/.claude/projects/<path>/memory/MEMORY.md=  | Claude (auto) | Cross-session   | Project-user    | =tengu_oboe=              | v2.1.31 |
+| Agent Memory        | =~/.claude/agent-memory/<name>/MEMORY.md= etc | Claude (auto) | Cross-session   | Per-agent       | =tengu_oboe=              | v2.1.31 |
+| Quick Memory (=#=)  | Writes to CLAUDE.md                           | User (manual) | Permanent      | Varies          | None (UI feature)         | v2.0.70 |
+
+* The Five Memory Systems
+
+** 1. CLAUDE.md Files (Manual Instructions)
+
+The original memory system. Users write =CLAUDE.md= files that are loaded into
+Claude's system prompt as persistent instructions.
+
+- *User memory*: =~/.claude/CLAUDE.md= -- global preferences
+- *Project memory*: =<project>/CLAUDE.md= -- project-specific, version-controlled
+- *Local memory*: =<project>/CLAUDE.local.md= -- project-specific, gitignored
+- *Managed memory*: =~/.claude/managed/CLAUDE.md= -- managed location
+- *ULTRACLAUDE.md*: =~/.claude/ULTRACLAUDE.md= -- experimental critical overrides
+
+These are entirely user-controlled. Claude does not modify them unless explicitly
+asked. The =/memory= slash command opens an editor for these files.
+
+Detailed documentation: [[file:ultraclaude-md.org][ULTRACLAUDE.md]], [[file:settings.org][Settings]]
+
+** 2. Session Memory (Automatic Per-Session Notes)
+
+An automatic background note-taking system that maintains structured notes during
+a conversation. Claude silently "forks" a background query to update notes using
+the Edit tool.
+
+- *Storage*: =~/.claude/session-memory/[session-uuid].md=
+- *Template*: Six sections (Task spec, Worklog, Code docs, Workflow, Corrections, Learnings)
+- *Control*: Server-gated via =tengu_session_memory= -- users cannot enable/disable
+- *Activation*: Token-based thresholds (~10K tokens to start, ~5K between updates)
+- *Customization*: Custom templates at =~/.claude/session-memory/config/template.md=
+
+Session memory is ephemeral per-session. Previous session notes can be injected
+into new sessions via =tengu_coral_fern= (past session search).
+
+Detailed documentation: [[file:session-memory.org][Session Memory]]
+
+** 3. Auto Memory (Persistent Cross-Session MEMORY.md)
+
+The newest memory system, introduced in v2.1.31. Claude reads a =MEMORY.md= file
+from disk every turn, and proactively writes learnings back to it using Read/Write/Edit
+tools. This is the memory system you see referenced in the system prompt as
+"auto memory directory."
+
+- *Storage*: =~/.claude/projects/<project-path>/memory/MEMORY.md=
+- *Control*: =tengu_oboe= feature flag (gradual rollout, default off)
+- *Disable*: =CLAUDE_CODE_DISABLE_AUTO_MEMORY=1=
+- *Limit*: MEMORY.md truncated at 200 lines in system prompt
+- *Guidelines*: Semantic organization by topic, separate files for detail
+
+This is what powers the "You have a persistent auto memory directory at..." block
+in the system prompt. Claude uses standard file tools (Write, Edit) to update it.
+
+Detailed documentation: [[file:auto-memory.org][Auto Memory]]
+
+** 4. Agent Memory (Persistent Per-Subagent MEMORY.md)
+
+When creating subagents (via the agent-creator UI or programmatically), each agent
+can have its own persistent memory with a configurable scope. This is distinct from
+auto memory in that it's *per-agent* rather than per-project.
+
+Three scope levels:
+- *User*: =~/.claude/agent-memory/<agent-name>/MEMORY.md= -- general, cross-project
+- *Project*: =.claude/agent-memory/<agent-name>/MEMORY.md= -- project-specific, shared via VCS
+- *Local*: =.claude/agent-memory-local/<agent-name>/MEMORY.md= -- project-specific, private
+
+Agents are given domain-specific memory instructions (e.g. "record code patterns you
+discover" for a code reviewer agent). Both auto memory and agent memory are gated by
+the same =tengu_oboe= flag.
+
+Detailed documentation: [[file:agent-memory.org][Agent Memory]]
+
+** 5. Quick Memory (=#= Prefix)
+
+A UI convenience feature. Typing =#= as a prefix in the input field triggers "memory
+mode" which writes the note to CLAUDE.md. This is essentially a shortcut for the
+=/memory= command.
+
+- *No feature flag*: Always available as a UI interaction
+- *Tracked*: =memoryUsageCount= in config, discoverable via "Quick Memory" feature card
+- *Storage*: Writes to the same CLAUDE.md files as system 1
+
+* Common Confusion Points
+
+** "Auto Memory" vs "Agent Memory"
+
+Both are gated by =tengu_oboe= and both use =MEMORY.md= files, but:
+
+| Aspect         | Auto Memory                            | Agent Memory                             |
+|----------------+----------------------------------------+------------------------------------------|
+| Who uses it    | The main conversation agent            | Subagents (spawned via Task tool)        |
+| Directory      | =~/.claude/projects/<path>/memory/=    | =~/.claude/agent-memory/<name>/= etc     |
+| Scope config   | Always project-user scoped             | User chooses: user/project/local/none    |
+| Configuration  | Automatic when flag is on              | Set during agent creation dialog         |
+| System prompt  | "auto memory directory" block          | "Persistent Agent Memory" block          |
+
+** "Session Memory" vs "Auto Memory"
+
+| Aspect         | Session Memory                     | Auto Memory                         |
+|----------------+------------------------------------+-------------------------------------|
+| Lifetime       | One session only                   | Persists across sessions            |
+| Update method  | Background fork (silent)           | Direct file edits (visible in tool use) |
+| Format         | Structured 6-section template      | Free-form, semantic organization    |
+| User control   | No toggle (server-gated)           | Disable via env var                 |
+| Cross-session  | Only via past-session injection    | Always available                    |
+
+** "CLAUDE.md" vs "MEMORY.md"
+
+| Aspect         | CLAUDE.md                          | MEMORY.md                           |
+|----------------+------------------------------------+-------------------------------------|
+| Who writes     | User (manual)                      | Claude (automatic)                  |
+| Purpose        | Instructions and preferences       | Learnings and patterns              |
+| Loaded as      | System instructions                | Memory context                      |
+| Editing        | User edits, or =/memory= command   | Claude edits via Write/Edit tools   |
+
+* How to Know What Memories Exist
+
+This is a common concern. Currently available discovery methods:
+
+** Visual Indicators
+- The UI shows loaded memory types (e.g. "project + user memory")
+- Memory update operations show labels ("Updated a memory", "Wrote a memory")
+- Large file warnings appear when CLAUDE.md exceeds limits
+
+** The =/memory= Command
+- Opens an editor showing CLAUDE.md files across scopes
+- Does NOT show session memory or auto memory files
+- Only manages the manual instruction files (system 1)
+
+** Manual File Inspection
+- Session memory: =ls ~/.claude/session-memory/=
+- Auto memory: =ls ~/.claude/projects/*/memory/=
+- Agent memory: =ls ~/.claude/agent-memory/= and =ls .claude/agent-memory*/=
+- CLAUDE.md: Check =./CLAUDE.md=, =~/.claude/CLAUDE.md=, =./CLAUDE.local.md=
+
+** What's Missing
+There is currently no unified command to list all memory across all systems.
+Users must inspect directories manually or ask Claude to check. A =/memory-status=
+or enhanced =/memory= that shows all five systems would address this gap.
+
+* How to Enable/Disable Memory Features
+
+| System           | Enable                                  | Disable                                           |
+|------------------+-----------------------------------------+---------------------------------------------------|
+| CLAUDE.md        | Create the file                         | Delete the file                                   |
+| Session Memory   | Server-controlled (no user toggle)      | Server-controlled (no user toggle)                |
+| Auto Memory      | =tengu_oboe= flag (gradual rollout)    | =CLAUDE_CODE_DISABLE_AUTO_MEMORY=1=               |
+| Agent Memory     | Select scope during agent creation      | Select "None" during agent creation               |
+| Quick Memory     | Always available                        | N/A (just don't use =#= prefix)                   |
+
+For auto memory / agent memory, the =tengu_oboe= flag can also be force-enabled
+via config injection (see [[file:../internals/feature-flags.org][Feature Flags]]):
+
+#+begin_src sh
+python3 -c "
+import json
+with open('$HOME/.claude.json') as f:
+    cfg = json.load(f)
+cfg.setdefault('cachedGrowthBookFeatures', {})
+cfg['cachedGrowthBookFeatures']['tengu_oboe'] = True
+with open('$HOME/.claude.json', 'w') as f:
+    json.dump(cfg, f, indent=2)
+"
+#+end_src
+
+Note: This injection may be overwritten when GrowthBook refreshes (~5s into the
+session). See the feature flags document for persistence strategies.
+
+* Telemetry Events
+
+Memory-related telemetry events across all systems:
+
+| Event                              | System         | Trigger                          |
+|------------------------------------+----------------+----------------------------------|
+| =tengu_session_memory_accessed=    | Session Memory | Session memory file touched      |
+| =tengu_session_memory_file_read=   | Session Memory | Session memory read              |
+| =tengu_session_memory_loaded=      | Session Memory | Session memory loaded at start   |
+| =tengu_agent_memory_loaded=        | Agent Memory   | Agent memory loaded into prompt  |
+| =tengu_memdir_accessed=            | Agent Memory   | Agent memory directory accessed  |
+| =tengu_memdir_file_read=           | Agent Memory   | Agent memory file read           |
+| =tengu_memdir_file_edit=           | Agent Memory   | Agent memory file edited         |
+| =tengu_memdir_file_write=          | Agent Memory   | Agent memory file written        |
+| =tengu_transcript_accessed=        | Session Memory | Session transcript accessed      |
+
+* Version History
+
+| Version | Date       | Change                                                    |
+|---------+------------+-----------------------------------------------------------|
+| v0.2.54 | 2025-05    | =/memory= command introduced, CLAUDE.md scopes defined    |
+| v0.2.64 | 2025-06    | ULTRACLAUDE.md, large-memory-files warning                |
+| v0.2.70 | 2025-06    | Quick Memory (=#= prefix)                                 |
+| v1.0.85 | 2025-08    | Session Memory introduced (=tengu_session_memory=)        |
+| v2.1.6  | 2026-01    | Session Memory compaction (=tengu_sm_compact=)            |
+| v2.1.26 | 2026-02    | Agent memory path helpers, MEMORY.md constant             |
+| v2.1.30 | 2026-02    | Memory UI labels ("Updated a memory", "Wrote a memory")   |
+| v2.1.31 | 2026-02    | Persistent Agent Memory system, auto memory (=tengu_oboe=)|
+| v2.1.32 | 2026-02    | MEMORY.md guidance (separate topic files, 200-line limit) |
+
+* Related Documents
+
+- [[file:session-memory.org][Session Memory]] -- detailed session memory analysis
+- [[file:auto-memory.org][Auto Memory]] -- auto memory (tengu_oboe) system
+- [[file:agent-memory.org][Agent Memory]] -- per-agent persistent memory
+- [[file:ultraclaude-md.org][ULTRACLAUDE.md]] -- experimental critical preferences
+- [[file:../internals/feature-flags.org][Feature Flags]] -- gate mechanism for memory features

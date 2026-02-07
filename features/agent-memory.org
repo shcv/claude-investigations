@@ -1,0 +1,294 @@
+#+TITLE: Agent Memory (Per-Subagent Persistent Memory)
+#+DATE: 2026-02-07
+
+* Overview
+
+Agent Memory is a persistent memory system for subagents (agents spawned via the
+Task tool or agent-creator UI). Each subagent can have its own =MEMORY.md= file
+stored at one of three configurable scope levels. The agent reads and writes to
+this file using standard tools (Read, Write, Edit), building domain-specific
+institutional knowledge across conversations.
+
+This is distinct from Auto Memory (the main conversation's memory) in that it's
+*per-agent* and *scope-configurable*. Both are gated by the same =tengu_oboe=
+feature flag.
+
+See [[file:memory-overview.org][Memory Overview]] for disambiguation of all memory systems.
+
+* Key Characteristics
+
+- *Per-agent*: Each named agent gets its own memory directory and MEMORY.md
+- *Configurable scope*: User chooses user/project/local during agent creation
+- *Domain-specific*: Memory instructions are tailored to the agent's role
+- *Standard tools*: No special memory tool -- agents use Read/Write/Edit
+- *Gradual rollout*: Same =tengu_oboe= gate as auto memory
+
+* Storage Locations (Three Scopes)
+
+** User Scope
+
+: ~/.claude/agent-memory/<agent-name>/MEMORY.md
+
+- General learnings that apply across all projects
+- Recommended default for most agents
+- Not version-controlled (lives in home directory)
+- Example: A code-reviewer agent learning general code quality patterns
+
+** Project Scope
+
+: <project>/.claude/agent-memory/<agent-name>/MEMORY.md
+
+- Project-specific knowledge, shared with team via version control
+- Lives in the project's =.claude/= directory
+- Checked into git (unless explicitly gitignored)
+- Example: A test-runner agent learning this project's test patterns
+
+** Local Scope
+
+: <project>/.claude/agent-memory-local/<agent-name>/MEMORY.md
+
+- Project-specific knowledge, NOT checked into version control
+- Lives in the project's =.claude/= directory but ignored by VCS
+- Example: An agent storing machine-specific build paths or credentials context
+
+** None
+
+No persistent memory. The agent starts fresh each conversation.
+
+* Configuration
+
+** During Agent Creation
+
+When creating an agent (via the agent-creator UI), a configuration dialog presents
+scope options:
+
+#+begin_src javascript
+// pretty-v2.1.31.js (agent creation UI component C5q)
+// When user is in home directory context:
+const options = [
+  { label: "Enable (~/.claude/agent-memory/) (Recommended)", value: "user" },
+  { label: "None (no persistent memory)", value: "none" },
+  { label: "Project scope (.claude/agent-memory/)", value: "project" },
+  { label: "Local scope (.claude/agent-memory-local/)", value: "local" },
+];
+
+// When user is in a project directory context:
+const options = [
+  { label: "Enable (.claude/agent-memory/) (Recommended)", value: "project" },
+  { label: "None (no persistent memory)", value: "none" },
+  { label: "User scope (~/.claude/agent-memory/)", value: "user" },
+  { label: "Local scope (.claude/agent-memory-local/)", value: "local" },
+];
+#+end_src
+
+The recommended default changes based on context: user scope when in the home
+directory, project scope when in a project directory.
+
+** Agent Definition
+
+The selected memory scope is stored in the agent's configuration:
+
+#+begin_src javascript
+// Agent object with memory configuration
+{
+  ...finalAgent,
+  memory: selectedMemory,  // "user" | "project" | "local" | undefined
+  getSystemPrompt: () => {
+    // If memory is enabled, generates memory system prompt + agent prompt
+  }
+}
+#+end_src
+
+** Display in Agent Summary
+
+The agent creation summary shows the selected memory scope:
+
+#+begin_src javascript
+// pretty-v2.1.31.js (agent summary display)
+// Renders: "Memory: User (~/.claude/agent-memory/)"
+//      or: "Memory: Project (.claude/agent-memory/)"
+//      or: "Memory: Local (.claude/agent-memory-local/)"
+//      or: "Memory: None"
+#+end_src
+
+* System Prompt Integration
+
+When an agent has memory enabled, a scope-specific system prompt block is injected:
+
+#+begin_example
+You have a persistent Persistent Agent Memory directory at
+`~/.claude/agent-memory/<agent-name>/`. Its contents persist across conversations.
+
+As you work, consult your memory files to build on previous experience...
+
+Guidelines:
+- `MEMORY.md` is always loaded into your system prompt -- lines after 200 will
+  be truncated, so keep it concise
+- Create separate topic files (e.g., `debugging.md`, `patterns.md`) for detailed
+  notes and link to them from MEMORY.md
+- Record insights about problem constraints, strategies that worked or failed,
+  and lessons learned
+- Update or remove memories that turn out to be wrong or outdated
+- Organize memory semantically by topic, not chronologically
+- Since this memory is [scope]-scope, [scope-specific guidance]
+- Use the Write and Edit tools to update your memory files
+#+end_example
+
+** Scope-Specific Guidelines
+
+Each scope gets tailored guidance:
+
+#+begin_src javascript
+// pretty-v2.1.31.js:295618-295641
+switch (scope) {
+  case "user":
+    guideline = "Since this memory is user-scope, keep learnings general " +
+                "since they apply across all projects";
+    break;
+  case "project":
+    guideline = "Since this memory is project-scope and shared with your " +
+                "team via version control, tailor your memories to this project";
+    break;
+  case "local":
+    guideline = "Since this memory is local-scope (not checked into version " +
+                "control), tailor your memories to this project and machine";
+    break;
+}
+#+end_src
+
+* Domain-Specific Memory Instructions
+
+The agent-creator system encourages domain-specific memory guidance. When creating
+agents, the system prompt template (=LeY=) includes:
+
+#+begin_example
+7. Agent Memory Instructions: If the user mentions "memory", "remember", "learn",
+   "persist", or similar concepts, OR if the agent would benefit from building up
+   knowledge across conversations, include domain-specific memory update
+   instructions in the systemPrompt.
+
+   Add a section like this to the systemPrompt:
+
+   "Update your agent memory as you discover [domain-specific items]. This builds
+    up institutional knowledge across conversations."
+
+   Examples:
+   - Code-reviewer: "patterns, style conventions, common issues, architectural decisions"
+   - Test-runner: "test patterns, common failure modes, flaky tests, testing best practices"
+   - Architect: "codepaths, library locations, key architectural decisions, component relationships"
+   - Documentation writer: "documentation patterns, API structures, terminology conventions"
+#+end_example
+
+* Tool Access
+
+When memory is enabled for an agent, the system automatically grants access to
+file tools for memory paths:
+
+#+begin_src javascript
+// pretty-v2.1.31.js (tool list expansion)
+if (hO() && agent.memory && tools !== undefined) {
+  let toolSet = new Set(tools);
+  // Ensure Read, Write, Edit are available for memory operations
+  for (let tool of [readTool, writeTool, editTool]) {
+    if (!toolSet.has(tool)) tools = [...tools, tool];
+  }
+}
+#+end_src
+
+Memory file paths are auto-allowed in the permission system:
+
+#+begin_src javascript
+// pretty-v2.1.31.js (permission checks)
+if (hO() && (path.includes("agent-memory/") || path.includes("agent-memory-local/")))
+  return true;  // Auto-allow read/write
+#+end_src
+
+This means agents can freely read and write their memory files without triggering
+permission prompts.
+
+* Discovery and Management
+
+** Listing Agent Memories
+
+#+begin_src sh
+# User-scope agent memories
+ls ~/.claude/agent-memory/
+
+# Project-scope agent memories
+ls .claude/agent-memory/
+
+# Local-scope agent memories
+ls .claude/agent-memory-local/
+
+# Example output:
+# code-reviewer/
+#   MEMORY.md
+#   patterns.md
+# test-runner/
+#   MEMORY.md
+#+end_src
+
+** Viewing an Agent's Memory
+
+#+begin_src sh
+cat ~/.claude/agent-memory/code-reviewer/MEMORY.md
+#+end_src
+
+** Clearing Agent Memory
+
+#+begin_src sh
+# Clear one agent's memory
+rm -rf ~/.claude/agent-memory/code-reviewer/
+
+# Clear all user-scope agent memories
+rm -rf ~/.claude/agent-memory/
+
+# Clear all project-scope agent memories
+rm -rf .claude/agent-memory/
+
+# Clear all local-scope agent memories
+rm -rf .claude/agent-memory-local/
+#+end_src
+
+** Current Gaps
+
+- No built-in command to list agents and their memory scopes
+- No UI to browse agent memories or switch scopes after creation
+- No way to migrate memory between scopes (user -> project or vice versa)
+- The =/memory= command does NOT manage agent memory (only CLAUDE.md files)
+- No cross-agent memory sharing (each agent is isolated)
+
+* Telemetry Events
+
+| Event                         | Trigger                             | Extra Data            |
+|-------------------------------+-------------------------------------+-----------------------|
+| =tengu_agent_memory_loaded=   | Agent memory loaded into prompt     | =scope=, =isMainLoopAgent= |
+| =tengu_memdir_accessed=       | Agent memory directory accessed      | =tool= (tool name)   |
+| =tengu_memdir_file_read=      | Agent memory file read              |                       |
+| =tengu_memdir_file_edit=      | Agent memory file edited            |                       |
+| =tengu_memdir_file_write=     | Agent memory file written           |                       |
+
+The =isMainLoopAgent= field distinguishes main conversation memory loads (=true=)
+from subagent memory loads (=false=).
+
+* Comparison with Auto Memory
+
+| Aspect              | Auto Memory                             | Agent Memory                          |
+|---------------------+-----------------------------------------+---------------------------------------|
+| Who uses it         | Main conversation                       | Subagents                             |
+| Storage path        | =~/.claude/projects/<path>/memory/=     | =~/.claude/agent-memory/<name>/= etc  |
+| Scope               | Fixed (project-user)                    | Configurable (user/project/local)     |
+| Configuration       | Automatic when flag is on               | Interactive dialog during agent creation |
+| Guidelines          | Generic ("record learnings")            | Domain-specific ("record code patterns") |
+| Version control     | Not version-controlled                  | Project scope is version-controlled   |
+| System prompt label | "auto memory"                           | "Persistent Agent Memory"             |
+| Feature flag        | =tengu_oboe=                            | =tengu_oboe= (same flag)             |
+
+* Version History
+
+| Version | Date       | Change                                              |
+|---------+------------+-----------------------------------------------------|
+| v2.1.16 | 2026-01-24 | Agent memory path helpers first appear               |
+| v2.1.26 | 2026-02-04 | Memory path recognition in permission checks         |
+| v2.1.31 | 2026-02-04 | Full agent memory system: 3 scopes, config UI, domain instructions |
+| v2.1.32 | 2026-02-05 | MEMORY.md guidance (separate topic files, per-turn reload doc) |

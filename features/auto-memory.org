@@ -1,0 +1,262 @@
+#+TITLE: Auto Memory (Persistent Cross-Session MEMORY.md)
+#+DATE: 2026-02-07
+
+* Overview
+
+Auto Memory is a persistent learning system introduced in Claude Code v2.1.31 that
+lets Claude remember insights, patterns, and lessons learned across conversations.
+Claude reads a =MEMORY.md= file from disk on every turn and proactively updates it
+using standard file tools (Write, Edit, Read).
+
+This is distinct from Session Memory (ephemeral per-session notes) and from CLAUDE.md
+(user-written instructions). Auto Memory is *Claude-written, cross-session knowledge*.
+
+See [[file:memory-overview.org][Memory Overview]] for disambiguation of all memory systems.
+
+* Key Characteristics
+
+- *Persistent*: Survives across sessions -- your next conversation picks up where the last left off
+- *Claude-written*: Claude autonomously decides what to record and when
+- *Read every turn*: MEMORY.md is loaded from disk on each API round-trip, not cached
+- *Standard tools*: Uses Write/Edit (no special memory tool) with auto-granted permissions
+- *Gradual rollout*: Gated by =tengu_oboe= feature flag (default off)
+
+* Storage Location
+
+For the main conversation agent:
+
+: ~/.claude/projects/<project-path-hash>/memory/MEMORY.md
+
+The =<project-path-hash>= is derived from the absolute path to your project directory,
+URL-encoded with dashes. For example, a project at =/home/user/myproject= might store
+memory at:
+
+: ~/.claude/projects/-home-user-myproject/memory/MEMORY.md
+
+Additional topic files can be created alongside MEMORY.md:
+
+#+begin_example
+~/.claude/projects/-home-user-myproject/memory/
+  MEMORY.md           # Main index (always loaded into system prompt)
+  debugging.md        # Detailed notes on debugging patterns
+  patterns.md         # Code patterns discovered in this project
+  architecture.md     # Architecture decisions and rationale
+#+end_example
+
+Only =MEMORY.md= is auto-loaded. Other files must be explicitly read by Claude.
+
+* Feature Gating
+
+** Feature Flag
+
+#+begin_src javascript
+// pretty-v2.1.31.js:271059-271062
+function hO() {
+  if (M6(process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY)) return !1;
+  return r8("tengu_oboe", !1);  // default: false (gradual rollout)
+}
+#+end_src
+
+** Environment Variable Override
+
+#+begin_src sh
+# Disable auto memory even if flag is enabled
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
+#+end_src
+
+There is no environment variable to *enable* it -- only to disable. Enabling
+requires the =tengu_oboe= flag to be set via GrowthBook or config injection
+(see [[file:../internals/feature-flags.org][Feature Flags]]).
+
+** Force-Enable via Config Injection
+
+#+begin_src sh
+python3 -c "
+import json
+with open('$HOME/.claude.json') as f:
+    cfg = json.load(f)
+cfg.setdefault('cachedGrowthBookFeatures', {})
+cfg['cachedGrowthBookFeatures']['tengu_oboe'] = True
+with open('$HOME/.claude.json', 'w') as f:
+    json.dump(cfg, f, indent=2)
+"
+#+end_src
+
+Note: GrowthBook's lazy updater (=KZ1=) may overwrite this ~5 seconds into the
+session. See feature flags document for persistence strategies.
+
+* System Prompt Integration
+
+When enabled, a block like this is injected into every system prompt:
+
+#+begin_example
+# auto memory
+
+You have a persistent auto memory directory at `~/.claude/projects/<path>/memory/`.
+Its contents persist across conversations.
+
+As you work, consult your memory files to build on previous experience. When you
+encounter a mistake that seems like it could be common, check your auto memory
+for relevant notes -- and if nothing is written yet, record what you learned.
+
+Guidelines:
+- `MEMORY.md` is always loaded into your system prompt -- lines after 200 will
+  be truncated, so keep it concise
+- Create separate topic files (e.g., `debugging.md`, `patterns.md`) for detailed
+  notes and link to them from MEMORY.md
+- Record insights about problem constraints, strategies that worked or failed,
+  and lessons learned
+- Update or remove memories that turn out to be wrong or outdated
+- Organize memory semantically by topic, not chronologically
+- Use the Write and Edit tools to update your memory files
+
+## MEMORY.md
+
+[contents of MEMORY.md are inserted here, truncated at 200 lines]
+#+end_example
+
+** Key Implementation Details
+
+The system prompt generation function (=yDA= in v2.1.31, updated in v2.1.32):
+
+#+begin_src javascript
+// pretty-v2.1.31.js:295524-295571
+function yDA(A) {
+  let { displayName: q, memoryDir: K, extraGuidelines: Y } = A,
+    z = x1(),      // filesystem module
+    w = K + Fq1;   // Fq1 = "MEMORY.md"
+  // ... reads MEMORY.md content, builds system prompt block
+}
+#+end_src
+
+The auto memory is registered as a system prompt section:
+
+#+begin_src javascript
+// pretty-v2.1.32.js (system prompt meta-info)
+Cd(
+  "auto_memory",
+  () => CjA(),
+  "MEMORY.md is read from disk each turn and can be edited by the model",
+)
+#+end_src
+
+* Truncation and Size Warnings
+
+** 200-Line Limit
+
+MEMORY.md content is truncated at 200 lines when injected into the system prompt.
+The truncation limit is stored as a constant (=_u1= / =db1= in minified source).
+
+When MEMORY.md exceeds the limit, a warning is appended:
+
+#+begin_example
+[MEMORY.md truncated at 200 lines -- move detailed content into separate topic
+files and keep MEMORY.md as a concise index]
+#+end_example
+
+** Empty Memory Prompt
+
+When MEMORY.md is empty or doesn't exist, Claude receives guidance to start
+recording:
+
+#+begin_example
+MEMORY.md is empty. As you work, record useful learnings here for future sessions.
+#+end_example
+
+* Permission Auto-Granting
+
+Memory file paths bypass the normal permission system. The path-checking functions
+recognize =memory/= paths within the =~/.claude/= directory:
+
+#+begin_src javascript
+// pretty-v2.1.31.js (path validation)
+if (hO() && q.includes("/memory/")) return !0;
+#+end_src
+
+This means Claude can Read, Write, and Edit files in the memory directory without
+user permission prompts -- an intentional design choice to make memory updates
+frictionless.
+
+* How Claude Uses Auto Memory
+
+Claude is instructed to:
+
+1. *Consult* memory at the start of tasks to leverage past insights
+2. *Record* new learnings as they emerge during work
+3. *Update* incorrect or outdated notes
+4. *Organize* semantically (by topic, not chronologically)
+5. *Keep MEMORY.md concise* and use separate files for detail
+
+In practice, Claude typically records:
+- Project architecture patterns and conventions
+- Common pitfalls and their solutions
+- Build/test workflow notes
+- Key file locations and their purposes
+- Lessons from debugging sessions
+
+* Discovery and Management
+
+** Viewing Auto Memory
+
+#+begin_src sh
+# View your auto memory for a project
+cat ~/.claude/projects/<project-path>/memory/MEMORY.md
+
+# List all auto memory directories
+ls ~/.claude/projects/*/memory/
+#+end_src
+
+** Manual Editing
+
+Auto memory files are plain Markdown. You can edit them directly:
+
+#+begin_src sh
+$EDITOR ~/.claude/projects/<project-path>/memory/MEMORY.md
+#+end_src
+
+Or ask Claude: "Show me what's in your memory" / "Update your memory to note that..."
+
+** Clearing Auto Memory
+
+#+begin_src sh
+# Clear memory for one project
+rm -rf ~/.claude/projects/<project-path>/memory/
+
+# Clear all auto memory
+find ~/.claude/projects/ -name "memory" -type d -exec rm -rf {} +
+#+end_src
+
+** Current Gaps
+
+- The =/memory= command does NOT manage auto memory files (only CLAUDE.md)
+- No built-in command to list or search across auto memory from different projects
+- No UI to browse what Claude has recorded
+- No size management beyond the 200-line truncation warning
+
+* Telemetry Events
+
+| Event                            | Trigger                                |
+|----------------------------------+----------------------------------------|
+| =tengu_session_memory_file_read= | Auto memory MEMORY.md read from disk  |
+| =tengu_session_memory_loaded=    | Auto memory content loaded into prompt |
+
+(Note: These event names are shared with session memory -- the "session" prefix
+is a legacy naming artifact.)
+
+* Relationship to Other Memory Systems
+
+| System         | How it differs from Auto Memory                    |
+|----------------+----------------------------------------------------|
+| CLAUDE.md      | User-written instructions vs Claude-written learnings |
+| Session Memory | Ephemeral (one session) vs persistent (cross-session) |
+| Agent Memory   | Per-subagent vs per-project main conversation       |
+| Quick Memory   | Manual shortcut to CLAUDE.md, not to MEMORY.md     |
+
+* Version History
+
+| Version | Date       | Change                                              |
+|---------+------------+-----------------------------------------------------|
+| v2.1.26 | 2026-02-04 | Path helpers added, =MEMORY.md= constant defined    |
+| v2.1.30 | 2026-02-04 | UI labels ("Updated a memory", "Wrote a memory")    |
+| v2.1.31 | 2026-02-04 | Full system: =tengu_oboe= flag, system prompt, permissions |
+| v2.1.32 | 2026-02-05 | Guidance update: separate topic files, concise index |
