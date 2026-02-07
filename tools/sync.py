@@ -32,7 +32,7 @@ import tarfile
 from dataclasses import dataclass
 import tempfile
 from pathlib import Path
-from subprocess import run, PIPE, DEVNULL
+from subprocess import run
 from typing import List, Set, Optional, Tuple
 import requests
 from packaging import version
@@ -45,7 +45,7 @@ except ImportError:
     # python-dotenv not installed, skip loading .env file
     pass
 
-# Claude changelog generation uses the claude CLI tool (Claude Code SDK)
+# Claude changelog generation uses the claude-agent-sdk package
 
 
 class ProjectConfig:
@@ -165,41 +165,10 @@ class ClaudeCodeSync:
     # Default changelog system prompt
     DEFAULT_CHANGELOG_PROMPT = """Give me a changelog based on the diff provided in the prompt. Return only the changelog contents. Be detailed and clear in your explanations. Investigate the newer file as needed. Focus on and prioritize user-facing (interactive and cli argument) features. If there is a new command, argument, flag, or other user-facing feature, give explanations and examples for how a user could use it. Note that this is an interactive CLI application, not a library; user's won't interact with the code directly, so present usage from the perspective of an interaction or command-line arguments, not function calls. If you want to explain the code, reproduce the relevant snippet with semantic names."""
 
-    # Default changes system prompt
-    DEFAULT_CHANGES_PROMPT = """You are analyzing a code diff to make it more understandable. Your task is to process one specific change from the diff.
-
-## Your Task
-
-Given a specific change (addition, removal, or modification), you should:
-
-1. **Preserve the exact function names and line numbers** where the change occurred
-2. **Rewrite the changed code using meaningful variable and parameter names** instead of minified names
-3. **Match related additions and removals** that should be grouped together (e.g., a function being moved or renamed)
-4. **Classify if this change is unimportant** (e.g., whitespace, formatting, build artifacts)
-
-## Output Format
-
-Return a JSON object with this structure:
-
-```json
-{
-  "location": "functionName() at line 123",
-  "type": "addition|removal|modification|move",
-  "original": "original minified code snippet",
-  "rewritten": "code with meaningful names",
-  "related_changes": ["line numbers of related changes"],
-  "importance": "high|medium|low|trivial",
-  "reason": "brief explanation if marked as low importance or trivial"
-}
-```
-
-## Guidelines
-
-- Focus on making the change understandable, not on classifying the kind of change
-- Use descriptive names that explain what the code does
-- Keep the output concise but informative
-- Group related changes (e.g., function moved to different location)
-- Mark build artifacts, whitespace changes, or auto-generated code as trivial"""
+    # Patterns for detecting version bump noise in astdiff output
+    _VERSION_BUMP_RE = re.compile(r'VERSION:\s*"[^"]*"')
+    _BUILD_TIME_RE = re.compile(r'BUILD_TIME:\s*"[^"]*"')
+    _BUILD_PATH_RE = re.compile(r'claude-cli-external-build-\d+')
 
     def __init__(
         self,
@@ -252,6 +221,7 @@ Return a JSON object with this structure:
         self.temp_dir = base_dir / f".sync-temp-{project.name}"
 
         self.stats = SyncStats()
+        self._cleanup_module = None
 
     def setup_directories(self):
         """Create required directories"""
@@ -1132,17 +1102,10 @@ Return a JSON object with this structure:
     def cleanup_single_changelog(self, changelog_file: Path, version_str: str) -> bool:
         """Clean up a single changelog file. Returns True on success."""
         try:
-            import importlib.util
-            cleanup_script = self.base_dir / "tools" / "cleanup_changelogs.py"
-
-            if not cleanup_script.exists():
+            cleanup_module = self._get_cleanup_module()
+            if cleanup_module is None:
                 print_warning("cleanup_changelogs.py not found, skipping cleanup")
                 return False
-
-            # Import the cleanup module
-            spec = importlib.util.spec_from_file_location("cleanup_changelogs", cleanup_script)
-            cleanup_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(cleanup_module)
 
             content = changelog_file.read_text()
             cleaned_content, was_modified = cleanup_module.cleanup_changelog(content, version_str)
@@ -1172,7 +1135,6 @@ Return a JSON object with this structure:
         The version is posted to all webhooks subscribed to this project's channel.
         """
         try:
-            import subprocess
             post_script = self.base_dir / "tools" / "post.py"
 
             if not post_script.exists():
@@ -1189,7 +1151,7 @@ Return a JSON object with this structure:
             if self.dry_run:
                 cmd.append("--dry-run")
 
-            result = subprocess.run(
+            result = run(
                 cmd,
                 cwd=str(self.base_dir),
                 capture_output=True,
@@ -1211,6 +1173,63 @@ Return a JSON object with this structure:
             print_warning(f"Failed to post {changelog_file.name}: {e}")
             self.stats.changelog_post_failures += 1
             return False
+
+    def _get_cleanup_module(self):
+        """Load and cache the cleanup_changelogs module."""
+        if self._cleanup_module is not None:
+            return self._cleanup_module
+
+        import importlib.util
+        cleanup_script = self.base_dir / "tools" / "cleanup_changelogs.py"
+
+        if not cleanup_script.exists():
+            return None
+
+        spec = importlib.util.spec_from_file_location("cleanup_changelogs", cleanup_script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self._cleanup_module = module
+        return module
+
+    def _check_sdk_available(self, feature_name: str) -> bool:
+        """Check if claude-agent-sdk is importable. Prints warning if not."""
+        try:
+            from claude_agent_sdk import query  # noqa: F401
+            return True
+        except ImportError:
+            print_warning(f"claude-agent-sdk not installed. Skipping {feature_name}.")
+            print_info("Install with: pip install claude-agent-sdk")
+            return False
+
+    def _ensure_prompt_file(self, directory: Path, filename: str, default_content: str, label: str):
+        """Ensure a prompt file exists, creating it with defaults if missing."""
+        prompt_file = directory / filename
+        if not prompt_file.exists():
+            print_info(f"Creating default {label} system prompt file...")
+            with open(prompt_file, "w", encoding="utf-8") as f:
+                f.write(default_content)
+            print_success(f"Created {prompt_file}")
+            print_info(f"You can edit this file to customize {label} generation")
+
+    def _run_query(self, prompt: str, options, timeout: int = None) -> str:
+        """Run a claude-agent-sdk query synchronously. Returns result text."""
+        import asyncio
+        from claude_agent_sdk import query, ResultMessage
+
+        async def _execute():
+            result = ""
+            async for msg in query(prompt=prompt, options=options):
+                if isinstance(msg, ResultMessage):
+                    if msg.is_error:
+                        raise RuntimeError(msg.result or "Claude query failed")
+                    result = msg.result or ""
+            return result
+
+        if timeout:
+            async def _with_timeout():
+                return await asyncio.wait_for(_execute(), timeout=timeout)
+            return asyncio.run(_with_timeout())
+        return asyncio.run(_execute())
 
     def generate_changelog(self, version_str: str, iteration: int = 1) -> bool:
         """Generate changelog for a specific version. Returns True on success."""
@@ -1240,14 +1259,26 @@ Return a JSON object with this structure:
             return False
 
         try:
-            # Read the diff
-            with open(diff_file, "r", encoding="utf-8") as f:
-                diff_content = f.read()
+            # Look for filtered astdiff output (from phase 5)
+            filtered_diff = None
+            for ext in (".md", ".diff"):
+                candidate = self.changes_dir / f"changes-v{version_str}{ext}"
+                if candidate.exists():
+                    with open(candidate, "r", encoding="utf-8") as f:
+                        filtered_diff = f.read()
+                    break
 
-            # Generate string diff for additional context
+            # Generate string diff as supplementary input
             string_diff_output = self.generate_string_diff(version_str)
             if string_diff_output:
                 print_info("Generated string diff for additional context")
+
+            if not filtered_diff and not string_diff_output:
+                print_warning(
+                    f"No filtered diff or string diff available for {version_str}. "
+                    "Skipping changelog generation."
+                )
+                return False
 
             # Ensure system prompt file exists and read it
             self.ensure_changelog_prompt()
@@ -1255,49 +1286,46 @@ Return a JSON object with this structure:
             with open(system_prompt_file, "r", encoding="utf-8") as f:
                 system_prompt = f.read()
 
-            # Use claude CLI to generate changelog
-            claude_result = run(["which", "claude"], capture_output=True)
-            if claude_result.returncode != 0:
-                print_warning("claude CLI not found. Cannot generate changelog.")
-                return False
+            # Build prompt — filtered astdiff is primary, string diff supplementary
+            cli_prompt_parts = [f"Generate a changelog for version {version_str}."]
 
-            try:
-                # Build prompt with optional string diff
-                cli_prompt_parts = [f"Generate a changelog for version {version_str} based on this diff: @{diff_file}"]
+            if filtered_diff:
+                cli_prompt_parts.append(f"""
 
-                if string_diff_output:
-                    cli_prompt_parts.append(f"""
+## Code Changes (Filtered AST Diff)
+
+The following shows structural code changes between versions, with noise removed
+(version bumps, reformatting, build paths filtered out). Import changes are grouped
+by module. Focus on the structural changes for feature detection.
+
+{filtered_diff}
+""")
+
+            if string_diff_output:
+                cli_prompt_parts.append(f"""
 
 ## String Literal Changes (AST-Extracted)
 
-The following shows all string literals that were added or removed between versions.
-This uses AST parsing for accuracy and filters out noise (identifiers, code fragments).
-Use this to identify user-facing message changes.
+Added/removed string literals between versions (identifiers and code fragments filtered).
+Use this to identify user-facing message changes, new settings, or renamed features.
 
 {string_diff_output}
 """)
 
-                cli_prompt = "".join(cli_prompt_parts)
+            cli_prompt = "".join(cli_prompt_parts)
 
-                result = run(
-                    [
-                        "claude",
-                        "--print",
-                        "--system-prompt",
-                        system_prompt,
-                        cli_prompt,
-                    ],
-                    capture_output=True,
-                    text=True,
+            try:
+                from claude_agent_sdk import ClaudeAgentOptions
+
+                options = ClaudeAgentOptions(
+                    system_prompt=system_prompt,
+                    allowed_tools=["Read", "Glob", "Grep"],
+                    permission_mode="bypassPermissions",
+                    cwd=str(self.base_dir),
                 )
-
-                if result.returncode == 0:
-                    changelog_content = result.stdout
-                else:
-                    print_warning(f"Claude CLI failed: {result.stderr}")
-                    return False
+                changelog_content = self._run_query(cli_prompt, options)
             except Exception as e:
-                print_warning(f"Claude CLI execution failed: {e}")
+                print_warning(f"Claude SDK execution failed: {e}")
                 return False
 
             # Write changelog
@@ -1332,12 +1360,7 @@ Use this to identify user-facing message changes.
         # Ensure the system prompt file exists
         self.ensure_changelog_prompt()
 
-        # Check if Claude CLI is available
-        claude_result = run(["which", "claude"], capture_output=True)
-        if claude_result.returncode != 0:
-            print_warning(
-                "claude CLI not found in PATH. Skipping changelog generation."
-            )
+        if not self._check_sdk_available("changelog generation"):
             return
 
         print_info("Checking for changelogs to generate...")
@@ -1367,15 +1390,15 @@ Use this to identify user-facing message changes.
                 f"{self.stats.changelog_generation_failures} changelog generations failed."
             )
 
-    def get_versions_to_changes(self) -> List[str]:
-        """Get list of versions that need changes files generated"""
+    def get_versions_to_filter(self) -> List[str]:
+        """Get list of versions that need filtered diff files"""
         return self._get_versions_needing_output(
-            self.changes_dir, "changes-v{version}.diff"
+            self.changes_dir, "changes-v{version}.md"
         )
 
-    def generate_changes(self, version_str: str, iteration: int = 1) -> bool:
-        """Generate changes file for a specific version. Returns True on success."""
-        # Use the appropriate diff file based on iteration
+    def filter_diff(self, version_str: str, iteration: int = 1) -> bool:
+        """Filter astdiff output to remove noise. Pure Python, no SDK needed.
+        Returns True on success."""
         if iteration > 1:
             diff_file = self.diff_dir / f"v{version_str}-{iteration}.diff"
             if not diff_file.exists():
@@ -1383,241 +1406,351 @@ Use this to identify user-facing message changes.
         else:
             diff_file = self.diff_dir / f"v{version_str}.diff"
 
-        # Add iteration suffix to changes file if > 1
         if iteration > 1:
-            changes_file = self.changes_dir / f"changes-v{version_str}-{iteration}.diff"
+            changes_file = self.changes_dir / f"changes-v{version_str}-{iteration}.md"
         else:
-            changes_file = self.changes_dir / f"changes-v{version_str}.diff"
+            changes_file = self.changes_dir / f"changes-v{version_str}.md"
 
-        print(f"\n--- Generating changes for version {version_str} ---")
+        print(f"\n--- Filtering diff for version {version_str} ---")
 
         if not diff_file.exists():
             print_warning(
-                f"Diff file not found for version {version_str}. Run with --diff to generate diffs first."
+                f"Diff file not found for version {version_str}. "
+                "Run with --diff to generate diffs first."
             )
             return False
 
         try:
-            # Read the diff
             with open(diff_file, "r", encoding="utf-8") as f:
-                diff_content = f.read()
+                content = f.read()
 
-            # Parse the diff to extract individual changes
-            changes = self.parse_diff_changes(diff_content)
-
-            if not changes:
-                print_warning(f"No changes found in diff for v{version_str}")
+            if "=== Removed" not in content and "=== Added" not in content:
+                print_warning(
+                    f"Diff for v{version_str} is not astdiff format, skipping filter"
+                )
                 return False
 
-            # Ensure system prompt file exists and read it
-            self.ensure_changes_prompt()
-            system_prompt_file = self.changes_dir / "changes-prompt.md"
-            with open(system_prompt_file, "r", encoding="utf-8") as f:
-                system_prompt = f.read()
+            filtered = self._filter_astdiff(content)
 
-            processed_changes = []
-            print_info(f"Processing {len(changes)} changes with Sonnet...")
-
-            # Process each change with Sonnet
-            for i, change in enumerate(changes, 1):
-                print(f"  Processing change {i}/{len(changes)}...", end="\r")
-
-                # Use claude CLI with Sonnet model for each change
-                claude_result = run(["which", "claude"], capture_output=True)
-                if claude_result.returncode == 0:
-                    try:
-                        prompt = (
-                            f"Analyze this specific change from the diff:\n\n{change}"
-                        )
-
-                        # Use Sonnet for better structured output following the prompt
-                        result = run(
-                            [
-                                "claude",
-                                "--print",
-                                "--model",
-                                "sonnet",
-                                "--system-prompt",
-                                system_prompt,
-                                prompt,
-                            ],
-                            capture_output=True,
-                            text=True,
-                            timeout=60,  # Increased timeout to 60 seconds
-                        )
-
-                        if result.returncode == 0:
-                            processed_changes.append(result.stdout)
-                        else:
-                            processed_changes.append(
-                                f"# Failed to process change:\n{change}"
-                            )
-                    except Exception as e:
-                        processed_changes.append(
-                            f"# Error processing change: {e}\n{change}"
-                        )
-                else:
-                    print_warning("Claude CLI not available for processing changes")
-                    return False
-
-            print()  # Clear the progress line
-
-            # Combine all processed changes
-            changes_content = f"# Changes for version {version_str}\n\n"
-            changes_content += "## Processed Changes\n\n"
-            changes_content += "\n---\n\n".join(processed_changes)
-
-            # Add a section for unimportant changes
-            changes_content += "\n\n## Unimportant Changes\n\n"
-            changes_content += (
-                "Changes marked as trivial or low importance are moved here.\n"
-            )
-
-            # Write changes file
             with open(changes_file, "w", encoding="utf-8") as f:
-                f.write(changes_content)
+                f.write(filtered)
 
-            print_success(f"Generated changes file for v{version_str}")
+            print_success(f"Filtered diff for v{version_str}")
             return True
 
         except Exception as e:
-            print_warning(f"Changes generation failed for v{version_str}: {e}")
+            print_warning(f"Diff filtering failed for v{version_str}: {e}")
             changes_file.unlink(missing_ok=True)
             return False
 
-    def parse_diff_changes(self, diff_content: str) -> List[str]:
-        """Parse diff content into individual changes"""
-        changes = []
-        current_change = []
-        in_change = False
+    # ── astdiff filtering ──────────────────────────────────────────────
 
-        # Check if this is an astdiff output or unified diff
-        is_astdiff = "=== Removed" in diff_content or "=== Added" in diff_content
+    def _filter_astdiff(self, content: str) -> str:
+        """Parse and filter astdiff output, removing version bumps and reformatting noise."""
+        sections = self._parse_astdiff_sections(content)
 
-        if is_astdiff:
-            # Parse astdiff format
-            lines = diff_content.split("\n")
-            i = 0
-            while i < len(lines):
-                line = lines[i]
-                # Look for section headers like "--- Removed function 'xyz'"
-                if (
-                    line.startswith("--- Removed")
-                    or line.startswith("--- Added")
-                    or line.startswith("--- Modified")
-                ):
-                    # Start of a change block
-                    change_block = [line]
-                    i += 1
-                    # Collect the file path line
-                    if i < len(lines) and lines[i].startswith("/"):
-                        change_block.append(lines[i])
-                        i += 1
-                    # Collect the actual code lines (prefixed with - or +)
-                    while i < len(lines) and (
-                        lines[i].startswith("-")
-                        or lines[i].startswith("+")
-                        or lines[i].strip() == ""
-                    ):
-                        if lines[i].strip():  # Skip empty lines
-                            change_block.append(lines[i])
-                        i += 1
-                    if len(change_block) > 1:
-                        changes.append("\n".join(change_block))
-                else:
-                    i += 1
+        # Filter structural changes
+        kept_structural = []
+        version_bump_count = 0
+        reformat_count = 0
+
+        for entry in sections["structural"]:
+            header_line = entry.split("\n")[0]
+            sim_match = re.search(r"\((\d+\.\d+)%\)", header_line)
+            similarity = float(sim_match.group(1)) if sim_match else 0
+
+            if similarity == 100.0:
+                reformat_count += 1
+                continue
+
+            if self._is_version_bump_entry(entry):
+                version_bump_count += 1
+                continue
+
+            kept_structural.append(entry)
+
+        # Filter string-only changes (version bumps can appear here too)
+        kept_string = []
+        string_version_bumps = 0
+
+        for entry in sections["string"]:
+            if self._is_version_bump_entry(entry):
+                string_version_bumps += 1
+                continue
+            kept_string.append(entry)
+
+        version_bump_count += string_version_bumps
+
+        # Pair removed/added imports by module
+        paired_imports, unpaired_removed, unpaired_added = self._pair_imports(
+            sections["removed"], sections["added"]
+        )
+
+        # Build filtered output
+        parts = [sections["header"]]
+
+        total_filtered = version_bump_count + reformat_count
+        if total_filtered > 0:
+            parts.append("")
+            parts.append(
+                f"Filtered: {version_bump_count} version bumps, "
+                f"{reformat_count} reformatting-only changes"
+            )
+
+        # Import style changes (paired old→new for same module)
+        if paired_imports:
+            parts.append("")
+            parts.append("=== Import Style Changes ===")
+            parts.append("")
+            for mod in sorted(paired_imports):
+                pair = paired_imports[mod]
+                old_stmts = []
+                for e in pair["removed"]:
+                    for ln in e.split("\n"):
+                        if ln.startswith("- "):
+                            old_stmts.append(ln[2:])
+                new_stmts = []
+                for e in pair["added"]:
+                    for ln in e.split("\n"):
+                        if ln.startswith("+ "):
+                            new_stmts.append(ln[2:])
+                parts.append(f'"{mod}":')
+                for s in old_stmts:
+                    parts.append(f"  - {s}")
+                for s in new_stmts:
+                    parts.append(f"  + {s}")
+                parts.append("")
+
+        # Unpaired removals (non-import declarations that were removed)
+        if unpaired_removed:
+            parts.append("=== Removed ===")
+            parts.append("")
+            for entry in unpaired_removed:
+                parts.append(entry)
+                parts.append("")
+
+        # Unpaired additions (non-import declarations that were added)
+        if unpaired_added:
+            parts.append("=== Added ===")
+            parts.append("")
+            for entry in unpaired_added:
+                parts.append(entry)
+                parts.append("")
+
+        # Structural changes (filtered)
+        if kept_structural:
+            parts.append("=== Structural Changes ===")
+            parts.append("")
+            for entry in kept_structural:
+                parts.append(entry)
+                parts.append("")
+
+        # String-only changes (filtered)
+        if kept_string:
+            parts.append("=== String Changes ===")
+            parts.append("")
+            for entry in kept_string:
+                parts.append(entry)
+                parts.append("")
+
+        return "\n".join(parts)
+
+    def _parse_astdiff_sections(self, content: str) -> dict:
+        """Parse astdiff output into header + per-section entry lists."""
+        section_markers = {
+            "=== Removed ===": "removed",
+            "=== Added ===": "added",
+            "=== Structural Changes ===": "structural",
+            "=== String Changes ===": "string",
+        }
+
+        # Split on section markers, keeping them as delimiters
+        pattern = r"\n(" + "|".join(
+            re.escape(m) for m in section_markers
+        ) + r")\n"
+        parts = re.split(pattern, content)
+
+        result = {
+            "header": parts[0].rstrip(),
+            "removed": [],
+            "added": [],
+            "structural": [],
+            "string": [],
+        }
+
+        # parts = [header, marker1, content1, marker2, content2, ...]
+        for i in range(1, len(parts), 2):
+            marker = parts[i]
+            section_content = parts[i + 1] if i + 1 < len(parts) else ""
+            key = section_markers.get(marker)
+            if key:
+                result[key] = self._split_astdiff_entries(section_content, key)
+
+        return result
+
+    def _split_astdiff_entries(self, text: str, section_type: str) -> list:
+        """Split a section's text into individual entry strings."""
+        if section_type == "removed":
+            marker = "--- Removed"
+        elif section_type == "added":
+            marker = "+++ Added"
         else:
-            # Parse unified diff format
-            for line in diff_content.split("\n"):
-                # Detect start of a new change block
-                if line.startswith("@@"):
-                    if current_change:
-                        changes.append("\n".join(current_change))
-                        current_change = []
-                    in_change = True
-                    current_change.append(line)
-                elif in_change and (
-                    line.startswith("+") or line.startswith("-") or line.startswith(" ")
-                ):
-                    current_change.append(line)
-                elif in_change and not line:
-                    # Empty line might separate changes
-                    if current_change:
-                        changes.append("\n".join(current_change))
-                        current_change = []
-                    in_change = False
+            marker = "@@@"
 
-            # Add the last change if any
-            if current_change:
-                changes.append("\n".join(current_change))
+        entries = []
+        current = []
 
-        return changes
+        for line in text.split("\n"):
+            if line.startswith(marker) and current:
+                entry = "\n".join(current).strip()
+                if entry:
+                    entries.append(entry)
+                current = []
+            current.append(line)
 
-    def phase_5_generate_changes(self):
-        """Phase 5: Generate changes files using Claude subagents"""
+        if current:
+            entry = "\n".join(current).strip()
+            if entry:
+                entries.append(entry)
+
+        return entries
+
+    def _is_version_bump_entry(self, entry_text: str) -> bool:
+        """Check if a structural/string entry's diff is only VERSION/BUILD_TIME changes."""
+        changed_minus = []
+        changed_plus = []
+        in_hunk = False
+
+        for line in entry_text.split("\n"):
+            if line.startswith("@@ "):
+                in_hunk = True
+                continue
+            # Skip file path lines (--- file, +++ file)
+            if line.startswith("--- ") or line.startswith("+++ "):
+                continue
+            if in_hunk:
+                if line.startswith("-"):
+                    changed_minus.append(line[1:])
+                elif line.startswith("+"):
+                    changed_plus.append(line[1:])
+
+        if not changed_minus or not changed_plus:
+            return False
+
+        def normalize_version_strings(text):
+            text = self._VERSION_BUMP_RE.sub('VERSION: ""', text)
+            text = self._BUILD_TIME_RE.sub('BUILD_TIME: ""', text)
+            text = self._BUILD_PATH_RE.sub("claude-cli-external-build-0", text)
+            return text
+
+        norm_minus = normalize_version_strings(" ".join(changed_minus))
+        norm_plus = normalize_version_strings(" ".join(changed_plus))
+
+        return norm_minus == norm_plus
+
+    def _pair_imports(self, removed_entries, added_entries):
+        """Pair removed default imports with added destructured imports for same module.
+
+        Returns (paired_dict, unpaired_removed, unpaired_added) where
+        paired_dict maps module_name -> {"removed": [...], "added": [...]}.
+        """
+        import_from_re = re.compile(r'from\s+"([^"]+)"')
+
+        def get_module(entry_text):
+            m = import_from_re.search(entry_text)
+            return m.group(1) if m else None
+
+        def is_import_entry(entry_text):
+            first_line = entry_text.split("\n")[0]
+            return "import@" in first_line or "import " in first_line
+
+        removed_by_mod = {}
+        removed_other = []
+        for entry in removed_entries:
+            if is_import_entry(entry):
+                mod = get_module(entry)
+                if mod:
+                    removed_by_mod.setdefault(mod, []).append(entry)
+                else:
+                    removed_other.append(entry)
+            else:
+                removed_other.append(entry)
+
+        added_by_mod = {}
+        added_other = []
+        for entry in added_entries:
+            if is_import_entry(entry):
+                mod = get_module(entry)
+                if mod:
+                    added_by_mod.setdefault(mod, []).append(entry)
+                else:
+                    added_other.append(entry)
+            else:
+                added_other.append(entry)
+
+        # Modules present in both removed and added = import style changes
+        paired = {}
+        for mod in set(removed_by_mod) & set(added_by_mod):
+            paired[mod] = {
+                "removed": removed_by_mod[mod],
+                "added": added_by_mod[mod],
+            }
+
+        # Unpaired: imports for modules only in one side + non-imports
+        unpaired_removed = removed_other[:]
+        for mod, entries in removed_by_mod.items():
+            if mod not in paired:
+                unpaired_removed.extend(entries)
+
+        unpaired_added = added_other[:]
+        for mod, entries in added_by_mod.items():
+            if mod not in paired:
+                unpaired_added.extend(entries)
+
+        return paired, unpaired_removed, unpaired_added
+
+    # ── phase 5 ────────────────────────────────────────────────────────
+
+    def phase_5_filter_diffs(self):
+        """Phase 5: Filter astdiff output to remove noise (no SDK needed)"""
         if not self.changes:
             return
 
-        print_header("Phase 5: Generating Changes Files")
+        print_header("Phase 5: Filtering Diffs")
 
-        # Ensure the system prompt file exists
-        self.ensure_changes_prompt()
+        print_info("Checking for diffs to filter...")
 
-        # Check if Claude CLI is available
-        claude_result = run(["which", "claude"], capture_output=True)
-        if claude_result.returncode != 0:
-            print_warning("Claude CLI not found. Skipping changes generation.")
-            print_info("Ensure claude CLI is in PATH")
-            return
+        versions = self.get_versions_to_filter()
 
-        print_info("Checking for changes files to generate...")
-
-        versions_to_changes = self.get_versions_to_changes()
-
-        if not versions_to_changes:
-            print_info("All changes files already generated.")
+        if not versions:
+            print_info("All diffs already filtered.")
             return
 
         order_desc = "newest first" if self.new_first else "oldest first"
         print_info(
-            f"Found {len(versions_to_changes)} changes files to generate (processing {order_desc})"
+            f"Found {len(versions)} diffs to filter (processing {order_desc})"
         )
 
-        for version_str in versions_to_changes:
-            if self.generate_changes(version_str):
+        for version_str in versions:
+            if self.filter_diff(version_str):
                 self.stats.changes_generated_count += 1
             else:
                 self.stats.changes_generation_failures += 1
 
         print_info(
-            f"\nGenerated {self.stats.changes_generated_count} new changes files."
+            f"\nFiltered {self.stats.changes_generated_count} diffs."
         )
         if self.stats.changes_generation_failures > 0:
             print_warning(
-                f"{self.stats.changes_generation_failures} changes generations failed."
+                f"{self.stats.changes_generation_failures} filter operations failed."
             )
 
     def ensure_changelog_prompt(self):
         """Ensure the changelog system prompt file exists"""
-        system_prompt_file = self.changelog_dir / "system-prompt.md"
-
-        if not system_prompt_file.exists():
-            print_info("Creating default changelog system prompt file...")
-            with open(system_prompt_file, "w", encoding="utf-8") as f:
-                f.write(self.DEFAULT_CHANGELOG_PROMPT)
-            print_success(f"Created {system_prompt_file}")
-            print_info("You can edit this file to customize changelog generation")
-
-    def ensure_changes_prompt(self):
-        """Ensure the changes system prompt file exists"""
-        system_prompt_file = self.changes_dir / "changes-prompt.md"
-
-        if not system_prompt_file.exists():
-            print_info("Creating default changes system prompt file...")
-            with open(system_prompt_file, "w", encoding="utf-8") as f:
-                f.write(self.DEFAULT_CHANGES_PROMPT)
-            print_success(f"Created {system_prompt_file}")
-            print_info("You can edit this file to customize changes generation")
+        self._ensure_prompt_file(
+            self.changelog_dir, "system-prompt.md",
+            self.DEFAULT_CHANGELOG_PROMPT, "changelog"
+        )
 
     def update_claude_md(self, version_str: str):
         """Update CLAUDE.md file to indicate the current version for analysis"""
@@ -1733,7 +1866,6 @@ Package: `{self.project.npm_package}`
 
         print_header("Phase 7: Posting Changelogs to Discord")
 
-        import subprocess
         post_script = self.base_dir / "tools" / "post.py"
 
         if not post_script.exists():
@@ -1754,7 +1886,7 @@ Package: `{self.project.npm_package}`
 
             print_info(f"Running: {' '.join(cmd)}")
 
-            result = subprocess.run(
+            result = run(
                 cmd,
                 cwd=str(self.base_dir),
                 capture_output=False,  # Let output go directly to terminal
@@ -1817,11 +1949,14 @@ Package: `{self.project.npm_package}`
                 )
 
         if self.changes:
-            changes_count = len(list(self.changes_dir.glob("changes-v*.diff")))
-            print(f"Version changes: {changes_count}")
+            changes_count = len(
+                list(self.changes_dir.glob("changes-v*.md"))
+                + list(self.changes_dir.glob("changes-v*.diff"))
+            )
+            print(f"Filtered diffs: {changes_count}")
             if self.stats.changes_generated_count > 0:
                 print_success(
-                    f"Generated {self.stats.changes_generated_count} new changes files"
+                    f"Filtered {self.stats.changes_generated_count} diffs"
                 )
 
         if self.do_cleanup:
@@ -1880,8 +2015,8 @@ Package: `{self.project.npm_package}`
                 self.phase_3_generate_diffs(all_versions)
 
             # Common phases for both project types
+            self.phase_5_filter_diffs()
             self.phase_4_generate_changelogs()
-            self.phase_5_generate_changes()
             self.phase_6_cleanup_changelogs()
             self.phase_7_post_changelogs()
 
@@ -2078,32 +2213,26 @@ Package: `{self.project.npm_package}`
                     else:
                         print_warning(f"No previous version found for v{version_str}")
 
-            # Generate changelog if requested
+            # Filter diff first (provides input for changelog)
+            if self.changes:
+                changes_iteration = changelog_iteration
+                print_info(
+                    f"Filtering diff iteration {changes_iteration} for v{version_str}"
+                )
+                if self.filter_diff(version_str, changes_iteration):
+                    self.stats.changes_generated_count += 1
+                else:
+                    self.stats.changes_generation_failures += 1
+
+            # Generate changelog (uses filtered diff if available)
             if self.changelog:
                 print_info(
                     f"Generating changelog iteration {changelog_iteration} for v{version_str}"
                 )
-                # Use the latest diff iteration if we just created one, otherwise use the latest existing
-                if self.diff:
-                    effective_iteration = diff_iteration
-                else:
-                    effective_iteration = 1  # Use base diff if not regenerating diffs
-
                 if self.generate_changelog(version_str, changelog_iteration):
                     self.stats.changelog_generated_count += 1
                 else:
                     self.stats.changelog_generation_failures += 1
-
-            # Generate changes if requested
-            if self.changes:
-                changes_iteration = changelog_iteration  # Use same iteration tracking
-                print_info(
-                    f"Generating changes iteration {changes_iteration} for v{version_str}"
-                )
-                if self.generate_changes(version_str, changes_iteration):
-                    self.stats.changes_generated_count += 1
-                else:
-                    self.stats.changes_generation_failures += 1
 
         print_info(
             f"\nRedo complete: {self.stats.diff_generated_count} diffs, {self.stats.changelog_generated_count} changelogs"
@@ -2135,7 +2264,7 @@ Examples:
   %(prog)s --all --since 1.0.50                     # Process all steps for versions 1.0.50+
   %(prog)s --changelog --new-first                  # Generate changelogs (newest first)
   %(prog)s --prettier --diff --changelog            # Generate diffs and changelogs
-  %(prog)s --diff --changes                         # Generate diffs and detailed changes
+  %(prog)s --diff --changes                         # Generate diffs and filter to meaningful changes
   %(prog)s --redo 69 --changelog                    # Redo changelog for v1.0.69
   %(prog)s --project codex --all                    # Process all Codex versions
         """,
@@ -2170,7 +2299,7 @@ Examples:
     parser.add_argument(
         "--changes",
         action="store_true",
-        help="Generate detailed changes files with meaningful names using Claude subagents",
+        help="Filter astdiff output to remove version bumps, reformatting noise, and pair import changes",
     )
 
     parser.add_argument(
@@ -2188,7 +2317,7 @@ Examples:
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Run all processing steps (prettier, diff, changelog, cleanup, post - excludes changes)",
+        help="Run all processing steps (prettier, diff, filter, changelog, cleanup, post)",
     )
 
     parser.add_argument(
@@ -2229,11 +2358,14 @@ Examples:
     if args.all:
         args.prettier = True
         args.diff = True
+        args.changes = True
         args.changelog = True
         args.cleanup = True
         args.post = True
 
-    # --changelog will work independently and process available diffs
+    # --changelog implies --changes (filter step provides input for changelog)
+    if args.changelog:
+        args.changes = True
 
     # Disable colors if requested or if not a TTY
     if args.no_color or not sys.stdout.isatty():
