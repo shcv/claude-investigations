@@ -1,17 +1,21 @@
 #+TITLE: Session Memory (Automatic Note-Taking)
 #+DATE: 2025-08-20
+#+UPDATED: 2026-01-09
 
 * Overview
 
 Session Memory is an automatic background note-taking system introduced in Claude Code v1.0.85. It maintains persistent, structured notes about your development work throughout a session, capturing task specifications, work progress, code documentation, workflows, corrections, and learnings without interrupting your conversation flow.
 
+*Important limitation*: There are no built-in tools to search previous sessions. Claude Code would need to use bash tools (grep, ls) to read past session files, or you must manually copy relevant information into =CLAUDE.md=.
+
 * Key Characteristics
 
 ** Automatic Activation
-- Activates after 5 messages in a session
-- No environment variables or feature flags required
-- Always enabled by default (no opt-out mechanism currently)
+- Activates based on token thresholds (configurable via feature flags)
+- Controlled by =tengu_session_memory= Statsig feature flag
+- *Server-controlled*: Users cannot enable/disable - Anthropic controls rollout
 - Transparent to the user - updates happen silently in the background
+- Uses a "fork" pattern - spawns a separate Claude query for updates
 
 ** Persistent Storage
 - Notes stored at: =~/.claude/session-memory/[session-id].md=
@@ -20,73 +24,178 @@ Session Memory is an automatic background note-taking system introduced in Claud
 - Markdown format for easy reading and editing
 
 ** Intelligent Updates
-- Claude uses itself to update the notes based on conversation context
-- Updates use the MultiEdit tool without requiring permissions
+- Claude uses itself (via forked query) to update notes
+- Updates use the Edit tool without requiring permissions
 - Maintains structured format with predefined sections
 - Focuses on actionable, specific information
 
 * Activation Mechanism
 
-** Message Count Trigger
-The feature activates when a session reaches 5 messages:
+** Token-Based Thresholds (v2.1.1)
+
+The feature uses three configurable thresholds:
+
 #+BEGIN_SRC javascript
-var nN8 = 5;  // Minimum message count threshold
+// pretty-v2.1.1.js:404105-404108
+JkA = {
+  minimumMessageTokensToInit: 10000,    // ~10k tokens before first activation
+  minimumTokensBetweenUpdate: 5000,     // ~5k tokens between updates
+  toolCallsBetweenUpdates: 3,           // 3 tool calls can also trigger update
+}
 #+END_SRC
 
-This threshold ensures notes aren't created for trivial interactions while still capturing meaningful development sessions early enough to be useful.
+These ensure notes aren't created for trivial interactions while still capturing meaningful sessions.
 
 ** Activation Check Function
-The =aN8()= function checks if the conversation has tool usage:
+
+The =fV7()= function determines when to trigger an update:
+
 #+BEGIN_SRC javascript
-function aN8(A) {
-  for (let B = A.length - 1; B >= 0; B--) {
-    let Q = A[B];
-    if (Q && Q.type === "assistant") {
-      let D = Q.message.content;
-      if (Array.isArray(D)) 
-        return D.some((G) => G.type === "tool_use");
-    }
+// pretty-v2.1.1.js:513462-513483
+function fV7(A) {
+  // Track tokens and tool calls since last update
+  let B = [...A].reverse().find((I) => I.type === "assistant")?.uuid;
+  if (B && B !== wV9) {
+    let I = OI(A);        // Count tokens
+    if (I > 0) ix2(I);
+    let W = FrB(A);       // Count tool calls
+    if (W > 0) nx2(W);
+    wV9 = B;
+  }
+
+  // Check if we've passed initialization threshold
+  if (!ox2()) {
+    if (!sx2()) return !1;  // minimumMessageTokensToInit not reached
+    rx2();                  // Mark as initialized
+  }
+
+  // Check update conditions
+  let G = tx2(),           // Enough tokens since last update?
+    Y = bV7(A, NV9) >= ex2(),  // Enough tool calls?
+    J = dhA(A);            // Is assistant still processing?
+
+  if ((G && Y) || (G && !J)) {
+    return !0;  // Trigger update
   }
   return !1;
 }
 #+END_SRC
 
-This ensures the feature activates for sessions involving actual work (tool usage) rather than just conversation.
-
 ** Permission Bypass
-The system automatically allows operations on session-memory files:
+
+Session memory writes bypass the normal permission system:
+
 #+BEGIN_SRC javascript
-if (typeof Q === "string" && Q.includes("session-memory"))
-  return { behavior: "allow", updatedInput: B };
+// pretty-v2.1.1.js:282589-282590
+if (B.includes("/session-memory/") && B.endsWith(".md"))
+  return "session_memory";  // Special file type marker
+
+// pretty-v2.1.1.js:404603
+if (Q === "session_memory") return !1;  // Skip permission check
 #+END_SRC
 
-This prevents permission prompts from interrupting the background note-taking process.
+* Fork Pattern Architecture
+
+Session memory uses a "fork" pattern where the main conversation spawns a separate Claude query to update notes. This ensures updates don't block or interfere with the user's conversation.
+
+** Main Handler
+
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:513564-513594
+gV7 = $v(async function (A) {
+  let { messages: Q, toolUseContext: B, querySource: G } = A;
+
+  // Only run from main thread
+  if (G !== "repl_main_thread") return;
+
+  // Check activation thresholds
+  if (!fV7(Q)) return;
+
+  // Prepare memory file
+  let Z = rfA(B),
+    { memoryPath: Y, currentMemory: J } = await hV7(Z),
+    X = await Gy2(J, Y);  // Generate update prompt
+
+  // Fork to background agent with restricted tool access
+  await y6A({
+    promptMessages: [N0({ content: X })],
+    cacheSafeParams: zfA(A),
+    canUseTool: uV7(Y),      // Only allow Edit on notes file
+    querySource: "session_memory",
+    forkLabel: "session_memory",
+    overrides: { readFileState: Z.readFileState },
+  });
+});
+#+END_SRC
+
+** Tool Restriction
+
+The forked agent can only use the Edit tool on the specific notes file:
+
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:513521-513539
+function uV7(A) {
+  return async (Q, B) => {
+    if (
+      Q.name === x3 &&  // Edit tool
+      typeof B === "object" &&
+      B !== null &&
+      "file_path" in B
+    ) {
+      if (B.file_path === A) return { behavior: "allow", updatedInput: B };
+    }
+    return {
+      behavior: "deny",
+      message: `only ${x3} on ${A} is allowed`,
+    };
+  };
+}
+#+END_SRC
 
 * Directory Structure
 
 ** Base Directory
 #+BEGIN_SRC
 ~/.claude/session-memory/
-├── [session-uuid-1].md    # Notes for session 1
-├── [session-uuid-2].md    # Notes for session 2
-├── template.md            # Optional custom template
-└── prompt.md              # Optional custom update prompt
+├── [session-uuid-1].md           # Notes for session 1
+├── [session-uuid-2].md           # Notes for session 2
+└── config/
+    ├── template.md               # Optional custom template
+    └── prompt.md                 # Optional custom update prompt
 #+END_SRC
 
-** Directory Creation
-The directory is created using:
+** Directory/File Creation
+
 #+BEGIN_SRC javascript
-var _T0 = auB(P9(), "session-memory");
-// P9() returns the Claude home directory (~/.claude)
-// auB() is a path joining function
-#+END_SRC
+// pretty-v2.1.1.js:513485-513498
+async function hV7(A) {
+  let Q = jA(),
+    B = pE1();  // ~/.claude/session-memory/
 
-The directory is created automatically when the feature first activates. If it doesn't exist, Claude Code creates it before writing the first notes file.
+  // Create directory if missing
+  if (!Q.existsSync(B)) Q.mkdirSync(B, { mode: 448 });
+
+  let G = IkA();  // Get session-specific file path
+
+  // Create file from template if missing
+  if (!Q.existsSync(G)) {
+    let X = await Mz0();  // Load template
+    wB(G, X, { encoding: "utf-8", flush: !1, mode: 384 });
+  }
+
+  // Read current content
+  let Z = await Y5.call({ file_path: G }, A),
+    Y = "",
+    J = Z.data;
+  if (J.type === "text") Y = J.file.content;
+  return { memoryPath: G, currentMemory: Y };
+}
+#+END_SRC
 
 * Default Template
 
 ** Structure
-The default template (=uI8= variable) contains six main sections:
+The default template contains six main sections:
 
 #+BEGIN_SRC markdown
 # Task specification
@@ -117,33 +226,101 @@ _What has worked well? What has not? What to avoid? Do not duplicate items in ot
 * Update Mechanism
 
 ** Update Prompt
-The system uses a detailed prompt (=mI8= variable) that instructs Claude to:
-1. Read the current notes content
-2. Update based on the conversation (excluding the update instruction itself)
-3. Maintain exact structure with all sections and headers
-4. Use MultiEdit tool exactly once
-5. Never mention the note-taking process to the user
 
-** Update Process
-1. System reads current notes from file
-2. Generates update prompt with current content embedded
-3. Claude processes the prompt and updates via MultiEdit
-4. Changes are saved automatically
-5. Process repeats periodically as conversation continues
+The update prompt instructs the forked Claude to:
 
-** Content Management
-- Sections that grow beyond ~2000 words cycle out less important details
-- Focus on actionable, specific information
-- Preserve most critical information when trimming
-- Maintain chronological progression in Worklog section
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:404141-404150 (excerpt from prompt)
+`Use the Edit tool with file_path: {{notesPath}}
+
+STRUCTURE PRESERVATION REMINDER:
+Each section has TWO parts that must be preserved exactly as they appear:
+1. The section header (line starting with #)
+2. The italic description line (the _italicized text_ immediately after)
+
+You ONLY update the actual content that comes AFTER these two preserved lines.
+
+REMEMBER: Use the Edit tool in parallel and stop. Do not continue after the edits.
+Only include insights from the actual user conversation, never from these
+note-taking instructions. Do not delete or change section headers or italic
+_section descriptions_.`
+#+END_SRC
+
+** Prompt Generation
+
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:404234-404238
+async function Gy2(A, Q) {
+  let B = await jd5(),        // Load custom or default prompt
+    G = Td5(A),               // Parse sections and count tokens
+    Z = Pd5(G);               // Generate length warnings if needed
+  return Sd5(B, { currentNotes: A, notesPath: Q }) + Z;
+}
+#+END_SRC
+
+** Section Length Management
+
+Sections that grow too long get warnings added to the prompt:
+
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:404208-404222
+function Pd5(A) {
+  let Q = Object.entries(A)
+    .filter(([B, G]) => G > Qy2)  // Token threshold per section
+    .map(
+      ([B, G]) =>
+        `- The "${B}" section is currently ~${G} tokens and growing long.
+           Consider condensing it while keeping all important details.`,
+    );
+  if (Q.length === 0) return "";
+  return "\n\n" + Q.join("\n");
+}
+#+END_SRC
+
+* Past Session Injection
+
+As of recent versions, Claude Code can inject previews of past sessions into new conversations:
+
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:522321-522345
+case "memory": {
+  let B = A.memories.map((G) => {
+    let Z =
+      G.remainingLines && G.remainingLines > 0
+        ? ` (${G.remainingLines} more lines in full file)`
+        : "";
+    return `## Previous Session (${new Date(G.lastModified).toLocaleDateString()})
+Full session notes: ${G.fullPath}${Z}
+
+${G.content}`;
+  }).join("\n\n---\n\n");
+
+  return w5([
+    N0({
+      content: `<session-memory>
+These session summaries are from PAST sessions that might not be related to the
+current task and may have outdated info. Do not assume the current task is
+related to these summaries, until the user's messages indicate so or reference
+similar tasks. Only a preview of each memory is shown - use the Read tool with
+the provided path to access full session memory when a session is relevant.
+
+${B}
+</session-memory>`,
+      isMeta: !0,
+    }),
+  ]);
+}
+#+END_SRC
+
+This allows Claude to see previews of relevant past sessions and use =Read= to access full content when needed - but there's no semantic search; it relies on Claude deciding which sessions look relevant.
 
 * Customization
 
 ** Custom Template
 Create your own template structure:
 #+BEGIN_SRC bash
-mkdir -p ~/.claude/session-memory
-cat > ~/.claude/session-memory/template.md << 'EOF'
+mkdir -p ~/.claude/session-memory/config
+cat > ~/.claude/session-memory/config/template.md << 'EOF'
 # Project Goals
 _High-level objectives and requirements_
 
@@ -164,7 +341,7 @@ EOF
 ** Custom Update Prompt
 Define how Claude should update your notes:
 #+BEGIN_SRC bash
-cat > ~/.claude/session-memory/prompt.md << 'EOF'
+cat > ~/.claude/session-memory/config/prompt.md << 'EOF'
 Update the session notes focusing on:
 1. Technical implementation details
 2. Design decisions and their rationale
@@ -178,139 +355,124 @@ EOF
 #+END_SRC
 
 ** Loading Custom Configuration
-The system checks for custom files at startup:
+
 #+BEGIN_SRC javascript
-async function GPB() {
-  let A = P1(),  // File system module
-    B = DPB(P9(), "session-memory", "template.md");
-  if (A.existsSync(B))
+// pretty-v2.1.1.js:404152-404165
+async function Mz0() {
+  let A = jA(),
+    Q = Ay2(MQ(), "session-memory", "config", "template.md");
+  if (A.existsSync(Q))
     try {
-      return A.readFileSync(B, { encoding: "utf-8" });
-    } catch (Q) {
-      // Falls back to default template
+      return A.readFileSync(Q, { encoding: "utf-8" });
+    } catch (B) {
+      r(Error(`Failed to load custom session memory template: ${B}`));
     }
-  return uI8;  // Default template
+  return Rd5;  // Default template
 }
 #+END_SRC
-
-* Implementation Details
-
-** File Naming
-Session files use UUID-based names:
-#+BEGIN_SRC javascript
-import { randomUUID as bN8 } from "crypto";
-// Files named like: 550e8400-e29b-41d4-a716-446655440000.md
-#+END_SRC
-
-** Update Frequency
-The system appears to update notes:
-- After significant tool usage
-- When new sections have content to add
-- At natural conversation breakpoints
-- Not on every single message to avoid excessive updates
-
-** Error Handling
-- Missing directories are created automatically
-- Read/write errors fail silently to avoid disrupting workflow
-- Malformed templates fall back to defaults
-- Update failures don't affect main conversation
-
-** Performance Considerations
-- Updates run asynchronously in background
-- No blocking operations in main conversation flow
-- Efficient diffing via MultiEdit tool
-- Minimal file I/O operations
-
-* Use Cases
-
-** Development Documentation
-- Automatically documents coding sessions
-- Captures architectural decisions as they're made
-- Records command sequences for reproducibility
-- Tracks what approaches were tried and abandoned
-
-** Knowledge Transfer
-- Creates handoff documentation for team members
-- Preserves context for returning to projects later
-- Documents workarounds and gotchas discovered
-- Maintains record of user preferences and corrections
-
-** Learning and Improvement
-- Tracks what solutions worked vs. failed
-- Records patterns to avoid in future
-- Documents user corrections for better assistance
-- Builds project-specific knowledge base
-
-** Debugging Aid
-- Maintains chronological record of attempts
-- Documents error messages and solutions
-- Tracks configuration changes made
-- Records successful command sequences
-
-* Best Practices
-
-** Template Design
-- Keep sections focused and specific
-- Use clear, descriptive headers
-- Include sections for both successes and failures
-- Design for scanability and quick reference
-
-** Content Guidelines
-- Focus on actionable information
-- Prioritize "why" over "what" for decisions
-- Include enough context for future understanding
-- Keep entries concise but complete
-
-** Maintenance
-- Periodically review and clean old session files
-- Archive important sessions for future reference
-- Consider version controlling important templates
-- Share useful templates with team members
 
 * Technical Architecture
 
 ** Component Structure
 #+BEGIN_SRC
-Session Memory System
+Session Memory System (v2.1.1)
 ├── Activation Logic
-│   ├── Message counter (nN8 = 5)
-│   ├── Tool usage detector (aN8)
-│   └── Session state manager
+│   ├── Token counter (minimumMessageTokensToInit: 10000)
+│   ├── Update interval (minimumTokensBetweenUpdate: 5000)
+│   ├── Tool call counter (toolCallsBetweenUpdates: 3)
+│   └── Activation gate (fV7)
 ├── Storage Layer
-│   ├── Directory management (_T0)
-│   ├── File operations (P1)
-│   └── Path resolution (auB, DPB)
+│   ├── Directory management (pE1, hV7)
+│   ├── File operations (jA, wB)
+│   └── Session ID (IkA - UUID-based)
 ├── Template System
-│   ├── Default template (uI8)
-│   ├── Custom template loader (GPB)
-│   └── Template validator
+│   ├── Default template (Rd5)
+│   ├── Custom template loader (Mz0)
+│   └── Section parser (Td5)
 ├── Update Engine
-│   ├── Update prompt generator (mI8)
-│   ├── Custom prompt loader (dI8)
-│   ├── Content processor (FPB)
-│   └── MultiEdit interface
+│   ├── Prompt generator (Gy2)
+│   ├── Custom prompt loader (jd5)
+│   ├── Length warning generator (Pd5)
+│   └── Fork handler (gV7, y6A)
 └── Permission System
-    └── Automatic bypass for session-memory paths
+    ├── Path detection (session-memory check)
+    ├── Tool restriction (uV7)
+    └── Permission bypass (session_memory type)
 #+END_SRC
 
 ** Data Flow
-1. User conversation reaches 5 messages
-2. System checks for tool usage activity
-3. Creates session-memory directory if needed
-4. Generates or loads template
-5. Creates initial notes file with template
-6. Monitors conversation for updates
-7. Periodically updates notes via MultiEdit
-8. Maintains notes throughout session
+1. Conversation accumulates tokens and tool calls
+2. =fV7()= checks if thresholds are met
+3. =hV7()= ensures directory and file exist
+4. =Gy2()= generates update prompt with current notes
+5. =y6A()= forks a background Claude query
+6. Forked Claude updates notes via Edit tool (restricted)
+7. Main conversation continues uninterrupted
+8. Process repeats when thresholds are met again
+
+* Feature Flag Control
+
+Session memory is controlled entirely server-side via Statsig feature flags. Users cannot enable or disable this feature themselves.
+
+** Statsig Integration
+
+#+BEGIN_SRC javascript
+// pretty-v2.1.1.js:140631-140632
+function lw(A) {
+  return (o$3(A), j1().cachedStatsigGates[A] ?? !1);  // Defaults to FALSE
+}
+
+// pretty-v2.1.1.js:513500-513502
+async function LV9() {
+  if (!hd()) return;
+  if (await Yz("tengu_session_memory")) {  // Check Statsig gate
+    // ... enable session memory
+  }
+}
+#+END_SRC
+
+** Key Points
+
+- *No user toggle*: There is no setting, environment variable, or config option to enable/disable
+- *Defaults to disabled*: Gates default to =false= if not explicitly enabled (=cachedStatsigGates[A] ?? !1=)
+- *Server-side rollout*: Anthropic can enable for specific users, percentages, or cohorts
+- *No client update needed*: Feature can be enabled/disabled without updating Claude Code
+
+** How to Check if Enabled
+
+The feature is enabled if the =~/.claude/session-memory/= directory exists and contains =.md= files:
+
+#+BEGIN_SRC bash
+# Check if feature has ever activated
+ls ~/.claude/session-memory/*.md 2>/dev/null && echo "Enabled" || echo "Not enabled or never triggered"
+
+# The directory is only created when:
+# 1. Feature flag is enabled AND
+# 2. A session reaches 10k+ tokens with tool usage
+#+END_SRC
+
+** Related Feature Flags
+
+| Flag | Purpose |
+|------|---------|
+| =tengu_session_memory= | Main enable/disable gate |
+| =tengu_sm_compact= | Session memory compaction |
+| =tengu_sm_config= | Dynamic config for thresholds |
 
 * Limitations and Considerations
 
+** No Cross-Session Search
+- *No built-in tools* to search previous sessions
+- No database or indexing of past sessions
+- Must use bash commands to browse =~/.claude/session-memory/=
+- Past session injection provides previews but no semantic search
+
 ** Current Limitations
-- No opt-out mechanism currently available
-- Cannot disable for specific projects
-- No configuration for activation threshold
-- Limited control over update frequency
+- *Server-gated*: Controlled by =tengu_session_memory= Statsig flag - users cannot opt in/out
+- No user-facing configuration for activation thresholds
 - No built-in cleanup for old sessions
+- Sessions accumulate indefinitely
+- No way to know if feature is enabled until files appear
 
 ** Privacy Considerations
 - Notes stored in plaintext on local filesystem
@@ -323,25 +485,25 @@ Session Memory System
 - No automatic cleanup mechanism
 - Files accumulate over time
 - Manual maintenance required
-- Consider disk space for long-term usage
 
 * Troubleshooting
 
 ** Notes Not Being Created
-- Ensure conversation has at least 5 messages
+- *Most likely*: Feature flag =tengu_session_memory= not enabled for your account
+- Ensure conversation has sufficient tokens (~10k+)
 - Check that tools are being used (not just chat)
-- Verify ~/.claude/session-memory/ exists
+- Verify =~/.claude/session-memory/= exists (created on first activation)
 - Check file system permissions
+- There is no way to manually enable - Anthropic controls rollout
 
 ** Custom Template Not Loading
 #+BEGIN_SRC bash
-# Verify template exists and is readable
-ls -la ~/.claude/session-memory/template.md
-cat ~/.claude/session-memory/template.md
+# Verify template exists and is readable (note: config/ subdirectory)
+ls -la ~/.claude/session-memory/config/template.md
+cat ~/.claude/session-memory/config/template.md
 
 # Check for syntax errors in markdown
-# Ensure file encoding is UTF-8
-file ~/.claude/session-memory/template.md
+file ~/.claude/session-memory/config/template.md
 #+END_SRC
 
 ** Finding Session Files
@@ -352,8 +514,11 @@ ls -la ~/.claude/session-memory/*.md
 # Find most recent session
 ls -t ~/.claude/session-memory/*.md | head -1
 
-# Search for specific content
+# Search for specific content across sessions
 grep -r "keyword" ~/.claude/session-memory/
+
+# Count sessions
+ls ~/.claude/session-memory/*.md 2>/dev/null | wc -l
 #+END_SRC
 
 ** Manual Cleanup
@@ -363,8 +528,23 @@ find ~/.claude/session-memory -name "*.md" -mtime +30 -delete
 
 # Archive old sessions
 tar czf session-archive-$(date +%Y%m%d).tar.gz ~/.claude/session-memory/*.md
-rm ~/.claude/session-memory/*.md
 #+END_SRC
+
+* Code References (v2.1.1)
+
+| Function/Variable | Line | Purpose |
+|-------------------|------|---------|
+| =JkA= | 404105 | Default threshold config |
+| =fV7= | 513462 | Activation check |
+| =hV7= | 513485 | File setup |
+| =Gy2= | 404234 | Prompt generation |
+| =Mz0= | 404152 | Template loader |
+| =jd5= | 404167 | Prompt loader |
+| =uV7= | 513521 | Tool restriction filter |
+| =gV7= | 513564 | Main update handler |
+| =y6A= | 513572 | Fork to background |
+| =Td5= | 404182 | Section parser |
+| =Pd5= | 404208 | Length warning generator |
 
 * Examples
 
@@ -373,12 +553,12 @@ After a typical development session:
 
 #+BEGIN_SRC markdown
 # Task specification
-User requested implementation of a REST API for todo list management with 
+User requested implementation of a REST API for todo list management with
 CRUD operations, PostgreSQL persistence, and JWT authentication.
 
 # Worklog
 - Set up Express server with TypeScript configuration
-- Created PostgreSQL schema with users and todos tables  
+- Created PostgreSQL schema with users and todos tables
 - Implemented JWT authentication middleware
 - Added user registration and login endpoints
 - Created CRUD endpoints for todos with user association

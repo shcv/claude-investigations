@@ -1,0 +1,485 @@
+#+TITLE: Claude Code Feature Flag System - Technical Analysis v2.1.33
+#+DATE: 2026-02-06
+
+* Overview
+
+Claude Code uses GrowthBook (an open-source feature flagging platform) for remote
+feature evaluation, despite legacy references to "Statsig" in variable names and
+config keys. Feature flags use the =tengu_= prefix and control access to experimental
+features, A/B tests, and gradual rollouts. The system uses a server-side evaluation
+model where Anthropic's server decides which flags a user gets based on identity
+attributes.
+
+* Architecture
+
+** Data Flow
+
+#+begin_example
+                 +---------------------------+
+                 |  api.anthropic.com        |
+                 |  POST /api/eval/<key>     |
+                 |  (GrowthBook remote eval) |
+                 +-----------+---------------+
+                             |
+                  Sends: user ID, org UUID, email
+                  Returns: feature values per user
+                             |
+                             v
+                 +---------------------------+
+              +--| ~/.claude.json            |
+              |  |  cachedGrowthBookFeatures |
+              |  |  cachedStatsigGates       |
+              |  +---------------------------+
+              |
+              v
+         Q8("tengu_flag", default)
+         +------------------------+
+         | Xe() -> telemetry      |--No--> return default
+         |        enabled?        |
+         +--------+---------------+
+                  |Yes
+                  v
+         cachedGrowthBookFeatures["tengu_flag"]
+                  |
+         defined? --No--> return default
+                  |Yes
+                  v
+         return cached value
+#+end_example
+
+** GrowthBook Client Configuration
+
+- *SDK Key*: =sdk-zAZezfDKGoZuXXKe= (line 7100)
+- *API Host*: =https://api.anthropic.com/= (line 520764, *hardcoded*)
+- *Endpoint*: =POST /api/eval/sdk-zAZezfDKGoZuXXKe=
+- *Evaluation Mode*: =remoteEval: true= (server decides, not client)
+- *Cache Key Attributes*: =["id", "organizationUUID"]=
+- *Init Timeout*: 5000ms
+
+** Config File Location
+
+The config file path is determined by =EM()= (line 30211):
+
+#+begin_src javascript
+function EM() {
+  if (x1().existsSync(Hh6($8(), ".config.json")))
+    return Hh6($8(), ".config.json");
+  let A = `.claude${uq8()}.json`;
+  return Hh6(process.env.CLAUDE_CONFIG_DIR || z5K(), A);
+}
+#+end_src
+
+Default path: =~/.claude.json=. Can be overridden with =CLAUDE_CONFIG_DIR=.
+
+** Telemetry Gate (Xe)
+
+All feature flag checks are gated by =Xe()= which returns =$M1()= which returns =!jZ()=:
+
+#+begin_src javascript
+function jZ() {
+  return (
+    _6(process.env.CLAUDE_CODE_USE_BEDROCK) ||
+    _6(process.env.CLAUDE_CODE_USE_VERTEX) ||
+    _6(process.env.CLAUDE_CODE_USE_FOUNDRY) ||
+    !!process.env.DISABLE_TELEMETRY ||
+    !!process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+  );
+}
+#+end_src
+
+When any of these env vars are set, =Xe()= returns false, and *all* =Q8()= calls
+return their hardcoded default without consulting the cache or the server.
+
+* Core Functions
+
+** Q8(flagName, default) - Gate Check (line 520632)
+
+Primary synchronous gate check. Returns the cached feature value or the default.
+
+#+begin_src javascript
+function Q8(A, q) {
+  if (!Xe()) return q;                    // telemetry off -> return default
+  if ((KZ1(A, q), Bp1.has(A))) DN6(A);   // fire lazy updater + log experiment
+  else bp1.add(A);                        // track first-seen flags
+  try {
+    let K = j6().cachedGrowthBookFeatures?.[A];
+    return K !== void 0 ? K : q;          // cache hit or default
+  } catch {
+    return q;
+  }
+}
+#+end_src
+
+** oY(flagName) - Boolean Gate Check (line 520643)
+
+Similar to Q8 but always returns a boolean. Falls back to =cachedStatsigGates= (legacy).
+
+#+begin_src javascript
+function oY(A) {
+  if (!Xe()) return !1;
+  if ((KZ1(A, !1), Bp1.has(A))) DN6(A);
+  else bp1.add(A);
+  let q = j6(),
+    K = q.cachedGrowthBookFeatures?.[A];
+  if (K !== void 0) return Boolean(K);
+  return q.cachedStatsigGates?.[A] ?? !1;
+}
+#+end_src
+
+** KZ1(flagName, default) - Lazy Updater (line 520822)
+
+Async, memoized (once per flag name per session). Fetches the live value from
+GrowthBook and writes it back to the config file if it differs from the cache.
+
+#+begin_src javascript
+KZ1 = KA(async (A, q) => {
+    let K = await jOq(A, q, !1),   // get live value from GrowthBook
+        Y = j6();                    // read current config
+    if (S11(Y.cachedGrowthBookFeatures?.[A], K)) return;  // no change
+    _A((z) => ({
+        ...z,
+        cachedGrowthBookFeatures: {
+            ...(z.cachedGrowthBookFeatures ?? {}),
+            [A]: K,
+        },
+    }));
+});
+#+end_src
+
+=KA= is lodash =memoize=, keyed by the first argument (flag name). Each flag gets
+exactly one live fetch per session.
+
+** W9z() - Periodic Bulk Refresh (line 520690)
+
+Refreshes all *already-cached* flags from the server. Does not add new flags.
+
+** G9z() - Refresh Timer (line 520712)
+
+Starts a =setInterval= calling =W9z()= every 6 hours (=j9z = 21600000=).
+Called once after GrowthBook initialization completes.
+
+** AE4() - Auth Change Handler (line 520662)
+
+Destroys the GrowthBook client, clears all caches (including memoization), and
+re-initializes from scratch. Triggered by login/logout events via =Hm1= (line 353844).
+
+* The Filesystem Cache
+
+** Purpose
+
+The cache exists to solve a timing problem: =Q8()= is synchronous, but GrowthBook
+initialization is async (~3-5 seconds for the network round-trip). Without the cache,
+every gate would return the hardcoded default during startup.
+
+The cache provides the *previous session's* server-evaluated values immediately on
+the next launch, so features are correctly enabled/disabled from the very first
+code path.
+
+** Update Lifecycle
+
+#+begin_example
+Session N ends
+  ~/.claude.json has cachedGrowthBookFeatures from this session's evaluations
+
+Session N+1 starts
+  1. First Q8() call reads cache from disk (synchronous) -> correct value
+  2. KZ1 fires async -> awaits GrowthBook init (~3-5s)
+  3. GrowthBook fetches live values from server
+  4. KZ1 writes updated value back to disk if changed
+  5. Subsequent Q8() calls read the updated disk cache
+  6. G9z() starts 6-hour refresh timer
+#+end_example
+
+** First-Ever Launch
+
+With no cache present, all flags return hardcoded defaults for the entire first
+session. The cache is populated during that session and available from the second
+launch onward.
+
+* Complete Gate Flag Inventory
+
+** Flags OFF by Default (gating access, default = false)
+
+These features are *disabled* unless GrowthBook enables them for the user's account.
+
+*** System Prompt & API
+
+| Flag                               | Purpose                                       | Check Frequency |
+|------------------------------------+-----------------------------------------------+-----------------|
+| =tengu_marble_anvil=               | Extended thinking / context management beta    | Per-turn        |
+| =tengu_scarf_coffee=               | Anthropic API beta header                      | Per-turn        |
+| =tengu_attribution_header=*        | API version attribution header (*default ON*)  | Per-turn        |
+| =tengu_vinteuil_phrase=            | Simplified system prompt variant               | Per-turn        |
+| =tengu_cork_m4q=                   | Bash command safety policy injection           | Per-interaction |
+| =tengu_marble_lantern_disabled=    | Kill switch - disables thinking entirely       | Per-turn        |
+| =tengu_marble_kite=                | Removes redundant tool descriptions            | Per-turn        |
+| =tengu_system_prompt_global_cache= | Global system prompt cache                     | Per-turn        |
+
+*** Session Memory & Auto-Memory
+
+| Flag                  | Purpose                       | Check Frequency | Env Override                                               |
+|-----------------------+-------------------------------+-----------------+------------------------------------------------------------|
+| =tengu_session_memory= | Session memory feature        | Per-turn        | --                                                         |
+| =tengu_sm_compact=    | Session memory compaction      | Per-turn        | =ENABLE_CLAUDE_CODE_SM_COMPACT= / =DISABLE_CLAUDE_CODE_SM_COMPACT= |
+| =tengu_oboe=          | Automatic memory note-taking   | Per-turn        | =CLAUDE_CODE_DISABLE_AUTO_MEMORY= (disable only)           |
+| =tengu_coral_fern=    | Past session search in prompt  | Per-turn        | --                                                         |
+
+*** Tool Search & Sorting
+
+| Flag                          | Purpose                           | Check Frequency | Env Override                       |
+|-------------------------------+-----------------------------------+-----------------+------------------------------------|
+| =tengu_tst_names_in_messages= | Tool Search Tool names in messages | Per-turn       | =CLAUDE_CODE_TST_NAMES_IN_MESSAGES= |
+| =tengu_tst_kx7=              | Deferred tool support for TST      | Per-turn       | --                                  |
+| =tengu_kv7_prompt_sort=      | Sorted deferred tool list          | Per-turn       | --                                  |
+
+*** Compaction & Caching
+
+| Flag                            | Purpose                         | Check Frequency | Env Override          |
+|---------------------------------+---------------------------------+-----------------+-----------------------|
+| =tengu_compact_cache_prefix=    | Prompt cache sharing            | Per-turn        | --                    |
+| =tengu_compact_streaming_retry= | Streaming retry for compaction  | Per-turn        | --                    |
+| =tengu_cache_plum_violet=       | Microcompact caching            | Per-turn        | =DISABLE_MICROCOMPACT= |
+
+*** UI & CLI Features
+
+| Flag                                    | Purpose                    | Check Frequency | Env Override                           |
+|-----------------------------------------+----------------------------+-----------------+----------------------------------------|
+| =tengu_keybinding_customization_release= | Custom keybinding support | Startup-once    | --                                     |
+| =tengu_code_diff_cli=                   | Code diff footer in CLI    | Per-interaction | --                                     |
+| =tengu_pr_status_cli=                   | PR status footer in CLI    | Per-interaction | --                                     |
+| =tengu_permission_explainer=            | Permission explainer UI    | Per-interaction | =PERMISSION_EXPLAINER_ENABLED=true=    |
+| =tengu_copper_lantern=                  | Opus promotional display   | Per-interaction | --                                     |
+| =tengu_silver_lantern=                  | Promotional messaging      | Per-interaction | --                                     |
+| =tengu_quiet_fern=                      | VSCode quiet mode          | Per-interaction | --                                     |
+
+*** Plan Mode & Remote
+
+| Flag                              | Purpose                          | Check Frequency | Env Override                            |
+|-----------------------------------+----------------------------------+-----------------+-----------------------------------------|
+| =tengu_plan_mode_interview_phase= | Plan mode interview phase        | Per-turn        | =CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE= |
+| =tengu_remote_backend=            | --remote without description     | Startup-once    | --                                      |
+| =tengu_quartz_lantern=            | Diff computation in remote mode  | Per-turn        | --                                      |
+
+*** Tool Execution
+
+| Flag                            | Purpose                           | Check Frequency |
+|---------------------------------+-----------------------------------+-----------------|
+| =tengu_plum_vx3=               | Disable thinking for web_search    | Per-interaction |
+| =tengu_file_write_optimization= | Optimized file write messaging    | Per-interaction |
+
+*** Miscellaneous
+
+| Flag                              | Purpose                     | Check Frequency |
+|-----------------------------------+-----------------------------+-----------------|
+| =tengu_chrome_auto_enable=        | Chrome extension auto-enable | Startup-once   |
+| =tengu_pid_based_version_locking= | PID-based version locking   | Startup-once    |
+| =tengu_workout2=                  | Unknown experimental feature | Startup-once    |
+
+** Flags ON by Default (default = true)
+
+These are enabled unless GrowthBook explicitly disables them.
+
+| Flag                      | Purpose                     | Check Frequency | Notes                                          |
+|---------------------------+-----------------------------+-----------------+------------------------------------------------|
+| =tengu_amber_flint=      | Agent teams                  | Startup-once    | Also requires =CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS= env var |
+| =tengu_chomp_inflection=  | Prompt suggestions          | Per-turn        |                                                |
+| =tengu_mcp_tool_search=  | MCP tool search (TST-auto)   | Per-turn        |                                                |
+| =tengu_attribution_header= | API attribution header     | Per-turn        | Disable via =CLAUDE_CODE_ATTRIBUTION_HEADER=   |
+
+** Config Values (non-boolean)
+
+| Flag                                  | Default | Purpose                                      |
+|---------------------------------------+---------+----------------------------------------------|
+| =tengu_tool_search_unsupported_models= | null   | Array of model names without tool search support |
+
+* Check Frequency Classification
+
+** Startup-Once
+
+Checked once at process initialization or CLI argument parsing. The cached value
+at launch time is the only value that matters for the session.
+
+Flags: =tengu_remote_backend=, =tengu_keybinding_customization_release=,
+=tengu_chrome_auto_enable=, =tengu_pid_based_version_locking=,
+=tengu_workout2=, =tengu_amber_flint=
+
+** Per-Turn
+
+Called on every API round-trip during system prompt construction, tool list
+building, or compaction. Since =Q8()= reads from disk and =j6()= checks file
+mtime, once =KZ1= writes the updated value (~5s into the session), all subsequent
+turns get the live server-evaluated value.
+
+~19 flags including: =tengu_marble_anvil=, =tengu_session_memory=,
+=tengu_oboe=, =tengu_coral_fern=, =tengu_vinteuil_phrase=, etc.
+
+** Per-Interaction
+
+Checked on every tool execution, UI render, or user action. Same timing behavior
+as per-turn.
+
+~10 flags including: =tengu_cork_m4q=, =tengu_plum_vx3=,
+=tengu_permission_explainer=, =tengu_code_diff_cli=, etc.
+
+* GrowthBook URL vs API URL
+
+The GrowthBook host and the Anthropic API host are configured *independently*.
+
+** GrowthBook: Hardcoded
+
+#+begin_src javascript
+// Line 520764 — raw string literal, no env var, no config
+q = "https://api.anthropic.com/"
+new ii1({
+    apiHost: q,
+    clientKey: liA,   // "sdk-zAZezfDKGoZuXXKe"
+    ...
+});
+#+end_src
+
+** Anthropic API: Configurable
+
+#+begin_src javascript
+// Line 122841 — reads ANTHROPIC_BASE_URL env var
+constructor({
+    baseURL: A = VR1("ANTHROPIC_BASE_URL"),
+    ...
+    baseURL: A || "https://api.anthropic.com",
+});
+#+end_src
+
+** Implications
+
+| Setting                              | Affects API | Affects GrowthBook |
+|--------------------------------------+-------------+--------------------|
+| =ANTHROPIC_BASE_URL=https://proxy/=  | Yes         | *No*               |
+| =HTTPS_PROXY=http://localhost:8080=  | Yes         | Yes (process-wide) |
+| Firewall on =api.anthropic.com=      | Yes         | Yes                |
+
+They share the same host (=api.anthropic.com=) but use different paths:
+- API: =/v1/messages=
+- GrowthBook: =/api/eval/sdk-zAZezfDKGoZuXXKe=
+
+A path-aware proxy can selectively intercept one without affecting the other.
+
+* Environment Variable Overrides
+
+Several flags check =process.env= *before* consulting GrowthBook, providing clean
+override paths:
+
+| Flag                              | Env Var                                  | Behavior                         |
+|-----------------------------------+------------------------------------------+----------------------------------|
+| =tengu_oboe=                      | =CLAUDE_CODE_DISABLE_AUTO_MEMORY=        | Disable only (=true= -> off)     |
+| =tengu_tst_names_in_messages=     | =CLAUDE_CODE_TST_NAMES_IN_MESSAGES=      | =true= -> on, =false= -> off    |
+| =tengu_plan_mode_interview_phase= | =CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=  | =true= -> on, =false= -> off    |
+| =tengu_cache_plum_violet=         | =DISABLE_MICROCOMPACT=                   | =true= -> enables (OR with gate) |
+| =tengu_sm_compact=                | =ENABLE_CLAUDE_CODE_SM_COMPACT=          | =true= -> on                     |
+| =tengu_sm_compact=                | =DISABLE_CLAUDE_CODE_SM_COMPACT=         | =true= -> off                    |
+| =tengu_system_prompt_global_cache= | =CLAUDE_CODE_FORCE_GLOBAL_CACHE=        | =true= -> enables (OR with gate) |
+| =tengu_permission_explainer=      | =PERMISSION_EXPLAINER_ENABLED=true=      | Exact string match               |
+| =tengu_attribution_header=        | =CLAUDE_CODE_ATTRIBUTION_HEADER=         | =false= -> disables              |
+
+* Bypass Approaches (Without Binary Modification)
+
+** 1. Environment Variable Overrides
+
+The cleanest approach for the ~7 flags that support it. Env vars are checked first
+and bypass the gate entirely.
+
+#+begin_src sh
+export CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=1
+export CLAUDE_CODE_TST_NAMES_IN_MESSAGES=1
+export ENABLE_CLAUDE_CODE_SM_COMPACT=1
+export CLAUDE_CODE_FORCE_GLOBAL_CACHE=1
+export PERMISSION_EXPLAINER_ENABLED=true
+#+end_src
+
+** 2. Config File Injection
+
+Write values directly into =cachedGrowthBookFeatures= in =~/.claude.json=.
+
+#+begin_src sh
+python3 -c "
+import json
+with open('$HOME/.claude.json') as f:
+    cfg = json.load(f)
+cfg.setdefault('cachedGrowthBookFeatures', {})
+cfg['cachedGrowthBookFeatures']['tengu_session_memory'] = True
+cfg['cachedGrowthBookFeatures']['tengu_oboe'] = True
+with open('$HOME/.claude.json', 'w') as f:
+    json.dump(cfg, f, indent=2)
+"
+#+end_src
+
+*** Durability
+
+- *Startup-once flags*: Injection works perfectly. Checked once before GrowthBook
+  responds; =KZ1= overwrites later but nobody checks again.
+- *Per-turn flags*: Injection works for the first turn (~5 seconds). After =KZ1=
+  resolves, the live server value overwrites the injection.
+- *No active GrowthBook connection*: If the server can't be reached (or telemetry
+  conditions aren't met), injected values persist indefinitely.
+
+** 3. Config Directory Redirect
+
+#+begin_src sh
+export CLAUDE_CONFIG_DIR=/path/to/custom/config
+#+end_src
+
+Isolates your curated config from the auto-updater's writes.
+
+** 4. Path-Selective Proxy
+
+Use =HTTPS_PROXY= with a local proxy that passes API calls through but blocks or
+stubs GrowthBook responses:
+
+- Pass through: =api.anthropic.com/v1/*=
+- Return empty/timeout: =api.anthropic.com/api/eval/*=
+
+This leaves =Xe()= returning true (so =Q8()= reads the cache), but =KZ1='s async
+fetch fails gracefully (caught, returns default). Injected cache values persist
+because nothing overwrites them.
+
+** 5. Disable Nonessential Traffic
+
+#+begin_src sh
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+#+end_src
+
+Makes =Xe()= return false, so =Q8()= returns the hardcoded default immediately.
+No cache is consulted, no server is contacted. All OFF-by-default flags stay off;
+all ON-by-default flags stay on.
+
+*Note*: This also bypasses the cache entirely, so config injection has no effect.
+
+** Comparison
+
+| Method                 | Flags Affected              | Durability          | Side Effects                  |
+|------------------------+-----------------------------+---------------------+-------------------------------|
+| Env var overrides      | ~7 specific flags           | Per-session         | Clean, no side effects        |
+| Config injection       | All gates                   | Until KZ1 overwrites | May be overwritten in ~5s    |
+| Config dir redirect    | All gates                   | Permanent           | Separate config state         |
+| Path-selective proxy   | All gates                   | Permanent           | Requires local proxy          |
+| Disable nonessential   | All gates -> defaults       | Per-session         | No telemetry, no remote eval  |
+| Config + no connection | All gates                   | Permanent           | Requires GrowthBook to be unreachable |
+
+* Telemetry Event Flags
+
+In addition to the ~35 gate flags, there are ~529 =tengu_= prefixed strings used
+solely as event names in telemetry calls (=l("tengu_...", {...})=). These do not
+gate any features. Major categories:
+
+- *API & OAuth*: =tengu_oauth_*=, =tengu_api_*=
+- *Tool Usage*: =tengu_tool_use_*=, =tengu_bash_*=
+- *Agent Features*: =tengu_agent_*=, =tengu_agentic_*=
+- *Session Management*: =tengu_session_*=, =tengu_teleport_*=
+- *Memory & Compacting*: =tengu_memdir_*=, =tengu_compact_*=
+- *Performance*: =tengu_streaming_*=, =tengu_startup_perf=
+- *Updates*: =tengu_auto_updater_*=, =tengu_native_*=
+
+* Version History
+
+- Analyzed version: v2.1.33 (confirmed same in v2.1.34)
+- Previous telemetry system (pre-1.x) used Statsig directly with a different SDK key
+- GrowthBook adoption appears to have replaced Statsig for feature evaluation while
+  retaining Statsig-style naming in config keys (=cachedStatsigGates=)
