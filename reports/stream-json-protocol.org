@@ -1,0 +1,558 @@
+#+TITLE: Claude Code Stream-JSON Protocol — Feature Analysis
+#+DATE: 2026-02-10
+
+* Overview
+
+The stream-json protocol is the low-level, bidirectional JSON-over-newlines
+protocol used by Claude Code's SDK mode (=-p=) for real-time streaming I/O.
+It's the foundation beneath both the TypeScript and Python Agent SDKs, and the
+primary integration point for custom tooling.
+
+| Mode          | CLI Flag                            | Direction |
+|---------------+-------------------------------------+-----------|
+| Output only   | =--output-format stream-json=       | Out       |
+| Bidirectional | =+ --input-format stream-json=      | In + Out  |
+| Partial msgs  | =+ --include-partial-messages=      | Out       |
+| Full verbose  | =+ --verbose=                       | Out       |
+
+When =--input-format stream-json= is set, =--output-format stream-json= is
+*required* (enforced at startup).
+
+** Official Documentation Links
+
+- [[https://code.claude.com/docs/en/headless][Run Claude Code programmatically]] — CLI-level =-p= mode, streaming examples
+- [[https://platform.claude.com/docs/en/agent-sdk/streaming-output][Stream responses in real-time]] — SDK-level StreamEvent reference
+- [[https://platform.claude.com/docs/en/agent-sdk/streaming-vs-single-mode][Streaming vs single input mode]] — Input mode comparison, async generators
+- [[https://code.claude.com/docs/en/cli-reference][CLI reference]] — Full flag listing
+
+* Quick Reference (Docs Summary)
+
+This section condenses what the official docs cover.
+
+** CLI Flags
+
+| Flag                           | Description                                               |
+|--------------------------------+-----------------------------------------------------------|
+| =--output-format stream-json=  | Newline-delimited JSON output (each line = one message)   |
+| =--input-format stream-json=   | Accept newline-delimited JSON on stdin                    |
+| =--include-partial-messages=   | Emit =stream_event= messages (raw API deltas)             |
+| =--verbose=                    | Emit ALL message types to stdout (not just final results) |
+| =--replay-user-messages=       | Re-emit user messages from stdin back on stdout           |
+| =--sdk-url <url>=              | Use remote WebSocket endpoint for SDK I/O                 |
+
+** SDK Message Types (Documented)
+
+The SDK docs describe these message types:
+
+| Type              | Subtype            | Description                     |
+|-------------------+--------------------+---------------------------------|
+| =system=          | =init=             | Session initialization metadata |
+| =system=          | =compact_boundary= | Context window compaction event |
+| =assistant=       |                    | Complete assistant response      |
+| =stream_event=    |                    | Raw API streaming delta          |
+| =result=          | =success=          | Final result with usage/cost     |
+| =result=          | =error_*=          | Error termination                |
+
+** StreamEvent Flow (Documented)
+
+With =--include-partial-messages=:
+
+#+begin_example
+stream_event (message_start)
+stream_event (content_block_start)    ← text or tool_use
+stream_event (content_block_delta)    ← text_delta or input_json_delta chunks
+stream_event (content_block_stop)
+stream_event (message_delta)          ← stop_reason, usage
+stream_event (message_stop)
+assistant                             ← complete accumulated message
+  ... tool executes ...
+result                                ← final result
+#+end_example
+
+** Streaming Limitations (Documented)
+
+- *Extended thinking*: When =max_thinking_tokens= is explicitly set, =stream_event= messages are not emitted (complete messages only)
+- *Structured output*: JSON schema results appear only in final =ResultMessage.structured_output=, not as streaming deltas
+
+* Beyond the Docs: Full Protocol from Source
+
+Analysis of =pretty-v2.1.39.js= reveals the complete protocol, including
+message types, internal messages, and the control protocol that the official
+docs do not cover.
+
+** All Message Types (16 total)
+
+The protocol defines *16 message types*. The docs cover 6 of them. The
+remaining 10 are documented here for the first time.
+
+*** Documented Types
+
+1. =assistant= — Complete assistant response
+2. =system= (=init=, =compact_boundary=) — System lifecycle events
+3. =stream_event= — Raw API streaming events
+4. =result= — Final result (success or error variants)
+5. =user= — User input messages (in streaming input mode)
+
+*** Undocumented Output Types
+
+6. [@6] =system= / =status= — Transient status changes (e.g. compaction in progress)
+7. =system= / =hook_started= — Hook execution began
+8. =system= / =hook_progress= — Hook stdout/stderr incremental output
+9. =system= / =hook_response= — Hook completed (success/error/cancelled)
+10. =system= / =files_persisted= — Files saved to persistent storage
+11. =system= / =task_notification= — Background task completed/failed/stopped
+12. =tool_progress= — Tool execution heartbeat with elapsed time
+13. =auth_status= — Authentication flow status (authenticating, output, error)
+14. =control_request= — Permission prompt for tool use approval
+
+*** Undocumented Input Types
+
+15. [@15] =control_response= — Response to a permission/control request
+16. =keep_alive= — Connection keep-alive (silently consumed, no output)
+17. =update_environment_variables= — Dynamically update process env vars
+
+*** Internal/Filtered Types (never emitted in stream-json)
+
+- =streamlined_text= — Condensed text content (UI-only)
+- =streamlined_tool_use_summary= — Tool use summary string (UI-only)
+- =tombstone= — Marks deleted/replaced messages
+- =tool_use_summary= — Summary of preceding tool uses
+
+** Message Schemas
+
+*** Common Fields
+
+Every output message includes:
+
+#+begin_src javascript
+{
+  uuid: string,         // UUID v4 — unique message identifier
+  session_id: string    // Session ID — links all messages in a conversation
+}
+#+end_src
+
+*** =system= / =init=
+
+Emitted once at session start. Contains full session configuration.
+
+#+begin_src javascript
+{
+  type: "system",
+  subtype: "init",
+  session_id: string,
+  uuid: string,
+  claude_code_version: string,
+  model: string,
+  cwd: string,
+  permissionMode: "default" | "plan" | "bypassPermissions" | ...,
+  tools: string[],               // Available tool names
+  agents: string[],              // Custom agent definitions
+  mcp_servers: [{ name: string, status: string }],
+  slash_commands: string[],
+  skills: string[],
+  plugins: [{ name: string, path: string }],
+  output_style: string,
+  apiKeySource: string,
+  betas: string[]
+}
+#+end_src
+
+*** =system= / =status=
+
+Transient status changes. Not in docs.
+
+#+begin_src javascript
+{
+  type: "system",
+  subtype: "status",
+  status: "compacting" | null,
+  permissionMode?: string          // Included when mode changes
+}
+#+end_src
+
+*** =system= / =compact_boundary=
+
+Emitted when context window compaction occurs.
+
+#+begin_src javascript
+{
+  type: "system",
+  subtype: "compact_boundary",
+  compact_metadata: {
+    trigger: "manual" | "auto",
+    pre_tokens: number             // Token count before compaction
+  }
+}
+#+end_src
+
+*** =system= / Hook Events (3 subtypes)
+
+Not documented. Emitted during hook lifecycle.
+
+#+begin_src javascript
+// hook_started
+{
+  type: "system", subtype: "hook_started",
+  hook_id: string,
+  hook_name: string,
+  hook_event: string               // e.g. "PreToolUse", "PostToolUse"
+}
+
+// hook_progress (incremental stdout/stderr)
+{
+  type: "system", subtype: "hook_progress",
+  hook_id: string, hook_name: string, hook_event: string,
+  stdout: string,
+  stderr: string,
+  output: string
+}
+
+// hook_response (completion)
+{
+  type: "system", subtype: "hook_response",
+  hook_id: string, hook_name: string, hook_event: string,
+  output: string,
+  stdout: string,
+  stderr: string,
+  exit_code?: number,
+  outcome: "success" | "error" | "cancelled"
+}
+#+end_src
+
+*** =system= / =files_persisted=
+
+Not documented. Emitted when files are saved to persistent storage.
+
+#+begin_src javascript
+{
+  type: "system",
+  subtype: "files_persisted",
+  files: [{ filename: string, file_id: string }],
+  failed: [{ filename: string, error: string }],
+  processed_at: string             // ISO timestamp
+}
+#+end_src
+
+*** =system= / =task_notification=
+
+Not documented. Emitted when a background task completes.
+
+#+begin_src javascript
+{
+  type: "system",
+  subtype: "task_notification",
+  task_id: string,
+  status: "completed" | "failed" | "stopped",
+  output_file: string,
+  summary: string
+}
+#+end_src
+
+*** =assistant=
+
+Complete assistant response (after all streaming deltas).
+
+#+begin_src javascript
+{
+  type: "assistant",
+  message: {                       // Full Anthropic API message object
+    role: "assistant",
+    content: [                     // Array of content blocks
+      { type: "text", text: string },
+      { type: "tool_use", id: string, name: string, input: object }
+    ]
+  },
+  parent_tool_use_id: string | null,  // Non-null if from a subagent
+  error?: "authentication_failed" | "billing_error" | "rate_limit" |
+          "invalid_request" | "server_error" | "unknown" | "max_output_tokens"
+}
+#+end_src
+
+*** =stream_event=
+
+Raw API streaming event, wrapped with session metadata.
+
+#+begin_src javascript
+{
+  type: "stream_event",
+  event: {                         // Raw Claude API stream event
+    type: "message_start" | "content_block_start" | "content_block_delta" |
+          "content_block_stop" | "message_delta" | "message_stop",
+    // ... event-specific fields (delta.text, delta.partial_json, etc.)
+  },
+  parent_tool_use_id: string | null
+}
+#+end_src
+
+*** =result= (success)
+
+#+begin_src javascript
+{
+  type: "result",
+  subtype: "success",
+  result: string,                  // Final text output
+  is_error: false,
+  duration_ms: number,
+  duration_api_ms: number,
+  num_turns: number,
+  total_cost_usd: number,
+  usage: object,                   // Aggregate token usage
+  modelUsage: Record<string, object>,  // Per-model usage breakdown
+  stop_reason: string | null,
+  permission_denials: [{
+    tool_name: string,
+    tool_use_id: string,
+    tool_input: Record<string, unknown>
+  }],
+  structured_output?: unknown      // Only with --json-schema
+}
+#+end_src
+
+*** =result= (error)
+
+#+begin_src javascript
+{
+  type: "result",
+  subtype: "error_during_execution" | "error_max_turns" |
+           "error_max_budget_usd" | "error_max_structured_output_retries",
+  is_error: true,
+  errors: string[],
+  // ... same cost/usage fields as success
+}
+#+end_src
+
+*** =tool_progress=
+
+Not documented. Heartbeat during long-running tool execution.
+
+#+begin_src javascript
+{
+  type: "tool_progress",
+  tool_use_id: string,
+  tool_name: string,
+  parent_tool_use_id: string | null,
+  elapsed_time_seconds: number
+}
+#+end_src
+
+*** =auth_status=
+
+Not documented. Emitted during authentication flows.
+
+#+begin_src javascript
+{
+  type: "auth_status",
+  isAuthenticating: boolean,
+  output: string[],
+  error?: string
+}
+#+end_src
+
+** The Control Protocol
+
+The control protocol enables *bidirectional permission management* — the most
+significant undocumented part of stream-json. This is how external tooling can
+programmatically approve or deny tool use requests.
+
+*** Flow
+
+#+begin_example
+Agent wants to use a tool
+  ↓
+← control_request (output)          Agent asks: "Can I use Bash(rm -rf /)?"
+  ↓
+→ control_response (input)          Your app responds: allow/deny
+  ↓
+Agent proceeds or skips
+#+end_example
+
+*** =control_request= (Output)
+
+#+begin_src javascript
+{
+  type: "control_request",
+  request_id: string,              // Correlation ID for response
+  request: {
+    subtype: "can_use_tool",
+    tool_name: string,
+    input: Record<string, unknown>,
+    permission_suggestions: array, // Suggested permission rules
+    blocked_path?: string,         // File path that triggered block
+    decision_reason?: string,      // Why permission is needed
+    tool_use_id: string,
+    agent_id: string               // Which agent is requesting
+  }
+}
+#+end_src
+
+*** =control_response= (Input)
+
+#+begin_src javascript
+{
+  type: "control_response",
+  response: {
+    request_id: string,            // Must match control_request
+    subtype: "success" | "error",
+    response: unknown,             // Permission decision payload
+    error?: string                 // Error description if subtype=error
+  }
+}
+#+end_src
+
+*** =control_cancel_request= (Output)
+
+Cancels a pending permission request (e.g., user interrupted).
+
+#+begin_src javascript
+{
+  type: "control_cancel_request",
+  request_id: string
+}
+#+end_src
+
+*** =--permission-prompt-tool=
+
+The CLI also supports delegating permission prompts to an MCP tool:
+
+#+begin_example
+claude -p --permission-prompt-tool mcp_auth_tool "do something"
+#+end_example
+
+This routes =control_request= messages to the specified MCP tool instead of
+expecting them on stdin.
+
+** Input Protocol Details
+
+*** Input Message Types
+
+When using =--input-format stream-json=, stdin accepts these JSON message types
+(one per line):
+
+| Type                          | Action                                          |
+|-------------------------------+-------------------------------------------------|
+| =user=                        | Send a user message to the conversation          |
+| =control_response=            | Respond to a permission request                  |
+| =keep_alive=                  | No-op heartbeat (silently consumed)              |
+| =update_environment_variables= | Modify =process.env= at runtime                 |
+
+Any other type causes a *fatal error* and process exit.
+
+*** User Message Schema (Input)
+
+#+begin_src javascript
+{
+  type: "user",
+  message: {
+    role: "user",
+    content: string | [             // String or content block array
+      { type: "text", text: string },
+      { type: "image", source: {
+          type: "base64",
+          media_type: "image/png" | "image/jpeg" | ...,
+          data: string              // Base64-encoded image data
+      }}
+    ]
+  },
+  parent_tool_use_id?: string,
+  isSynthetic?: boolean,
+  tool_use_result?: unknown
+}
+#+end_src
+
+*** Update Environment Variables (Input)
+
+#+begin_src javascript
+{
+  type: "update_environment_variables",
+  variables: Record<string, string>   // Key-value pairs to set
+}
+#+end_src
+
+** Output Filtering
+
+Not all message types are emitted in all modes. The protocol has two output
+paths:
+
+*** Verbose Stream Mode (=--output-format stream-json --verbose=)
+
+*All* messages written to stdout as they occur. This is the "raw firehose."
+
+*** Collected/Non-verbose Mode
+
+Messages are filtered before collection. These types are *excluded*:
+
+- =control_response=
+- =control_request=
+- =control_cancel_request=
+- =stream_event= (unless =--include-partial-messages=)
+- =keep_alive=
+- =streamlined_text=
+- =streamlined_tool_use_summary=
+
+*** =--replay-user-messages=
+
+When set (requires =--input-format stream-json= + =--output-format stream-json=),
+user messages received on stdin are echoed back on stdout. Useful for logging
+or building UIs that need to see both sides.
+
+** Subagent Tracking
+
+The =parent_tool_use_id= field (present on =assistant=, =stream_event=, =user=,
+and =tool_progress= messages) links messages to their originating subagent:
+
+- =null= → main agent
+- =string= → ID of the =tool_use= block that spawned the subagent
+
+This enables multiplexing multiple concurrent subagent streams over a single
+connection, which is how the Task tool and team features work.
+
+** Session Management
+
+- Every message carries =session_id= — a UUID generated at session start
+- Sessions persist to disk by default (disable with =--no-session-persistence=)
+- Resume with =--resume <session-id>= or =--continue= (most recent)
+- Fork with =--fork-session= to branch from a checkpoint
+- The =system/init= message provides the =session_id= to capture
+
+** Wire Format
+
+The protocol is *newline-delimited JSON* (NDJSON):
+
+- One JSON object per line
+- No framing, no length prefix — just =JSON.stringify(msg) + "\n"=
+- Input parsing: line-buffered, =JSON.parse()= per line
+- Parse failures on input cause *fatal error and exit* (logged before exit)
+- Encoding: UTF-8
+
+* Implementation Notes
+
+** Request/Response Correlation
+
+Control requests are tracked in a =pendingRequests= Map keyed by =request_id=
+(UUID). When a =control_response= arrives on stdin, the implementation:
+
+1. Looks up the matching request by =request_id=
+2. Resolves the pending Promise
+3. The agent loop continues with the permission decision
+
+If no matching request exists, the response is silently dropped.
+
+** Format Enforcement
+
+At startup (line ~574944), the CLI validates:
+- =--input-format stream-json= requires =--output-format stream-json=
+- =--include-partial-messages= requires =--output-format stream-json= and =-p=
+
+** Practical Tips
+
+- Use =jq= for filtering: =| jq -rj 'select(.type == "stream_event" and .event.delta.type? == "text_delta") | .event.delta.text'=
+- The =system/init= message is always first — parse it to get =session_id=, =model=, =tools=
+- For permission automation, watch for =control_request= and respond with =control_response=
+- =tool_progress= messages are useful for timeout detection (check =elapsed_time_seconds=)
+- The =result= message is always last — it contains aggregate cost and usage data
+
+* Source
+
+Analysis based on:
+- Official documentation at [[https://code.claude.com/docs/en/headless][code.claude.com]] and [[https://platform.claude.com/docs/en/agent-sdk/overview][platform.claude.com]]
+- Source code analysis of =archive/claude-code/pretty/pretty-v2.1.39.js=
