@@ -10,6 +10,9 @@
 # Ignore diff files (hundreds of MB)
 **/diff/
 
+# Ignore auto-filtered changes files
+**/changes/
+
 # Temp directory for sync tool
 .sync-temp/
 

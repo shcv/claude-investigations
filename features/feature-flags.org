@@ -1,0 +1,215 @@
+#+TITLE: Claude Code Feature Flags Reference (v2.1.38)
+#+DATE: 2026-02-10
+
+* Overview
+
+Claude Code gates experimental features behind ~45 feature flags evaluated via
+GrowthBook. All flags use the =tengu_= prefix. A flag's value comes from
+=cachedGrowthBookFeatures= in =~/.claude.json=, populated by remote evaluation
+against =api.anthropic.com/api/eval/=.
+
+The /settings workaround/ refers to writing values directly into
+=cachedGrowthBookFeatures= in =~/.claude.json=. Its effectiveness depends on how
+often the flag is re-read and whether GrowthBook's lazy updater overwrites it.
+
+| Check Frequency | Settings Workaround                                        |
+|-----------------+------------------------------------------------------------|
+| Startup-once    | Effective for entire session (never re-checked)            |
+| Per-turn        | ~5 seconds only, then overwritten by live server value     |
+| Per-interaction  | ~5 seconds only, then overwritten by live server value     |
+| Any frequency   | Permanent if GrowthBook server is unreachable (see below) |
+
+To make the settings workaround permanent for per-turn/per-interaction flags,
+block GrowthBook evaluation while keeping the cache readable. Options:
+
+- Block the endpoint: proxy/firewall =/api/eval/= path on =api.anthropic.com=
+- Redirect config: =CLAUDE_CONFIG_DIR=/path/to/custom= with curated cache file
+- Set =CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1= (but this makes =Q8()= return
+  hardcoded defaults, bypassing the cache entirely — only useful for ON-by-default flags)
+
+* Locally Controllable Flags
+
+These work without remote GrowthBook — either on by default, controllable via
+environment variable, or governed by managed policy settings.
+
+** ON by Default
+
+These are enabled unless GrowthBook explicitly turns them off. They function
+normally with no server connection and can only be /disabled/ remotely.
+
+| Flag                       | Purpose                              | Check     | Env Override                                |
+|----------------------------+--------------------------------------+-----------+---------------------------------------------|
+| =tengu_attribution_header= | Sends API version attribution header | Per-turn  | =CLAUDE_CODE_ATTRIBUTION_HEADER=false=      |
+| =tengu_amber_flint=       | Agent teams feature gate              | Startup   | Also needs =CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS= |
+| =tengu_chomp_inflection=  | Prompt suggestions after responses    | Per-turn  | --                                          |
+| =tengu_mcp_tool_search=   | MCP tool auto-discovery via TST       | Per-turn  | --                                          |
+| =tengu_penguins_enabled=  | Fast mode master switch               | Per-turn  | --                                          |
+
+** Environment Variable Overrides
+
+These flags can be forced on or off locally regardless of GrowthBook state.
+The env var is checked /before/ the cache, so it always wins.
+
+| Flag                              | Env Var                                    | Behavior                        |
+|-----------------------------------+--------------------------------------------+---------------------------------|
+| =tengu_oboe=                      | =CLAUDE_CODE_DISABLE_AUTO_MEMORY=          | =true= disables auto-memory     |
+| =tengu_tst_names_in_messages=     | =CLAUDE_CODE_TST_NAMES_IN_MESSAGES=        | =true= enables, =false= disables |
+| =tengu_plan_mode_interview_phase= | =CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=    | =true= enables, =false= disables |
+| =tengu_sm_compact=                | =ENABLE_CLAUDE_CODE_SM_COMPACT=            | =true= enables                  |
+| =tengu_sm_compact=                | =DISABLE_CLAUDE_CODE_SM_COMPACT=           | =true= disables                 |
+| =tengu_cache_plum_violet=         | =DISABLE_MICROCOMPACT=                     | =true= enables (OR with gate)   |
+| =tengu_system_prompt_global_cache= | =CLAUDE_CODE_FORCE_GLOBAL_CACHE=          | =true= enables (OR with gate)   |
+| =tengu_permission_explainer=      | =PERMISSION_EXPLAINER_ENABLED=true=        | Exact string match enables      |
+| =tengu_snippet_save=              | =CLAUDE_CODE_SNIPPET_SAVE=                 | =true= enables                  |
+
+** Policy Flags (Managed Settings)
+
+Checked via the policy function =p0()=, not GrowthBook. Read from
+=managed-settings.json= (=~/.claude/= on Unix, =%ProgramData%\ClaudeCode\= on
+Windows). Default to =true= (allowed) when no policy is set.
+
+| Flag                     | Purpose                               |
+|--------------------------+---------------------------------------|
+| =allow_product_feedback= | Controls feedback submission           |
+| =allow_remote_sessions= | Controls remote/teleport session access |
+
+* Remote GrowthBook Required
+
+These flags default to =false= and require GrowthBook to enable them. Without
+server evaluation, they remain off. Organized by check frequency, which
+determines whether the settings workaround is effective.
+
+** Startup-Once — Settings Workaround: Effective
+
+Checked once during process initialization or CLI argument parsing. The value
+read from cache at launch time is the only value that matters for the entire
+session. KZ1 may update the cache file later, but no code re-checks the flag.
+
+Injecting a value into =cachedGrowthBookFeatures= before launch reliably
+enables these for the full session.
+
+| Flag                                | Purpose                                        |
+|-------------------------------------+------------------------------------------------|
+| =tengu_keybinding_customization_release= | Custom keybinding support (=~/.claude/keybindings.json=) |
+| =tengu_remote_backend=              | Enables =--remote= flag without =--description= |
+| =tengu_chrome_auto_enable=          | Auto-enable Chrome extension integration       |
+| =tengu_pid_based_version_locking=   | PID-based version locking for concurrent instances |
+| =tengu_thinkback=                   | "Year in Review" retrospective feature         |
+
+** Per-Turn — Settings Workaround: Brief (~5s)
+
+Checked on every API round-trip during system prompt construction, tool list
+assembly, or compaction. After KZ1's lazy updater resolves (~3-5s into session),
+the live server value overwrites any injected cache value.
+
+*** System Prompt & Thinking
+
+| Flag                              | Purpose                                           |
+|-----------------------------------+---------------------------------------------------|
+| =tengu_marble_anvil=              | Extended thinking budget / context management beta |
+| =tengu_vinteuil_phrase=           | Simplified system prompt variant                   |
+| =tengu_marble_lantern_disabled=   | Kill switch — disables extended thinking entirely  |
+| =tengu_system_prompt_global_cache= | Global prompt cache sharing across sessions       |
+| =tengu_scarf_coffee=              | Adds Anthropic API beta header to requests         |
+
+*** Session Memory
+
+| Flag                  | Purpose                                  |
+|-----------------------+------------------------------------------|
+| =tengu_session_memory= | Session memory persistence               |
+| =tengu_sm_compact=    | Session memory compaction on context overflow |
+| =tengu_oboe=          | Automatic memory note-taking (auto-memory) |
+| =tengu_coral_fern=    | Injects past session search into prompt  |
+
+*** Tool Search & Discovery
+
+| Flag                          | Purpose                                   |
+|-------------------------------+-------------------------------------------|
+| =tengu_tst_names_in_messages= | Include tool names in assistant messages  |
+| =tengu_tst_kx7=              | Deferred tool loading for Tool Search Tool |
+| =tengu_kv7_prompt_sort=      | Sort deferred tool list in prompt          |
+| =tengu_tool_pear=            | Additional tool feature gate               |
+
+*** Compaction & Caching
+
+| Flag                            | Purpose                                     |
+|---------------------------------+---------------------------------------------|
+| =tengu_compact_cache_prefix=    | Prompt cache prefix sharing across sessions |
+| =tengu_compact_streaming_retry= | Retry compaction via streaming on failure   |
+| =tengu_cache_plum_violet=       | Microcompact — lightweight mid-turn compaction |
+
+*** Planning & Remote
+
+| Flag                              | Purpose                                 |
+|-----------------------------------+-----------------------------------------|
+| =tengu_plan_mode_interview_phase= | Adds interview/clarification phase to plan mode |
+| =tengu_quartz_lantern=            | Diff computation in remote mode         |
+
+*** Model & Streaming
+
+| Flag                                | Purpose                                    |
+|-------------------------------------+--------------------------------------------|
+| =tengu_streaming_tool_execution2=   | v2 streaming tool execution pipeline       |
+
+** Per-Interaction — Settings Workaround: Brief (~5s)
+
+Checked on each tool execution, UI render, or user action. Same timing
+characteristics as per-turn flags — KZ1 overwrites injected values within
+seconds.
+
+*** UI & CLI Display
+
+| Flag                       | Purpose                                          |
+|----------------------------+--------------------------------------------------|
+| =tengu_code_diff_cli=     | Show code diff summary in CLI footer              |
+| =tengu_pr_status_cli=     | Show PR status in CLI footer                      |
+| =tengu_permission_explainer= | Permission request explainer UI                |
+| =tengu_copper_lantern=    | Opus upgrade promotional display                  |
+| =tengu_silver_lantern=    | Promotional/marketing messaging                   |
+| =tengu_quiet_fern=        | VSCode quiet mode (reduced output)                |
+
+*** Tool Execution
+
+| Flag                            | Purpose                                       |
+|---------------------------------+-----------------------------------------------|
+| =tengu_plum_vx3=               | Disable extended thinking for web_search tool |
+| =tengu_file_write_optimization= | Optimized file write result messaging         |
+| =tengu_cork_m4q=               | Bash command safety policy injection           |
+| =tengu_snippet_save=           | Code snippet saving functionality              |
+| =tengu_scratch=                | Scratch/temporary workspace feature            |
+
+*** Permissions & Security
+
+| Flag                                    | Purpose                                        |
+|-----------------------------------------+------------------------------------------------|
+| =tengu_disable_bypass_permissions_mode= | Blocks =bypassPermissions= mode when enabled   |
+| =tengu_mcp_elicitation=                | MCP server user-input elicitation               |
+
+*** IDE Integration
+
+| Flag                          | Purpose                        |
+|-------------------------------+--------------------------------|
+| =tengu_vscode_onboarding=    | VSCode extension onboarding flow |
+| =tengu_vscode_review_upsell= | VSCode review/upgrade prompts  |
+
+* Configuration Values (Non-Boolean)
+
+These flags return structured data rather than booleans. They follow the same
+caching and update lifecycle as boolean gates.
+
+| Flag                                  | Default                                      | Purpose                                          |
+|---------------------------------------+----------------------------------------------+--------------------------------------------------|
+| =tengu_tool_search_unsupported_models= | =null=                                      | Array of model names that lack tool search support |
+| =tengu_penguin_mode_promo=            | ={discountPercent: 50, endDate: "Feb 16"}= | Fast mode promotional pricing details             |
+| =tengu_penguins_off=                  | =null=                                       | If non-null, message blocking fast mode entirely  |
+| =tengu_copper_lantern_config=         | ={meridian: "2026-02-05T07:59:00Z"}=        | Timing cutoff for subscription upgrade offers     |
+| =tengu_sm_config=                     | ={}=                                         | Session memory feature configuration              |
+| =tengu_1p_event_batch_config=         | ={}=                                         | First-party event batching/throttling config      |
+
+* Version Notes
+
+| Version | Change                                          |
+|---------+-------------------------------------------------|
+| v2.1.38 | Added: =tengu_penguins_enabled=, =tengu_penguins_off=, =tengu_penguin_mode_promo=, =tengu_snippet_save=, =tengu_scratch=, =tengu_thinkback=, =tengu_disable_bypass_permissions_mode=, =tengu_streaming_tool_execution2=, =tengu_mcp_elicitation=, =tengu_vscode_onboarding=, =tengu_vscode_review_upsell=, =tengu_copper_lantern_config=, =tengu_sm_config=, =tengu_1p_event_batch_config= |
+| v2.1.38 | Removed: =tengu_marble_kite=, =tengu_workout2=  |
+| v2.1.33 | Base inventory established                       |
