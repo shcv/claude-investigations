@@ -1,575 +1,294 @@
 #+TITLE: WebSocket SDK Streaming Interface
-#+DATE: 2025-08-20
+#+DATE: 2026-02-10
 
 * Overview
 
-The WebSocket SDK streaming interface provides a persistent, bidirectional communication channel between Claude Code and SDK servers. Introduced in version 1.0.77, this feature enables real-time streaming interactions with automatic reconnection, message buffering, and exactly-once delivery semantics.
+The =--sdk-url= flag provides a WebSocket-based transport layer as an
+alternative to stdin/stdout for Claude Code's stream-json mode. Instead of
+reading NDJSON from stdin and writing to stdout, messages flow over a persistent
+WebSocket connection to a remote server, with automatic reconnection, message
+buffering, and replay semantics built in.
 
-* Key Features
+Introduced in v1.0.77, refined through v2.1.x. The flag is hidden from
+=--help= output (=.hideHelp()= in the argument parser) — it's an internal
+integration point, not a user-facing feature.
 
-** Persistent Connections
-- Maintains long-lived WebSocket connections to SDK servers
-- Supports both =ws://= and =wss://= protocols
-- Bearer token authentication for secure connections
+* How It Differs from stdio stream-json
 
-** Resilient Communication
-- Automatic reconnection with exponential backoff (up to 5 attempts)
-- 1000-message circular buffer for offline queuing
-- UUID-based message tracking and replay after disconnection
-- Graceful handling of temporary network interruptions
+Both modes use the same NDJSON message protocol. The difference is the
+transport layer underneath.
 
-** Stream-JSON Format
-- Newline-delimited JSON (NDJSON) for message serialization
-- Bidirectional streaming for real-time request/response
-- Compatible with Claude's SDK protocol specification
+| Aspect | stdio (=stream-json=) | WebSocket (=--sdk-url=) |
+|---------------------------+-------------------------------+--------------------------------------|
+| Transport | stdin/stdout pipes | Persistent WebSocket connection |
+| Lifecycle | Tied to process lifetime | Survives transient network failures |
+| Message buffering | None — caller manages stdin | 1000-message circular buffer |
+| Reconnection | N/A | Automatic, 10-minute budget |
+| Message replay | N/A | Replays buffered messages on reconnect |
+| Keep-alive | N/A | Ping/pong every 10 seconds |
+| Control requests | Via stdin | Via WebSocket or HTTP POST fallback |
+| Authentication | Environment/config | Bearer token in WebSocket headers |
+| Permission prompts | Normal tool | Forced to =stdio= mode |
 
-* Installation & Requirements
+The key architectural insight: =FQA= (the SDK transport class) *extends* =Mc1=
+(the stdio transport class). It bridges the WebSocket into a Node.js
+PassThrough stream, so downstream code sees the same interface regardless of
+transport. The selection happens at startup:
 
-** Version Requirements
-- Claude Code v1.0.77 or later for basic WebSocket support
-- Claude Code v1.0.78+ for enhanced security features (file descriptor authentication)
-
-** Required Flags
-When using =--sdk-url=, the following flags are mandatory:
-- =--input-format=stream-json=
-- =--output-format=stream-json=
-
-* Usage
-
-** Basic Connection
-
-*** Environment Variable Authentication
-#+BEGIN_SRC bash
-# Set authentication token
-export CLAUDE_CODE_SESSION_ACCESS_TOKEN="your-token-here"
-
-# Connect to WebSocket SDK server
-claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
-       --input-format=stream-json \
-       --output-format=stream-json
+#+BEGIN_SRC javascript
+// Transport factory (deobfuscated from IJz in pretty-v2.1.38.js:541962)
+function createInputHandler(prompt, options) {
+  // ... wrap prompt into initial message ...
+  return options.sdkUrl
+    ? new SdkTransport(options.sdkUrl, inputStream, options.replayUserMessages)
+    : new StdioTransport(inputStream, options.replayUserMessages);
+}
 #+END_SRC
 
-*** File Descriptor Authentication (v1.0.78+)
-More secure method that prevents token exposure in process listings:
+* Architecture
+
+Three classes form the transport stack:
+
+** Pc1 — Core WebSocket Transport
+
+The low-level WebSocket manager. Handles connection lifecycle, reconnection,
+ping/pong, and message buffering.
+
+Source location: =pretty-v2.1.38.js:537836-538115=
+
+Key state:
+- =state=: idle → reconnecting → connected → closing → closed
+- =messageBuffer=: CircularBuffer with capacity 1000
+- =lastSentId=: UUID of last sent message (for replay negotiation)
+- =reconnectStartTime=: Timestamp for 10-minute budget tracking
+- =pongReceived=: Dead connection detection flag
+
+** mQA — Hybrid Transport (POST Fallback)
+
+Extends =Pc1=. When the environment variable
+=CLAUDE_CODE_POST_FOR_SESSION_INGRESS_V2= is set, this transport is selected
+instead. It receives data over WebSocket but sends outbound messages via HTTP
+POST to a derived URL (converts =/ws/= to =/session/= and appends =/events=).
+
+Source location: =pretty-v2.1.38.js:538144-538199=
+
+POST retry strategy: 10 attempts, 500ms initial delay, 8s max delay,
+exponential backoff.
+
+** FQA — SDK Transport Wrapper
+
+Extends =Mc1= (stdio transport). Creates a PassThrough stream and wires
+WebSocket data into it, so the rest of Claude Code reads from what looks like
+stdin.
+
+Source location: =pretty-v2.1.38.js:538222-538264=
+
+The transport factory =zMq()= at line 538201 selects between =Pc1= and =mQA=
+based on the =CLAUDE_CODE_POST_FOR_SESSION_INGRESS_V2= environment variable.
+
+* Required Flags
+
+=--sdk-url= strictly requires both format flags. The CLI exits with an error
+if they're missing:
 
 #+BEGIN_SRC bash
-# Pass token through file descriptor
+claude -p "prompt" \
+  --sdk-url=wss://example.com/sdk/v1/connect \
+  --input-format=stream-json \
+  --output-format=stream-json
+#+END_SRC
+
+The validation (=pretty-v2.1.38.js:574358=):
+#+BEGIN_SRC javascript
+if (sdkUrl) {
+  if (inputFormat !== "stream-json" || outputFormat !== "stream-json") {
+    console.error("Error: --sdk-url requires both --input-format=stream-json"
+                + " and --output-format=stream-json.");
+    process.exit(1);
+  }
+}
+#+END_SRC
+
+Also requires =-p= (print/non-interactive mode). When =--sdk-url= is active,
+the permission prompt tool is forced to ="stdio"= regardless of configuration.
+
+* Authentication
+
+** Token Resolution Order
+
+The token function (=nV()= at line 235867) checks in this order:
+
+1. =CLAUDE_CODE_SESSION_ACCESS_TOKEN= environment variable — checked first
+2. Internal fallback (=mL6()=) — undocumented internal method
+3. =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR= — reads token from a file
+   descriptor number
+
+The token is sent as a =Bearer= token in the WebSocket upgrade request headers.
+
+** File Descriptor Authentication
+
+Prevents token exposure in process listings (=/proc/*/cmdline=, =ps=). The
+implementation reads from platform-specific paths:
+
+- Linux: =/proc/self/fd/{N}=
+- macOS/FreeBSD: =/dev/fd/{N}=
+
+#+BEGIN_SRC bash
+# Pass token through fd 3
 export CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR=3
 exec 3< <(echo "your-token-here")
 
-claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
-       --input-format=stream-json \
-       --output-format=stream-json
+claude -p "prompt" \
+  --sdk-url=wss://example.com/sdk \
+  --input-format=stream-json \
+  --output-format=stream-json
 #+END_SRC
 
-** Local Development Server
-#+BEGIN_SRC bash
-# Connect to local WebSocket server (no TLS)
-claude --sdk-url=ws://localhost:8080/sdk \
-       --input-format=stream-json \
-       --output-format=stream-json
-#+END_SRC
+** Additional Headers
 
-** Programmatic Usage
+The transport also sends =x-environment-runner-version= if
+=CLAUDE_CODE_ENVIRONMENT_RUNNER_VERSION= is set. A session ID is included in
+connection metadata.
 
-*** Node.js Example
+* Reconnection
+
+** Time-Budget Strategy
+
+Reconnection does *not* use a fixed attempt count. It uses a 10-minute total
+time budget. As long as elapsed time since the first failure is under 10
+minutes, it keeps trying with exponential backoff.
+
+| Parameter | Value |
+|---------------------+----------|
+| Initial delay | 1000ms |
+| Max delay per attempt | 30000ms |
+| Total time budget | 600000ms |
+| Jitter | ±25% |
+
+The backoff formula:
 #+BEGIN_SRC javascript
-const { spawn } = require('child_process');
-const readline = require('readline');
-
-// Start Claude Code with WebSocket SDK
-const claude = spawn('claude', [
-  '--sdk-url=wss://api.claude.ai/sdk/v1/connect',
-  '--input-format=stream-json',
-  '--output-format=stream-json'
-], {
-  env: {
-    ...process.env,
-    CLAUDE_CODE_SESSION_ACCESS_TOKEN: 'your-token-here'
-  }
-});
-
-// Create interface for reading responses
-const rl = readline.createInterface({
-  input: claude.stdout
-});
-
-// Handle streaming responses
-rl.on('line', (line) => {
-  try {
-    const message = JSON.parse(line);
-    console.log('Received:', message);
-  } catch (e) {
-    console.error('Invalid JSON:', line);
-  }
-});
-
-// Send a message
-const request = {
-  type: 'user',
-  uuid: crypto.randomUUID(),
-  message: {
-    role: 'user',
-    content: 'Hello, Claude!'
-  }
-};
-
-claude.stdin.write(JSON.stringify(request) + '\n');
+// delay = min(1000 * 2^(attempt-1), 30000), then add ±25% jitter
+let baseDelay = Math.min(1000 * Math.pow(2, attempts - 1), 30000);
+let delay = Math.max(0, baseDelay + baseDelay * 0.25 * (2 * Math.random() - 1));
 #+END_SRC
 
-*** Python Example
-#+BEGIN_SRC python
-import subprocess
-import json
-import uuid
-import os
+When the 10-minute budget expires, the transport fires its close callback and
+the process exits.
 
-# Start Claude Code with WebSocket SDK
-env = os.environ.copy()
-env['CLAUDE_CODE_SESSION_ACCESS_TOKEN'] = 'your-token-here'
+** Message Replay on Reconnect
 
-process = subprocess.Popen([
-    'claude',
-    '--sdk-url=wss://api.claude.ai/sdk/v1/connect',
-    '--input-format=stream-json',
-    '--output-format=stream-json'
-], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
-   stderr=subprocess.PIPE, text=True, env=env)
+After a successful reconnection:
 
-# Send a message
-request = {
-    'type': 'user',
-    'uuid': str(uuid.uuid4()),
-    'message': {
-        'role': 'user',
-        'content': 'Explain quantum computing'
+1. Client sends =X-Last-Request-Id= header containing the UUID of the last
+   message it sent before disconnection
+2. Server responds with =x-last-request-id= indicating the last message it
+   actually processed
+3. Client finds that UUID in its circular buffer and replays everything after it
+
+This provides at-least-once delivery. Messages without a =uuid= field are not
+buffered and not replayed.
+
+* Circular Buffer
+
+Fixed-capacity ring buffer. Capacity: 1000 messages.
+
+Source location: =pretty-v2.1.38.js:264520-264566= (class =$B1=)
+
+Only messages with a =uuid= field are added to the buffer (checked in the
+=write()= method). When the buffer is full, the oldest message is overwritten.
+The =toArray()= method returns messages in insertion order, handling the
+wrap-around correctly.
+
+* Keep-Alive
+
+A ping is sent every 10 seconds. If no pong is received before the next ping
+interval fires, the connection is considered dead and reconnection begins.
+
+#+BEGIN_SRC javascript
+// Simplified from pretty-v2.1.38.js:538070
+startPingInterval() {
+  this.pongReceived = true;
+  this.pingInterval = setInterval(() => {
+    if (!this.pongReceived) {
+      this.handleConnectionError();  // triggers reconnection
+      return;
     }
+    this.pongReceived = false;
+    this.ws.ping();
+  }, 10000);
 }
+#+END_SRC
 
-process.stdin.write(json.dumps(request) + '\n')
-process.stdin.flush()
+* Control Requests
 
-# Read streaming responses
-for line in iter(process.stdout.readline, ''):
-    if line:
-        try:
-            message = json.loads(line.strip())
-            print('Received:', message)
-        except json.JSONDecodeError:
-            print('Invalid JSON:', line)
+Added around v2.1.32. The WebSocket transport supports sending control messages
+for operations like interrupting the current task:
+
+#+BEGIN_SRC javascript
+sendInterrupt() {
+  if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+  this.ws.send(JSON.stringify({
+    type: "control_request",
+    request_id: crypto.randomUUID(),
+    request: { subtype: "interrupt" },
+  }));
+}
 #+END_SRC
 
 * Message Protocol
 
-** Message Format
-All messages use newline-delimited JSON (NDJSON):
+All messages are newline-delimited JSON (NDJSON), identical to the stdio
+stream-json format.
 
+** User Messages
 #+BEGIN_SRC json
-{"type":"user","uuid":"550e8400-e29b-41d4-a716-446655440000","message":{"role":"user","content":"Hello"}}
-{"type":"assistant","uuid":"550e8400-e29b-41d4-a716-446655440001","message":{"role":"assistant","content":"Hi!"}}
+{"type":"user","uuid":"550e8400-...","session_id":"","message":{"role":"user","content":"Hello"},"parent_tool_use_id":null}
 #+END_SRC
 
-** Message Structure
-
-*** Request Messages
-#+BEGIN_SRC javascript
-{
-  "type": "user",                    // Message type
-  "uuid": "unique-message-id",       // Required for replay tracking
-  "message": {
-    "role": "user",
-    "content": "Your message here"
-  }
-}
+** Control Responses
+#+BEGIN_SRC json
+{"type":"control_response","status":"connected","metadata":{"session_id":"abc123","last_request_id":"550e8400-..."}}
 #+END_SRC
 
-*** Response Messages
-#+BEGIN_SRC javascript
-{
-  "type": "assistant",
-  "uuid": "response-id",
-  "message": {
-    "role": "assistant",
-    "content": "Claude's response"
-  }
-}
+** Control Requests (client → server)
+#+BEGIN_SRC json
+{"type":"control_request","request_id":"uuid-here","request":{"subtype":"interrupt"}}
 #+END_SRC
 
-*** Control Messages
-#+BEGIN_SRC javascript
-{
-  "type": "control_response",
-  "status": "connected",
-  "metadata": {
-    "session_id": "abc123",
-    "last_request_id": "550e8400-e29b-41d4-a716-446655440000"
-  }
-}
-#+END_SRC
+The =session_id= and =parent_tool_use_id= fields are present in the SDK
+transport but not in stdio mode — they're part of the remote session protocol.
 
-** UUID Tracking
-- Messages with a =uuid= field are automatically buffered
-- UUIDs enable message replay after reconnection
-- Server acknowledges last processed UUID via headers
+* Environment Variables
 
-* Connection Lifecycle
-
-** State Machine
-The WebSocket transport manages these states:
-1. =idle= - Initial state, no connection
-2. =connecting= - Establishing WebSocket connection
-3. =connected= - Active connection, messages flowing
-4. =reconnecting= - Connection lost, attempting to reconnect
-5. =closing= - Graceful shutdown initiated
-6. =closed= - Connection terminated
-
-** Reconnection Logic
-
-*** Exponential Backoff
-Reconnection delays increase exponentially:
-- 1st attempt: 1 second
-- 2nd attempt: 2 seconds
-- 3rd attempt: 4 seconds
-- 4th attempt: 8 seconds
-- 5th attempt: 16 seconds
-- Maximum delay: 30 seconds
-- Maximum attempts: 5
-
-*** Message Replay
-After successful reconnection:
-1. Client sends =X-Last-Request-Id= header with last sent UUID
-2. Server responds with =x-last-request-id= indicating last processed message
-3. Client replays all buffered messages after that point
-
-** Buffer Management
-
-*** Circular Buffer Design
-- Capacity: 1000 messages
-- Overwrites oldest messages when full
-- Prevents unbounded memory growth
-- Maintains message order for replay
-
-*** Buffer Implementation
-#+BEGIN_SRC javascript
-class CircularBuffer {
-  constructor(capacity = 1000) {
-    this.capacity = capacity;
-    this.buffer = new Array(capacity);
-    this.head = 0;
-    this.size = 0;
-  }
-  
-  add(message) {
-    this.buffer[this.head] = message;
-    this.head = (this.head + 1) % this.capacity;
-    if (this.size < this.capacity) this.size++;
-  }
-  
-  getMessages() {
-    // Returns messages in order, handling wrap-around
-    const start = this.size < this.capacity ? 0 : this.head;
-    const messages = [];
-    for (let i = 0; i < this.size; i++) {
-      messages.push(this.buffer[(start + i) % this.capacity]);
-    }
-    return messages;
-  }
-}
-#+END_SRC
-
-* Authentication
-
-** Bearer Token Authentication
-The WebSocket connection includes an Authorization header:
-#+BEGIN_SRC http
-Authorization: Bearer <your-token-here>
-#+END_SRC
-
-** Token Sources (in priority order)
-1. File descriptor (v1.0.78+): =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR=
-2. Environment variable: =CLAUDE_CODE_SESSION_ACCESS_TOKEN=
-3. Standard Claude Code authentication flow
-
-** Security Best Practices
-- Use file descriptor method in production to avoid token exposure
-- Rotate tokens regularly
-- Use =wss://= (TLS) for production connections
-- Never log or display tokens in output
-
-* Error Handling
-
-** Connection Errors
-#+BEGIN_SRC javascript
-// Connection refused
-Error: WebSocket connection failed: ECONNREFUSED
-
-// Authentication failure
-Error: WebSocket authentication failed: 401 Unauthorized
-
-// Invalid URL
-Error: Invalid WebSocket URL: must start with ws:// or wss://
-#+END_SRC
-
-** Reconnection Failures
-After 5 failed reconnection attempts:
-#+BEGIN_SRC
-WebSocket reconnection failed after 5 attempts. Connection closed.
-#+END_SRC
-
-** Message Format Errors
-#+BEGIN_SRC
-Error: Invalid stream-json message: Unexpected token < in JSON at position 0
-#+END_SRC
-
-* Configuration
-
-** Connection Parameters
-| Parameter | Default | Description |
-|-----------+---------+-------------|
-| Buffer Capacity | 1000 | Maximum messages to buffer |
-| Max Reconnect Attempts | 5 | Reconnection attempts before giving up |
-| Initial Reconnect Delay | 1000ms | Starting delay for exponential backoff |
-| Max Reconnect Delay | 30000ms | Maximum delay between reconnection attempts |
-
-** Environment Variables
-| Variable | Description |
-|----------+-------------|
-| =CLAUDE_CODE_SESSION_ACCESS_TOKEN= | Bearer token for authentication |
-| =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR= | File descriptor containing token |
-
-* Best Practices
-
-** Message Design
-- Always include =uuid= field for important messages
-- Keep message payloads reasonably sized
-- Use appropriate message types for different operations
-- Implement idempotent message handlers
-
-** Connection Management
-- Monitor connection state and handle disconnections gracefully
-- Implement application-level heartbeat/ping if needed
-- Consider message ordering requirements
-- Plan for message replay scenarios
-
-** Error Recovery
-- Handle parsing errors gracefully
-- Implement retry logic at application level
-- Log connection events for debugging
-- Monitor buffer usage in high-throughput scenarios
-
-** Performance Considerations
-- Batch small messages when possible
-- Avoid sending messages faster than they can be processed
-- Monitor memory usage with large message volumes
-- Consider implementing flow control
-
-* Troubleshooting
-
-** Common Issues
-
-*** Connection Fails Immediately
-Possible causes:
-- Invalid SDK URL format
-- Missing or invalid authentication token
-- Network connectivity issues
-- Firewall blocking WebSocket connections
-
-Solution:
-#+BEGIN_SRC bash
-# Test connectivity
-curl -I https://api.claude.ai
-
-# Verify token
-echo $CLAUDE_CODE_SESSION_ACCESS_TOKEN
-
-# Check WebSocket support
-wscat -c wss://api.claude.ai/sdk/v1/connect \
-      -H "Authorization: Bearer $CLAUDE_CODE_SESSION_ACCESS_TOKEN"
-#+END_SRC
-
-*** Messages Not Being Received
-Possible causes:
-- Missing =--verbose= flag for debugging
-- Incorrect message format
-- Server not sending newline delimiters
-
-Solution:
-#+BEGIN_SRC bash
-# Enable verbose output for debugging
-claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
-       --input-format=stream-json \
-       --output-format=stream-json \
-       --verbose
-#+END_SRC
-
-*** Reconnection Loop
-Possible causes:
-- Token expired
-- Server rejecting connections
-- Network instability
-
-Solution:
-- Refresh authentication token
-- Check server logs
-- Implement circuit breaker pattern
-
-** Debug Output
-Enable debug logging:
-#+BEGIN_SRC bash
-DEBUG=websocket claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
-                      --input-format=stream-json \
-                      --output-format=stream-json
-#+END_SRC
-
-* Advanced Topics
-
-** Custom SDK Servers
-
-*** Implementation Requirements
-Your SDK server must:
-1. Accept WebSocket connections with Bearer token auth
-2. Support newline-delimited JSON messages
-3. Handle =X-Last-Request-Id= header for replay
-4. Send =x-last-request-id= in response headers
-
-*** Example Server (Node.js)
-#+BEGIN_SRC javascript
-const WebSocket = require('ws');
-const http = require('http');
-
-const server = http.createServer();
-const wss = new WebSocket.Server({ noServer: true });
-
-server.on('upgrade', (request, socket, head) => {
-  // Verify Bearer token
-  const auth = request.headers.authorization;
-  if (!auth?.startsWith('Bearer ')) {
-    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-    socket.destroy();
-    return;
-  }
-  
-  // Handle replay header
-  const lastRequestId = request.headers['x-last-request-id'];
-  
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    // Send last processed ID
-    if (lastRequestId) {
-      ws.send(JSON.stringify({
-        type: 'control_response',
-        metadata: { last_request_id: lastRequestId }
-      }) + '\n');
-    }
-    
-    wss.emit('connection', ws, request);
-  });
-});
-
-wss.on('connection', (ws) => {
-  ws.on('message', (data) => {
-    const message = JSON.parse(data.toString());
-    console.log('Received:', message);
-    
-    // Echo response
-    ws.send(JSON.stringify({
-      type: 'assistant',
-      uuid: crypto.randomUUID(),
-      message: {
-        role: 'assistant',
-        content: `Received: ${message.message.content}`
-      }
-    }) + '\n');
-  });
-});
-
-server.listen(8080);
-#+END_SRC
-
-** Integration Patterns
-
-*** Request-Response Pattern
-#+BEGIN_SRC javascript
-const pendingRequests = new Map();
-
-function sendRequest(content) {
-  const uuid = crypto.randomUUID();
-  const promise = new Promise((resolve, reject) => {
-    pendingRequests.set(uuid, { resolve, reject });
-    
-    claude.stdin.write(JSON.stringify({
-      type: 'user',
-      uuid,
-      message: { role: 'user', content }
-    }) + '\n');
-  });
-  
-  return promise;
-}
-
-// Handle responses
-rl.on('line', (line) => {
-  const message = JSON.parse(line);
-  if (message.correlation_id && pendingRequests.has(message.correlation_id)) {
-    const { resolve } = pendingRequests.get(message.correlation_id);
-    resolve(message);
-    pendingRequests.delete(message.correlation_id);
-  }
-});
-#+END_SRC
-
-*** Streaming Pattern
-#+BEGIN_SRC javascript
-class StreamingClient {
-  constructor(sdkUrl) {
-    this.messages = [];
-    this.listeners = [];
-    
-    this.process = spawn('claude', [
-      `--sdk-url=${sdkUrl}`,
-      '--input-format=stream-json',
-      '--output-format=stream-json'
-    ]);
-    
-    this.setupStreaming();
-  }
-  
-  setupStreaming() {
-    const rl = readline.createInterface({
-      input: this.process.stdout
-    });
-    
-    rl.on('line', (line) => {
-      const message = JSON.parse(line);
-      this.messages.push(message);
-      this.listeners.forEach(fn => fn(message));
-    });
-  }
-  
-  onMessage(callback) {
-    this.listeners.push(callback);
-  }
-  
-  send(content) {
-    this.process.stdin.write(JSON.stringify({
-      type: 'user',
-      uuid: crypto.randomUUID(),
-      message: { role: 'user', content }
-    }) + '\n');
-  }
-}
-#+END_SRC
+| Variable | Purpose |
+|----------------------------------------------+--------------------------------------------------|
+| =CLAUDE_CODE_SESSION_ACCESS_TOKEN= | Bearer token for WebSocket auth |
+| =CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR= | File descriptor number containing the token |
+| =CLAUDE_CODE_ENVIRONMENT_RUNNER_VERSION= | Sent as =x-environment-runner-version= header |
+| =CLAUDE_CODE_POST_FOR_SESSION_INGRESS_V2= | Enables hybrid POST fallback transport |
 
 * Version History
 
 | Version | Changes |
-|---------+---------|
-| v1.0.77 | Initial WebSocket support with stream-json format |
-| v1.0.78 | Added file descriptor authentication for enhanced security |
-| v1.0.84 | Current stable version with refined implementation |
+|---------+-----------------------------------------------------|
+| v1.0.77 | Initial WebSocket transport with stream-json format |
+| v1.0.78 | File descriptor authentication |
+| v2.0.x | Stable through major version bump, no breaking changes |
+| ~v2.1.32 | Control request support (interrupt), improved logging |
+| v2.1.38 | Current version analyzed in this report |
 
-* See Also
+* Source References
 
-- [[https://docs.anthropic.com/en/docs/claude-code/sdk][Claude Code SDK Documentation]]
-- [[https://github.com/anthropics/claude-code][Claude Code GitHub Repository]]
-- [[https://jsonlines.org/][JSON Lines Specification]]
-- [[https://developer.mozilla.org/en-US/docs/Web/API/WebSocket][WebSocket API Reference]]
+All line numbers reference =archive/claude-code/pretty/pretty-v2.1.38.js=:
+
+| Symbol | Lines | Purpose |
+|--------+--------------+--------------------------------------|
+| =FQA= | 538222-538264 | SDK transport wrapper |
+| =Pc1= | 537836-538115 | Core WebSocket transport |
+| =mQA= | 538144-538199 | Hybrid POST fallback transport |
+| =Mc1= | 537591-537785 | Stdio transport (base class) |
+| =$B1= | 264520-264566 | CircularBuffer |
+| =nV()= | 235867-235871 | Token retrieval |
+| =JD9()= | 235827-235866 | File descriptor token reading |
+| =zMq()= | 538201-538207 | Transport factory |
+| =IJz()= | 541962-541979 | Input handler factory |
