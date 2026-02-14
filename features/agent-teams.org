@@ -1,0 +1,209 @@
+#+TITLE: Agent Teams (Multi-Agent Coordination)
+#+DATE: 2026-02-13
+
+* Overview
+
+Agent Teams is Claude Code's multi-agent coordination system, allowing a lead
+agent to spawn and orchestrate multiple teammate agents working in parallel.
+Teams share a task list for work distribution and communicate via a file-based
+mailbox system.
+
+** Feature Status (v2.1.42)
+
+Enabled when *both* conditions are met:
+- Environment variable: ~CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1~
+- Feature flag: ~tengu_amber_flint~ (server-side, defaults enabled)
+
+** Already Documented Elsewhere
+
+| Document                    | Covers                               | Freshness       |
+|-----------------------------+--------------------------------------+-----------------|
+| [[file:agent-mailbox.org]]  | Mailbox architecture, file storage   | Stale (v2.0.66) |
+| [[file:task-management.org]]| TaskCreate/Get/Update/List tools     | Current         |
+| [[file:agent-memory.org]]   | Per-agent persistent memory          | Current         |
+| [[file:../internals/feature-flags.org]] | ~tengu_amber_flint~ flag  | Current         |
+
+Key changelogs:
+- *v2.1.16* - Agent Swarms introduced (TeammateTool, iTerm2 split panes)
+- *v2.1.20* - SendMessageTool replaces old teammate messaging
+- *v2.1.23* - Terminology: "swarm" renamed to "team"
+- *v2.1.33* - TeamCreate/TeamDelete tools added, hooks added
+
+* User-Facing Tools
+
+** TeamCreate
+
+Creates a team and its shared task list.
+
+#+begin_src javascript
+{
+  "team_name": "my-project",        // required, sanitized to [a-z0-9-]
+  "description": "Working on X",    // optional
+  "agent_type": "researcher"         // optional, lead's role label
+}
+#+end_src
+
+Creates on disk:
+- =~/.claude/teams/{name}/config.json= -- team roster, metadata
+- =~/.claude/tasks/{name}/= -- shared task list directory
+
+Constraints:
+- A leader can only manage one team at a time
+- Duplicate team names get auto-suffixed
+
+** TeamDelete
+
+Tears down the team. Takes no parameters (uses current team context).
+
+- Fails if active members remain -- must shut them down first
+- Removes team directory, task directory, and git worktrees
+- Clears team context from session state
+
+** SendMessage
+
+All inter-agent communication. Five message types:
+
+*** type: "message" (Direct Message)
+
+#+begin_src javascript
+{
+  "type": "message",
+  "recipient": "researcher",     // teammate name (not UUID)
+  "content": "Your message",
+  "summary": "Brief preview"     // shown in UI notification
+}
+#+end_src
+
+*** type: "broadcast"
+
+Same message to all teammates. Expensive (N messages for N members).
+Reserved for critical team-wide announcements.
+
+*** type: "shutdown_request"
+
+Ask a teammate to gracefully exit:
+
+#+begin_src javascript
+{
+  "type": "shutdown_request",
+  "recipient": "researcher",
+  "content": "Task complete, wrapping up"
+}
+#+end_src
+
+Teammate receives JSON with a ~requestId~ they must respond to.
+
+*** type: "shutdown_response"
+
+Teammate approves (~approve: true~) or rejects with reason.
+Approval terminates the teammate process.
+
+*** type: "plan_approval_response"
+
+When a teammate with ~plan_mode_required~ finishes planning, the lead
+can approve or reject their plan with feedback.
+
+** Task Tools (in Team Context)
+
+When a team exists, all task tools automatically use the team's shared task
+list at =~/.claude/tasks/{team-name}/=. See [[file:task-management.org]].
+
+Key team additions to the base task system:
+- ~owner~ field on tasks for assignment to teammates
+- ~blockedBy~ / ~blocks~ for dependency chains
+- All teammates can create, claim, update, and list tasks
+
+** Spawning Teammates
+
+Teammates are spawned via the *Task tool* (not TeamCreate) with these parameters:
+
+#+begin_src javascript
+// Task tool call from team lead
+{
+  "name": "researcher",           // teammate's display name
+  "prompt": "Research the auth system...",
+  "team_name": "my-project",      // which team to join
+  "agent_type": "general-purpose", // or custom agent type
+  "plan_mode_required": true,      // optional: start in plan mode
+  "model": "sonnet",              // optional: model override
+  "cwd": "/path/to/work"          // optional: working directory
+}
+#+end_src
+
+** Team Workflow
+
+1. Lead calls *TeamCreate* to establish the team
+2. Lead uses *TaskCreate* to define work items
+3. Lead spawns teammates via the *Task* tool
+4. Lead assigns tasks with *TaskUpdate* (~owner~ parameter)
+5. Teammates work on tasks, mark them completed
+6. Teammates go idle between turns (automatic notification to lead)
+7. Lead sends *shutdown_request* when work is done
+8. Lead calls *TeamDelete* to clean up
+
+** Discovery
+
+Teammates discover each other by reading the team config:
+=~/.claude/teams/{team-name}/config.json=
+
+Contains a ~members~ array with each agent's:
+- ~name~ -- always use this for messaging and task assignment
+- ~agentId~ -- internal identifier
+- ~agentType~ -- role description
+- ~model~ -- which model they're running
+
+** Hooks
+
+Two team-specific hook events available in settings:
+
+- *TeammateIdle* -- fires when any teammate finishes a turn
+- *TaskCompleted* -- fires when a task is marked completed
+
+* What's Not Documented Elsewhere
+
+** Idle State Semantics
+
+Teammates go idle after every turn. This is the *normal* state, not an error.
+Idle means "waiting for input." Sending a message to an idle teammate wakes
+them up. The system sends idle notifications automatically to the team lead.
+
+Idle notifications include:
+- ~idleReason~: "available" or "interrupted"
+- ~summary~: brief description of what was done
+- ~completedTaskId~ / ~completedStatus~: if a task was just finished
+
+** Permission Delegation
+
+The team lead's permission mode flows to teammates:
+- Teammates can send permission requests to the leader via the mailbox
+- Leader sees them as tool-use confirmation prompts in their UI
+- Leader approves/rejects, response routed back to teammate
+- Sandbox permission requests (network access) also routed through leader
+
+** Peer DM Visibility
+
+When teammate A sends a DM to teammate B, the team lead gets a brief
+summary in the next idle notification. This gives the lead visibility into
+peer collaboration without flooding their context with full message content.
+
+** Plan Mode for Teammates
+
+Teammates can be spawned with ~plan_mode_required: true~:
+- They start in plan mode, can only explore (no edits)
+- When they call ExitPlanMode, a plan approval request goes to the lead
+- Lead approves/rejects via SendMessage (plan_approval_response)
+- On approval, the teammate's permission mode is updated automatically
+
+** Backend Requirements
+
+Teams need a terminal multiplexer to display teammates:
+- *iTerm2* with ~it2~ CLI -- native split panes (preferred on macOS)
+- *tmux* -- used as fallback or primary on Linux
+- *In-process* -- no terminal required (teammates run as internal tasks)
+
+If neither iTerm2 nor tmux is available, the system offers install instructions.
+
+** Cost Model
+
+Each teammate is a separate Claude conversation. Broadcasting sends N
+separate messages. The system explicitly warns about cost scaling.
