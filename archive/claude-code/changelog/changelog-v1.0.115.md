@@ -3,6 +3,7 @@
 ## Highlights
 This release adds rainbow color support to the color theme system and improves thinking detection toggle behavior to be more predictable and user-controlled.
 
+
 ### Rainbow Color Palette
 **What:** Added a complete rainbow color palette to all theme variants (light, dark, and custom themes)
 
@@ -15,6 +16,7 @@ This release adds rainbow color support to the color theme system and improves t
   - `rainbow_orange`: "rgb(245,139,87)"
   - `rainbow_yellow`: "rgb(250,195,95)"
   - And corresponding shimmer variants for each
+
 
 ### Rainbow Color Arrays and Helper Functions
 **What:** New infrastructure for cycling through rainbow colors
@@ -31,6 +33,7 @@ The system now includes:
 - Uses modulo arithmetic to cycle through colors: `Q[A % Q.length]`
 - **Evidence**: `m61() at line 365993`, `Ew1() at line 365990`, `Cj9 at line 365972`, `Uj9 at line 365981`
 
+
 ### Thinking Detection Toggle Behavior
 **What:** Improved how the thinking detection disabled state works when users toggle it on/off
 
@@ -42,6 +45,7 @@ The system now includes:
 - Visual feedback (border colors, shimmer effects) now shows thinking detection state more accurately
 - User preference for disabled thinking now persists instead of being automatically reset
 - **Evidence**: `i1 variable at line 437849 in Yp5()`, removed `useEffect` from previous version
+
 
 ### Code Organization
 **What:** Refactored imports for better tree-shaking and bundle optimization

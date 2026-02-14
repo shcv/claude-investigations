@@ -3,6 +3,7 @@
 ## Highlights
 This release adds Pro plan Opus defaults, improved teammate/agent messaging UI, smarter git state detection to prevent diff issues during rebases/merges, and enhanced prompt queue execution handling.
 
+
 ### Pro Plan Opus Default Option
 **What:** New experimental feature that allows Pro plan subscribers to use Opus 4.5 as their default model.
 
@@ -15,6 +16,7 @@ When enabled via the `tengu_opus_default_pro_plan` experiment, Pro plan users wi
 - Added `haA()` function at line 181569 that checks if the Opus default experiment is enabled
 - Model description function `uaA()` at line 181634 now includes the Pro plan Opus option check
 
+
 ### Teammate Message Display Component
 **What:** New UI component to render incoming teammate messages with proper formatting and color support.
 
@@ -26,6 +28,7 @@ Teammate messages are automatically displayed when received via the inbox system
 - Added `KS7()` parser function at line 471552 that extracts teammate ID, color, and content from message tags
 - Messages are rendered with teammate identification and styled borders
 - **Evidence**: Message rendering added at line 17992-17993 in the message display switch statement
+
 
 ### Agent Notification Display Component  
 **What:** New UI component to display agent completion/failure notifications in the conversation.
@@ -40,6 +43,7 @@ When a background agent completes or fails, a notification is automatically show
 - Added function `m39()` at line 479132 to format and queue agent notifications
 - **Evidence**: Message rendering added at line 17994-17995 in the message display switch statement
 
+
 ### Prompt Queue Auto-Execution Hook
 **What:** New hook that automatically processes queued commands when the session becomes idle.
 
@@ -53,6 +57,7 @@ When commands are queued (via `/add-to-queue` or similar), they are now automati
 - Tracks execution with a ref to prevent duplicate processing
 - **Evidence**: Hook usage at line 19833-19839 in main component
 
+
 ### Teammate Message Submission Handler
 **What:** New handler that allows submitting messages directly from the inbox to the conversation when idle.
 
@@ -65,6 +70,7 @@ Messages from teammates in the inbox can now be submitted as user queries when t
 - Includes sophisticated idle detection and busy-state queuing logic
 - **Evidence**: Hook usage at line 19883 in main component
 
+
 ### Disable Slash Commands Option
 **What:** New `disableSlashCommands` parameter for the main component that prevents slash command processing.
 
@@ -75,6 +81,7 @@ Pass `disableSlashCommands: true` to the main component to disable all slash com
 - Added `disableSlashCommands` parameter at line 19137 with default value `false`
 - When enabled, the commands list is replaced with an empty array
 - **Evidence**: Parameter defined at line 19137, conditional at line 19191
+
 
 ### Git Rebase/Merge State Detection
 **What:** Claude now detects when git is in the middle of a rebase, merge, cherry-pick, or revert operation and skips the diff display to avoid confusing partial state.
@@ -87,6 +94,7 @@ Pass `disableSlashCommands: true` to the main component to disable all slash com
   - `REVERT_HEAD` - revert in progress
 - The `ky2()` function at line 405477 now calls `rm5()` and returns early if any state file exists
 - **Evidence**: New function added at line 16108, integration at line 17927
+
 
 ### WebFetch Documentation Mode
 **What:** WebFetch now has a special mode for fetching documentation that allows including code examples without the strict quote limits.
@@ -101,6 +109,7 @@ When fetching from llms.txt or documentation sources, the response can include f
 - Added `ZzB` variable at line 182657 pointing to `https://platform.claude.com/llms.txt`
 - **Evidence**: New function at line 7427, parameter added to `md2()` at line 18044-18045
 
+
 ### Model Name Display Function
 **What:** New helper function that formats model identifiers into user-friendly "Claude" prefixed names.
 
@@ -109,6 +118,7 @@ When fetching from llms.txt or documentation sources, the response can include f
 - Transforms model IDs like "sonnet" into "Claude Sonnet"
 - Returns just "Claude" if the model name is unchanged after transformation
 - **Evidence**: Function at line 7462-7468
+
 
 ### React Reconciler Update  
 **What:** Updated internal React reconciler with scheduler improvements for better performance.
@@ -119,10 +129,12 @@ When fetching from llms.txt or documentation sources, the response can include f
 - Added timing functions `Iy()`, `PzB()` for deadline checking
 - These are internal React infrastructure updates that improve rendering performance
 
+
 ### Inbox Message Handling Improvements
 - Inbox polling now properly queues messages when session is busy
 - Messages are delivered when session transitions from busy to idle
 - Improved logging with `[InboxPoller]` prefix for debugging
+
 
 ### Query Return Value Handling
 - The `onQuery` callback no longer returns a status object

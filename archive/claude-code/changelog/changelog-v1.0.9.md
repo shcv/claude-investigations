@@ -2,16 +2,19 @@
 
 # Claude Code v1.0.9 Changelog
 
+
 ### Internal Metrics Export System
 - Added new internal metrics exporter (`Nh1` class) that sends telemetry data to Anthropic's metrics endpoint
 - Metrics are exported every 60 seconds to `https://api.anthropic.com/api/claude_code/otel/metrics`
 - Includes service metadata, metric descriptions, and data points with timestamps
 - Graceful shutdown support with configurable timeout
 
+
 ### Enhanced Telemetry System
 - Restructured OpenTelemetry initialization to support both external and internal metrics collection
 - Added conditional logic for enabling internal metrics export (controlled by `uB6()` function, currently disabled)
 - Improved error handling and logging for telemetry operations
+
 
 ### Import Optimizations
 - Replaced generic stream imports with more specific imports:
@@ -19,10 +22,12 @@
   - Updated process import to use named import `{ cwd }` instead of default import
 - Added new utility variables for internal operations
 
+
 ### Code Organization
 - Refactored telemetry initialization function (renamed from `Mk0` to `Rk0`)
 - Improved separation of concerns between external and internal metrics readers
 - Better error messages for OpenTelemetry timeout scenarios
+
 
 ### Version Updates
 - Bumped version from 1.0.8 to 1.0.9

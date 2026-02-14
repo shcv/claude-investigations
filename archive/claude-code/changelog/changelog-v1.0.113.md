@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.113 enhances security with workspace trust validation for OpenTelemetry helpers, improves prompt caching with per-model control via new environment variables, and refines user experience by filtering out error sessions and improving alias detection to preserve custom configurations.
 
+
 ### Per-Model Prompt Caching Control
 **What:** Fine-grained control over prompt caching for individual model families
 **How to use:**
@@ -25,6 +26,7 @@ export DISABLE_PROMPT_CACHING=true
 - Enables cost and performance tuning based on your specific use cases
 - **Evidence**: `Sd(A)` function at line 395280 replaces `Pd()` at line 394932 in v1.0.112
 
+
 ### Sessions API Support (Feature-Flagged)
 **What:** New v1 Sessions API endpoint alongside existing OAuth API
 **Details:**
@@ -33,6 +35,7 @@ export DISABLE_PROMPT_CACHING=true
 - Currently defaults to legacy API (feature flag `o45()` at line 412718 returns false)
 - Provides foundation for future migration to new API
 - **Evidence**: Split from single function `TzB()` at line 412258 in v1.0.112
+
 
 ### Cache Warming Infrastructure (Disabled by Default)
 **What:** Background cache warming to maintain cache freshness during idle periods
@@ -44,6 +47,7 @@ export DISABLE_PROMPT_CACHING=true
 - Configuration includes idle threshold (240s) and warmup intervals (300s)
 - **Evidence**: Functions `ql5()` and `Z0Q()` at lines 437674 and 437683, not present in v1.0.112
 
+
 ### Automatic Trailing Whitespace Removal
 **What:** All file writes and edits now automatically remove trailing whitespace from each line
 **Details:**
@@ -53,6 +57,7 @@ export DISABLE_PROMPT_CACHING=true
 - Ensures cleaner, more consistent code formatting
 - **Evidence**: `hC0()` function at line 386524, not present in v1.0.112
 
+
 ### Enhanced Usage Statistics Merging
 **What:** Improved usage tracking with support for ephemeral cache tiers
 **Details:**
@@ -60,6 +65,7 @@ export DISABLE_PROMPT_CACHING=true
 - Properly merges cache creation statistics across streaming events
 - Used when combining usage stats from multiple API responses
 - **Evidence**: `hYB()` function at line 395825 with `cache_creation` object structure
+
 
 ### Workspace Trust Validation for OpenTelemetry Helpers
 **What changed:** OpenTelemetry headers from project/local settings now require workspace trust
@@ -70,6 +76,7 @@ export DISABLE_PROMPT_CACHING=true
 - Returns empty headers instead of executing untrusted code
 - Part of broader security hardening effort
 - **Evidence**: Replaces simpler `bh2()` at line 371852 in v1.0.112
+
 
 ### Improved Alias Detection Logic
 **What changed:** Shell alias detection now preserves custom user configurations
@@ -84,6 +91,7 @@ export DISABLE_PROMPT_CACHING=true
 - Previous version `V11()` at line 377695 in v1.0.112 removed all claude aliases indiscriminately
 - **Evidence**: Compares alias target against `zv` (default path) at line 377718
 
+
 ### Error Session Filtering
 **What changed:** Session list now excludes sessions that start with API errors
 **Details:**
@@ -92,6 +100,7 @@ export DISABLE_PROMPT_CACHING=true
 - Improves UI cleanliness by hiding failed/error sessions
 - **Evidence**: `YA1()` function at lines 428269-428270, enhanced from `QA1()` at line 428139 in v1.0.112
 
+
 ### Improved Slash Command Validation
 **What changed:** Character-level validation replaced path-prefix checking
 **Details:**
@@ -99,6 +108,7 @@ export DISABLE_PROMPT_CACHING=true
 - Replaces previous logic that checked for `/var`, `/tmp`, `/private` path prefixes
 - Provides more precise security validation
 - **Evidence**: Used at line 421356 instead of path checks at line 421220 in v1.0.112
+
 
 ### Conditional Telemetry Initialization
 **What changed:** Telemetry initialization can be deferred based on workspace trust
@@ -109,6 +119,7 @@ export DISABLE_PROMPT_CACHING=true
 - Prevents sensitive telemetry from initializing in untrusted workspaces
 - **Evidence**: `EtB` variable at line 429231 with conditional logic, replacing direct initialization in `VtB` at line 429100 in v1.0.112
 
+
 ### Hotkey Change for Expand/Collapse
 **What changed:** Expand/collapse hotkey changed from Ctrl+R to Ctrl+O
 **Details:**
@@ -117,17 +128,20 @@ export DISABLE_PROMPT_CACHING=true
 - Note: Ctrl+R still used for error retry functionality (separate feature)
 - **Evidence**: Variable `F2B` at line 372920 replaces `B2B` at line 372904 in v1.0.112
 
+
 ### Refactored Authentication Helper
 - New `uzB()` function at line 412641 extracts common authentication logic
 - Consolidates access token and organization UUID retrieval
 - Used by both `dzB()` and `mzB()` session fetching functions
 - Improves code reusability and maintainability
 
+
 ### Enhanced Prompt Caching Function Signatures
 - Functions now accept model parameter for per-model cache control
 - `gYB()` at line 395982, `dt6()` at line 395373, `ct6()` at line 395400, `lt6()` at line 395849
 - All call `Sd(model)` instead of `Pd()` for cache control decisions
 - Enables the per-model caching feature described above
+
 
 ### Import Optimization
 - Removed unused `stream` import (line 337903 in v1.0.112)

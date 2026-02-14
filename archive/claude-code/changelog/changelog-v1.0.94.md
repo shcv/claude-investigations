@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.94 introduces comprehensive performance monitoring with new warnings for large agent descriptions and MCP tools, significantly improves security with sophisticated sed command validation, and enhances the permission system with dynamic update capabilities.
 
+
 ### Performance Context Warnings
 **What:** New warning system that monitors context consumption from custom agents and MCP tools
 **How to use:**
@@ -17,6 +18,7 @@ Version 1.0.94 introduces comprehensive performance monitoring with new warnings
 - Shows top contributors by token consumption for optimization
 - Integrated with existing CLAUDE.md size warnings into unified system
 - **Evidence**: `kY1() at line 399348`, `XV5() at line 399376`, `FV5() at line 399400`, `WSB() at line 399442`
+
 
 ### Advanced sed Command Security
 **What:** Complete replacement of sed command validation with sophisticated parsing that blocks dangerous operations
@@ -36,6 +38,7 @@ claude "Use sed to replace text in file.txt"
 - Detects and blocks write operations (`w`), execute operations (`e`), and dangerous flags
 - **Evidence**: `P1B() at line 379595`, `mS6() at line 379676`, `hS6() at line 379611`, `gS6() at line 379638`
 
+
 ### Dynamic Permission Updates
 **What:** Tools can now suggest and apply permission changes during execution
 **Details:**
@@ -45,12 +48,14 @@ claude "Use sed to replace text in file.txt"
 - Context-aware permission suggestions based on access patterns
 - **Evidence**: `qW1() at line 430572`, `Cz1() at line 348277`, `CR5() at line 421430`
 
+
 ### Enhanced Error Messages
 **What:** Improved error handling for PDF files
 **Details:**
 - Clear message when PDF exceeds page limits
 - Guidance to edit message and retry with smaller PDF
 - **Evidence**: `bb6 variable at line 391166` in error handler `B_1()`
+
 
 ### Checkpointing Status Display
 **What:** Better visibility into checkpointing errors and status
@@ -60,6 +65,7 @@ claude "Use sed to replace text in file.txt"
 - Displays save failures with error messages
 - **Evidence**: `KV5() at line 399769`
 
+
 ### Memory File Selection UI
 **What:** Redesigned memory file selector interface
 **Details:**
@@ -68,12 +74,14 @@ claude "Use sed to replace text in file.txt"
 - Clearer descriptions of file locations
 - **Evidence**: `sb1() at line 400461` replacing `hb1()`
 
+
 ### Git Command Flag Handling
 **What:** Fixed handling of numeric flags in git commands
 **Details:**
 - Git commands with numeric flags like `git log -5` now work correctly
 - Improved flag parsing to distinguish between numeric flags and invalid options
 - **Evidence**: `lS6() at line 380053`, added check for `/^-\d+$/` pattern at line 1404
+
 
 ### Model Deprecation Updates
 **What:** Added deprecation dates for additional Claude models
@@ -83,6 +91,7 @@ claude "Use sed to replace text in file.txt"
 - Added `claude-3-5-sonnet-20240620` with deprecation date October 22, 2025
 - **Evidence**: `My2 object at line 366970`, `jy2 object at line 367622`
 
+
 ### Settings Processing
 **What:** Enhanced --settings flag processing during initialization
 **Details:**
@@ -90,6 +99,7 @@ claude "Use sed to replace text in file.txt"
 - Supports both JSON strings and file paths
 - Better error messages for invalid settings
 - **Evidence**: `wS5() at line 433801`, initialization check at lines 1537-1541
+
 
 ### Local Memory Type Selection
 **What:** Simplified memory file selection by removing separate "Local" memory type

@@ -1,8 +1,5 @@
 # Changelog for version 1.0.18
 
-Based on the diff analysis, here's the detailed changelog for Claude Code version 1.0.18:
-
-# Claude Code v1.0.18 Changelog
 
 ### MCP Server Management UI
 - **New interactive MCP server management interface** - Users can now manage MCP (Model Context Protocol) servers through a new interactive UI
@@ -11,6 +8,7 @@ Based on the diff analysis, here's the detailed changelog for Claude Code versio
   - Browse and inspect available tools for each MCP server
   - View tool details including parameters, descriptions, and whether they're read-only
   - Authenticate SSE (Server-Sent Events) based MCP servers directly from the UI
+
 
 ### Enhanced Directory Permissions
 - **New `--add-dir` flag** - Add additional working directories for the current session
@@ -21,10 +19,12 @@ Based on the diff analysis, here's the detailed changelog for Claude Code versio
   - Can use relative or absolute paths
   - Validates that paths exist and are directories
 
+
 ### Streaming JSON Input Support
 - **New streaming input mode** - Accept streaming JSON input from stdin for continuous interactions
   - Supports the `stream-json` output format for real-time message processing
   - Enables piping structured messages into Claude Code for automated workflows
+
 
 ### Enhanced Permission Modes
 - **Improved permission system** with new modes:
@@ -33,19 +33,23 @@ Based on the diff analysis, here's the detailed changelog for Claude Code versio
   - `plan` - Planning mode for complex tasks
   - `bypassPermissions` - Skip permission checks (requires explicit acceptance)
 
+
 ### Performance Enhancements
 - **Async message history loading** - Message transcripts and summaries now load asynchronously for better performance
 - **Caching improvements** for MCP client connections with cache invalidation support
 - **Optimized file filtering** for MCP tools by server name
+
 
 ### ️ Better Error Handling
 - **Improved directory existence checks** - More robust handling when creating directories or files
 - **Enhanced rate limit handling** - Better tracking and display of unified rate limit status
 - **Clearer error messages** for MCP tool authentication failures
 
+
 ### Logging Improvements
 - **New environment variable `OTEL_LOG_USER_PROMPTS`** - Enable logging of user prompts for debugging
 - **Simplified log cleanup** - Removed separate message log cleanup, focusing on MCP logs only
+
 
 ### Fixed Issues
 - **Permission prompt improvements** - Fixed duplicate permission prompts for file operations
@@ -53,11 +57,13 @@ Based on the diff analysis, here's the detailed changelog for Claude Code versio
 - **Streaming mode stability** - Fixed issues with streaming JSON input parsing
 - **MCP server reconnection** - Servers now properly reconnect after authentication
 
+
 ### Internal Improvements
 - Refactored MCP tool filtering to use consistent naming patterns (`mcp__<server>__<tool>`)
 - Improved separation between MCP tools and built-in tools
 - Better handling of tool permission contexts for different modes
 - Enhanced support for SSE-based MCP authentication flow
+
 
 ### Managing MCP Servers
 ```bash
@@ -72,6 +78,7 @@ claude mcp
 # - View detailed tool documentation
 ```
 
+
 ### Working with Additional Directories
 ```bash
 # Add directories to the working context
@@ -83,6 +90,7 @@ claude "analyze dependencies" --add-dir ../shared-lib
 # Multiple projects at once
 claude "find common patterns" --add-dir ~/project1 --add-dir ~/project2
 ```
+
 
 ### Streaming Mode
 ```bash

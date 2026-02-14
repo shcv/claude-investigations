@@ -1,6 +1,5 @@
 # Changelog for version 1.0.21
 
-Based on my analysis of the diff file, here is the changelog for Claude Code version 1.0.21:
 
 ### New Features
 
@@ -10,6 +9,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
   - `prompts/get` - Retrieve a specific prompt by name with optional arguments
   - `prompts/list` - List all available prompts from an MCP server
 - Added prompt list change notifications support via `notifications/prompts/list_changed`
+
 
 ### Improvements
 
@@ -26,11 +26,13 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
   - Better error reporting for incompatible authentication servers
 - Improved validation for OAuth response types and code challenge methods
 
+
 ### Technical Improvements
 
 - Enhanced session ID handling in connection establishment
 - Better support for client information persistence across OAuth flows
 - Improved error state tracking with optional `isError` flag
+
 
 ### MCP Integration Examples
 

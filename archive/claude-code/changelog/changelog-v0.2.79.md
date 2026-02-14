@@ -1,5 +1,6 @@
 # Changelog for version 0.2.79
 
+
 ### New Features
 
 #### 🆕 Local File Context Command
@@ -16,6 +17,7 @@
 - Large files that exceed size limits are now partially loaded instead of being completely skipped
 - When a file is too large, the first 100 lines are loaded with a truncation indicator
 - This ensures you can still reference and work with large files, even if only partially
+
 
 ### Improvements
 
@@ -40,12 +42,14 @@
 - New interrupt message: "Interaction interrupted by the safety supervisor."
 - Better separation of different interruption scenarios (user interrupts vs safety interrupts)
 
+
 ### Internal Changes
 
 - Removed unused stream import
 - Consolidated process imports
 - Added project onboarding tracking counter
 - Improved code organization and error handling
+
 
 ### Bug Fixes
 

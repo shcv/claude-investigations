@@ -26,7 +26,7 @@ This release contains only internal changes that do not affect user-facing funct
 - **Code refactoring**: One OAuth metadata discovery helper function (`R42`) was refactored/inlined
 - **Re-minification**: 6,293 variable renames from fresh minification pass (internal identifier changes like `FT8` → `KT8`)
 
-**Evidence**: Diff header shows 99.9% structural similarity with only 17 additions, 18 deletions, and 55 modifications across ~13,000 declarations.
+Evidence: Diff header shows 99.9% structural similarity with only 17 additions, 18 deletions, and 55 modifications across ~13,000 declarations.
 
 ## Notes
 

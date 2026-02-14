@@ -4,6 +4,7 @@
 
 Version 2.0.47 introduces remote environment configuration for Teleport users, implements intelligent plan mode parallelism based on subscription tier, and adds automatic image compression to prevent API errors from oversized images.
 
+
 ### Remote Environment Configuration
 **What:** New CLI command to configure default remote development environments for Teleport sessions
 
@@ -21,6 +22,7 @@ claude remote-env
 - Stores selection in `settings.local.json` under `remote.defaultEnvironmentId`
 - **Evidence**: `EZ9()` at line 489948, `zZ9()` at line 489984, command registration at line 490139
 
+
 ### Automatic Image Compression
 **What:** Images in conversation context are now automatically compressed when they exceed size limits
 
@@ -37,6 +39,7 @@ claude remote-env
 - Transparent to users - happens automatically during content processing
 - **Evidence**: `egQ()` at line 155776, called from content truncation at line 502920
 
+
 ### Plan Mode Exit State Tracking
 **What:** Internal state management to track when users have exited plan mode
 
@@ -45,6 +48,7 @@ claude remote-env
 - Improves workflow continuity in long sessions
 - State persists for the duration of the current session
 - **Evidence**: `qV0()` getter at line 2315, `og()` setter at line 2318
+
 
 ### Plan Mode Parallelism Now Tier-Based
 **What changed:** Plan mode now adjusts parallel agent count based on subscription tier instead of using a fixed default
@@ -66,6 +70,7 @@ claude remote-env
 ## Bug Fixes
 
 None identified in this release.
+
 
 ### OpenTelemetry Queue Configuration
 - Added explicit max queue size constant (8,192) for telemetry batching

@@ -2,6 +2,7 @@
 
 # Claude Code v1.0.66 Changelog
 
+
 ### Session Feedback System
 A new interactive feedback prompt has been added that appears during your coding sessions. When prompted, you can rate how Claude is performing:
 - Press `1` for "Bad"
@@ -11,18 +12,22 @@ A new interactive feedback prompt has been added that appears during your coding
 
 The feedback system intelligently appears based on session duration and interaction count, helping improve Claude's performance over time.
 
+
 ### Session Bookmarking
 You can now bookmark important coding sessions for easy reference later. Bookmarked sessions are preserved and marked in the session history, making it easier to find and return to significant conversations.
+
 
 ### Enhanced File Security
 - Added validation to prevent access to potentially sensitive file paths
 - File operations now include additional security checks before processing
 - Improved handling of file paths in IDE integration features
 
+
 ### Better Error Handling
 - Settings file operations now return detailed error information when issues occur
 - Invalid JSON in settings files is caught and reported with helpful error messages
 - More robust error recovery for configuration file issues
+
 
 ### Performance Optimizations
 - Replaced asynchronous checkpoint loading with synchronous operations for better reliability

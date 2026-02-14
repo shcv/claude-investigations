@@ -3,6 +3,7 @@
 ## Highlights
 Advanced beta features including interleaved thinking and 1M token context windows are now available for users of the Anthropic API and Google Vertex AI. AWS Bedrock users maintain the previous feature set for compatibility.
 
+
 ### Extended Beta Features for First-Party and Vertex API Users
 **What:** Users connecting through Anthropic's API or Google Vertex AI now have access to previously restricted beta features
 **How to use:**
@@ -19,6 +20,7 @@ claude "Use interleaved thinking to solve this complex problem"
 - Enables "context-1m-2025-08-07" beta feature supporting up to 1 million token context windows
 - These features are automatically included in API requests when not using AWS Bedrock
 - No additional flags or configuration needed - features activate automatically based on your backend
+
 
 ### Smart Beta Feature Detection Based on Backend
 **What changed:** The CLI now intelligently enables or disables beta features based on your chosen backend provider

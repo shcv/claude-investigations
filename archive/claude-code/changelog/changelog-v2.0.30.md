@@ -4,6 +4,7 @@
 
 Version 2.0.30 introduces Language Server Protocol (LSP) support, enabling Claude to access code intelligence features like go-to-definition, find-references, and hover documentation. It also adds enhanced sandbox security controls and refactors the internal tool execution architecture for better concurrent processing.
 
+
 ### LSP (Language Server Protocol) Tool
 
 **What:** A new tool that integrates Language Server Protocol servers to provide code intelligence features directly to Claude.
@@ -37,6 +38,7 @@ LSP servers can be configured in two ways:
 - Comprehensive error handling for LSP failures including: `lsp-config-invalid`, `lsp-server-start-failed`, `lsp-server-crashed`, `lsp-request-timeout`, `lsp-request-failed`
 - LSP URI decoding support at line 205830 (`uO0()` function)
 
+
 ### Magic Docs Auto-Update System
 
 **What:** An automated documentation maintenance system that updates project documentation files based on conversations with Claude.
@@ -52,7 +54,8 @@ LSP servers can be configured in two ways:
 - Removes or replaces outdated information
 - Emphasizes terseness: "High signal only. No filler words."
 
-**Evidence**: `magic-docs` agent type at line 476091, documentation update prompt generator `Aa5()` at line 475984
+Evidence: `magic-docs` agent type at line 476091, documentation update prompt generator `Aa5()` at line 475984
+
 
 ### Enhanced Sandbox Security Policy
 
@@ -75,6 +78,7 @@ LSP servers can be configured in two ways:
 - **User communication:** Claude receives different system prompt instructions based on this setting (lines 208919-208942)
 - **Evidence**: Configuration schema at line 473000, getter function `XP8()` at line 208521
 
+
 ### Refactored Tool Execution Architecture
 
 **What changed:** Internal tool execution system migrated from function-based approach to a class-based queue system with better concurrent execution support.
@@ -90,7 +94,8 @@ LSP servers can be configured in two ways:
 - More efficient parallel processing of independent operations
 - Improved result streaming as tools complete
 
-**Evidence**: `Qr1` class definition at line 429311, feature flag check at line 429499
+Evidence: `Qr1` class definition at line 429311, feature flag check at line 429499
+
 
 ### Command Redirection Safety
 
@@ -101,19 +106,22 @@ LSP servers can be configured in two ways:
 - Safety validation detects dangerous redirection patterns
 - Already existed in v2.0.29 but continues to provide protection in v2.0.30
 
-**Evidence**: Function `SP()` at line 208476 (v2.0.30), existed as `whA()` at line 204320 (v2.0.29)
+Evidence: Function `SP()` at line 208476 (v2.0.30), existed as `whA()` at line 204320 (v2.0.29)
+
 
 ### TodoWrite Tool Documentation
 
 The TodoWrite tool documentation remains unchanged between v2.0.29 and v2.0.30. All guidance on when to use the tool, task states, and management practices are identical.
 
-**Evidence**: Documentation at lines 204989-205176 (v2.0.30), previously at lines 204886-205072 (v2.0.29)
+Evidence: Documentation at lines 204989-205176 (v2.0.30), previously at lines 204886-205072 (v2.0.29)
+
 
 ### ExitPlanMode Tool
 
 The ExitPlanMode tool continues to exist with the same functionality as in v2.0.29. This tool prompts users to exit plan mode after planning is complete.
 
-**Evidence**: Tool description at line 432519 (v2.0.29), continues in v2.0.30 with updated variable names
+Evidence: Tool description at line 432519 (v2.0.29), continues in v2.0.30 with updated variable names
+
 
 ### Internal Refactoring
 

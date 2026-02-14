@@ -1,6 +1,5 @@
 # Changelog for version 1.0.20
 
-Based on my analysis of the diff, here is the changelog for version 1.0.20:
 
 ### New Features
 
@@ -18,8 +17,10 @@ Based on my analysis of the diff, here is the changelog for version 1.0.20:
   - When users provide multiple tasks (numbered or comma-separated)
 - **Better task tracking**: Claude is now instructed to mark tasks as completed immediately after finishing them, not batching completions
 
+
 ### Removed Features
 - **File structure snapshot removed**: The automatic project file structure snapshot that was shown at the start of conversations has been removed. This snapshot previously displayed the project's directory structure while skipping .gitignore patterns.
+
 
 ### UI/UX Improvements
 - **Mode selection UI**: Added visual mode indicators with distinct color schemes:
@@ -29,9 +30,11 @@ Based on my analysis of the diff, here is the changelog for version 1.0.20:
   - Bypass Permissions mode
 - **Development Partner Program notice**: Users in the Development Partner Program will see a notice that their sessions are being shared with Anthropic for service improvement
 
+
 ### Tool Improvements
 - **MultiEdit tool enhancement**: Added clarification that `old_string` and `new_string` must be different, preventing accidental no-op edits
 - **Better error messages**: More specific error messages for various edge cases in tools
+
 
 ### Documentation Updates
 - Updated references to Claude Code documentation with specific sub-pages:
@@ -44,6 +47,7 @@ Based on my analysis of the diff, here is the changelog for version 1.0.20:
   - `bedrock-vertex-proxies` (Model configuration)
   - `tutorials` (Extended thinking, pasting images, workflows)
   - `troubleshooting`
+
 
 ### Bug Fixes
 - Various minor fixes and improvements to tool execution and error handling

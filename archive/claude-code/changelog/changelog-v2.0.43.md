@@ -4,6 +4,7 @@
 
 Version 2.0.43 delivers a major internal refactoring of the sandbox subsystem, replacing the previous function-based architecture with a unified manager pattern. This release adds clickable hyperlink support in terminal output, enhances Linux sandboxing with seccomp filtering for Unix socket blocking, and introduces plan mode infrastructure for persistent task planning workflows.
 
+
 ### Clickable Hyperlinks in Terminal Output
 **What:** Terminal output now supports clickable hyperlinks using the OSC 8 escape sequence standard, allowing tools to render URIs that users can click in compatible terminals.
 
@@ -17,6 +18,7 @@ Hyperlinks are automatically rendered when tools generate output with URIs. Comp
 - `gp9()` encodes hyperlinks into ANSI escape sequences (lines 78736-78738)
 - Terminal output handler processes hyperlink diff entries (lines 78765-78767)
 - **Evidence**: `Bk0() at line 76647`, `d0A() at line 76652`, `DJ1() at line 77362`, `gp9() at line 78736`
+
 
 ### Enhanced Linux Sandbox Security with Seccomp Filtering
 **What:** Linux sandboxing now blocks Unix domain socket creation using Berkeley Packet Filter (BPF) seccomp filters, preventing sandboxed processes from bypassing network restrictions via local sockets.
@@ -34,6 +36,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Fallback: `allowAllUnixSockets` configuration option to disable seccomp filtering when needed (line 1693)
 - **Evidence**: `Q$Q()` at line ~1535, `Ox1()` for BPF filter location, `NiA()` for apply-seccomp binary discovery, seccomp integration at lines 1686-1693
 
+
 ### Plan Mode Infrastructure
 **What:** New persistent plan file storage system for task planning workflows, allowing Claude Code to save, retrieve, and track acceptance of execution plans.
 
@@ -46,6 +49,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `WNQ()` and `ETQ()` handle tool name overrides in plan context
 - Plan files persist across sessions for continuity
 - **Evidence**: `eO()`, `pm()`, `sx()`, `BnA()`, `INQ()`, `Zy6()` functions added for plan file management
+
 
 ### Sandbox Architecture Refactoring
 **What changed:** The sandbox implementation has been completely restructured from scattered individual functions into a centralized `dZ` manager object with a cleaner API.
@@ -60,6 +64,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Removed legacy functions from v2.0.42: `eu()` (line 220098), `dm8()` (line 220108), `cm8()` (line 220112), `mm8()` (line 220052), `gm8()` and `um8()` (lines 220040-220051), along with 35+ other sandbox-related functions
 - **Evidence**: New `dZ` object at lines 277192-277216, old functions removed from v2.0.42 lines 220040-220112
 
+
 ### Enhanced Permission Management
 **What changed:** Permission checking and configuration validation now uses comprehensive Zod schemas for type safety and validation.
 
@@ -71,6 +76,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `VqQ()` function converts permissions to sandbox config format
 - Network permission checking via `M$Q()` replaces the old `CQQ()` function
 - **Evidence**: `VqQ()` for permission conversion, `M$Q()` for domain-based network checking, schema validation system `c$Q`
+
 
 ### Filesystem and Network Configuration
 **What changed:** Filesystem and network restriction configuration now uses dedicated getter functions with clearer interfaces.
@@ -84,6 +90,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `y$Q()`, `k$Q()`, `_$Q()`, `x$Q()` get HTTP/SOCKS proxy ports and socket paths
 - **Evidence**: `Ij6()`, `Gj6()`, `Zj6()`, `P$Q()`, `L$Q()` functions for configuration access
 
+
 ### Test Infrastructure Enhancement
 **What changed:** New fixture-based testing system with caching for improved test reproducibility and performance.
 
@@ -92,6 +99,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `tqQ()` implements token counting with fixture support
 - Better test isolation and repeatability
 - **Evidence**: `Ay6()` for fixture caching, `tqQ()` for token counting with fixtures
+
 
 ### Session and Message Handling
 **What changed:** Enhanced session lifecycle hooks and message tracking capabilities.
@@ -105,6 +113,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `WeA()` and `FeA()` track message sources
 - **Evidence**: `A22()`, `WW5()` for session hooks, `nA0()` for ID extraction, `Xk2()` for grouping, `ITQ()` for rendering
 
+
 ### Debugging and Logging
 **What changed:** New unified sandbox debug logging function replaces scattered logging calls.
 
@@ -113,6 +122,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Consistent log format across sandbox operations
 - Better troubleshooting capability
 - **Evidence**: `LB()` function for sandbox debug logging throughout the new sandbox implementation
+
 
 ### Platform Detection
 **What changed:** Improved platform detection and validation for sandbox compatibility.
@@ -124,6 +134,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Better error messages when sandbox dependencies are missing
 - **Evidence**: `ON()` for platform detection, `W$Q()` for Linux dependency checking, `Zv1()` for support validation
 
+
 ### Ripgrep Integration
 **What changed:** Better detection and configuration of ripgrep (`rg`) for code search operations.
 
@@ -133,6 +144,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Configurable ripgrep behavior through sandbox configuration
 - **Evidence**: `owQ()` for availability check, `ziA()` for search with timeout
 
+
 ### File Checkpointing
 **What changed:** Added ability to check if file checkpointing is enabled.
 
@@ -140,6 +152,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - `Cc8()` function checks file checkpointing configuration
 - Supports incremental file state tracking
 - **Evidence**: `Cc8()` function for checkpointing status check
+
 
 ### Removed Legacy Code
 - Removed 41 sandbox-related functions from v2.0.42 as part of the architecture refactoring
@@ -149,6 +162,7 @@ When network sandboxing is enabled on Linux, Claude Code automatically applies p
 - Removed old bwrap command wrapper (`AQQ()`)
 - Cleaned up obsolete imports (`stream`, `node:child_process` imports that were no longer needed)
 - **Evidence**: Functions removed from v2.0.42 lines 154620 (OUB variable), 219367 (Tm8), 219424 (AQQ), 219480 (tP1), 219536 (km8), 219942 (bdA), 219960 (FQQ), 219967 (bm8), 219974 (CQQ), 220040-220051 (gm8/um8), 220052 (mm8), 220098-220114 (eu/dm8/cm8)
+
 
 ### Code Quality Improvements
 - Comprehensive refactoring involved 224 declaration changes (154 additions, 41 deletions, 29 modifications)

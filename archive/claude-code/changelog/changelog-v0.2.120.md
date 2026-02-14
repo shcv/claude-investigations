@@ -1,5 +1,6 @@
 # Changelog for version 0.2.120
 
+
 ### Tool Permission Handling Improvements
 
 #### Enhanced CLI Tool Filtering
@@ -21,6 +22,7 @@ The permission system for CLI tools has been improved with better parsing of all
 
 - **Improved tool name parsing**: Tool names are now properly trimmed of whitespace and empty values are filtered out, making the tool specification more robust
 
+
 ### Internal Changes
 
 #### Async MCP Client Discovery
@@ -31,6 +33,7 @@ The permission system for CLI tools has been improved with better parsing of all
 
 #### Process Import Cleanup
 - Simplified process imports by importing `cwd` directly from `node:process` instead of importing the entire process module
+
 
 ### Technical Details
 

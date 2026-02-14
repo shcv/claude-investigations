@@ -4,6 +4,7 @@
 ## Highlights
 This release improves the plan mode workflow by adding guidance for handling ambiguous requirements, helping Claude better understand when to ask clarifying questions before implementing features.
 
+
 ### Enhanced Plan Mode Guidance
 **What:** The ExitPlanMode tool now includes comprehensive guidance on handling ambiguous requirements and unclear implementation approaches.
 
@@ -22,6 +23,7 @@ This release improves the plan mode workflow by adding guidance for handling amb
 - v2.0.20: Basic ExitPlanMode documentation at `OU8() at line 428188` with 2 examples
 - v2.0.21: Enhanced ExitPlanMode documentation at `OU8() at line 428198` with ambiguity handling section and 3 examples
 
+
 ### Improved Signal Handling
 **What:** Enhanced initialization sequence to include proper SIGINT/SIGTERM signal handlers for graceful shutdown.
 
@@ -33,6 +35,7 @@ This release improves the plan mode workflow by adding guidance for handling amb
 **Evidence:**
 - v2.0.20: `uz1` initialization at line 455101 without signal handlers
 - v2.0.21: `uz1` initialization at line 455136 now includes `N7()` signal handler
+
 
 ### Code Reorganization
 - Internal variable and function renames throughout the codebase (6690 renames total)

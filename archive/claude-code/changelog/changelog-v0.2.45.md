@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.45 Changelog
 
+
 ### Environment Variable Support for API Customization
 Claude Code now supports a new environment variable `CLAUDE_CODE_EXTRA_BODY` that allows users to inject additional parameters into API requests.
 
@@ -21,6 +22,7 @@ This feature enables:
 - The value must be a valid JSON object (not an array or primitive)
 - Invalid JSON will be logged to stderr and ignored
 - Parsing errors are gracefully handled with descriptive error messages
+
 
 ### Import Optimizations
 - Switched from default imports to named imports for better tree-shaking:

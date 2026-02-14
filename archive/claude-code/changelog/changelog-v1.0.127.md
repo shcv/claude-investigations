@@ -4,6 +4,7 @@
 
 Version 1.0.127 focuses on internal code refactoring and improvements with 98.9% structural similarity to v1.0.126. The main user-facing changes include enhanced sandbox command filtering capabilities, improved UI text clarity for history search and file restoration, and updated color scheme implementation using ANSI color names.
 
+
 ### Enhanced Sandbox Command Filtering
 
 **What:** Added support for substring-based command filtering in the sandbox configuration through the new `tengu_sandbox_disabled_commands` feature gate.
@@ -20,6 +21,7 @@ The sandbox now supports two methods for disabling commands:
 - Both methods are combined when evaluating whether a command should bypass sandboxing
 - **Evidence**: `Qg2()` function at line 379010 in v1.0.127 (replaces `qu2()` at line 383844 in v1.0.126)
 
+
 ### Improved Diff Stats Display Component
 
 **What:** New unified component for displaying file change statistics during restore operations.
@@ -30,6 +32,7 @@ The sandbox now supports two methods for disabling commands:
 - Displays insertions (+) and deletions (-) with appropriate colors
 - Simplifies the restore UI presentation
 - **Evidence**: `kGB()` component at line 413123 (new in v1.0.127, did not exist in v1.0.126)
+
 
 ### Clearer History Search Prompts
 
@@ -43,6 +46,7 @@ The sandbox now supports two methods for disabling commands:
 
 **Why it matters:** The new prompts use plain language instead of technical terminal jargon, making the feature more discoverable and user-friendly.
 
+
 ### Better File Restore Messaging
 
 **What:** Improved clarity when viewing file restoration previews.
@@ -54,6 +58,7 @@ The sandbox now supports two methods for disabling commands:
 - **Evidence**: Function `ey6()` at line 413105 in v1.0.127 (was `ek6()` at line 415828 in v1.0.126)
 
 **Why it matters:** Users can now immediately understand whether there are actual changes to review or if the code state is unchanged.
+
 
 ### Color Scheme Refactoring
 
@@ -67,6 +72,7 @@ The sandbox now supports two methods for disabling commands:
 
 **Why it matters:** While mostly internal, this improves cross-platform color rendering and maintainability. Users may notice slightly improved color consistency across different terminal emulators.
 
+
 ### Model and Output Style Selection Refactoring
 
 **What:** Restructured the model and output style selection menus for better code organization.
@@ -77,6 +83,7 @@ The sandbox now supports two methods for disabling commands:
 - Callback functions extracted for cleaner separation of concerns
 - No functional changes to user experience
 - **Evidence**: Functions `bK5()` and `mK5()` at lines 435315 and 435411 in v1.0.127
+
 
 ### Code Refactoring
 

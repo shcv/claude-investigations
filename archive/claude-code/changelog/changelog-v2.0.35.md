@@ -4,6 +4,7 @@
 
 Version 2.0.35 significantly strengthens security around network path access and file attachments. The update adds comprehensive UNC path detection to prevent unauthorized network resource access, implements file size limits for at-mention attachments, and introduces an optional auto-exit feature for idle sessions. Additionally, slash command search performance was improved through better indexing.
 
+
 ### Enhanced UNC Path Detection
 
 **What:** Expanded detection of Universal Naming Convention (UNC) paths that could access network shares and remote resources.
@@ -19,6 +20,7 @@ Version 2.0.35 significantly strengthens security around network path access and
 - **Defense-in-depth check** - Added explicit UNC path verification in permission checking that triggers before other path validation, requiring manual user approval with message: "Claude requested permissions to read from {path}, which appears to be a UNC path that could access network resources"
 - **Evidence**: `kB1() at line 469623`, `Cm() at line 474419` (new UNC check at lines 474427-474436)
 
+
 ### Expanded Windows Path Security
 
 **What:** Additional checks for potentially dangerous Windows path patterns.
@@ -27,6 +29,7 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Blocks paths containing `$` or `%` characters (environment variable references like `%APPDATA%` or `$env:USERNAME`)
 - Integrated comprehensive UNC detection into suspicious path validation
 - **Evidence**: `hs2() at line 474240` (new checks at lines 474253-474254)
+
 
 ### File Size Limits for At-Mentions
 
@@ -47,6 +50,7 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Regular Read tool usage (without at-mention) is unaffected and can still handle large files with offset/limit parameters
 - **Evidence**: `npA() at line 481542`, `ob1() at line 313340` (size check at lines 313344-313349)
 
+
 ### Optimized Slash Command Search
 
 **What:** Improved slash command autocomplete performance through better data structure indexing.
@@ -56,6 +60,7 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Changed from creating multiple search entries per command (via `flatMap`) to single structured entries (via `map`)
 - Improves responsiveness when typing `/` to search available commands
 - **Evidence**: `p22() at line 381579` (refactored from `d22()` which used `flatMap` at v2.0.34 line 381594)
+
 
 ### Automatic Image Compression
 
@@ -67,6 +72,7 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Default threshold: 25KB (25,000 tokens)
 - **Evidence**: `rk1() at line 276879`
 
+
 ### Simplified Permission System
 
 **What:** Migrated `ignorePatterns` configuration to unified permissions system.
@@ -77,6 +83,7 @@ Version 2.0.35 significantly strengthens security around network path access and
 - Runtime file access checking now uses unified `xC()` permission function instead of separate `GN()` ignore checker
 - Behavior remains the same - patterns still block file access, just through the permissions infrastructure
 - **Evidence**: `u6A() at line 474347` (simplified from `IsA()`), `se2() at line 487463` (migration with cleanup at line 487480)
+
 
 ### Optional Auto-Exit on Idle
 
@@ -98,6 +105,7 @@ claude
 - Useful for automated testing, CI/CD pipelines, or managing long-running sessions
 - **Evidence**: `XA9() at line 488655`, exit message at line 488668
 
+
 ### Improved Model Name Recognition
 
 **What:** Better handling of model names with bracketed suffixes like `[1m]`.
@@ -108,6 +116,7 @@ claude
 - Improves compatibility with certain API responses or model name formats
 - **Evidence**: `ce5() at line 466959`
 
+
 ### Fixed Assistant Message Handling
 
 **What:** Improved reliability of assistant message extraction from streaming responses.
@@ -117,6 +126,7 @@ claude
 - Prevents potential issues where intermediate assistant messages could be missed
 - Adds explicit error if no assistant message found in stream
 - **Evidence**: `ES() at line 468457` (formerly `HS()`)
+
 
 ### Enhanced Read Tool Validation
 

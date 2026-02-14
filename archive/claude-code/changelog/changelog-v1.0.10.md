@@ -1,6 +1,5 @@
 # Changelog for version 1.0.10
 
-Based on my analysis of the diff file, here is the changelog for Claude Code version 1.0.10:
 
 ### New Features
 
@@ -15,6 +14,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - **New environment variable**: `OTEL_LOG_USER_PROMPTS`
   - Enables logging of user prompts for debugging purposes
   - Example usage: `export OTEL_LOG_USER_PROMPTS=1`
+
 
 ### Improvements
 
@@ -39,6 +39,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Removed OAuth authentication flow for MCP servers (streamlined authentication)
 - Better error recovery for streaming tool use
 
+
 ### Technical Improvements
 
 #### Code Organization
@@ -52,6 +53,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Improved process working directory access with `e70` import
 - Enhanced date/time formatting utilities with comprehensive locale support
 
+
 ### Removed Features
 
 #### Simplified Authentication
@@ -59,11 +61,13 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Removed the `mcp-auth` command and its associated UI components
 - Streamlined MCP server connection process
 
+
 ### Bug Fixes
 
 - Fixed empty model response handling to provide meaningful fallback messages
 - Improved tool use input validation to ensure proper string or object format
 - Better handling of streaming responses that fall back to non-streaming mode
+
 
 ### Internal Changes
 

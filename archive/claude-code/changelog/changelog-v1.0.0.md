@@ -1,8 +1,5 @@
 # Changelog for version 1.0.0
 
-Based on my analysis of the diff file, here's the changelog for Claude Code version 1.0.0:
-
-# Claude Code v1.0.0 Changelog
 
 ### New Models
 
@@ -22,6 +19,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   - AWS Bedrock: `us.anthropic.claude-sonnet-4-20250514-v1:0`
   - Google Vertex: `claude-sonnet-4@20250514`
 - Claude Sonnet 3.7 remains available for AWS Bedrock users
+
 
 ### User-Facing Features
 
@@ -43,6 +41,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   - Shows clear warnings with actionable instructions
   - Press Enter to continue anyway or Ctrl+C to exit and fix issues
 
+
 ### CLI Improvements
 
 #### Better IDE Integration
@@ -54,6 +53,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Removed the experimental batch tool execution feature (`Call` tool)
 - Streamlined tool execution for better reliability
 - Improved handling of unified rate limits with automatic fallback
+
 
 ### Technical Changes
 
@@ -67,15 +67,18 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Improved credit balance error messages
 - Enhanced prompt length error handling
 
+
 ### Removed Features
 - Removed placeholder model used for testing
 - Removed batch tool execution (`mX1`/batch tool)
 - Removed several internal helper functions for cleaner codebase
 
+
 ### Bug Fixes
 - Fixed duplicate model selection issues
 - Improved error handling for overloaded servers
 - Better handling of rate limit resets with unified fallback
+
 
 ### Setting Models
 ```bash
@@ -89,8 +92,10 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 /model
 ```
 
+
 ### Handling Rate Limits
 When you encounter rate limits with Opus during high load periods, Claude Code will now suggest switching to Sonnet automatically with a clear message.
+
 
 ### Visual Experience
 The new splash screen adapts to your terminal size, showing different Claude ASCII art based on available space, creating a more polished first-run experience.

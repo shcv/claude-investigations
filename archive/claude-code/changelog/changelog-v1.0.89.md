@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.89 introduces powerful debug filtering, a new wizard-based UI framework for multi-step workflows, and significantly improves reliability with enhanced error handling, permission persistence, and extended timeout support for long-running operations.
 
+
 ### Debug Output Filtering
 **What:** Filter debug messages by category using `--debug=pattern` syntax
 **How to use:**
@@ -22,6 +23,7 @@ claude --debug=mcp,server1,api <command>
 - Cannot mix include and exclude patterns in the same filter
 - Helps reduce noise when debugging specific components
 
+
 ### Wizard Framework for Multi-Step Workflows
 **What:** A new React-based wizard system that provides consistent navigation for multi-step processes
 **How to use:**
@@ -36,6 +38,7 @@ The wizard framework is currently used internally for the agent creation flow, p
 - Supports cancellation at any point with Escape key
 - Designed to be reusable for future multi-step features
 
+
 ### Permission Persistence
 **What:** Permanent permissions granted during tool use are now automatically saved to settings files
 **How to use:**
@@ -46,6 +49,7 @@ When you grant permanent permissions to a tool during execution, they are now au
 - Eliminates the need to re-grant permissions in future sessions
 - Includes comprehensive debug logging for troubleshooting
 
+
 ### Enhanced Error and API Request Tracking
 **What:** Internal diagnostics system that tracks the last API request and maintains an error log
 **How to use:**
@@ -55,6 +59,7 @@ This feature works automatically in the background, maintaining a rolling log of
 - Maintains structured clones of API requests for analysis
 - Error log has a 100-item limit with automatic rotation
 - Primarily for internal debugging and support
+
 
 ### Expanded Bash Command Permission Tracking
 **What:** 18 additional bash commands now require appropriate file permissions
@@ -72,11 +77,13 @@ diff file1.txt file2.txt
 - Provides clear descriptions when permission prompts appear
 - Enhances security by ensuring all file access is properly authorized
 
+
 ### Ripgrep Error Recovery
 **What changed:** Ripgrep now recovers partial results when interrupted or hitting limits
 **Previous behavior:** Lost all results if ripgrep was terminated or hit buffer limits
 **New behavior:** Preserves and returns valid partial results, trimming potentially incomplete last lines
 **Impact:** More reliable search results in large codebases where ripgrep might hit resource limits
+
 
 ### API Timeout Extension
 **What changed:** Default API timeout increased from 60 seconds to 600 seconds (10 minutes)
@@ -84,11 +91,13 @@ diff file1.txt file2.txt
 **New behavior:** API calls have 10 minutes before timing out
 **Impact:** Prevents timeouts for complex Claude interactions, especially with slower models or lengthy operations
 
+
 ### Improved Timeout Error Messages
 **What changed:** Timeout errors now provide actionable guidance
 **Previous behavior:** Generic timeout error messages
 **New behavior:** Displays "Request timed out (check API_TIMEOUT_MS)" with clear next steps
 **Impact:** Users can easily identify and resolve timeout issues by adjusting the API_TIMEOUT_MS environment variable
+
 
 ### TodoWrite Tool Schema Enhancement
 **What changed:** TodoWrite tool now requires dual-form descriptions for all todo items
@@ -111,17 +120,20 @@ diff file1.txt file2.txt
 - All three fields (`content`, `activeForm`, `status`) are now required for TodoWrite tool usage
 - Note: While activeForm enhances the schema, users still cannot see todo lists due to display removal in v1.0.86
 
+
 ### Platform Compatibility - Musl Libc Detection
 **What changed:** Added detection for musl-based Linux distributions like Alpine Linux
 **Previous behavior:** Assumed all Linux systems used glibc
 **New behavior:** Detects musl libc by checking for library files and ldd output
 **Impact:** Improves compatibility with Alpine Linux and other musl-based distributions
 
+
 ### Configurable Ripgrep Timeout
 **What changed:** Ripgrep timeout is now configurable via environment variable
 **Previous behavior:** Fixed 10-second timeout for ripgrep operations
 **New behavior:** Uses BASH_DEFAULT_TIMEOUT_MS environment variable, defaulting to 120 seconds
 **Impact:** Allows adjustment for different system capabilities and codebase sizes
+
 
 ### Fixed: Permanent permissions not persisting between sessions
 - **Issue:** When users granted "permanent" permissions through the UI, they weren't saved to disk

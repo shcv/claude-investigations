@@ -7,11 +7,13 @@
   - Automatically clears the indicator when selection is removed
   - Supports selection notifications from IDE extensions that implement the `selection_changed` MCP notification
 
+
 ### Improved Changelog Management
 - **Dynamic changelog fetching**: Claude Code now fetches the latest changelog from GitHub
   - Automatically caches changelog updates for better performance
   - Fetches from: `https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md`
   - Shows relevant release notes on startup when updates are available
+
 
 ### Model Configuration Updates
 - **New Sonnet model**: Added support for `claude-3-7-sonnet-20250219`
@@ -19,12 +21,14 @@
   - Automatically selects appropriate model variant based on your provider (Bedrock, Vertex, or First-party)
   - Respects `ANTHROPIC_SMALL_FAST_MODEL` environment variable for custom model selection
 
+
 ### User Interface
 - **Queue command hint tracking**: Added `queuedCommandUpHintCount` to user preferences for better hint management
 - **Enhanced streaming status**: Claude now shows more specific status indicators during response streaming:
   - "responding" for regular text responses
   - "tool-use" when executing tools
   - "thinking" when in thinking mode
+
 
 ### Performance
 - **Optimized output handling**: Large outputs are now written in chunks to prevent buffer overflow

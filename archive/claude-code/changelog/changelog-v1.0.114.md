@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.114 introduces macOS filesystem sandboxing, an interactive thinking mode with visual highlighting, and enhanced Windows terminal support. This release focuses on security hardening, improved user experience, and better cross-platform compatibility.
 
+
 ### Filesystem Sandboxing for macOS
 **What:** Fine-grained filesystem access controls using macOS sandbox-exec, allowing you to restrict which files and directories bash commands can read or write.
 
@@ -34,6 +35,7 @@ Configure in `.claude/settings.json`:
 - Path validation prevents shell metacharacters (`&&`, `||`, `;`, backticks, `$`)
 - **Evidence**: `QBB() at line 374281`, `y41() at line 353864`
 
+
 ### Interactive Thinking Mode with Visual Highlighting
 **What:** Real-time detection and visual highlighting of thinking trigger words in 7 languages (English, Japanese, Chinese, Spanish, French, German, Korean) with three intensity levels.
 
@@ -58,6 +60,7 @@ claude "think harder about the security implications"
 - Color-coded by intensity: basic (low), medium (medium), high (max)
 - **Evidence**: `TTA() at line 366061`, `PTA() at line 366112`, `fA0() at line 366083`, `o1Q() at line 436378`
 
+
 ### Windows Terminal Enhanced Support
 **What:** Improved clear screen handling for Windows Terminal and VSCode integrated terminal on Windows.
 
@@ -69,6 +72,7 @@ claude "think harder about the security implications"
 - Provides cleaner screen clearing experience in modern Windows environments
 - **Evidence**: `JN9() at line 362129`, `XN9() at line 362132`, `FN9() at line 362142`
 
+
 ### Output Truncation Protection
 **What:** Automatic truncation of bash command output exceeding 64MB to prevent memory issues.
 
@@ -78,6 +82,7 @@ claude "think harder about the security implications"
 - Tracks total bytes received even when truncated
 - Prevents crashes from commands generating massive output
 - **Evidence**: `class ga at line 362733`
+
 
 ### Bulk File History Restore
 **What:** Restore multiple files from file history backups in a single operation.
@@ -89,6 +94,7 @@ claude "think harder about the security implications"
 - Returns count of files affected
 - Continues on errors with detailed logging
 - **Evidence**: `_3B() at line 393833`, `k3B() at line 393866`
+
 
 ### Smart Editor Detection
 **What:** Intelligent editor selection that verifies editors are actually installed before attempting to use them.
@@ -108,6 +114,7 @@ claude /memory
 - Improves reliability when opening memory files
 - **Evidence**: `If1() at line 404558`, `V95() at line 404550`
 
+
 ### Enhanced PostToolUse Hook Messages
 **What:** Specialized system message types for hook execution outcomes instead of generic informational messages.
 
@@ -119,6 +126,7 @@ claude /memory
 - Note: PostToolUse hooks existed in v1.0.113, only the message types are new
 - **Evidence**: `PIB() at line 398052`, `jq0() at line 398064`
 
+
 ### Improved Interrupt Messaging
 **What:** More informative interrupt messages that guide users on what to do next.
 
@@ -127,6 +135,7 @@ claude /memory
 - Clearer call-to-action for users after interrupting
 - Better UX for mid-task cancellations
 - **Evidence**: `lM() at line 373333`, `t8() at line 373341`
+
 
 ### Environment Variable Support for Default Haiku Model
 **What:** Configure default Haiku model via `ANTHROPIC_DEFAULT_HAIKU_MODEL` environment variable.
@@ -137,6 +146,7 @@ claude /memory
 - Useful for testing or using alternative Haiku versions
 - **Evidence**: `FX2() at line 371423`
 
+
 ### Empty Directory Cleanup
 **What:** Automatically removes empty directories after file operations.
 
@@ -145,6 +155,7 @@ claude /memory
 - Prevents directory clutter in file history operations
 - Silently handles cases where directory removal fails
 - **Evidence**: `U65() at line 411458`
+
 
 ### Metrics Reset Function
 **What:** Proper reset of session cost and usage metrics.
@@ -155,15 +166,19 @@ claude /memory
 - Prevents metric accumulation across sessions
 - **Evidence**: `Fo1() at line 340029`
 
+
 ### Image Optimization
 - Added `hOA() at line 364421` for processing and optimizing base64-encoded images
+
 
 ### String Truncation Utility
 - Added `u00() at line 362718` for joining and truncating string arrays with size limits
 
+
 ### Path Processing Helpers
 - Added `EG1() at line 374270` for expanding filesystem paths (`~`, `./`, relative to absolute)
 - Added `NG1() at line 374278` for escaping paths in sandbox profiles
+
 
 ### Thinking Detection Utilities
 - Added `$j9() at line 366080` for checking if text contains thinking triggers

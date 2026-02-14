@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.96 introduces privacy controls that allow users to manage whether their usage data helps improve Claude, along with updated Consumer Terms and Privacy Policy notifications. This update also removes some internal telemetry code and makes minor improvements to the codebase.
 
+
 ### Privacy Settings Command
 **What:** New `privacy-settings` command to view and manage data privacy preferences
 **How to use:**
@@ -16,6 +17,7 @@ claude privacy-settings
 - Provides direct link to web privacy settings at https://claude.ai/settings/data-privacy-settings
 - Settings changes take effect immediately upon confirmation
 - **Evidence**: `MN5` privacy-settings command at line 410235, `uM1()` tier check at line 355298
+
 
 ### Consumer Terms and Privacy Policy Notice
 **What:** Interactive notice system for updated Consumer Terms and Privacy Policy taking effect September 28, 2025
@@ -32,6 +34,7 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Reminder frequency configurable to avoid notification fatigue
 - **Evidence**: `Nh1()` notice component at line 409856, `KgB()` display logic at line 409841
 
+
 ### Privacy Notice on Non-Interactive Commands
 **What:** Privacy policy reminder when running Claude commands without entering interactive mode
 **Details:**
@@ -39,6 +42,7 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Different messages for grace period vs. post-deadline
 - Automatically marks notice as viewed to prevent repeated displays
 - **Evidence**: `zgB()` function at line 410212, called in `$pB()` startup flow
+
 
 ### Startup Flow Enhancement
 **What:** Integrated privacy consent into the onboarding and startup process
@@ -48,6 +52,7 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Graceful handling of escape/cancellation with proper telemetry tracking
 - **Evidence**: Modified `NS5()` function at line 434069 (previously `DS5()`)
 
+
 ### Statsig Analytics Removal
 **What:** Removed Statsig telemetry client initialization code
 **Details:**
@@ -55,6 +60,7 @@ The notice appears automatically when starting Claude if you haven't made a priv
 - Cleaned up related imports and dependencies
 - Statsig tracking appears to be replaced with internal telemetry for privacy choices
 - **Evidence**: Removed functions at lines 409748-409785 in v1.0.95
+
 
 ### New Telemetry Events
 The following analytics events were added for privacy feature tracking:
@@ -67,6 +73,7 @@ The following analytics events were added for privacy feature tracking:
 - `tengu_grove_policy_exited` - When user exits during startup notice
 - `tengu_grove_print_viewed` - When non-interactive reminder is shown
 - **Evidence**: Event calls throughout `Nh1()`, `HgB()`, and `zgB()` functions
+
 
 ### API Endpoints
 New API endpoints for privacy management:

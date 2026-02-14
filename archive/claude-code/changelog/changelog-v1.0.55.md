@@ -6,10 +6,12 @@
 - **Multi-IDE selection**: When multiple IDEs are detected, users can select which one to install the extension for via a new selection interface
 - **Supported IDEs expanded**: Full support for VS Code, Cursor, Windsurf, and all JetBrains IDEs (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, RubyMine, CLion, GoLand, Rider, DataGrip, AppCode, DataSpell, Aqua, Gateway, Fleet, Android Studio)
 
+
 ### Auto-Connect IDE Dialog
 - New first-run dialog asking users if they want to enable auto-connect to IDE
 - Users can configure this later with `/config` or the `--ide` flag
 - Setting persisted as `autoConnectIde` in user preferences
+
 
 ### Improved IDE Integration UI
 - **Redesigned welcome screen** for IDE extensions with:
@@ -19,25 +21,30 @@
   - Diff preview indicators showing how changes will appear (+11 -22)
   - Clearer hotkey instructions (Cmd+Esc for Quick Launch, Cmd+Option+K for file references)
 
+
 ### New Configuration Options
 - `autoInstallIdeExtension`: Control whether Claude Code automatically installs IDE extensions (defaults to true)
 - `hasIdeAutoConnectDialogBeenShown`: Tracks whether the auto-connect dialog has been shown
+
 
 ### Better IDE Status Reporting
 - Enhanced `/ide` command output with more detailed connection status
 - Clearer error messages when IDE extensions fail to install
 - Version mismatch detection between installed extension and server
 
+
 ### Platform-Specific Enhancements
 - Improved Windows path handling for better cross-platform compatibility
 - Better process detection across macOS, Windows, and Linux
 - Platform-specific process keyword matching for accurate IDE detection
+
 
 ### UI/UX Improvements
 - New `ide` theme color (rgb(71,130,200)) for IDE-related UI elements
 - Spinner tips system foundation added (for future loading screen tips)
 - Better escape key handling in dialogs
 - More consistent dialog styling with rounded borders
+
 
 ### Refactored IDE Detection System
 - Centralized IDE configuration in new `oc` object containing all IDE metadata
@@ -48,10 +55,12 @@
   - `HV()`: Get display name for an IDE
   - `IBA()`: Get current terminal IDE if applicable
 
+
 ### Improved Shell Command Execution
 - Simplified shell command construction removing conditional snapshot loading
 - Better stdin handling for shell commands using PassThrough streams
 - More robust error handling in shell execution
+
 
 ### Permission System Enhancement
 - New `QJ4()` function for enhanced permission prompt handling

@@ -4,8 +4,6 @@
 
 Version 2.1.28 is a maintenance release with one internal refactoring change: the removal of the `saved_hook_context` session persistence layer. No new features, commands, flags, settings, or feature flags were added. The 252,000-line diff is almost entirely minifier variable renaming.
 
-## Improvements
-
 ### Simplified Hook Context Session Persistence
 
 The internal mechanism for persisting hook additional context to session logs has been simplified. Previously, `hook_additional_context` attachment messages were serialized into a special `saved_hook_context` format when writing to the session log, then deserialized back when loading a session. This intermediate format has been removed; hook context messages now follow the same persistence path as all other messages.
@@ -14,7 +12,7 @@ As part of this change, the message filter applied before saving was also simpli
 
 In practice, this means hook context injected by hooks (e.g., from `SessionStart`, `PreToolUse`, `PostToolUse` hooks) is no longer persisted across session resume for external users. This is unlikely to affect most users, as hook context is primarily relevant within a single session.
 
-**Evidence**: Removal of `saved_hook_context` serialization layer (search for `"saved_hook_context"` in v2.1.27 -- absent from v2.1.28). Message filter simplification visible in the function that previously checked `q.attachment.type === "hook_additional_context"` (search for `"hook_additional_context"` in the session persistence area around line ~513044 in v2.1.28).
+Evidence: Removal of `saved_hook_context` serialization layer (search for `"saved_hook_context"` in v2.1.27 -- absent from v2.1.28). Message filter simplification visible in the function that previously checked `q.attachment.type === "hook_additional_context"` (search for `"hook_additional_context"` in the session persistence area around line ~513044 in v2.1.28).
 
 ## Notes
 

@@ -2,11 +2,13 @@
 
 # Claude Code v1.0.19 Changelog
 
+
 ### MCP Resource Support (@mentions)
 - **New @mention syntax for MCP resources**: You can now reference MCP (Model Context Protocol) resources directly in your messages using the `@server:resource` syntax
   - Example: `@myserver:config.json` to reference a config file from an MCP server
   - Resources are automatically fetched and included as context when mentioned
   - Autocomplete support for discovering available MCP resources (up to 15 suggestions)
+
 
 ### Agent-Specific Todo Lists
 - **Isolated todo lists per agent**: When using the Task tool to spawn sub-agents, each agent now maintains its own separate todo list
@@ -14,11 +16,13 @@
   - Prevents todo list conflicts between parent and child agents
   - Each agent can track its own progress independently
 
+
 ### Compact Summary Messages
 - **New compact summary display**: A new message type that shows condensed summaries of long responses
   - Displays "Compact summary" header with the summarized content
   - In transcript view, shows the full summary text
   - In other views, shows hint "(ctrl+r to expand)" for accessing full content
+
 
 ### Enhanced Text Editing
 
@@ -33,17 +37,20 @@
 
 These commands are useful when working with long lines that wrap in the terminal, allowing navigation based on actual line breaks in the text rather than visual line wrapping.
 
+
 ### Shell Command Execution
 - **Background process management**: Enhanced support for running commands in the background
   - New `moveToBackground()` function for shell commands
   - Returns shell ID when moving a process to background
   - Example output: "Command running in background (shell ID: 123)"
 
+
 ### Command Metadata
 - **Read-only command flagging**: Commands can now be marked as `read_only`
   - New `read_only` boolean field in command schemas
   - Helps identify commands that won't modify the filesystem or make network calls
   - Improves command safety and permission handling
+
 
 ### Performance
 - **Adaptive connection checking**: Connection status polling interval now adjusts based on environment

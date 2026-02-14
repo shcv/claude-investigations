@@ -7,6 +7,7 @@ This release contains two minor changes: the official plugins repository URL was
 
 *No new features in this release.*
 
+
 ### Official Plugins Repository Renamed
 **What:** The GitHub repository URL for the official plugins marketplace was updated from `anthropics/claude-code-plugins` to `anthropics/claude-plugins-official`.
 
@@ -14,6 +15,7 @@ This release contains two minor changes: the official plugins repository URL was
 - This aligns the repository name with the existing marketplace identifier `claude-plugins-official`
 - Existing plugin references using the old repository name in documentation may need updating
 - **Evidence**: Variable `r70` at line 496527 in v2.0.63 → Variable `e70` at line 496571 in v2.0.64
+
 
 ### Screenshot Copying Build Check
 **What:** Screenshot copying now verifies build capabilities before attempting to generate screenshots, providing a clearer error message when the feature is unavailable.

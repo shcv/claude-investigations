@@ -4,6 +4,7 @@
 
 Version 2.0.18 adds **OpenTelemetry distributed tracing infrastructure** (disabled by default), introduces **settings source restriction** capability for enterprise use cases, and includes a **background task summarization fix** that prevents unnecessary processing.
 
+
 ### OpenTelemetry Tracing Support (Opt-In)
 
 **What:** Comprehensive distributed tracing infrastructure for monitoring Claude Code's internal operations, API calls, and performance metrics. This feature is **disabled by default** and requires explicit opt-in.
@@ -65,6 +66,7 @@ export OTEL_LOG_MODEL_RESPONSE=true   # Log model responses in traces
 - `OTEL_BSP_SCHEDULE_DELAY` - Export delay in ms (default: 5000)
 - `OTEL_BSP_EXPORT_TIMEOUT` - Timeout in ms (default: 30000)
 
+
 ### Settings Source Restriction
 
 **What:** New capability to restrict which sources can provide settings, useful for enterprise deployments or security-sensitive environments where configuration should only come from approved sources.
@@ -73,6 +75,7 @@ export OTEL_LOG_MODEL_RESPONSE=true   # Log model responses in traces
 - Programmatic API for controlling allowed settings sources
 - Likely to be exposed via command-line flags or environment variables in future versions
 - **Evidence**: `s0A() at line 3770`
+
 
 ### Background Task Summarization Guard
 
@@ -83,6 +86,7 @@ export OTEL_LOG_MODEL_RESPONSE=true   # Log model responses in traces
 - Prevents wasted CPU cycles and potential side effects
 - Improves performance for users who don't use background task features
 - **Evidence**: Check added in `tjQ()` function (formerly `bRQ`)
+
 
 ### Skills Display Enhancement
 

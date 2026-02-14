@@ -1,5 +1,6 @@
 # Changelog for version 1.0.24
 
+
 ### New Features
 
 #### Tool Execution Hooks
@@ -65,12 +66,14 @@ The OAuth authentication flow now provides better visibility into the authorizat
 - Improved error handling for OAuth client configuration issues
 - Better cleanup of invalid OAuth credentials when authentication fails
 
+
 ### Technical Changes
 
 - Replaced direct stream imports with more specific imports (`PassThrough` from stream module)
 - Updated process import to use named import (`cwd` from node:process)
 - Enhanced OAuth flow to accept a callback for receiving the authorization URL
 - Multiple new internal variables added for improved functionality
+
 
 ### Bug Fixes
 

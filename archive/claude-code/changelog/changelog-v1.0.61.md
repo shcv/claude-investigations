@@ -1,5 +1,6 @@
 # Changelog for version 1.0.61
 
+
 ### New Features
 
 #### Enhanced Clipboard Integration for macOS
@@ -14,6 +15,7 @@
   # The CLI now supports flag-based configuration settings
   # These are separate from user/project/local settings
   ```
+
 
 ### Improvements
 
@@ -31,6 +33,7 @@
 - **Windows-specific PATH handling**: Added proper path separator handling for Windows environments
 - **Better diagnostics**: More detailed error messages when installation issues are detected
 
+
 ### Bug Fixes
 
 #### Hook Display Filtering
@@ -41,6 +44,7 @@
 - **Flag settings exclusion**: The `flagSettings` type is now properly excluded from certain write operations (similar to `policySettings`)
 - **Improved validation**: Better error handling when reading and parsing settings files
 
+
 ### Internal Changes
 
 #### Code Organization
@@ -50,6 +54,7 @@
 
 #### Environment Variable Handling
 - **New helper function**: Added `X$2()` to parse boolean environment variables, recognizing "0", "false", "no", and "off" as false values
+
 
 ### Developer Notes
 

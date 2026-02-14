@@ -4,6 +4,7 @@
 
 Version 2.0.44 introduces an experimental reasoning effort control feature that allows Claude to adjust its reasoning depth based on experiment configuration. This is gated behind a Statsig experiment flag and enables testing different trade-offs between response speed and thoroughness.
 
+
 ### Experimental Reasoning Effort Control
 
 **What:** A new system that allows Claude to dynamically adjust how much reasoning it applies to tasks based on an experiment-controlled effort level.
@@ -27,6 +28,7 @@ This feature is controlled by the Statsig experiment flag `tengu_effort_exp` wit
 - Mapping object `aQI = { low: 45, medium: 75, high: 99 }` converts string levels to numeric values
 - The generated `<reasoning_effort>` XML tag is appended to the system prompt array
 - Experiment values are retrieved via the Statsig client using the `d3()` helper function
+
 
 ### Module System Refactoring
 

@@ -8,8 +8,10 @@ When viewing the detailed transcript (accessed via Ctrl+R), users now see a two-
 
 This prevents accidental exits when reviewing conversation history.
 
+
 ### Updated Settings Panel
 The "Todo List" setting has been renamed to "Todo list tool enabled" for better clarity about what this option controls.
+
 
 ### New Tip of the Day
 Added a new tip that shows users the IDE integration hotkey:
@@ -18,8 +20,10 @@ Added a new tip that shows users the IDE integration hotkey:
 
 This tip appears periodically (every 15 sessions) when IDE integration is available.
 
+
 ### Improved Todo Tool Management
 The todo tool list generation now respects the user's todo feature preference more consistently. The `TodoRead` and `TodoWrite` tools are only included when the todo feature is explicitly enabled in settings.
+
 
 ### Code Structure Changes
 - Removed unused imports and variables related to stream processing

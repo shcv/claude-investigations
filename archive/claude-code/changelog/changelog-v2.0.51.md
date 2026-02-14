@@ -4,6 +4,7 @@
 
 This release introduces **Opus 4.5 model support** for first-party API users, adds the new **EnterPlanMode tool** enabling Claude to proactively request plan mode, and significantly improves **rate limit warnings** with utilization percentages and smart thresholds. Multiple UX enhancements including grouped agent display and trailing thinking block filtering improve the overall experience.
 
+
 ### Opus 4.5 Model Support
 **What:** Opus 4.5 is now available as the most capable model for complex work, replacing Opus 4.1 as the default for first-party API users.
 
@@ -24,6 +25,7 @@ claude --model opus
 - A notification informs users about Opus 4.5 availability on first use
 - **Evidence**: Model registry at `rcA()` line 163104, default logic at `QUA()` line 224121, selector at `rJ6` line 224397
 
+
 ### EnterPlanMode Tool
 **What:** A new tool that allows Claude to proactively request permission to enter plan mode for complex tasks requiring careful exploration before implementation.
 
@@ -41,6 +43,7 @@ claude --model opus
 - Cannot be used from agent contexts (main conversation only)
 - **Evidence**: Tool definition at `GRA` variable in `_50` at line 425698, prompt at `vb2` line 425575
 
+
 ### Rate Limit Utilization Warnings
 **What:** Rate limit warnings now show exact utilization percentages and use intelligent thresholds based on both token usage and time remaining.
 
@@ -56,6 +59,7 @@ claude --model opus
 - 5-hour limits now show warnings (previously silent)
 - Considers usage rate vs. time remaining in window
 - **Evidence**: Function `N49()` at line 467497, threshold config at `j$3`/`S$3` line 467531
+
 
 ### Grouped Agent Display
 **What:** When multiple Task agents run simultaneously, the UI now shows a collapsed summary view that can be expanded with ctrl+o.
@@ -75,12 +79,14 @@ Running 3 agents… (ctrl+o to expand)
 - Same-type agents show grouped label (e.g., "Running 3 investigator agents…")
 - **Evidence**: Main renderer `i49()` at line 469450, item renderer `g49()` at line 469102
 
+
 ### Extra Usage Integration Enhanced
 The extra usage feature now has deeper integration with account state and re-authentication flows.
 - Added `hasExtraUsageEnabled` account property tracked via OAuth
 - `/extra-usage` command now triggers re-authentication to sync state
 - Pro users with extra usage enabled get access to Opus features
 - **Evidence**: Account property at `DC1()` line 67554, API mapping at line 67521
+
 
 ### Improved Rate Limit Error Messages
 Rate limit error messages now provide actionable guidance specific to your subscription tier.
@@ -89,6 +95,7 @@ Rate limit error messages now provide actionable guidance specific to your subsc
 - Sonnet weekly limit now has distinct messaging from general weekly limit
 - **Evidence**: Function `YLA()` at line 336478
 
+
 ### Model Description Updates
 - Sonnet 4.5: "Best for everyday tasks" (was "Smartest model for daily use")
 - Opus: "Most capable for complex work"
@@ -96,11 +103,13 @@ Rate limit error messages now provide actionable guidance specific to your subsc
 - Dynamic pricing display using `jc()` helper function
 - **Evidence**: Model options at `qh1`, `kzB`, `xzB` around line 224380
 
+
 ### November 2025 Limits Update Notice
 Max and Team users see an informational notice about limit changes:
 - Opus cap removed - can use Opus 4.5 up to overall limit
 - Sonnet now has its own separate limit
 - **Evidence**: Function `TN3()` at line 477797
+
 
 ### Trailing Thinking Block Filtering
 Assistant messages ending with thinking blocks now have those blocks automatically filtered out before display.
@@ -109,12 +118,14 @@ Assistant messages ending with thinking blocks now have those blocks automatical
 - Replaces content with "[No message content]" if all blocks were thinking
 - **Evidence**: Function `GT3()` at line 504394, helper `oX9()` at line 504391
 
+
 ### Default Model Logic for Max/Team Users
 Max and Team subscribers now default to Opus 4.5 instead of requiring manual model selection.
 - First-party API users get Opus 4.5 by default
 - Cloud provider (Bedrock/Vertex) users continue with Opus 4.1
 - Respects `ANTHROPIC_DEFAULT_OPUS_MODEL` environment variable override
 - **Evidence**: Function `PnA()` at line 224154, `QUA()` at line 224121
+
 
 ### Model Detection Extended
 The model detection functions now correctly recognize Opus 4.5 model IDs.

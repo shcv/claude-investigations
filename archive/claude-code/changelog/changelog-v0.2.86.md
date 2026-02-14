@@ -1,5 +1,6 @@
 # Changelog for version 0.2.86
 
+
 ### New Features
 
 #### Managed Settings Support
@@ -13,6 +14,7 @@
 - Better handling of tool use errors with dedicated error message rendering
 - Error messages now properly distinguish between different error types and provide clearer feedback
 
+
 ### API Changes
 
 #### New Functions for Session Tracking
@@ -25,11 +27,13 @@
 #### Improved Current Directory Detection
 - New `d0()` function provides more robust current working directory detection with fallback handling
 
+
 ### Bug Fixes
 
 - Fixed duplicate import issues (removed redundant stream imports)
 - Removed obsolete error handling classes and functions
 - Cleaned up unused variables and functions related to session management
+
 
 ### Internal Changes
 
@@ -37,6 +41,7 @@
 - Simplified message persistence by removing complex database transaction logic
 - Streamlined error content formatting for better consistency
 - Updated version string from "0.2.85" to "0.2.86"
+
 
 ### Removed Features
 

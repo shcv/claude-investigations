@@ -4,6 +4,7 @@
 
 Version 2.0.41 introduces major improvements to git workflow management, including automatic tracking of uncommitted changes and unpushed commits, enhanced multi-agent planning with structured 4-phase workflows, and better terminal rendering with improved ANSI escape sequence handling and Unicode support.
 
+
 ### Git Repository Status Tracking
 **What:** Comprehensive git status detection for branch management and workflow automation
 
@@ -18,6 +19,7 @@ Version 2.0.41 introduces major improvements to git workflow management, includi
 - Integrated into branch switching workflows
 - Prevents accidental loss of work during teleport operations
 - **Evidence**: `lJ1()` at line 87137, `Hn9()` at line 87127, `dJ1()` at line 87177 in pretty-v2.0.41.js
+
 
 ### Uncommitted Changes UI
 **What:** Interactive dialog when switching branches with uncommitted or unpushed changes
@@ -34,6 +36,7 @@ claude  # then use teleport feature
 - Prevents data loss during branch switches
 - **Evidence**: `uT2()` at line 428379 in pretty-v2.0.41.js (replaces unrelated function at line 428358 in v2.0.37)
 
+
 ### Automatic Upstream Branch Setup
 **What:** Automatically configures upstream tracking after git checkout
 
@@ -49,6 +52,7 @@ git branch --set-upstream-to=origin/<branch> <branch>
 - Logs all actions for debugging
 - Called automatically after branch checkout operations
 - **Evidence**: `tl5()` at line 427581 in pretty-v2.0.41.js (new function, doesn't exist in v2.0.37)
+
 
 ### Brace Expansion for CLAUDE.md Paths
 **What:** Glob-style brace expansion in CLAUDE.md frontmatter configuration
@@ -72,6 +76,7 @@ src/utils/*.tsx
 - Used in CLAUDE.md frontmatter `paths:` field
 - **Evidence**: `nP0()` at line 52984, `aP0()` at line 53002 in pretty-v2.0.41.js (not present in v2.0.37)
 
+
 ### VCS Account Linking
 **What:** OAuth-based GitHub account linking with Claude account
 
@@ -87,6 +92,7 @@ src/utils/*.tsx
 - Tracks organization UUID and billing type
 - **Evidence**: `cl5()` at line 426586, `mt1()` at line 426608 in pretty-v2.0.41.js (not in v2.0.37)
 
+
 ### Conductor App Detection
 **What:** Detects when running inside Conductor desktop app
 
@@ -95,6 +101,7 @@ src/utils/*.tsx
 - Allows behavior customization for Conductor environment
 - Similar to existing IDE detection (VSCode, Cursor, etc.)
 - **Evidence**: `Vb9()` at line 47155 in pretty-v2.0.41.js (v2.0.37 has different code at line 47461)
+
 
 ### Glob Operations with Ripgrep (Experimental)
 **What:** Optional performance optimization using ripgrep for file pattern matching
@@ -109,6 +116,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Respects ignore patterns
 - Performance benefit for large codebases
 - **Evidence**: Feature flag check at line 483919 in pretty-v2.0.41.js (not in v2.0.37)
+
 
 ### Enhanced Multi-Agent Plan Mode
 **What:** Structured 4-phase planning workflow with parallel agent coordination
@@ -126,6 +134,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Context-aware perspective selection based on task type
 - **Evidence**: Enhanced workflow at line 475195 in pretty-v2.0.41.js (basic version at line 473774 in v2.0.37)
 
+
 ### Network Path Security Enhancements
 **What:** Expanded detection of suspicious Windows network paths
 
@@ -141,6 +150,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Shows security warnings for suspicious paths
 - **Evidence**: `ddA()` at line 222047 in pretty-v2.0.41.js (enhanced from `i2Q()` at line 222404 in v2.0.37)
 
+
 ### ANSI Escape Sequence Handling
 **What:** Improved parsing of terminal color codes and escape sequences
 
@@ -151,6 +161,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - More accurate terminal width calculations
 - **Evidence**: `Km9()` at line 76407, `Em9()` at line 76423 in pretty-v2.0.41.js (different code at same lines in v2.0.37)
 
+
 ### Unicode Text Segmentation
 **What:** Better handling of emoji and full-width characters in terminal output
 
@@ -159,6 +170,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Detects full-width characters (CJK, emoji) for alignment
 - Prevents terminal rendering issues with Unicode
 - **Evidence**: `Nm9()` at line 76699, `$m9` initialization at line 76716 in pretty-v2.0.41.js (enhanced from v2.0.37)
+
 
 ### TodoList Tool Documentation
 **What:** Comprehensive examples and guidance for todo list usage
@@ -176,6 +188,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Ensures systematic progress tracking
 - **Evidence**: Enhanced documentation in `Kv0` tool description at lines 1287-1469 in diff
 
+
 ### ExitPlanMode Tool Clarification
 **What:** Clearer guidance on appropriate use of plan mode
 
@@ -186,6 +199,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Added 3 specific examples distinguishing planning vs research
 - **Evidence**: Enhanced guidance in `a12()` at lines 1902-1917 in diff
 
+
 ### LSP Diagnostic Improvements
 **What:** Better handling of Language Server Protocol diagnostics
 
@@ -195,6 +209,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Better error messages for malformed LSP responses
 - Reduces duplicate error reports in editor
 - **Evidence**: Enhanced diagnostic handling at lines 1710-1734 in diff
+
 
 ### Error Message Improvements
 **What:** More specific error types and clearer user feedback
@@ -211,6 +226,7 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Context-specific troubleshooting hints
 - **Evidence**: New error types at lines 1499-1554 in diff
 
+
 ### Slash Command Documentation
 **What:** Enhanced explanation of slash command behavior
 
@@ -221,25 +237,30 @@ Requires feature flag `tengu_glob_with_rg` to be enabled.
 - Better understanding of command execution model
 - **Evidence**: Enhanced documentation at lines 96963-96982 in diff
 
+
 ### MCP Tool Token Tracking
 Separate token usage tracking for MCP tools, distinguishing them from built-in tools in context window breakdown.
-**Evidence**: Token tracking at lines 97073-97152 in diff
+Evidence: Token tracking at lines 97073-97152 in diff
+
 
 ### Hook Summary Messages  
 Consolidated plugin hook execution summaries showing hook count, errors, and prevention status with better formatting.
-**Evidence**: `FaQ()`, `ij6()` at lines 3166-3181, 1625-1648 in diff
+Evidence: `FaQ()`, `ij6()` at lines 3166-3181, 1625-1648 in diff
+
 
 ### Terminal Hyperlink Support
 Added OSC 8 hyperlink support for creating clickable links in supported terminals using standard ANSI escape sequences.
-**Evidence**: `X16()` at lines 1595-1606 in diff
+Evidence: `X16()` at lines 1595-1606 in diff
+
 
 ### Truncation Indicators
 Better warnings for truncated content, showing kilobytes removed for large tool results and warnings for git status truncation.
-**Evidence**: Improvements at lines 1174, 2150-2151 in diff
+Evidence: Improvements at lines 1174, 2150-2151 in diff
+
 
 ### Thinking Mode Metadata
 Enhanced thinking mode integration with better metadata passing and settings synchronization for `alwaysThinkingEnabled`.
-**Evidence**: `dwQ()`, `pwQ()` at lines 61382-61438, 3485-3486 in diff
+Evidence: `dwQ()`, `pwQ()` at lines 61382-61438, 3485-3486 in diff
 
 
 **Note:** This changelog covers changes from v2.0.37 to v2.0.41. All line numbers reference the prettified source files in the archive. Function names are from the minified/obfuscated source and may not reflect original implementation names.

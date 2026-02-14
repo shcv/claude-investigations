@@ -2,6 +2,7 @@
 
 Based on my analysis of the diff for version 1.0.53, here is the detailed changelog:
 
+
 ### New Features
 
 #### AWS Authentication Enhancements
@@ -46,6 +47,7 @@ Based on my analysis of the diff for version 1.0.53, here is the detailed change
 - **Dynamic Terminal Resizing**: Improved handling of terminal window resizing with proper event listeners and state management.
 - **Better TTY Detection**: Enhanced checks for interactive terminal environments.
 
+
 ### User Experience Improvements
 
 #### Command Processing
@@ -67,6 +69,7 @@ Based on my analysis of the diff for version 1.0.53, here is the detailed change
 - **AWS Credential Errors**: Better error messages and automatic retry mechanisms for AWS authentication failures.
 - **Hook Error Display**: Clear error messages when prompt submission is blocked by hooks.
 
+
 ### Configuration
 
 #### New Settings
@@ -75,15 +78,18 @@ Based on my analysis of the diff for version 1.0.53, here is the detailed change
 - `otelHeadersHelper`: Command to generate OpenTelemetry headers
 - `MCP_SERVER_CONNECTION_BATCH_SIZE`: Environment variable for MCP connection concurrency
 
+
 ### API and Integration Updates
 - Added support for the `DecodeAuthorizationMessage` AWS STS operation
 - Enhanced AWS SDK integration with proper credential provider error handling
 - Improved TypeScript helper imports and exports
 
+
 ### Performance and Stability
 - **Connection Management**: Better handling of concurrent MCP server connections
 - **Memory Management**: Improved caching mechanisms for AWS credentials and system state
 - **Event Handling**: More robust terminal resize event management
+
 
 ### Developer Features
 - **Client Type Configuration**: Added ability to set client type for telemetry

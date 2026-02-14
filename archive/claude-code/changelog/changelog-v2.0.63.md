@@ -4,6 +4,7 @@
 
 This release introduces performance monitoring infrastructure to detect slow filesystem and shell operations, adds automatic retry logic for ripgrep EAGAIN errors, and optimizes settings writes to avoid unnecessary disk I/O.
 
+
 ### Slow Operation Detection
 
 **What:** New performance monitoring that detects and logs slow filesystem and shell command operations.
@@ -19,6 +20,7 @@ This release introduces performance monitoring infrastructure to detect slow fil
 - For shell commands, the first 100 characters of the command are included in the log
 - Logs are written to debug output (controlled by `CLAUDE_CODE_DEBUG_LOGS_DIR` environment variable)
 - **Evidence:** `XX()` wrapper function at line 554, threshold `Zl2 = 5` at line 605, shell monitoring in `MG()` at line 16934
+
 
 ### Ripgrep EAGAIN Error Auto-Retry
 
@@ -37,6 +39,7 @@ When ripgrep fails with an EAGAIN error (common in high-concurrency environments
 - Telemetry event `tengu_ripgrep_eagain_retry` is logged when this occurs
 - **Evidence:** `lJ9()` function at line 17125, retry logic at lines 17163-17178
 
+
 ### Optimized OAuth Account Settings Writes
 
 **What:** Settings are now only written to disk when OAuth account information actually changes.
@@ -51,6 +54,7 @@ When ripgrep fails with an EAGAIN error (common in high-concurrency environments
 - Uses strict equality checks with optional chaining for safety
 - **Evidence:** `HW1()` function at line 74155 with comparison at lines 74170-74176, compared to old unconditional `G$1()` function
 
+
 ### Increased Startup Performance Telemetry Sampling
 
 **What:** Startup performance telemetry sampling rate increased from 0.1% to 0.5% of CLI invocations.
@@ -61,6 +65,7 @@ When ripgrep fails with an EAGAIN error (common in high-concurrency environments
 - Can still be forced on with `CLAUDE_CODE_PROFILE_STARTUP=1` environment variable
 - **Evidence:** `Xa2 = 0.005` at line 2661, sampling logic at line 2674
 
+
 ### Registered Hooks State Management
 
 **What:** Added functions to get and set registered hooks in the global state.
@@ -70,6 +75,7 @@ When ripgrep fails with an EAGAIN error (common in high-concurrency environments
 - New `vTA()` function to get registered hooks (line 2398)
 - New `jJA()` function to access plan slug cache (line 2401)
 - **Evidence:** Functions at lines 2395-2401
+
 
 ### Internal Refactoring
 

@@ -3,6 +3,7 @@
 ## Highlights
 Claude Code 1.0.78 introduces enhanced security for authentication tokens, a completely refactored permission system with three-tier control, and renames "output modes" to "output styles" for clarity. The update also adds support for a new Sonnet model with 1M context and implements infrastructure for A/B testing and dynamic configuration.
 
+
 ### File Descriptor Authentication for Enhanced Security
 **What:** Authentication tokens can now be passed via file descriptors instead of environment variables
 **How to use:**
@@ -22,6 +23,7 @@ claude
 - Falls back to environment variable for backward compatibility
 - Provides clear error messages for invalid file descriptors
 
+
 ### Three-Tier Permission System
 **What:** New granular permission options for file operations
 **How to use:**
@@ -35,6 +37,7 @@ When Claude requests file permissions, you now have three options:
 - Read operations don't offer project-level write permissions
 - Clearer distinction between temporary and persistent permissions
 
+
 ### Sonnet Model with 1M Context
 **What:** New high-context variant of Claude 3.5 Sonnet with 1 million token context window
 **Details:**
@@ -42,6 +45,7 @@ When Claude requests file permissions, you now have three options:
 - Uses rate limits faster than standard models
 - Access may be gated based on account type or feature flags
 - Provides extended context for working with very large codebases
+
 
 ### Simplified Onboarding Experience
 **What:** New streamlined onboarding for first-time users
@@ -51,6 +55,7 @@ When Claude requests file permissions, you now have three options:
 - More focused introduction compared to standard onboarding
 - Automatically selected based on usage patterns
 
+
 ### Output Modes Renamed to Output Styles
 **What changed:** The entire "output modes" feature is now called "output styles"
 **Impact:** 
@@ -58,6 +63,7 @@ When Claude requests file permissions, you now have three options:
 - Built-in options renamed: "Insights" → "Explanatory", "Learn By Doing" → "Learning"
 - Clearer terminology that better reflects the feature's purpose
 - Agent type renamed from `output-mode-setup` to `output-style-setup`
+
 
 ### Dynamic Model Configuration
 **What changed:** Models can now be configured remotely via Statsig
@@ -67,12 +73,14 @@ When Claude requests file permissions, you now have three options:
 - Enables A/B testing of different model configurations
 - External overrides respect user's first usage date to prevent unexpected changes
 
+
 ### Enhanced Agent Configuration
 **What changed:** Agent definitions now include source tracking
 **Impact:**
 - Agents now specify their source: `built-in`, `localSettings`, or `projectSettings`
 - Better management and display of agent origins
 - Statusline setup agent now recommends skipping optional git locks for better performance
+
 
 ### Improved Permission Storage
 **What changed:** Simplified and more reliable permission persistence
@@ -82,14 +90,17 @@ When Claude requests file permissions, you now have three options:
 - Automatic addition of allowed directories to settings
 - Better handling of permissions for files outside project directory
 
+
 ### Fixed: Stdin Terminal Mode Cleanup
 - **Issue:** Terminal raw mode wasn't properly cleaned up on exit
 - **Resolution:** Added `Ao4()` function to properly reset stdin terminal mode and unref the stream
+
 
 ### Fixed: Enterprise Account Detection
 - **Issue:** Enterprise and team accounts weren't properly detected for feature gating
 - **Cause:** Missing logic to check account type in conjunction with environment flags
 - **Resolution:** New `BL6()` function correctly identifies enterprise/team accounts
+
 
 ### Fixed: Model Selection Logic
 - **Issue:** Model selection didn't properly handle all user access scenarios

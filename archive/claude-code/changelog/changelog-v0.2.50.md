@@ -11,6 +11,7 @@
   
   This creates or updates a `.mcp.json` file in your project root that can be committed to version control.
 
+
 ### Memory System Enhancements
 - **Memory type selector**: When creating memories, you can now choose between three types:
   - **Project Memory**: Shared in the project repository (stored in `CLAUDE.md`)
@@ -22,6 +23,7 @@
 
   The memory selector UI provides arrow key navigation and clear descriptions of each memory type's scope.
 
+
 ### Notebook Editing Improvements
 - **Enhanced Jupyter notebook cell editing**: New dedicated UI for notebook cell operations with better visual feedback
   - Supports insert, delete, and replace operations on notebook cells
@@ -29,8 +31,10 @@
   - Provides syntax-highlighted previews of cell contents
   - Displays diffs for cell replacements
 
+
 ### Git Operation Tracking
 - **Automatic git operation analytics**: The CLI now tracks when you perform git commits and create pull requests through the bash tool, providing better insights into your workflow patterns.
+
 
 ### File Path Handling
 - **Better support for files with spaces**: The bash tool now properly handles file paths containing spaces by automatically quoting them
@@ -41,21 +45,26 @@
   python "/path/with spaces/script.py"  # Correctly handled
   ```
 
+
 ### Input System
 - **Refined keyboard shortcuts**: The input system has been optimized with better handling of escape sequences and control keys
 
+
 ### Token Usage Warnings
 - **New token threshold warnings**: The system now provides warnings when approaching token limits to help manage long conversations
+
 
 ### Removed Features
 - Removed several internal memory management functions that were replaced by the new memory type selector
 - Removed unused debugging and configuration variables
 - Consolidated import statements for better module organization
 
+
 ### Internal Improvements
 - Streamlined the CLAUDE.md file discovery system to support the new three-tier memory architecture
 - Improved error handling for file operations
 - Better organization of keyboard input handling code
+
 
 ### MCP Scope Naming (from v0.2.49)
 Note: The previous version (v0.2.49) renamed MCP server scopes:

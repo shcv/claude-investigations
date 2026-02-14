@@ -1,5 +1,6 @@
 # Changelog for version 0.2.80
 
+
 ### New Features
 
 #### OAuth Support for Claude.ai Pro/Team Users (`CLAUDE_MAX`)
@@ -27,6 +28,7 @@
 - **ReadNotebook** renamed to **NotebookReadTool** for consistency
 - **LS** renamed to **LSTool** for consistency
 
+
 ### Improvements
 
 #### Enhanced Security
@@ -45,6 +47,7 @@
 #### Performance Enhancements
 - Prompt caching can now be disabled via `DISABLE_PROMPT_CACHING` environment variable
 - Improved async handling for file operations and OAuth flows
+
 
 ### Usage Examples
 
@@ -77,6 +80,7 @@ claude
   }
 }
 ```
+
 
 ### Bug Fixes
 

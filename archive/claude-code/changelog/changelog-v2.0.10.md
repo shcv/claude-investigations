@@ -4,6 +4,7 @@
 
 Version 2.0.10 introduces intelligent shell completion for Bash commands, MCP server management in the command palette, enhanced plugin error tracking, and several improvements to model switching and telemetry handling. The release also includes internal rendering system refactoring for better maintainability.
 
+
 ### Shell Completion Support
 **What:** Added intelligent tab-completion for bash and zsh shells when typing commands in the Bash tool
 **How to use:**
@@ -19,6 +20,7 @@ While typing a command in the Bash tool, press Tab to see completion suggestions
 - Zsh completion uses native zsh parameter and command arrays
 - Limited to 100 suggestions per request for performance
 - **Evidence**: `M0Q()` at line 420086, `wn5()` at line 420018, `qn5()` at line 420051, `En5()` at line 420059, `Nn5()` at line 420067 in v2.0.10
+
 
 ### MCP Server Toggling in Command Palette
 **What:** MCP servers now appear in the command palette and can be toggled on/off with a keystroke
@@ -37,6 +39,7 @@ While typing a command in the Bash tool, press Tab to see completion suggestions
 - Toggle action immediately enables/disables the server
 - **Evidence**: `On5()` at line 420158 in v2.0.10 (was empty array stub `bF5()` at line 419342 in v2.0.9)
 
+
 ### Model Switching from Plan Mode
 **What:** Claude can now suggest switching to a different model when exiting plan mode
 **How to use:**
@@ -49,6 +52,7 @@ When Claude presents a plan and exits plan mode, it may automatically switch to 
 - Status command shows: `Current model: <model> (session override from plan mode)` when active
 - Base model remains unchanged for future sessions
 - **Evidence**: `bY7` schema at line 416861, `mainLoopModelForSession` state at line 448805 in v2.0.10 (did not exist in v2.0.9)
+
 
 ### Telemetry Flush on Logout
 **What:** Telemetry data is now properly flushed when logging out, with configurable timeout
@@ -68,6 +72,7 @@ claude
 - Integrated into logout flow via `IL0()` function
 - **Evidence**: `DEB()` at line 398367 in v2.0.10 (did not exist in v2.0.9)
 
+
 ### Dynamic Environment Selection
 **What:** Environment providers are now fetched dynamically from the API instead of using hardcoded values
 **How to use:**
@@ -82,6 +87,7 @@ This happens automatically when creating remote sessions. The first available en
 - Replaces hardcoded environment ID `env_011CSUkSjSxeWzWtatWym6Yn`
 - **Evidence**: `mMB()` at line 404246 in v2.0.10 (different function in v2.0.9)
 
+
 ### Dynamic Configuration Caching
 **What:** Statsig dynamic configurations are now cached in application state for faster access
 **How to use:**
@@ -95,6 +101,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Improves initial render performance
 - **Evidence**: `cachedDynamicConfigs` at line 440962, `B2Q()` at line 441924, `Q2Q()` at line 441937 in v2.0.10 (did not exist in v2.0.9)
 
+
 ### Enhanced Plugin Error Tracking
 **What changed:** Plugin loading failures are now tracked individually with structured error information instead of failing silently
 
@@ -105,6 +112,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Error count included in startup logs: `Loaded plugins - ... Errors: ${count}`
 - If one plugin component fails to load, others still attempt to load
 - **Evidence**: `ad1()` at line 423922, errors field at line 448824 in v2.0.10 (errors ignored in `dMB()` at line 422999 in v2.0.9)
+
 
 ### External Editor Experience
 **What changed:** External editors now launch in alternate screen buffer for cleaner terminal experience
@@ -118,6 +126,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Supports `$VISUAL`, `$EDITOR`, and fallback editors (code, vi, nano)
 - **Evidence**: `AAQ()` at line 422356 in v2.0.10 (screen buffer codes existed but not integrated in v2.0.9)
 
+
 ### Model Descriptions for Claude
 **What changed:** Model options now include descriptions specifically tailored for Claude's decision-making
 
@@ -129,6 +138,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Helps Claude make better model switching decisions when exiting plan mode
 - **Evidence**: `kB4.descriptionForModel` at line 364157, `fL1.descriptionForModel` at line 364164, `wtA.descriptionForModel` at line 364173 in v2.0.10 (did not exist in v2.0.9)
 
+
 ### Environment Variable Parsing for MCP Commands
 **What changed:** Enhanced validation of environment variable formats in `claude mcp add` command
 
@@ -138,6 +148,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Variable names can contain letters, numbers, and underscores
 - Prevents malformed environment variables from being added to MCP server configurations
 - **Evidence**: `OI6()` at line 386305 in v2.0.10 (did not exist in v2.0.9)
+
 
 ### Installation Notification System
 **What changed:** Installation messages and warnings are now managed through a centralized notification system
@@ -150,6 +161,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Integrates with the notification queue system
 - **Evidence**: `N2Q()` at line 425522 in v2.0.10 (did not exist in v2.0.9)
 
+
 ### Top-of-Feed Tips
 **What changed:** Added configurable tips system that displays messages at the top of the conversation feed
 
@@ -161,6 +173,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Default state: `{ tip: "", color: "dim" }`
 - **Evidence**: `u_0()` at line 424743, `Ma5()` at line 424769 in v2.0.10 (did not exist in v2.0.9)
 
+
 ### Authentication Token Handling
 **What changed:** Authentication functions now accept optional `allowedSettingSources` parameter for better source control
 
@@ -170,6 +183,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - `z4Q(allowedSettingSources)` ensures token availability (was `qjB()`)
 - Allows filtering which settings sources can provide authentication tokens
 - **Evidence**: `FO()` at line 440418, `Xr4()` at line 376327 in v2.0.10 (different signatures in v2.0.9)
+
 
 ### Debug Log Symlink Management
 **What changed:** Latest debug log file now has a symlink for easier access
@@ -181,6 +195,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Symlink automatically updated on each run
 - Located in debug directory: `~/.cache/claude-code/<workspace>/debug/latest`
 - **Evidence**: `G$Q` at line 341114, `MH1()` at line 341106, `On1()` at line 341111 in v2.0.10 (did not exist in v2.0.9)
+
 
 ### Rendering System Architecture
 **What changed:** Terminal rendering logic refactored into dedicated classes for better separation of concerns
@@ -196,6 +211,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - No user-visible changes
 - **Evidence**: `OC1` at line 358599, `dt1` at line 357561, `ft1()` at line 357320 in v2.0.10 (was `MC1` at line 358357, inline rendering in v2.0.9)
 
+
 ### Model Status Display
 **What changed:** `/model` command now shows session override information when active
 
@@ -206,6 +222,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Helps users understand when plan mode has changed their model
 - **Evidence**: `Yr5()` at line 431964 in v2.0.10 (was simpler `zz5()` at line 431016 in v2.0.9)
 
+
 ### Console Patching Behavior
 **What:** Console.log and console.error now route through global error handlers instead of internal write methods
 
@@ -215,6 +232,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Removed special case filtering for React error message "The above error occurred"
 - More consistent error tracking and logging
 - **Evidence**: `patchConsole()` in `OC1` at line 358722 in v2.0.10 (was different in `MC1.patchConsole()` at line 358579 in v2.0.9)
+
 
 ### Lodash Utility Functions
 **What:** Added proper implementations of `trim`, `toNumber`, `debounce`, and `throttle` from lodash
@@ -227,11 +245,13 @@ This is automatic. Config values are returned immediately from cache while fresh
 - These replace or supplement existing implementations for better compatibility
 - **Evidence**: Added functions at lines 335238-337246 in v2.0.10 (partial or missing in v2.0.9)
 
+
 ### State Management Updates
 - Added `mainLoopModelForSession: null` to initial state for session-scoped model overrides
 - Added `errors: []` to plugins state structure
 - Added `cachedDynamicConfigs: {}` to state for configuration caching
 - Default state object renamed from `QH` to `Iz`
+
 
 ### Import Reorganization
 - Added `import { cwd as w7A } from "node:process"` at line 357756
@@ -241,6 +261,7 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Removed `import NzQ from "stream"` (replaced with named import)
 - Removed `import q6Q from "node:process"` (no longer needed)
 - Removed `import { resolve as A5Q } from "path"` (renamed to `L5Q`)
+
 
 ### Function Removals
 - Removed `giQ()` rendering function (replaced by `ft1()`)
@@ -259,10 +280,12 @@ This is automatic. Config values are returned immediately from cache while fresh
 - Removed `RV5` opus plan welcome banner
 - Removed `zz5()` simple model status (replaced by `Yr5()`)
 
+
 ### File Path Constants
 - Log directory structure simplified in `cO` object (was `oJ`)
 - Removed `debugLog()` function from path helpers (now uses `MH1()`)
 - Added path separator constant `OK` at line 438815
+
 
 ### Thinking Feature Constants
 - Added `Ny2 = "tmp-preserve-thinking-2025-10-01"` constant at line 376351

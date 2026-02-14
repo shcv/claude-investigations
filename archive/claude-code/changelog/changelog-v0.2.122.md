@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.122 Changelog
 
+
 ### Co-Authorship Attribution
 - **Added automatic co-authorship credits** for Claude-generated commits and pull requests
   - When Claude helps create commits, it now automatically adds a "Co-Authored-By: Claude <noreply@anthropic.com>" line to the commit message
@@ -17,10 +18,12 @@
   Co-Authored-By: Claude <noreply@anthropic.com>
   ```
 
+
 ### Import Optimizations
 - Replaced generic `stream` import with more specific `PassThrough` import from the stream module
 - Changed from importing the entire `node:process` module to only importing the `cwd` function
 - These changes improve startup performance by reducing unnecessary module loading
+
 
 ### Internal Updates
 - Added new internal variable binding for improved module compatibility

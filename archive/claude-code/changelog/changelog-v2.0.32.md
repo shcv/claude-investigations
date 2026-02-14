@@ -4,6 +4,7 @@
 
 Version 2.0.32 delivers significant performance improvements with optimized terminal rendering that eliminates flicker, introduces an automated tool execution API for building agentic workflows, and enhances the user feedback system for better accuracy. The release also removes seasonal Halloween content and adds helpful UI hints for users with 1M context access.
 
+
 ### Automated Tool Execution API (BetaToolRunner)
 
 **What:** A new `toolRunner()` method in the Messages API that automatically executes tools in an agentic loop, eliminating the need to manually handle tool_use/tool_result message cycles.
@@ -45,6 +46,7 @@ const finalMessage = await runner.done();
 - Can be controlled manually via `generateToolResponse()` and `pushMessages()` methods
 - **Evidence**: Class `TYA` at line 82603, function `bh9()` at line 82564, variable `uZ1` at line 82604, new `toolRunner()` method at line 82828
 
+
 ### /stickers Command
 
 **What:** New slash command to order official Claude Code stickers
@@ -60,6 +62,7 @@ const finalMessage = await runner.done();
 - Available in all contexts (always enabled, not hidden)
 - Does not support non-interactive mode
 - **Evidence**: Variable `$d2` at line 463792
+
 
 ### Enhanced Context Window Hints
 
@@ -82,6 +85,7 @@ Tip: You have access to Sonnet 1M with 5x more context
 - Improves discoverability of the 1M context feature
 - **Evidence**: Functions `Wh6()` at line 317408 and `p8A()` at line 317415
 
+
 ### Optimized Terminal Rendering
 
 **What:** New screen diffing algorithm that only updates changed characters instead of clearing and re-rendering the entire terminal, eliminating flicker and improving performance.
@@ -100,6 +104,7 @@ The renderer now:
 - Implements transaction-based cursor management for atomic updates
 - **Evidence**: Functions `qRA()` at line 70135, `uR0()` at line 70140, `mR0()` at line 70379, class `dR0` at line 70395
 
+
 ### Feedback Survey System Refinements
 
 **What changed:** The in-app feedback survey mechanism was refactored for improved accuracy and maintainability
@@ -117,7 +122,8 @@ The renderer now:
 
 **Net effect:** Surveys appear less frequently but with more accurate tracking across sessions
 
-**Evidence**: Function `Ky2()` at line 445844 (renamed from `mS2`), configuration `ku5` at line 445950, state structure at line 298044
+Evidence: Function `Ky2()` at line 445844 (renamed from `mS2`), configuration `ku5` at line 445950, state structure at line 298044
+
 
 ### Import Optimizations
 
@@ -130,7 +136,8 @@ The renderer now:
 - Added `import { cwd as XT0 } from "node:process"` at line 70828
 - Added `import { join as Dn2, basename as Pr5 } from "path"` at line 481476
 
-**Evidence**: Diff lines 10-21 (removed) and 534-537, 955-958, 1093-1096, 1105-1112 (added)
+Evidence: Diff lines 10-21 (removed) and 534-537, 955-958, 1093-1096, 1105-1112 (added)
+
 
 ### Initialization Flow Enhancement
 
@@ -143,6 +150,7 @@ The renderer now:
 - Helps SDKs and automation tools track authentication progress
 - **Evidence**: Function `Go5()` (renamed from `kr5`) at line 483837, lines 1288-1301 show the new auth status emission
 
+
 ### Helper Utility Functions
 
 Several new utility functions were added to improve code organization:
@@ -153,6 +161,7 @@ Several new utility functions were added to improve code organization:
 - `Sb5()` at line 430186: Reads `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY` environment variable with default value of 10
 - `YuA()` at line 207879: Strips `<sandbox_violations>` tags from content using regex
 - `dS2()` at line 470949: Comparison function for checking if one value exceeds another in a specific context
+
 
 ### State Management Updates
 
@@ -172,6 +181,7 @@ feedbackSurvey: {
 - Synced to global settings via state change handler
 - **Evidence**: State structure at line 298044, sync handler in `Wb()` (renamed from `Bb`) at line 482021
 
+
 ### Message Selection After Restoration
 
 **What:** Fixed message selection index calculation after restoring previous conversations
@@ -181,6 +191,7 @@ feedbackSurvey: {
 - Now resets to first message (index 0) when message list changes
 - Prevents out-of-bounds errors when message IDs don't match after restoration
 - **Evidence**: Function `w11()` at line 439713 (simplified from `I11()` at line 439313)
+
 
 ### Seasonal Content Removal
 
@@ -193,6 +204,7 @@ feedbackSurvey: {
 - Simplified mascot rendering to single implementation (function `Ft1()` at line 444608)
 - The Halloween mascots featured witch hats with green decoration that were displayed during October/November 2024
 - **Evidence**: Diff lines 222-416 (removed functions), new simplified function at line 444608
+
 
 ### Prompt Template Consolidation
 
@@ -209,10 +221,12 @@ feedbackSurvey: {
 - **SDK Version:** Updated from 0.60.0 to 0.66.0
 - **Variable `Dh` at line 81689**
 
+
 ### Constants Added
 
 - `Mk0` at line 83970: `"\n\nHuman:"` prompt separator
 - `Ok0` at line 83971: `"\n\nAssistant:"` prompt separator
+
 
 ### Module Initialization
 

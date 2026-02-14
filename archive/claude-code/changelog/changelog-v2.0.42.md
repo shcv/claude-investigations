@@ -3,6 +3,7 @@
 ## Highlights
 Version 2.0.42 introduces bidirectional LSP communication support, enhanced GitHub authentication, and improved LSP workspace initialization. The LSP system can now respond to server requests (not just send them), GitHub CLI authentication is more robust with JSON output parsing, and LSP servers receive proper workspace context from initialization.
 
+
 ### LSP Request Handler Support
 **What:** LSP servers can now send requests back to Claude Code and receive responses, enabling full bidirectional communication required by the LSP protocol.
 
@@ -17,6 +18,7 @@ The LSP client now supports `onRequest()` to handle incoming requests from langu
 - **Evidence**: `y$Q() at line 283547-283803` (new LSP client), `x$Q() at line 283893` (exposed API)
 
 **Why it matters:** Many LSP servers (TypeScript, Python, etc.) require clients to respond to `workspace/configuration` requests during initialization. Without this, some language servers may fail to initialize properly or operate with reduced functionality.
+
 
 ### GitHub App Installation Validation
 **What:** Background tasks now verify that the Claude GitHub app is installed on the repository before allowing execution.
@@ -33,6 +35,7 @@ When initiating background tasks in a GitHub repository, Claude Code automatical
 
 **Why it matters:** Ensures background tasks have proper GitHub integration permissions before execution, preventing mysterious failures when app permissions are missing.
 
+
 ### Enhanced GitHub Authentication Detection
 **What:** GitHub CLI authentication detection now uses JSON output parsing for more reliable credential extraction.
 
@@ -48,6 +51,7 @@ The `gh auth status` command is now called with `--active --json hosts` flags, p
 
 **Why it matters:** More robust GitHub authentication detection prevents false negatives and works consistently across different GitHub CLI versions and Enterprise configurations.
 
+
 ### Git User Email Detection
 **What:** Added function to retrieve git user email from git configuration.
 
@@ -60,6 +64,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Used to associate git commits with Claude Code user accounts
 - **Evidence**: `Wi5() at line 426065`, `QT2() at line 426023`
 
+
 ### LSP Workspace Initialization
 **What:** LSP servers now receive proper workspace root information during initialization instead of null values.
 
@@ -70,6 +75,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - **Evidence**: `x$Q() at line 283750-283756`
 
 **Why it matters:** Some language servers use the deprecated `rootPath` and `rootUri` fields for workspace detection. Providing actual values instead of `null` improves compatibility with older LSP implementations.
+
 
 ### Settings Update Error Handling
 **What:** Plugin enable/disable operations now properly propagate errors to callers.
@@ -82,6 +88,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 
 **Why it matters:** Previously, settings update failures could be silently ignored. Now callers can properly handle and report errors when plugin state changes fail.
 
+
 ### Plugin Hook Filtering
 **What:** Function-type hooks are now filtered out when serializing plugin hooks.
 
@@ -92,6 +99,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 
 **Why it matters:** Function-type hooks cannot be serialized to JSON, so filtering them prevents serialization errors.
 
+
 ### Hook Type Handling
 **What:** Hook execution now handles multiple hook types including callback and function types.
 
@@ -100,6 +108,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Function `PBI()` at line 473700 executes function-type hooks with proper timeout and abort signal handling
 - Callback hook execution in `jBI()` at line 473754 simplified with cleaner abort handling
 - **Evidence**: `vz() at line 472202`, `PBI() at line 473700`, `jBI() at line 473754`
+
 
 ### LSP Definition Result Normalization
 **What:** Go-to-definition results are now normalized to handle both Location and LocationLink formats.
@@ -112,6 +121,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 
 **Why it matters:** LSP spec allows servers to return either Location or LocationLink for definitions. Normalization ensures consistent handling regardless of format.
 
+
 ### Hook Matching Logic
 **What:** Hook matching now considers both matcher name and hook event when finding applicable hooks.
 
@@ -120,6 +130,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Supports empty matcher string for wildcard matching
 - Returns full hook entry (not just `onMatch` callback) for more context
 - **Evidence**: `Hr2() at line 472167-472185`
+
 
 ### MCP Configuration Lookup
 **What:** Added helper functions for looking up MCP server configurations and resources by normalized names.
@@ -130,6 +141,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Handles case-insensitive lookups via `normalizedNames` mapping
 - **Evidence**: `Te2() at line 495603`, `Pe2() at line 495609`
 
+
 ### Environment Variable Telemetry
 **What:** Added `claude_code_container_id` to telemetry payload when running in containerized environments.
 
@@ -139,6 +151,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Sourced from `CLAUDE_CODE_CONTAINER_ID` environment variable
 - **Evidence**: `Wp2() at line 450398-450399`
 
+
 ### Bash Command Execution in Plugins
 **What:** Simplified plugin bash command execution by removing plugin root directory injection.
 
@@ -146,6 +159,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Function `cc()` at line 432214 no longer wraps commands with `An5()` to inject `CLAUDE_PLUGIN_ROOT`
 - Commands now execute directly without environment variable manipulation
 - **Evidence**: `cc() at line 432214-432236`
+
 
 ### Callback Hook Abort Handling
 **What:** Improved abort signal handling in callback hooks to prevent unhandled promise rejections.
@@ -156,6 +170,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Abort signals now handled by upstream code
 - **Evidence**: `jBI() at line 473754-473794`
 
+
 ### Import Reorganization
 - Consolidated `node:process` imports: Added `cwd as Xy0` at line 77734
 - Consolidated `node:stream` imports: Added `Readable as Hs9` at line 87712
@@ -164,6 +179,7 @@ Automatically detects `git config user.email` value when linking VCS accounts.
 - Added specific imports: `join as K19, basename as w8I` from path at line 489603
 - Added `PassThrough as p8I` from stream at line 490866
 - Added `homedir as G6I` from node:os at line 492712
+
 
 ### Variable Renaming (Minification)
 Multiple variables renamed due to code minification:

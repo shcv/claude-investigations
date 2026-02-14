@@ -327,6 +327,70 @@ def remove_horizontal_rules(content: str) -> Tuple[str, bool]:
     return '\n'.join(result_lines), modified
 
 
+def debold_field_labels(content: str) -> Tuple[str, bool]:
+    """
+    Remove bold formatting from field labels like **What**: → What:
+
+    Bold labels compete visually with ### feature headings, making it hard
+    to distinguish heading hierarchy. Plain text labels with colons are
+    sufficient visual cues.
+    """
+    label_pattern = re.compile(
+        r'^\*\*(What|Evidence|Details|Status|Usage|Orphaned Tip)\*\*:',
+        re.MULTILINE
+    )
+    new_content = label_pattern.sub(r'\1:', content)
+    return new_content, new_content != content
+
+
+def add_feature_spacing(content: str) -> Tuple[str, bool]:
+    """
+    Ensure a double blank line before ### feature headings.
+
+    Within a feature, subsections (What/Evidence/Details) are separated by
+    single blank lines. Between features, a double blank line provides
+    clear visual separation.
+    """
+    # Match ### headings that don't already have a double blank line before them.
+    # But skip the very first ### after a ## section heading.
+    lines = content.split('\n')
+    result = []
+    modified = False
+
+    for i, line in enumerate(lines):
+        if re.match(r'^###\s+', line) and i >= 2:
+            # Check what's above: skip if preceded by ## heading (with optional blank)
+            prev_nonblank = None
+            for j in range(i - 1, -1, -1):
+                if lines[j].strip():
+                    prev_nonblank = lines[j]
+                    break
+
+            if prev_nonblank and re.match(r'^##\s+(?!#)', prev_nonblank):
+                # This ### directly follows a ## section heading — don't add extra space
+                result.append(line)
+                continue
+
+            # Count blank lines immediately before this ###
+            blank_count = 0
+            for j in range(i - 1, -1, -1):
+                if lines[j].strip() == '':
+                    blank_count += 1
+                else:
+                    break
+
+            if blank_count < 2:
+                # Add blank lines to reach 2
+                needed = 2 - blank_count
+                for _ in range(needed):
+                    result.append('')
+                    modified = True
+
+        result.append(line)
+
+    return '\n'.join(result), modified
+
+
 def normalize_blank_lines(content: str) -> Tuple[str, bool]:
     """
     Normalize multiple consecutive blank lines to at most 2.
@@ -352,6 +416,8 @@ def cleanup_changelog(content: str, version: str) -> Tuple[str, bool]:
         ('duplicate headers', lambda c: remove_duplicate_headers(c, version)),
         ('post-heading preamble', remove_post_heading_preamble),
         ('emoji in headers', remove_emoji_from_headers),
+        ('bold field labels', debold_field_labels),
+        ('feature spacing', add_feature_spacing),
         ('empty sections', collapse_empty_sections),
         ('trailing separators', remove_trailing_separators),
         ('horizontal rules', remove_horizontal_rules),

@@ -2,11 +2,13 @@
 
 # Claude Code v0.2.27 Changelog
 
+
 ### Tool Permissions Management
 - **New `/approved-tools` command** - Manage which tools Claude can use during your session
   - View currently approved tools
   - Add or remove tool permissions
   - Control what operations Claude can perform
+
 
 ### Enhanced Code Diff Display
 - **Word-level diff highlighting** - See exactly what changed within modified lines
@@ -15,16 +17,19 @@
   - Automatically falls back to line-level display for extensive changes (>40% of line content)
   - Color-coded word changes: additions and removals are highlighted within their respective lines
 
+
 ### Improved Command Experience
 - **Fuzzy matching for slash commands** - Type commands more naturally
   - No need to remember exact command names
   - Partial matches and typos are handled gracefully
   - Faster command entry with intelligent suggestions
 
+
 ### Better Process and Stream Handling
 - Switched to named imports for Node.js built-ins (`env`, `cwd`, `PassThrough`)
 - More explicit handling of process environment and streams
 - Improved modularity in system interaction code
+
 
 ### New Diff Rendering Engine
 The diff display system has been completely overhauled with several new components:
@@ -39,6 +44,7 @@ The diff display system has been completely overhauled with several new componen
 - `ff` - Renders line numbers with proper formatting
 - `fV9` - Assigns line numbers to diff entries
 - `od` - Feature flag wrapper that enables word-level diff when available
+
 
 ### User Information Handling
 - Added `homedir` and `userInfo` imports from the `os` module

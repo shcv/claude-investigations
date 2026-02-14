@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.55 Changelog
 
+
 ### Enhanced Tool Permission System
 - **New permission checking functions** for file operations:
   - `d_()` - Validates read permissions before file access, providing clear error messages when permissions haven't been granted
@@ -11,11 +12,13 @@
   - "Claude requested permissions to read from [path], but you haven't granted it yet."
   - "Claude requested permissions to write to [path], but you haven't granted it yet."
 
+
 ### Improved Memory Update Notifications
 - **Simplified memory update display** with the new `Xk2()` component
   - Shows concise memory update notifications without diff details
   - Displays: "[MemoryType] updated in [path] · /memory to edit"
   - Cleaner UI that reduces visual clutter while maintaining essential information
+
 
 ### Better Error Handling for Context Limits
 - **New `Tl2()` function** parses context limit errors to extract token information
@@ -23,16 +26,19 @@
   - Extracts and returns structured data: `{ inputTokens, maxTokens, contextLimit }`
   - Helps users understand token usage and adjust their requests accordingly
 
+
 ### MCP Tool Timeout
 - **New environment variable**: `MCP_TOOL_TIMEOUT`
   - Default: 100,000,000ms (increased from standard timeout)
   - Allows longer-running MCP tool operations
   - Set via: `export MCP_TOOL_TIMEOUT=100000000`
 
+
 ### MCP Connection Timeout
 - **Modified environment variable handling**: `MCP_TIMEOUT`
   - Default: 30,000ms (30 seconds)
   - Now properly handles empty string values with fallback
+
 
 ### Refactored Status Indicator System
 - **Centralized status theme logic** with `EL1()` function
@@ -44,14 +50,17 @@
   - `nm5()` - Returns color theme for current status
   - `am5()` - Returns message style for current status
 
+
 ### Stream Handling
 - Changed from default import to named import for Node.js streams
   - Before: `import pg4 from "stream"`
   - After: `import { Readable as ug4 } from "stream"`
 
+
 ### Process Management
 - Relocated process.cwd import for better module organization
   - Now imported as: `import { cwd as NX0 } from "node:process"`
+
 
 ### Error Retry Logic
 - Enhanced `Ak5()` function (formerly `Bb5()`) now checks for context limit errors

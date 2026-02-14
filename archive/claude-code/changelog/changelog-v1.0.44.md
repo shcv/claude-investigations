@@ -2,6 +2,7 @@
 
 Based on my analysis of the diff file, here's the detailed changelog for Claude Code version 1.0.44:
 
+
 ### New Features
 
 #### 1. **Export Conversation Command** 🆕
@@ -32,6 +33,7 @@ Based on my analysis of the diff file, here's the detailed changelog for Claude 
 - Better integration with MCP servers and resources
 - Support for `strictMcpConfig` parameter for stricter configuration validation
 
+
 ### Enhancements
 
 #### GitHub Actions Integration
@@ -52,6 +54,7 @@ Based on my analysis of the diff file, here's the detailed changelog for Claude 
 - Improved clipboard integration across platforms
 - Enhanced error messages with platform-specific instructions
 - Smoother OAuth authentication flow with visual feedback
+
 
 ### Technical Changes
 
@@ -78,11 +81,13 @@ Based on my analysis of the diff file, here's the detailed changelog for Claude 
   - GitHub Actions setup problems
 - Platform-specific troubleshooting instructions
 
+
 ### Bug Fixes
 - Fixed issues with stream handling in various tools
 - Improved stability of GitHub Actions setup process
 - Better handling of suspended/resumed state
 - Fixed edge cases in conversation export
+
 
 ### Internal Improvements
 - Cleaner separation of OAuth and API key authentication paths
@@ -90,9 +95,11 @@ Based on my analysis of the diff file, here's the detailed changelog for Claude 
 - Improved error tracking and telemetry
 - Enhanced TypeScript type definitions
 
+
 ### Breaking Changes
 - `TodoRead` tool has been removed - todo functionality integrated differently
 - `Ctrl+Z` now suspends the application instead of undo (use `Ctrl+U` for undo)
+
 
 ### Notes for Users
 

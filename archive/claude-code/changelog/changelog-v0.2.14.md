@@ -1,5 +1,6 @@
 # Changelog for version 0.2.14
 
+
 ### New Features
 
 #### Dynamic Terminal Detection
@@ -26,6 +27,7 @@ Claude Code now automatically detects your terminal environment using the new `B
 - New `Tp1()` component displays customizable messages from the server
 - Supports color theming to match your terminal color scheme
 
+
 ### Improvements
 
 #### Shell Process Management
@@ -43,6 +45,7 @@ Claude Code now automatically detects your terminal environment using the new `B
 #### Theme System
 - **New "remember" color**: Added to all color themes for better visual distinction of remembered/saved items
 
+
 ### Technical Improvements
 
 #### Code Quality
@@ -50,12 +53,14 @@ Claude Code now automatically detects your terminal environment using the new `B
 - **Resource management**: Improved cleanup of file descriptors and temporary files
 - **Error boundaries**: More robust error handling throughout the shell execution pipeline
 
+
 ### Bug Fixes
 
 - Fixed potential race conditions in shell process management
 - Improved handling of shell crashes during command execution
 - Better validation of file paths before operations
 - More reliable shell availability checks before writing commands
+
 
 ### Breaking Changes
 

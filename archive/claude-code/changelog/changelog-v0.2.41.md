@@ -1,5 +1,6 @@
 # Changelog for version 0.2.41
 
+
 ### New Features
 
 #### MCP (Model Context Protocol) Status Command
@@ -22,6 +23,7 @@ MCP Server Status
 Run claude with --mcp-debug to see error logs inline, or view log files in: /path/to/logs
 ```
 
+
 ### Improvements
 
 #### Enhanced MCP Integration
@@ -39,6 +41,7 @@ Run claude with --mcp-debug to see error logs inline, or view log files in: /pat
   - `tengu_memory_undo_attempt` - Tracks when undo is attempted
   - `tengu_memory_undo_success` - Tracks successful undo operations
   - `tengu_memory_undo_failure` - Tracks failed undo operations
+
 
 ### Technical Changes
 
@@ -60,10 +63,12 @@ Run claude with --mcp-debug to see error logs inline, or view log files in: /pat
 - Cleaner import organization and dependency management
 - More consistent error messaging and logging patterns
 
+
 ### Bug Fixes
 - Fixed potential race conditions in MCP server connection initialization
 - Improved error handling for failed MCP server connections
 - Better cleanup of timeouts in connection handling
+
 
 ### Breaking Changes
 None - This release maintains backward compatibility with existing configurations and APIs.

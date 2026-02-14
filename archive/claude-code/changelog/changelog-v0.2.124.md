@@ -5,6 +5,7 @@
 ## Summary
 This release includes minor improvements to AWS Bedrock model discovery, better error handling, and updates to the CLI launcher script.
 
+
 ### Improved AWS Bedrock Model Discovery
 The model discovery function has been enhanced with better error handling and a more efficient implementation:
 
@@ -13,6 +14,7 @@ The model discovery function has been enhanced with better error handling and a 
 - **Explicit null checking**: Added explicit checks for empty or null model lists before attempting to search
 
 **Usage impact**: Users working with AWS Bedrock will experience more reliable model discovery, with clearer fallback behavior when model listing fails.
+
 
 ### CLI Launcher Script Update (v0.0.1 → v0.0.2)
 The bash launcher script has been updated with a subtle but important change in cleanup behavior:
@@ -23,6 +25,7 @@ The bash launcher script has been updated with a subtle but important change in 
 ```
 
 **What this means for users**: The launcher no longer removes the "latest" symlink before executing Claude Code. Instead, the application itself now manages this cleanup, providing more reliable update handling and preventing potential race conditions during launches.
+
 
 ### Code Organization Improvements
 - Consolidated stream imports to use named imports from the `stream` module

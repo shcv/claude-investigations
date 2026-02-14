@@ -1,6 +1,5 @@
 # Changelog for version 1.0.34
 
-Based on my analysis of the diff, here's the changelog for Claude Code version 1.0.34:
 
 ### New Features
 
@@ -10,6 +9,7 @@ The CLI now provides better shell configuration guidance when setting up the `cl
 - Clear instructions tailored to the user's specific shell (bash, zsh, etc.)
 - Confirmation messages when aliases are successfully added or replaced
 - Example output: `✓ Replaced old claude alias in ~/.bashrc`
+
 
 ### Technical Updates
 
@@ -21,6 +21,7 @@ The CLI now provides better shell configuration guidance when setting up the `cl
 #### Stream Processing Improvements  
 - Updated stream imports to use more specific named imports (`PassThrough` from `stream`)
 - Changed process imports to use the `node:` protocol prefix for better Node.js compatibility
+
 
 ### Code Quality Improvements
 
@@ -34,12 +35,14 @@ Example of improved error messages:
 - Old: Generic conversion errors
 - New: `"Argument is not a finite number"` or `"Argument is not in byte range"`
 
+
 ### Internal Changes
 
 - Structural similarity with previous version: 99.7%
 - 16 new function declarations added
 - 22 legacy function declarations removed  
 - Maintained backward compatibility for all user-facing features
+
 
 ### Summary
 

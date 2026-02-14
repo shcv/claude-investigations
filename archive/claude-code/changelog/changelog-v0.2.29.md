@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.29 Changelog
 
+
 ### Enhanced `.gitignore` Support for LS Command
 The `ls` command now respects `.gitignore` patterns when listing files and directories. This provides a cleaner view of your project by automatically filtering out ignored files.
 
@@ -16,6 +17,7 @@ claude ls /path/to/directory
 claude ls /path/to/directory --ignore "*.tmp" "*.log"
 ```
 
+
 ### Improved Command Suggestions UI
 The command suggestion interface has been redesigned to be more responsive and informative:
 
@@ -24,17 +26,21 @@ The command suggestion interface has been redesigned to be more responsive and i
 - **Enhanced descriptions**: Shows argument names for prompt-type commands
 - **Better visual hierarchy**: Improved spacing and text wrapping for better readability
 
+
 ### Vim Mode Indicator
 For users with Vim as their `$EDITOR`, Claude Code now displays a `-- INSERT --` indicator when in insert mode, providing a familiar experience for Vim users.
 
+
 ### Tool Comparison Enhancement
 The tool comparison logic now supports custom `inputsEqual` methods for tools, allowing for more sophisticated comparison of tool inputs. This improves the accuracy of determining when tools need to be re-executed.
+
 
 ### File Edit Refactoring
 The file editing logic has been refactored for better maintainability:
 - Separated file reading logic into its own function (`AY9`)
 - Improved empty string replacement handling in `XY9` function
 - Cleaner separation of concerns in the `Cu` (formerly `mN1`) function
+
 
 ### Token Usage Display
 The token usage display component has been extracted into a reusable component (`xR2`), making the UI more modular and maintainable.

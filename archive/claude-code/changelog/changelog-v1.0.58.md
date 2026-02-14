@@ -1,6 +1,5 @@
 # Changelog for version 1.0.58
 
-Based on the diff analysis, here's the changelog for Claude Code v1.0.58:
 
 ### New Features
 
@@ -33,6 +32,7 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.58:
 - Allows prefixing all bash commands with custom wrapper scripts
 - Useful for sandboxing or monitoring command execution
 
+
 ### Improvements
 
 #### Performance
@@ -53,6 +53,7 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.58:
 - New `print` mode detection in API success metrics
 - TTY detection for better usage analytics
 
+
 ### API Changes
 
 #### Tool Permission Context
@@ -66,17 +67,20 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.58:
 - `uz0` function for getting agent colors
 - `e31` function for setting custom agent colors
 
+
 ### Bug Fixes
 
 - Fixed duplicate code comments in some scenarios
 - Improved error handling for OAuth token refresh flows
 - Better cleanup of temporary shell execution files
 
+
 ### Removed Features
 
 - Removed several unused internal functions and variables
 - Cleaned up deprecated OAuth implementation code
 - Removed redundant file reading state management
+
 
 ### Developer Notes
 

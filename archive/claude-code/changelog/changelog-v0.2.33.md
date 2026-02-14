@@ -1,6 +1,5 @@
 # Changelog for version 0.2.33
 
-Based on the diff analysis, here's the changelog for version 0.2.33:
 
 ### New Features
 
@@ -10,12 +9,14 @@ Based on the diff analysis, here's the changelog for version 0.2.33:
 - **Configurable preservation**: The command now preserves the last 10 messages by default (`fS2 = 10`) while summarizing older content
 - **Improved telemetry**: Added tracking for compacted vs preserved message counts
 
+
 ### Bug Fixes
 
 #### Error Reporting Improvements
 - **Enhanced error details**: Bug reports now include structured error information in JSON format
 - **Stack trace collection**: Added error stack trace collection to help diagnose issues more effectively
 - **Better error context**: Bug reports now include complete error objects with stack traces
+
 
 ### Removed Features
 
@@ -30,6 +31,7 @@ The following experimental features have been removed:
 - Removed `BatchTool` variable
 - Removed `onboarding` command (was ANT-ONLY and disabled)
 - Removed various stream imports that were unused
+
 
 ### Technical Changes
 
@@ -48,11 +50,13 @@ The following experimental features have been removed:
 - Better separation of DOM-related functionality
 - Improved module structure with clearer boundaries
 
+
 ### Performance Improvements
 
 - Optimized message compaction to avoid unnecessary processing
 - Better memory management during conversation compaction
 - More efficient handling of large conversation histories
+
 
 ### User Experience Improvements
 

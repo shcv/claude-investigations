@@ -3,6 +3,7 @@
 ## Highlights
 Version 2.0.25 introduces session-only plugin loading via `--plugin-dir`, adds session titles to memory templates for better organization, and enhances editor integration with Sublime Text wait flag support.
 
+
 ### Session-Only Plugin Loading
 **What:** Load plugins from local directories for the current session without permanently installing them
 **How to use:**
@@ -21,6 +22,7 @@ claude --plugin-dir /path/to/custom/plugins chat
 - Session plugins persist only for the current command execution
 - **Evidence**: `Td6()` function at line 264116, `GQA()` at line 3778, `YQA()` at line 3781, CLI option at line 475753 in v2.0.25
 
+
 ### Session Title in Memory Template
 **What:** Session memory now includes a dedicated title section for quick identification
 **How to use:**
@@ -35,6 +37,7 @@ _A short and distinctive 5-10 word descriptive title for the session. Super info
 - Makes it easier to identify and navigate between different work sessions
 - Complements the existing 7 sections (Task specification, Files and Functions, etc.)
 - **Evidence**: Template variable `ng8` at line 467211 in v2.0.25 (vs `dg8` at line 467131 in v2.0.24)
+
 
 ### Environment Variable for Session Memory Model Selection
 **What:** Control which AI model handles session memory updates via environment variable
@@ -53,6 +56,7 @@ claude chat
 - Useful for rapid iteration or cost-conscious workflows
 - **Evidence**: `Gu8()` function at line 467294 in v2.0.25 uses conditional model selection vs inline object at line 467224 in v2.0.24
 
+
 ### Enhanced Editor Wait Flag Support
 **What:** Improved external editor integration now supports Sublime Text with proper blocking behavior
 **Details:**
@@ -61,6 +65,7 @@ claude chat
 - Refactored from inline conditional to extensible configuration map
 - Makes future editor additions straightforward
 - **Evidence**: `Fy8` configuration map at line 431215 with usage at line 431189 in v2.0.25 vs inline ternary at line 431126 in v2.0.24
+
 
 ### Debug Log Path Display
 **What:** Debug mode now shows the actual log file path instead of the symlink

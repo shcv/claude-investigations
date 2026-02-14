@@ -3,6 +3,7 @@
 ## Highlights
 Version 2.0.28 introduces marketplace branch/tag support for plugin repositories, enhanced cleanup when removing marketplaces, and several security and performance improvements including SSH pre-flight checks and agent transcript resumption capabilities.
 
+
 ### Marketplace Branch/Tag Support
 **What:** Marketplaces can now be installed from specific branches, tags, or commit refs instead of only the default branch.
 
@@ -26,6 +27,7 @@ claude marketplace add git@github.com:owner/repo.git#abc123
 - Clone and update logging now shows which ref is being used
 - **Evidence**: New functions `Xd8() at line 264036`, `Bd8() at line 263476`, `b5Q() at line 264043`, `Cd8() at line 264049`; marketplace parsing extracts ref from URLs at line 263078-263135
 
+
 ### SSH Authentication Pre-flight Check
 **What:** Claude now tests SSH authentication before attempting to clone GitHub repositories, avoiding unnecessary failed clone attempts for users without SSH keys configured.
 
@@ -45,6 +47,7 @@ claude marketplace add owner/repo
 - Automatically falls back to HTTPS without a failed clone attempt
 - Provides clearer logging about SSH status
 - **Evidence**: New function `Qd8() at line 263519`; usage in marketplace cloning logic at lines 263717-263750
+
 
 ### Agent Transcript Resumption
 **What:** Agents can now resume from previous execution transcripts, allowing you to continue where a previous agent left off.
@@ -68,6 +71,7 @@ claude marketplace add owner/repo
 - Previous messages are not re-recorded to session storage
 - **Evidence**: New function `b_2() at line 465741`; `resume` parameter schema at line 449027-449032; resume logic at lines 449114-449130
 
+
 ### Help Command Fast Path
 **What:** Commands ending with `--help` now bypass expensive API calls for prefix detection, significantly improving response time.
 
@@ -78,6 +82,7 @@ claude marketplace add owner/repo
 - Validates all tokens are alphanumeric or the `--help` flag
 - Immediately returns the full command as its own prefix
 - **Evidence**: New function `Yq8() at line 204259`; usage at line 204549
+
 
 ### Enhanced Marketplace Removal Cleanup
 **What:** Removing a marketplace now automatically cleans up all references from settings files, preventing orphaned configuration entries.
@@ -101,6 +106,7 @@ claude marketplace remove my-marketplace
 - Handles errors gracefully if settings write fails
 - **Evidence**: Enhanced function `ruA() at line 263832` (replaced `suA()` from v2.0.27); cleanup loop at lines 263842-263868
 
+
 ### Improved Path Traversal Detection
 **What:** Enhanced security check now detects paths with 3+ consecutive dots (e.g., `...`, `....`) as suspicious Windows path patterns.
 
@@ -113,6 +119,7 @@ claude marketplace remove my-marketplace
 - Complements existing checks for reserved names, alternate data streams, and other Windows-specific attacks
 - **Evidence**: Modified function `tf2() at line 465855` (renamed from `mf2()`); new check at line 465867
 
+
 ### Extended Git Operation Timeouts
 **What:** Git clone and update operations now use 30-second timeouts instead of 5 seconds, improving reliability for large repositories or slow connections.
 
@@ -121,6 +128,7 @@ claude marketplace remove my-marketplace
 - Update operations: timeout increased from 5000ms to 30000ms
 - Reduces false failures on slow networks or large marketplaces
 - **Evidence**: `Id8() at line 263544` uses `timeout: 30000`; `Bd8() at line 263476` uses `timeout: 30000`
+
 
 ### Terminal Output Height Detection
 **What:** Improved detection of when terminal output needs to be redrawn, accounting for output height relative to terminal rows.
@@ -131,6 +139,7 @@ claude marketplace remove my-marketplace
 - Prevents visual artifacts when output is taller than terminal
 - **Evidence**: Enhanced function `OL0() at line 70043` (was `wL0()` in v2.0.27); checks `B.outputHeight >= B.rows` at line 70046
 
+
 ### Session Initialization with Current Working Directory
 **What:** Session state now initializes with the actual current working directory instead of placeholder values.
 
@@ -139,6 +148,7 @@ claude marketplace remove my-marketplace
 - Normalizes the path using `zo2()`
 - Sets both `originalCwd` and `cwd` to the correct value at session start
 - **Evidence**: Modified function `wo2() at line 3444` (was `Yo2()` in v2.0.27); uses `zo2(Uo2())` at line 3446
+
 
 ### Tool Permission Request Tracking
 **What:** The permission stream class now tracks pending permission requests, enabling better state management and UI updates.
@@ -150,6 +160,7 @@ claude marketplace remove my-marketplace
 - Stores request metadata alongside resolve/reject callbacks
 - **Evidence**: Enhanced class `dzA at line 475314` (was `hzA` in v2.0.27); new method `getPendingPermissionRequests() at line 475580`; request storage at line 475650
 
+
 ### Agent Result Tracking
 **What:** Agent execution results now include the agent ID for better tracking and correlation.
 
@@ -158,6 +169,7 @@ claude marketplace remove my-marketplace
 - Enables linking results back to specific agent invocations
 - Supports transcript resumption and execution tracking
 - **Evidence**: Modified function `Bv6() at line 448963` (was `dx6()` in v2.0.27); returns `agentId: B` at line 449019
+
 
 ### Model Override Support for Subagents
 **What:** Agent model selection now supports an additional override parameter for finer-grained control.
@@ -169,6 +181,7 @@ claude marketplace remove my-marketplace
 - Environment variable `CLAUDE_CODE_SUBAGENT_MODEL` still has highest priority
 - **Evidence**: Modified function `akA() at line 144682` (was `lkA()` in v2.0.27); uses override parameter at line 144693
 
+
 ### Token Budget Capping
 **What:** API requests now respect a token budget cap, adjusting both max_tokens and thinking budget_tokens when needed.
 
@@ -178,6 +191,7 @@ claude marketplace remove my-marketplace
 - Prevents thinking budget from consuming all available tokens
 - **Evidence**: New function `pb6() at line 460609`
 
+
 ### SessionStart Hook Context
 **What:** Plugin SessionStart hooks now receive session context information for better initialization.
 
@@ -185,6 +199,7 @@ claude marketplace remove my-marketplace
 - Hooks receive session metadata when invoked
 - Enables plugins to customize behavior based on session state
 - **Evidence**: Modified function `Lz() at line 317267` (was `qz()` in v2.0.27); passes session context parameter `B` at line 317350
+
 
 ### Plugin Command Processing with Session ID
 **What:** Plugin commands and skills now have access to session ID during processing.
@@ -194,6 +209,7 @@ claude marketplace remove my-marketplace
 - Enables session-aware plugin behavior
 - Supports plugin state management across invocations
 - **Evidence**: Modified functions `ZR2() at line 441792`, `YR2() at line 441892`, `yUA() at line 441803` now accept session ID parameter
+
 
 ### File Permission Check Consolidation
 **What:** File write permission checks now use a centralized safety validation function for consistency.
@@ -205,6 +221,7 @@ claude marketplace remove my-marketplace
 - Used by both direct file operations and tool permission handlers
 - **Evidence**: New function `SL1() at line 465870`; used in `jL1() at line 466119` and `xn() at line 466119`
 
+
 ### Ripgrep Binary Loading Flexibility
 **What:** Added support for custom ripgrep binary location via environment variable.
 
@@ -215,11 +232,13 @@ claude marketplace remove my-marketplace
 - Falls back to bundled ripgrep if not set
 - **Evidence**: Modified function `To2() at line 3881` (was `Eo2()` in v2.0.27); checks `process.env.RIPGREP_NODE_PATH` at line 3882
 
+
 ### Refactored Functions
 - Session ID generation functions consolidated
 - Permission stream class methods reorganized
 - Skills loading function signatures updated for session context
 - Git clone/update error handling refactored into shared `R5Q()` function at line 263494
+
 
 ### Import Optimizations
 - Removed unused `stream` import
@@ -227,6 +246,7 @@ claude marketplace remove my-marketplace
 - Removed unused `node:process` import
 - Added targeted imports: `execSync`, `spawn`, `readdir`, `readFile`, `PassThrough`, `homedir`, `openSync`, `existsSync`, `readFileSync`, `writeFileSync`, `dg6`, `cg6`, `pg6`
 - Added process.cwd import: `import { cwd as iL0 } from "node:process"` at line 70611
+
 
 ### Code Organization
 - Path validation logic consolidated into reusable `SL1()` function

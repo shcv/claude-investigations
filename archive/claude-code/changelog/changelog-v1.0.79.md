@@ -3,11 +3,13 @@
 ## Summary
 v1.0.79 updates the GitHub Actions integration documentation URLs and adds enhanced telemetry tracking for subscription types.
 
+
 ### GitHub Actions Documentation Reorganization
 **What changed:** Updated all GitHub Actions setup documentation links to point to new dedicated documentation files
 **Previous:** Links pointed to README hash fragments like `#manual-setup-direct-api`
 **New:** Links now point to dedicated docs at `https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md`
 **Impact:** Users get more comprehensive setup instructions in a dedicated documentation structure
+
 
 ### Enhanced Telemetry
 **What changed:** Added subscription type and first token timestamp tracking to the identity provider
@@ -16,6 +18,7 @@ v1.0.79 updates the GitHub Actions integration documentation URLs and adds enhan
 - `firstTokenTime`: Records when user first authenticated with Claude Code
 - `organizationUUID`: Added to custom IDs for better org-level analytics
 **Impact:** Better understanding of user segments and engagement patterns while maintaining privacy
+
 
 ### GitHub Actions Environment Detection
 **What changed:** Enhanced telemetry when running in GitHub Actions environment
@@ -27,6 +30,7 @@ v1.0.79 updates the GitHub Actions integration documentation URLs and adds enhan
 - `githubRepositoryOwner`: Repository owner information
 **Impact:** Better support and debugging for Claude Code running in CI/CD pipelines
 
+
 ### Module Import Optimization
 **What changed:** Switched from default imports to named imports for Node.js built-in modules
 **Changes:**
@@ -34,6 +38,7 @@ v1.0.79 updates the GitHub Actions integration documentation URLs and adds enhan
 - `import stream from "stream"` → `import { PassThrough } from "stream"`
 - `import process from "node:process"` → `import { cwd } from "node:process"`
 **Impact:** Slightly improved tree-shaking and bundle optimization
+
 
 ### Output Style Function Addition
 **What changed:** Added new function `L8B()` for retrieving output style configurations

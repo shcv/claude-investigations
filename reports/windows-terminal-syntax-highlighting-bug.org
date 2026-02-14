@@ -1,0 +1,155 @@
+#+TITLE: Windows Terminal Syntax Highlighting Offset Bug
+#+DATE: 2026-01-26
+
+* Summary
+
+Investigation into syntax highlighting color offset issues in Claude Code v2.1.19
+when running on Windows Terminal. Colors appear shifted from the text they should
+color, with the offset accumulating approximately 1 character per line.
+
+* Root Cause Hypothesis
+
+The most likely cause is a *mismatch between how Claude Code calculates display
+widths and how Windows Terminal/ConPTY interprets cursor positions*, specifically
+around control characters in syntax-highlighted code.
+
+Key Code Path: =archive/claude-code/pretty/pretty-v2.1.19.js=
+
+* Critical Code Sections
+
+** Width Calculation in Tokenizer (lines 173147-173154)
+
+#+begin_src javascript
+let H = s66(w),  // Only checks East Asian width
+    J = String.fromCodePoint(w);
+q.push({ type: "char", value: J, fullWidth: H });
+z += H ? 2 : J.length;  // BUG: Uses J.length for non-wide chars
+#+end_src
+
+For =\r= (code 13), =J.length= is 1 but actual display width is 0.
+
+** Main Width Function (lines 170541-170554)
+
+#+begin_src javascript
+if (K) {  // ASCII fast path
+  let Y = 0;
+  for (let z = 0; z < A.length; z++)
+    if (A.charCodeAt(z) > 31) Y++;  // Correctly skips control chars
+  return Y;
+}
+#+end_src
+
+This correctly skips control characters, BUT only in the ASCII fast path.
+
+** Control Character Handling in Render Loop (lines 173548-173592)
+
+#+begin_src javascript
+if (V !== void 0 && V <= 31) {
+  if (V === 9) { /* TAB handling */ }
+  else if (V === 27) { /* ESC/ANSI handling */ }
+  continue;  // Other control chars skipped
+}
+#+end_src
+
+The screen model correctly skips =\r=, but width calculations may not.
+
+** Segmenter Grouping (lines 173647-173656)
+
+#+begin_src javascript
+for (let { segment: H } of qY4.segment(w))
+  q.push({ type: "char", value: H, fullWidth: p7(H) === 2, styles: z });
+#+end_src
+
+=Intl.Segmenter= can group =\r\n= as a single segment with length 2.
+
+* Where the Bug Manifests
+
+When code content has Windows =\r\n= line endings:
+
+1. Text is split by =\n= only (line 173497): ~J.split('\n')~ leaves =\r= at end of each line
+2. =\r= flows through the system with styles attached
+3. In the screen buffer, =\r= is correctly skipped (no cell filled)
+4. BUT in width calculations outside the ASCII fast path, =\r= may contribute to width
+5. This affects cursor positioning during differential rendering
+
+* ConPTY Interaction
+
+Windows Terminal uses ConPTY which:
+- Has known issues with cursor position synchronization
+- May interpret some ANSI sequences differently
+- Could have different handling of =\r= in certain contexts
+
+* Architecture Notes
+
+Claude Code uses a *custom cell-based screen buffer* (not standard Ink):
+- Typed arrays: =Uint32Array= for chars, =Uint16Array= for styles, =Uint8Array= for widths
+- Differential rendering with cursor tracking via =H86= class
+- Cursor movements use =\r= (carriageReturn) + relative cursor moves
+
+Windows Terminal detection:
+- =WT_SESSION= environment variable
+- Some features disabled for WT (like progress reporting via =pz4()=)
+- Different clear sequences for WT vs legacy cmd
+
+* Proposed Workaround (for users)
+
+If the source files being displayed have Windows line endings, converting them to
+Unix line endings (=\n= only) should eliminate the offset:
+
+#+begin_src bash
+# Convert files to Unix line endings
+sed -i 's/\r$//' filename
+
+# Or for all files in a directory
+find . -type f -name "*.js" -exec sed -i 's/\r$//' {} \;
+#+end_src
+
+* Proposed Fix (for Anthropic)
+
+** Option 1: Fix width calculation
+
+In the width calculation at line 173152, add explicit handling for control characters:
+
+#+begin_src javascript
+// Current:
+z += H ? 2 : J.length;
+
+// Proposed:
+z += H ? 2 : (w <= 31 ? 0 : J.length);
+#+end_src
+
+** Option 2: Normalize line endings
+
+Normalize line endings when reading code for syntax highlighting:
+
+#+begin_src javascript
+// Before highlighting:
+text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+#+end_src
+
+* Why This Only Affects Syntax Highlighting
+
+Normal text output uses =\n= only (relying on Windows text mode to add =\r=), but
+code content being displayed may already contain =\r\n= from Windows-style source
+files. The ANSI color codes from syntax highlighting are positioned based on width
+calculations that may incorrectly count =\r= as having width.
+
+* Files Examined
+
+- =archive/claude-code/pretty/pretty-v2.1.19.js= - Main bundled Claude Code (16.5MB)
+- =refs/ink/src/renderer.ts= - Ink library renderer (for comparison)
+- =refs/ink/src/output.ts= - Ink library output class (for comparison)
+- =refs/ink/src/log-update.ts= - Ink library log update (for comparison)
+
+* Related Functions
+
+| Function | Line  | Purpose                              |
+|----------+-------+--------------------------------------|
+| c0A      | 173124 | Tokenizes text into chars/ANSI codes |
+| U94      | 173062 | Applies styles from ANSI to chars    |
+| jF3      | 173636 | Uses Segmenter to group graphemes    |
+| p7/L34   | 170541 | Width calculation (Node.js path)     |
+| Yg3      | 170665 | Width calculation (Bun path)         |
+| l71      | 173434 | Screen buffer class                  |
+| H86      | 174003 | Cursor tracking for diff rendering   |
+| m86      | 177393 | Final output to stdout               |

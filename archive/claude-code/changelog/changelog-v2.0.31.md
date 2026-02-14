@@ -4,6 +4,7 @@
 
 Version 2.0.31 introduces startup performance profiling capabilities, significantly enhances sed command security validation, and adds support for the latest web-search API. Additionally, internal improvements to diff rendering and telemetry tracking provide better visibility into Claude Code's operations.
 
+
 ### Startup Performance Profiling
 
 **What:** Optional profiling system to measure Claude Code's startup performance and memory usage across initialization phases.
@@ -26,6 +27,7 @@ CLAUDE_CODE_PROFILE_STARTUP=1 claude
 - Useful for diagnosing slow startup issues or investigating performance regressions
 - **Evidence**: `o5()` at line 3881, `RB9()` at line 3891, `B80()` at line 3919, profiler initialization in `aqA` at line 3926
 
+
 ### File Operation Telemetry
 
 **What:** Privacy-preserving telemetry that tracks file operations (read, write, edit) using hashed identifiers.
@@ -42,6 +44,7 @@ CLAUDE_CODE_PROFILE_STARTUP=1 claude
 - Helps Anthropic understand common file operation patterns
 - **Evidence**: `sM()` function at line 249864, hash functions `Nd8()` at line 249858 and `Ld8()` at line 249861
 
+
 ### Web Search API Update
 
 **What:** Support for the new `web-search-2025-03-05` beta API.
@@ -51,6 +54,7 @@ CLAUDE_CODE_PROFILE_STARTUP=1 claude
 - Provides access to updated web search capabilities
 - Part of Anthropic's beta features system
 - **Evidence**: `ErB = "web-search-2025-03-05"` at line 203723, `AT8()` function at line 203732
+
 
 ### Enhanced Sed Command Validation
 
@@ -78,6 +82,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Prevents file modification and command execution while allowing safe text processing
 - **Evidence**: Comparison of `hoB()` at line 209135 in v2.0.30 vs `JtB()` at line 209288 in v2.0.31
 
+
 ### Diff Rendering Simplification
 
 **What:** Streamlined diff patch rendering with cleaner code and fewer configuration options.
@@ -93,6 +98,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - More consistent visual rendering across different diff contexts
 - **Evidence**: `hB6()` at line 288996 in v2.0.30 vs `$Q6()` at line 289176 in v2.0.31; word diff function `fB6()` at line 288906 in v2.0.30 vs `wQ6()` at line 289088 in v2.0.31
 
+
 ### Settings Loading Profiling
 
 **What:** Added profiling checkpoints around settings initialization.
@@ -101,6 +107,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Tracks time spent loading settings from various sources
 - Helps identify slow configuration loading
 - **Evidence**: `o5("eagerLoadSettings_start")` at line 485096, `o5("eagerLoadSettings_end")` at line 485107 in function `Bo5()` at line 485095
+
 
 ### CLI Argument Parsing Instrumentation
 
@@ -111,6 +118,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Part of the overall startup profiling infrastructure
 - **Evidence**: `o5("cli_before_main_import")` at line 486806, `o5("cli_after_main_import")` at line 486808 in function `Wo5()` at line 486798
 
+
 ### Redirect Operator Quoting
 
 **What:** Fixed shell command quoting logic to correctly handle file descriptor redirects.
@@ -120,6 +128,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Prevents errors when redirecting stderr or other file descriptors
 - **Evidence**: Function `ET8()` at line 204583 adds check for `\d+>>?` pattern, replacing `bR8()` at line 204525 in v2.0.30
 
+
 ### Hook Removal Edge Case
 
 **What:** Fixed settings cleanup when removing the last hook from a configuration source.
@@ -128,6 +137,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Ensures `hooks` object is properly removed when empty
 - Prevents empty configuration objects from persisting
 - **Evidence**: Function `rV2()` at line 414417 adds proper cleanup logic at lines 414433-414435, improving upon `qV2()` at line 414128 in v2.0.30
+
 
 ### Import Organization
 
@@ -145,6 +155,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - More explicit imports improve tree-shaking and code clarity
 - Reduces namespace pollution from default imports
 
+
 ### Color Diff Module Loading
 
 **What:** Updated native color diff module loading with better error handling.
@@ -154,6 +165,7 @@ The validation now uses a comprehensive whitelist approach with multiple layers:
 - Improved fallback behavior when native module unavailable
 - Better logging for debugging color diff issues
 - **Evidence**: Function `GVQ()` at line 289328, initialization in `uy1` at line 289318
+
 
 ### Component Refactoring
 

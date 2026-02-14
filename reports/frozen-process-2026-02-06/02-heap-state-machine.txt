@@ -1,0 +1,642 @@
+Scanning 3708 heap/anon regions...
+
+["stop_reason"] @ 0x7fa0be04c6dc
+  ":"ull "}     }..   event: message_delta.data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"input_tokens":363,"cache_creation_input_tokens":0,"cache_read_i
+
+["stop_reason"] @ 0x7fa0be04c88c
+  n\""}     }..       event: m.S..gj..elta.data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"input_tokens":1,"cache_creation_input_tokens":697,"cache_read_i
+
+["stop_reason"] @ 0x7fa0be0982fc
+  event: message_delta.data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"input_tokens":1,"cache_creation_input_tokens":3019,"cache_read_input_tokens"
+
+["stop_reason"] @ 0x7fa0be09857c
+  }.."}    }.. }... event: message_delta.data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"input_tokens":363,"cache_creation_input_tokens":0,"cache_read_inp
+
+["stop_reason"] @ 0x7fa0be0986bc
+  .   ""}     }..     event: message_delta.data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"input_tokens":363,"cache_creation_input_tokens":0,"cache_read_i
+
+["stop_reason"] @ 0x7fa0be09893c
+  }..p"    }..     event: m.H....elta.data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"input_tokens":1,"cache_creation_input_tokens":697,"cache_read_input_
+
+["stop_reason"] @ 0x7fa0be0c8c77
+  "msg_017QL8t8PK788xvwrQRNtBXi","type":"message","role":"assistant","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":363,"cache_creation_input_tokens":0,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf0c3e438f
+  AgeMins":420,"provider":"firstParty","requestId":"req_011CXrQRTfGXGDjjL7suGPqt","stop_reason":"end_turn","costUSD":0.000597,"didFallBackToNonStreaming":false,"isNonInteractiveSession":false,"print":fa
+
+["stop_reason"] @ 0x7fbf4456f472
+  ","type":"message","role":"assistant","content":[{"type":"text","text":"\n\n"}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":29259,"cache_read_input_
+
+["stop_reason"] @ 0x7fbf4456faac
+  FZwMO61JdNIPvXmtHpzunlKKCdt7SauiSU1KhMuBgPtWW1dYGeEfSq0fhXOsxg3QCJz9iv8YAQ=="}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":29259,"cache_read_input_
+
+["stop_reason"] @ 0x7fbf4456fe42
+  ified CLI source files for Statsig feature flags with the \"tengu_\" prefix."}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":29259,"cache_read_input_
+
+["stop_reason"] @ 0x7fbf4457022b
+  claude-investigations/archive/claude-code","output_mode":"content","-n":true}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":29259,"cache_read_input_
+
+["stop_reason"] @ 0x7fbf44570834
+  ","name":"Glob","input":{"pattern":"archive/claude-code/pretty/pretty-v*.js"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":29259,"cache_read_input_
+
+["stop_reason"] @ 0x7fbf4457bfae
+  RaBSeNrmhOJsPxXfJKvHdJGT83Ap3bblN/lHswwLl3XDKbPDUjH972KvZPeRG+SWzsUU3k0YAQ=="}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":4443,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf4457c35e
+  on the latest version and do a deep search across it for all feature flags."}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":4443,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf4457cb11
+  `tengu_`. Output the complete deduplicated list.","subagent_type":"Explore"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":4443,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf4457dc6d
+  ions/archive/claude-code/pretty/ | grep -E 'pretty-v[0-9]+\\.js$' | tail -5"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":16110,"cache_read_input_
+
+["stop_reason"] @ 0x7fbf4457ec51
+  63db-46d0-854d-b12a2cfeab2e/tool-results/toolu_017MiNak3seG8EwkSogiLRSA.txt"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":4443,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf4458a5e8
+  ls -1 /home/shcv/projects/claude-investigations/archive/claude-code/pretty/"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":5,"cache_creation_input_tokens":179,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf4458cd8f
+  ations/archive/claude-code/pretty/pretty-v2.1.33.js","output_mode":"content"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":4,"cache_creation_input_tokens":3597,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf4458e6b3
+  laude-investigations/archive/claude-code/pretty/pretty-v2.1.33.js | sort -u"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":3,"cache_creation_input_tokens":1062,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf44593d7c
+  vestigations/archive/claude-code/pretty/pretty-v2.1.33.js | sort -u | wc -l"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":6287,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf44594e4e
+  ude-investigations/archive/claude-code/pretty/pretty-v2.1.33.js | head -100"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":1,"cache_creation_input_tokens":293,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf44599ac9
+  aude-investigations/archive/claude-code/pretty/pretty-v2.1.33.js | head -80"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":2049,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf4459b5ca
+  sort -u\nEOFSCRIPT\nchmod +x /tmp/analyze_flags.sh\n/tmp/analyze_flags.sh\n"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":936,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf445a0a6c
+  projects/claude-investigations/archive/claude-code/pretty/pretty-v2.1.33.js"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":6394,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf445a1ed2
+  ch\" \"oY\"\nEOFSCRIPT\nchmod +x /tmp/get_context.sh\n/tmp/get_context.sh\n"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":344,"cache_read_input_to
+
+["stop_reason"] @ 0x7fbf445a3cc0
+  mp/final_report.sh > /tmp/flag_inventory.txt\ncat /tmp/flag_inventory.txt\n"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":1220,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf445a9f7c
+  nEOFSCRIPT\nchmod +x /tmp/detailed_examples.sh\n/tmp/detailed_examples.sh\n"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":7329,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf445abe24
+  l: $total\"\nEOFSCRIPT\nchmod +x /tmp/final_clean.sh\n/tmp/final_clean.sh\n"}}],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"cache_creation_input_tokens":1703,"cache_read_input_t
+
+["stop_reason"] @ 0x7fbf453ace5b
+  .......  ..  s o     .    .  4.:E..  .   data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"input_tokens":1,"cache_creation_input_tokens":3019,"cache_read_
+
+["stop_reason"] @ 0x7fbf4552e02b
+  H..  .vmH..  ....    .   .   ..RE..  .   data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"input_tokens":363,"cache_creation_input_tokens":0,"cache_read_i
+
+["type":"error"] @ 0x7fbf779b1ff9
+  nstanceof my)L=A.originalError;if(r(L),L instanceof Error&&L.message.includes('{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}'))return!1;throw L}}function KY1(H
+
+["type":"message_start"] @ 0x7fa0be0c8bdc
+  ppe"}          }..         }..failed"} }...         event: m...5,D..tart.data: {"type":"message_start","message":{"model":"claude-haiku-4-5-20251001","id":"msg_017QL8t8PK788xvwrQRNtBXi","type":"messag
+
+["type":"message_start"] @ 0x7fa0bf00820c
+  event: message_start.data: {"type":"message_start","message":{"model":"claude-haiku-4-5-20251001","id":"msg_017QL8t8PK788xvwrQRNtBXi","type":"message","role":"assistant",
+
+["type":"message_start"] @ 0x7fbf0c16f05b
+  .   ..  T.....  .   data: {"type":"message_start","message":{"model":"claude-haiku-4-5-20251001","id":"msg_017QL8t8PK788xvwrQRNtBXi","type":"message","role":"assistant",
+
+[AbortError] @ 0x7fbf711afdd4
+  .   H. ...  @p....  E   .   .   .   ...q..  ....UndiciError .   .   ...q..  .(..AbortError  .   .   ...q..  ...;SocketError .   .   ...q..  .g.%parseHeadersAp....  ..2     @..q..  0.....  P..q..  .   
+
+[AbortError] @ 0x7fbf71224ebb
+  .   .   .N"q..  .\.]APIConnectionTimeoutError   .   .   .N"q..  .e..APIUserAbortError           .   .   .N"q..  ....ConflictError               .   .   .O"q..  ...RateLimitError              .   .   D
+
+[AbortError] @ 0x7fbf7714718a
+  JR extends Error{};oE=class oE extends Error{constructor(H){super(H);this.name="AbortError"}};T_=class T_ extends Error{filePath;defaultConfig;constructor(H,$,A){super(H);this.name="ConfigParseError",
+
+[AbortError] @ 0x7fbf771b57eb
+  ch(FV.clearTimeout),I(j)};if($?.aborted){let j=Error("Request aborted");j.name="AbortError",M(j);return}let G=H.protocol==="https:",U=H.headers??{},X=(U.Expect??U.expect)==="100-continue",J=G?D.httpsA
+
+[AbortError] @ 0x7fbf771b5c61
+  ));else M(j)}),$){let j=()=>{Z.destroy();let u=Error("Request aborted");u.name="AbortError",M(u)};if(typeof $.addEventListener==="function"){let u=$;u.addEventListener("abort",j,{once:!0}),Z.once("clo
+
+[AbortError] @ 0x7fbf771b69e5
+  c(y)=>{await M,f(y)};if($?.aborted){E=!0;let y=Error("Request aborted");y.name="AbortError",U(y);return}let{hostname:X,method:J,port:F,protocol:Q,query:W}=H,P="";if(H.username!=null||H.password!=null)
+
+[AbortError] @ 0x7fbf771b6db7
+  Error",q(y)});if($){let y=()=>{u.close();let g=Error("Request aborted");g.name="AbortError",q(g)};if(typeof $.addEventListener==="function"){let g=$;g.addEventListener("abort",y,{once:!0}),u.once("clo
+
+[AbortError] @ 0x7fbf771b88c6
+  config.credentials;if($?.aborted){let P=Error("Request aborted");return P.name="AbortError",Promise.reject(P)}let B=H.path,f=YoB.buildQueryString(H.query||{});if(f)B+=`?${f}`;if(H.fragment)B+=`#${H.fr
+
+[AbortError] @ 0x7fbf771b8d00
+  ($)W.push(new Promise((P,Y)=>{let C=()=>{let Z=Error("Request aborted");Z.name="AbortError",Y(Z)};if(typeof $.addEventListener==="function"){let Z=$;Z.addEventListener("abort",C,{once:!0}),F=()=>Z.rem
+
+[AbortError] @ 0x7fbf772a1351
+  };function Xu(H){return typeof H==="object"&&H!==null&&(("name"in H)&&H.name==="AbortError"||("message"in H)&&String(H.message).includes("FetchRequestCanceledException"))}var cqH=(H)=>{if(H instanceof
+
+[AbortError] @ 0x7fbf772b1b69
+  .APIError=KD;LM.APIConnectionError=R6;LM.APIConnectionTimeoutError=nR;LM.APIUserAbortError=lf;LM.NotFoundError=wAH;LM.ConflictError=nqH;LM.RateLimitError=aqH;LM.BadRequestError=lqH;LM.AuthenticationEr
+
+[AbortError] @ 0x7fbf77358a07
+  config.credentials;if($?.aborted){let W=Error("Request aborted");return W.name="AbortError",Promise.reject(W)}let D=H.path,B=BII(H.query||{});if(B)D+=`?${B}`;if(H.fragment)D+=`#${H.fragment}`;let f=""
+
+[AbortError] @ 0x7fbf77358e16
+  ($)Q.push(new Promise((W,P)=>{let Y=()=>{let C=Error("Request aborted");C.name="AbortError",P(C)};if(typeof $.addEventListener==="function"){let C=$;C.addEventListener("abort",Y,{once:!0}),J=()=>C.rem
+
+[AbortError] @ 0x7fbf773655c8
+  ;function nk0(H){return typeof H==="object"&&H!==null&&(("name"in H)&&H.name==="AbortError"||("message"in H)&&String(H.message).includes("FetchRequestCanceledException"))}var B1A=(H)=>new TextDecoder(
+
+[AbortError] @ 0x7fbf773696d9
+  shouldRetry:!0,config:H.config}}function Mu0(H){var $;let A=l1I(H);if(H.name==="AbortError"||(($=H.error)===null||$===void 0?void 0:$.name)==="AbortError")return!1;if(!A||A.retry===0)return!1;if(!H.re
+
+[AbortError] @ 0x7fbf77369718
+  (H);if(H.name==="AbortError"||(($=H.error)===null||$===void 0?void 0:$.name)==="AbortError")return!1;if(!A||A.retry===0)return!1;if(!H.response&&(A.currentRetryAttempt||0)>=A.noResponseRetries)return!
+
+[AbortError] @ 0x7fbf77395cbf
+  hn;var LE$=K(()=>{hn=class hn extends Error{constructor(H){super(H);this.name="AbortError"}}});function IE$(H){return H.toLowerCase()}function*Rc0(H){for(let $ of H.values())yield[$.name,$.value]}func
+
+[AbortError] @ 0x7fbf77398cc6
+  ing("utf8"))}),H.on("error",(I)=>{if(I&&(I===null||I===void 0?void 0:I.name)==="AbortError")A(I);else A(new o_(`Error reading response as text: ${I.message}`,{code:o_.PARSE_ERROR}))})})}function pc0(H
+
+[AbortError] @ 0x7fbf7739d241
+  H;var nGI=K(()=>{wXH=class wXH extends Error{constructor(H){super(H);this.name="AbortError"}}});var HEA=K(()=>{nGI()});function rGI(H,$){let{cleanupBeforeAbort:A,abortSignal:L,abortErrorMsg:I}=$!==nul
+
+[AbortError] @ 0x7fbf773e8ef6
+  "ClientConfigurationError"||$.name==="BrowserConfigurationAuthError"||$.name==="AbortError"||$.name==="AuthenticationError")return $;if($.name==="NativeAuthError")return hxH.info(NE(H,`Error from the 
+
+[AbortError] @ 0x7fbf77467cee
+  Ex,QFA).call(this))}while(J)}),WK(this,JFA,(I)=>{O4(this,ar,void 0),!(I.name==="AbortError"||I.type==="aborted")&&pg(this,Ex,QFA).call(this,GFA(I))}),WK(this,FFA,(I)=>{typeof I.id=="string"&&O4(this,P
+
+[AbortError] @ 0x7fbf777e5673
+  X(wJ.SECURITY_ERR)};FE.NetworkError=function(){throw new NX(wJ.NETWORK_ERR)};FE.AbortError=function(){throw new NX(wJ.ABORT_ERR)};FE.UrlMismatchError=function(){throw new NX(wJ.URL_MISMATCH_ERR)};FE.Q
+
+[AbortError] @ 0x7fbf77876b34
+  ,promptId:M,generationRequestId:U}}))}catch(D){if(D instanceof Error&&D.name==="AbortError")return;N(`[Speculation] Pipelined suggestion failed: ${D instanceof Error?D.message:String(D)}`)}}async func
+
+[AbortError] @ 0x7fbf778779d1
+  (X.current,H,E.current,A,B)}catch(J){if(B.abort(),J instanceof Error&&J.name==="AbortError"){luH(G),AxA(A);return}luH(G),r(J instanceof Error?J:Error("Speculation failed")),r2$(D,"error",f,H.length,E.
+
+[AbortError] @ 0x7fbf77878e60
+  ,H,H.toolUseContext.setAppState,!1,f)}catch(E){if(E instanceof Error&&E.name==="AbortError"){lS("aborted");return}r(E instanceof Error?E:Error("Prompt suggestion generation failed"))}finally{if(d9H===
+
+[AbortError] @ 0x7fbf778849df
+  G){if(M(),G instanceof Error&&(G.message==="Function hook cancelled"||G.name==="AbortError"))return{outcome:"cancelled",hook:H};return r(G instanceof Error?G:Error(String(G))),{message:FB({type:"hook_
+
+[AbortError] @ 0x7fbf778ae01d
+  M!==void 0)clearInterval(M);let U=Date.now()-f;if(G instanceof Error&&G.name!=="AbortError")TA($,`Tool '${A}' failed after ${Math.floor(U/1000)}s: ${G.message}`);if(G instanceof Error){if(("code"in G?
+
+[AbortError] @ 0x7fbf778ae19a
+  requires re-authorization (token expired)`)}if(!(G instanceof Error)||G.name!=="AbortError")throw G;return{content:void 0}}finally{if(E!==void 0)clearInterval(E);if(M!==void 0)clearInterval(M)}}functi
+
+[AbortError] @ 0x7fbf779f76ce
+  sion_explainer_error",{tool_name:iB(H),error_type:B instanceof Error&&B.name==="AbortError"?OZ1:xZ1,latency_ms:f}),null}}var zZ1,NZ1=1,OZ1=2,xZ1=3,SZ1="Analyze shell commands and explain what they do,
+
+[AbortError] @ 0x7fbfbb87b916
+  .....  ."."serverSymbol.   .   ......  ..d.kRequest    .   .   ......  ...wisAbortError    .   4.....  .w\._closed         .   T.....  ..t~numberlike      .   t.....  .V..field       .   .   ......  .
+
+[ECONNRESET] @ 0x7fbf771b4666
+  e("http"),OeH=require("https"),a8L=require("stream"),Dc$=require("http2"),saB=["ECONNRESET","EPIPE","ETIMEDOUT"],o8L=(H)=>{let $={};for(let A of Object.keys(H)){let L=H[A];$[A]=Array.isArray(L)?L.join
+
+[ECONNRESET] @ 0x7fbf771f0b69
+  tError","RequestTimeout","RequestTimeoutException"],ML0=[500,502,503,504],GL0=["ECONNRESET","ECONNREFUSED","EPIPE","ETIMEDOUT"],UL0=["EHOSTUNREACH","ENETUNREACH","ENOTFOUND"],U4L=(H)=>H?.$retryable!==
+
+[ECONNRESET] @ 0x7fbf77399d3d
+  e==="ETIMEDOUT"||H.code==="ESOCKETTIMEDOUT"||H.code==="ECONNREFUSED"||H.code==="ECONNRESET"||H.code==="ENOENT"||H.code==="ENOTFOUND"}var lc0=1000,ic0=64000;var XGI=K(()=>{jfA();vfA()});function iNH(H,
+
+[ECONNRESET] @ 0x7fbf776fd83b
+  h code ${H.rstCode} (Internal server error)`;else if(this.internalError.code==="ECONNRESET"||this.internalError.code==="ETIMEDOUT")E=kM.Status.UNAVAILABLE,M=this.internalError.message;else M=`Received
+
+[ECONNRESET] @ 0x7fbf778b044f
+  et F=Date.now(),Q=!1,W=E.onerror,P=E.onclose,Y=0,C=3,Z=(y)=>{return y.includes("ECONNRESET")||y.includes("ETIMEDOUT")||y.includes("EPIPE")||y.includes("EHOSTUNREACH")||y.includes("ECONNREFUSED")||y.in
+
+[ECONNRESET] @ 0x7fbf778b05b3
+  dropped after ${Math.floor(g/1000)}s uptime`),y.message)if(y.message.includes("ECONNRESET"))TA(H,"Connection reset - server may have crashed or restarted");else if(y.message.includes("ETIMEDOUT"))TA(H
+
+[ECONNRESET] @ 0x7fbf7797e976
+  : ${I.code}):`,I),this.connected=!1,this.connecting=!1,I.code&&["ECONNREFUSED","ECONNRESET","EPIPE","ENOENT","EOPNOTSUPP","ECONNABORTED"].includes(I.code))this.scheduleReconnect()}),this.socket.on("cl
+
+[Stream completed with] @ 0x7fbf458aa314
+  o stable tool for cache marker?...  P.?...   #....  Pl ...  .   Z   ...E..  .F..Stream completed without receiving message_start event - triggering non-streaming fallback  ......  P.....  .       ...x
+
+[Stream completed with] @ 0x7fbf45922294
+  ..  ..  .   @.E..  ..  .                                   .   g   .".E..  .}..Stream completed with message_start but no content blocks completed - triggering non-streaming fallback     .         .x.
+
+[Stream completed with] @ 0x7fbf779b4a6a
+  eak}yield{type:"stream_event",event:yH}}if(!wH||BH.length===0&&!IH)throw N(!wH?"Stream completed without receiving message_start event - triggering non-streaming fallback":"Stream completed with messa
+
+[Stream completed with] @ 0x7fbf779b4ac7
+  ted without receiving message_start event - triggering non-streaming fallback":"Stream completed with message_start but no content blocks completed - triggering non-streaming fallback",{level:"error"}
+
+[isStreaming] @ 0x7fbf771bbe02
+  {return this.getSchema()===17}isBigDecimalSchema(){return this.getSchema()===19}isStreaming(){let{streaming:H}=this.getMergedTraits();return!!H||this.getSchema()===42}isIdempotencyToken(){let H=(I)=>(
+
+[isStreaming] @ 0x7fbf771bc3a4
+  eamMember(){if(this.isStructSchema()){for(let[H,$]of this.structIterator())if($.isStreaming()&&$.isStructSchema())return H}return""}*structIterator(){if(this.isUnitSchema())return;if(!this.isStructSch
+
+[isStreaming] @ 0x7fbf771c5269
+  ??{},W=L[J];if(W==null&&!F.isIdempotencyToken())continue;if(Q.httpPayload){if(F.isStreaming())if(F.isStructSchema()){if(L[J])U=await this.serializeEventStream({eventStream:L[J],requestSchema:E})}else 
+
+[isStreaming] @ 0x7fbf771c5b3c
+  ,U]of E.structIterator()){let X=U.getMemberTraits();if(X.httpPayload){if(B=!1,U.isStreaming())if(U.isStructSchema())D[G]=await this.deserializeEventStream({response:A,responseSchema:E});else D[G]=oeH.
+
+[isStreaming] @ 0x7fbf771f5907
+  })})});var k4L=z((bH$)=>{Object.defineProperty(bH$,"__esModule",{value:!0});bH$.isStreamingPayload=void 0;var sL0=require("stream"),eL0=(H)=>H?.body instanceof sL0.Readable||typeof ReadableStream<"u"&
+
+[isStreaming] @ 0x7fbf771f59a6
+  sL0.Readable||typeof ReadableStream<"u"&&H?.body instanceof ReadableStream;bH$.isStreamingPayload=eL0});var vW=z(($K)=>{var U5=xR(),mGH=Z4L(),vl=Ei$(),g4L=_c$(),u4L=Z6(),HI0=b4L(),$I0=k4L(),AI0=(H,$)=
+
+[isStreaming] @ 0x7fbf771f6b96
+  otalRetryDelay=M,{response:X,output:J}}catch(X){let J=MI0(X);if(f=d4L(X),U&&$I0.isStreamingPayload(G))throw(A.logger instanceof HI0.NoOpLogger?console:A.logger)?.warn("An error was encountered in a no
+
+[isStreaming] @ 0x7fbf77944533
+  emo(()=>[...$,...b5(H).filter(at)],[H,$]),j=KY.useMemo(()=>{if(!C)return!1;if(C.isStreaming)return!0;if(C.streamingEndedAt)return Date.now()-C.streamingEndedAt<30000;return!1},[C]),u=KY.useMemo(()=>{i
+
+[isStreaming] @ 0x7fbf779c31ed
+  )=>E.type==="thinking");if(f&&f.type==="thinking")B?.(()=>({thinking:f.thinking,isStreaming:!1,streamingEndedAt:Date.now()}))}$(H);return}if(H.type==="stream_request_start"){L("requesting");return}if(
+
+[isStreaming] @ 0x7fbf77a4c14b
+  ,[k8,R9]=lA.useState([]),[FI,LB]=lA.useState(null);lA.useEffect(()=>{if(FI&&!FI.isStreaming&&FI.streamingEndedAt){let FL=30000-(Date.now()-FI.streamingEndedAt);if(FL>0){let SL=setTimeout(()=>{LB(null)
+
+[isStreaming] @ 0x7fbfbbeefff4
+  .   ....  ....isBlobSchema.   .   ....  .s`IisUnitSchema.   .   ....  ...NisStreaming .   `.  P.b...                  ..c...  H.   .  .  . @  .  .  . @  .  .  . @  .  .  . @  .  .  . @  .  .  . @  .  
+
+[isStreaming] @ 0x7fbfbbfbbe84
+  ..                  i...?           .               ..      .   .   ......  ...nisStreamingPayload          .b....  .       .2....  .             ...2....  .       .p...  @.p...  ..p...   .p...  `.p..
+
+[non-streaming fallback] @ 0x7fbf458aa358
+  ...E..  .F..Stream completed without receiving message_start event - triggering non-streaming fallback  ......  P.....  .       ...x..  .x..  P. .N   @.....  H. ...      .   .   n   .       .. ...  .V
+
+[non-streaming fallback] @ 0x7fbf459222e5
+  tream completed with message_start but no content blocks completed - triggering non-streaming fallback     .         .x..  . .x..  p.H..   ...n..              .   .   ..  .       .. ...  ..3&..  pK.n.
+
+[non-streaming fallback] @ 0x7fbf779b4aae
+  hrow N(!wH?"Stream completed without receiving message_start event - triggering non-streaming fallback":"Stream completed with message_start but no content blocks completed - triggering non-streaming 
+
+[overloaded_error] @ 0x7fbf445964f8
+  api_opus_fallback_triggered\", {\n210647:              l(\"tengu_api_custom_529_overloaded_error\", {}),\n210672:            l(\"tengu_max_tokens_context_overflow_adjustment\", {\n210684:      (l(\"te
+
+[overloaded_error] @ 0x7fbf45529969
+  _api_opus_fallback_triggeredc1f.jsonl  .   %   T.RE..  .@.{tengu_api_custom_529_overloaded_errorjsonl  .   "   ..RE..  ..*s is less than FLOOR_OUTPUT_TOKENS 5c.jsonl  .   ,   .RE..  ..cctengu_max_toke
+
+[overloaded_error] @ 0x7fbf77419b17
+  n"rate_limit";if(H instanceof KD&&(H.status===529||H.message?.includes('"type":"overloaded_error"')))return"server_overload";if(H instanceof Error&&H.message.toLowerCase().includes(Zg.toLowerCase()))r
+
+[overloaded_error] @ 0x7fbf7741ac78
+  model,A.fallbackModel);if(!process.env.IS_SANDBOX)throw c("tengu_api_custom_529_overloaded_error",{}),new my(Error(F4A),I)}}if(E>L)throw new my(G,I);if(!QB9(G)&&(!(G instanceof KD)||!WB9(G)))throw new
+
+[overloaded_error] @ 0x7fbf7741b2ad
+  (H instanceof KD))return!1;return H.status===529||(H.message?.includes('"type":"overloaded_error"')??!1)}function m6I(H){if(A$(process.env.CLAUDE_CODE_USE_BEDROCK)){if(pTL(H)||H instanceof KD&&H.statu
+
+[overloaded_error] @ 0x7fbf7741b3b5
+  ,!0;return!1}function WB9(H){if(nQI(H))return!1;if(H.message?.includes('"type":"overloaded_error"'))return!0;if(g6I(H))return!0;let $=H.headers?.get("x-should-retry");if($==="true"&&!nL())return!0;if(
+
+[progressMessage] @ 0x7fbf4863a4a4
+  ..          %                ..                             &   .   ..cH..  ..X0progressMessagesForMessage  2   .   .cH..  ..&.shouldAnimate               "   .   ..cH..  ..#.shouldShowDot            
+
+[progressMessage] @ 0x7fbf774db750
+  ":void 0,pluginInfo:{pluginManifest:L,repository:A},isEnabled:()=>!0,isHidden:j,progressMessage:D||B.isSkillMode?"loading":"running",userFacingName(){return P||H},async getPromptForCommand(u,y){let g=
+
+[progressMessage] @ 0x7fbf77647958
+  er message: ",H))}var hyH;var BnI=K(()=>{xH();cB();hyH=h(t(),1)});function fnI({progressMessagesForMessage:H,tool:$,tools:A,param:L,verbose:I}){if(typeof L.content==="string"&&L.content.includes(OC))r
+
+[progressMessage] @ 0x7fbf77647b8f
+  (o9,{result:L.content,verbose:I});return $.renderToolUseErrorMessage(L.content,{progressMessagesForMessage:Nr(H),tools:A,verbose:I})}var mx;var EnI=K(()=>{_L();aJH();cB();O5();c3A();BnI();mx=h(t(),1)}
+
+[progressMessage] @ 0x7fbf77647c1f
+  EnI=K(()=>{_L();aJH();cB();O5();c3A();BnI();mx=h(t(),1)});function MnI({input:H,progressMessagesForMessage:$,style:A,tool:L,tools:I,verbose:D}){let{columns:B}=QL(),[f]=PI();if(!L)return kyH.createElem
+
+[progressMessage] @ 0x7fbf77647d4b
+  L.renderToolUseRejectedMessage(E.data,{columns:B,messages:[],tools:I,verbose:D,progressMessagesForMessage:Nr($),style:A,theme:f})}var kyH;var GnI=K(()=>{QF();zB();xH();kyH=h(t(),1)});function WQ$({hoo
+
+[progressMessage] @ 0x7fbf776481e1
+  new Map,r3A=new Set,n3A=new Set});function PnI({message:H,lookups:$,toolUseID:A,progressMessagesForMessage:L,style:I,tool:D,tools:B,verbose:f,width:E}){let[M]=PI();if(!H.toolUseResult||!D)return null;
+
+[progressMessage] @ 0x7fbf77648506
+  var CnI;var wnI=K(()=>{CnI=h(t(),1)});function ZnI({param:H,message:$,lookups:A,progressMessagesForMessage:L,style:I,tools:D,verbose:B,width:f}){let E=YnI(H.tool_use_id,D,A);if(!E)return null;if(H.con
+
+[progressMessage] @ 0x7fbf77648601
+  ontent===qBH||H.content===OC)return Sm.createElement(MnI,{input:E.toolUse.input,progressMessagesForMessage:L,tool:E.tool,tools:D,lookups:A,style:I,verbose:B});if(H.is_error)return Sm.createElement(fnI
+
+[progressMessage] @ 0x7fbf7764867b
+  ools:D,lookups:A,style:I,verbose:B});if(H.is_error)return Sm.createElement(fnI,{progressMessagesForMessage:L,tool:E.tool,tools:D,param:H,verbose:B});return Sm.createElement(PnI,{message:$,lookups:A,to
+
+[progressMessage] @ 0x7fbf77648708
+  ose:B});return Sm.createElement(PnI,{message:$,lookups:A,toolUseID:E.toolUse.id,progressMessagesForMessage:L,style:I,tool:E.tool,tools:D,verbose:B,width:f})}var Sm;var qnI=K(()=>{_L();InI();EnI();GnI(
+
+[progressMessage] @ 0x7fbf776489f4
+  on OnI({param:H,addMargin:$,tools:A,commands:L,verbose:I,inProgressToolUseIDs:D,progressMessagesForMessage:B,shouldAnimate:f,shouldShowDot:E,inProgressToolCallCount:M,lookups:G}){let U=QL(),[X]=PI(),J
+
+[progressMessage] @ 0x7fbf7778b81b
+  UseIDs.has(G.id),isError:A.erroredToolUseIDs.has(G.id),isInProgress:L.has(G.id),progressMessages:Nr(A.progressMessagesByToolUseID.get(G.id)??[]),result:U}}),E=f.some((M)=>M.isInProgress);return D.rend
+
+[progressMessage] @ 0x7fbf7778b831
+  or:A.erroredToolUseIDs.has(G.id),isInProgress:L.has(G.id),progressMessages:Nr(A.progressMessagesByToolUseID.get(G.id)??[]),result:U}}),E=f.some((M)=>M.isInProgress);return D.renderGroupedToolUse(f,{sh
+
+[progressMessage] @ 0x7fbf7778cc7d
+  age:H,lookups:$,addMargin:A,tools:L,commands:I,verbose:D,inProgressToolUseIDs:B,progressMessagesForMessage:f,shouldAnimate:E,shouldShowDot:M,style:G,width:U,isTranscriptMode:X,onOpenRateLimitOptions:J
+
+[progressMessage] @ 0x7fbf7778cea7
+  ,{key:C,param:Y,addMargin:A,tools:L,commands:I,verbose:D,inProgressToolUseIDs:B,progressMessagesForMessage:f,shouldAnimate:E,shouldShowDot:M,width:U,inProgressToolCallCount:B.size,isTranscriptMode:X,l
+
+[progressMessage] @ 0x7fbf7778d0ca
+  teIds?.[Y],Y++;return x1.createElement(te9,{key:O,message:H,addMargin:A,tools:L,progressMessagesForMessage:f,param:q,style:G,verbose:D,imageIndex:j??Y,isUserContinuation:Q,lookups:$,isTranscriptMode:X
+
+[progressMessage] @ 0x7fbf7778d3e8
+  ools:L,lookups:$,isActiveGroup:F})}}function te9({message:H,addMargin:$,tools:A,progressMessagesForMessage:L,param:I,style:D,verbose:B,imageIndex:f,isUserContinuation:E,lookups:M,isTranscriptMode:G}){
+
+[progressMessage] @ 0x7fbf7778d5ac
+  !E});case"tool_result":return x1.createElement(ZnI,{param:I,message:H,lookups:M,progressMessagesForMessage:L,style:D,tools:A,verbose:B,width:U-5});default:return}}function se9({param:H,addMargin:$,too
+
+[progressMessage] @ 0x7fbf7778d655
+  on se9({param:H,addMargin:$,tools:A,commands:L,verbose:I,inProgressToolUseIDs:D,progressMessagesForMessage:B,shouldAnimate:f,shouldShowDot:E,width:M,inProgressToolCallCount:G,isTranscriptMode:U,lookup
+
+[progressMessage] @ 0x7fbf7778d797
+  nt(OnI,{param:H,addMargin:$,tools:A,commands:L,verbose:I,inProgressToolUseIDs:D,progressMessagesForMessage:B,shouldAnimate:f,shouldShowDot:E,inProgressToolCallCount:G,lookups:X});case"text":return x1.
+
+[progressMessage] @ 0x7fbf77790b18
+  .createElement(i0H,{content:H,verbose:A,timeoutMs:f})}function NKD(H,{verbose:$,progressMessagesForMessage:A,tools:L}){return TG.createElement(o9,{result:H,verbose:$})}var TG,YKD=2,lwA=160;var iwA=K((
+
+[progressMessage] @ 0x7fbf777c2e84
+  kups:xh,addMargin:!1,tools:$,commands:[],verbose:A,inProgressToolUseIDs:new Set,progressMessagesForMessage:H,shouldAnimate:!1,shouldShowDot:!1,style:"condensed",isTranscriptMode:!1,isStatic:!0})))),I>
+
+[progressMessage] @ 0x7fbf777c2f5a
+  ement(V,{dimColor:!0},"+",I," more tool ",I===1?"use":"uses")))}function cWD(H,{progressMessagesForMessage:$,tools:A,verbose:L}){return J1.createElement(J1.Fragment,null,e_$($,{tools:A,verbose:L}),J1.
+
+[progressMessage] @ 0x7fbf777c2ffa
+  ment,null,e_$($,{tools:A,verbose:L}),J1.createElement($8,null))}function lWD(H,{progressMessagesForMessage:$,tools:A,verbose:L}){return J1.createElement(J1.Fragment,null,e_$($,{tools:A,verbose:L}),J1.
+
+[progressMessage] @ 0x7fbf777c4fcf
+  rToolUseRejectedMessage:cWD,renderToolUseErrorMessage:lWD},TA1=new Set(["type","progressMessage","contentLength","argNames","model","source","pluginInfo","disableNonInteractive","skillRoot","context",
+
+[progressMessage] @ 0x7fbf777df0d7
+  vocable:X,context:P,agent:Y,contentLength:I.length,isEnabled:()=>!0,isHidden:!X,progressMessage:"running",userFacingName(){return $||H},source:J,loadedFrom:Q,hooks:W,skillRoot:F,async getPromptForComm
+
+[progressMessage] @ 0x7fbf77843239
+  kups:xh,addMargin:!1,tools:A,commands:[],verbose:L,inProgressToolUseIDs:new Set,progressMessagesForMessage:$,shouldAnimate:!1,shouldShowDot:!1,isTranscriptMode:!1,isStatic:!0})))):null,L&&G&&G.length>
+
+[progressMessage] @ 0x7fbf77843d1c
+  more tool ",G===1?"use":"uses"," ",kA.createElement(sO,null))))}function jwD(H,{progressMessagesForMessage:$,tools:A,verbose:L}){let I=$[0]?.data?.agentId;return kA.createElement(kA.Fragment,null,!1,m
+
+[progressMessage] @ 0x7fbf77843dd9
+  t,null,!1,m6H($,{tools:A,verbose:L}),kA.createElement($8,null))}function RwD(H,{progressMessagesForMessage:$,tools:A,verbose:L}){return kA.createElement(kA.Fragment,null,m6H($,{tools:A,verbose:L}),kA.
+
+[progressMessage] @ 0x7fbf7784408a
+  rn null;let{shouldAnimate:A,tools:L}=$,I=H.map(({param:U,isResolved:X,isError:J,progressMessages:F,result:Q})=>{let W=J11(F),P=F11(F,L),Y=MNA.safeParse(U.input),C=Q?.output?.status==="teammate_spawned
+
+[progressMessage] @ 0x7fbf778468e0
+  .loadedFrom==="skills"||H.loadedFrom==="plugin")return FNA(H.userFacingName(),H.progressMessage);return kwD(H.userFacingName(),$)}async function oWD(H,$,A,L,I=[]){if(!wp(H,A))throw new JR(`Unknown com
+
+[progressMessage] @ 0x7fbf77847cbb
+  and("",A);N(`[Agent: ${H.agentType}] Preloaded skill '${YH}'`);let $H=FNA(YH,OH.progressMessage);Z.push(R$({content:[{type:"text",text:$H},...HH]}))}}let{clients:BH,tools:VH,cleanup:wH}=await P11(H,A.
+
+[progressMessage] @ 0x7fbf778a248f
+  ht:1},G0.createElement(V,{dimColor:!0},"Running\u2026"));let{progress:A,total:L,progressMessage:I}=$.data;if(A===void 0)return G0.createElement(HA,{height:1},G0.createElement(V,{dimColor:!0},"Running\
+
+[progressMessage] @ 0x7fbf778adcec
+  ss",status:"progress",serverName:$,toolName:A,progress:Y.progress,total:Y.total,progressMessage:Y.message})}:void 0}),X]).finally(()=>{if(U)clearTimeout(U)});if("isError"in J&&J.isError){let Y="Unknow
+
+[progressMessage] @ 0x7fbf778b1f8e
+  scription:!!L.description,contentLength:0,isEnabled:()=>!0,isHidden:!1,isMcp:!0,progressMessage:"running",userFacingName(){return`${H.name}:${L.name} (MCP)`},argNames:I,source:"mcp",async getPromptFor
+
+[progressMessage] @ 0x7fbf778f717f
+  file with codebase documentation",contentLength:0,isEnabled:()=>!0,isHidden:!1,progressMessage:"analyzing your codebase",userFacingName(){return"init"},source:"builtin",async getPromptForCommand(){ret
+
+[progressMessage] @ 0x7fbf77938b9e
+  e"}},uyA=m61});var zgD=()=>{};var NgD=()=>{};function kVH({name:H,description:$,progressMessage:A,pluginName:L,pluginCommand:I,getPromptWhileMarketplaceIsPrivate:D}){return{type:"prompt",name:H,descri
+
+[progressMessage] @ 0x7fbf77938c1e
+  etPromptWhileMarketplaceIsPrivate:D}){return{type:"prompt",name:H,description:$,progressMessage:A,contentLength:0,isEnabled:()=>!0,isHidden:!1,userFacingName(){return H},source:"builtin",async getProm
+
+[progressMessage] @ 0x7fbf77938d21
+  D=kVH({name:"pr-comments",description:"Get comments from a GitHub pull request",progressMessage:"fetching PR comments",pluginName:"pr-comments",pluginCommand:"pr-comments",async getPromptWhileMarketpl
+
+[progressMessage] @ 0x7fbf77943b62
+  ge:H,lookups:P,addMargin:!0,tools:L,commands:I,verbose:D,inProgressToolUseIDs:B,progressMessagesForMessage:y,shouldAnimate:p,shouldShowDot:!0,isTranscriptMode:Y,isStatic:v,onOpenRateLimitOptions:G,isA
+
+[progressMessage] @ 0x7fbf7794bf16
+  XvA=K(()=>{TQ();SE();YT$=kVH({name:"review",description:"Review a pull request",progressMessage:"reviewing pull request",pluginName:"code-review",pluginCommand:"code-review",async getPromptWhileMarket
+
+[progressMessage] @ 0x7fbf7794f198
+  mands:$.options.commands,verbose:$.options.verbose,inProgressToolUseIDs:new Set,progressMessagesForMessage:[],shouldAnimate:!1,shouldShowDot:!1,style:"condensed",isTranscriptMode:!1,isStatic:!0}))),Wf
+
+[progressMessage] @ 0x7fbf7795680f
+  ption:"Complete a security review of the pending changes on the current branch",progressMessage:"analyzing code changes for security risks",pluginName:"security-review",pluginCommand:"security-review"
+
+[progressMessage] @ 0x7fbf779857c7
+  t,agent:H.agent,isEnabled:H.isEnabled??(()=>!0),isHidden:!(H.userInvocable??!0),progressMessage:"running",userFacingName:()=>H.name,getPromptForCommand:H.getPromptForCommand};niD.push($)}function riD(
+
+[progressMessage] @ 0x7fbf7798a3c2
+  e UI",contentLength:0,aliases:[],isEnabled:()=>!0,isHidden:!1,name:"statusline",progressMessage:"setting up statusLine",allowedTools:["Task","Read(~/**)","Edit(~/.claude/settings.json)"],source:"built
+
+[progressMessage] @ 0x7fbf779a6c70
+  alyzing your Claude Code sessions",contentLength:0,isEnabled:()=>!0,isHidden:!1,progressMessage:"analyzing your sessions",source:"builtin",async getPromptForCommand(H){let $=!1,A=[],L=!1,{insights:I,h
+
+[progressMessage] @ 0x7fbf779c15d7
+  =new Map;for(let[W,P]of F)Q.set(W,P.size);X.set(J,Q)}return{siblingToolUseIDs:D,progressMessagesByToolUseID:B,inProgressHookCounts:f,resolvedHookCounts:X,toolResultByToolUseID:M,toolUseByToolUseID:I,n
+
+[progressMessage] @ 0x7fbf779c172c
+  oolUseIDs.get(A)??new Set}function amD(H,$){let A=Ss(H);if(!A)return[];return $.progressMessagesByToolUseID.get(A)??[]}function smD(H,$,A){let L=A.inProgressHookCounts.get(H)?.get($)??0,I=A.resolvedHo
+
+[progressMessage] @ 0x7fbf779cbbcd
+  equire("crypto");V6A=new Set([ro,OC,WQH,qBH,cIH]);xh={siblingToolUseIDs:new Map,progressMessagesByToolUseID:new Map,inProgressHookCounts:new Map,resolvedHookCounts:new Map,toolResultByToolUseID:new Ma
+
+[progressMessage] @ 0x7fbf77a1f2c7
+  ookups:xh,addMargin:!1,tools:[],commands:[],verbose:!1,inProgressToolUseIDs:dT1,progressMessagesForMessage:[],shouldAnimate:!1,shouldShowDot:!1,isTranscriptMode:!1,isStatic:!0}))))}var U8H,dT1,UuA=3;v
+
+[progressMessage] @ 0x7fbfbb7d9bd4
+  s           .   .   ..}...  ..J.siblingToolUseIDs           .   .   .}...  .M..progressMessagesByToolUseID .   .   ..}...  .C..inProgressHookCounts        .   .   4.}...  .JK.resolvedHookCounts       
+
+[progressMessage] @ 0x7fbfbba70824
+  f specified .   .   ......  ..d.Execution status            *   .   $.....  .O+.progressMessage             .   .   T.....  ....destroyWhenAborted              .   ......  ....contentLength           
+
+[rate_limit] @ 0x7fbf44591fe7
+  nts\ntengu_query_before_attachments\ntengu_query_error\ntengu_quiet_fern\ntengu_rate_limit_options_menu_cancel\ntengu_rate_limit_options_menu_select_extra_usage\ntengu_rate_limit_options_menu_select_u
+
+[rate_limit] @ 0x7fbf4459200d
+  engu_query_error\ntengu_quiet_fern\ntengu_rate_limit_options_menu_cancel\ntengu_rate_limit_options_menu_select_extra_usage\ntengu_rate_limit_options_menu_select_upgrade\ntengu_react_vulnerability_noti
+
+[rate_limit] @ 0x7fbf4459203f
+  it_options_menu_cancel\ntengu_rate_limit_options_menu_select_extra_usage\ntengu_rate_limit_options_menu_select_upgrade\ntengu_react_vulnerability_notice_shown\ntengu_react_vulnerability_warning\ntengu
+
+[rate_limit] @ 0x7fbf4459ef2a
+  ery_after_attachments\ntengu_query_before_attachments\ntengu_query_error\ntengu_rate_limit_options_menu_cancel\ntengu_rate_limit_options_menu_select_extra_usage\ntengu_rate_limit_options_menu_select_u
+
+[rate_limit] @ 0x7fbf4459ef50
+  ore_attachments\ntengu_query_error\ntengu_rate_limit_options_menu_cancel\ntengu_rate_limit_options_menu_select_extra_usage\ntengu_rate_limit_options_menu_select_upgrade\ntengu_react_vulnerability_noti
+
+[rate_limit] @ 0x7fbf445a7b3d
+  ter_attachments\n  tengu_query_before_attachments\n  tengu_query_error\n  tengu_rate_limit_options_menu_cancel\n  tengu_rate_limit_options_menu_select_extra_usage\n  tengu_rate_limit_options_menu_sele
+
+[rate_limit] @ 0x7fbf445a7b65
+  tachments\n  tengu_query_error\n  tengu_rate_limit_options_menu_cancel\n  tengu_rate_limit_options_menu_select_extra_usage\n  tengu_rate_limit_options_menu_select_upgrade\n  tengu_react_vulnerability_
+
+[rate_limit] @ 0x7fbf445a7b99
+  ptions_menu_cancel\n  tengu_rate_limit_options_menu_select_extra_usage\n  tengu_rate_limit_options_menu_select_upgrade\n  tengu_react_vulnerability_notice_shown\n  tengu_reduce_motion_setting_changed\
+
+[rate_limit] @ 0x7fbf6e2802df
+  .j.'aspnetcore.diagnostics.handler.type         .   .   ..(n..  .<..aspnetcore.rate_limiting.policy             .   .   ..(n..  ...aspnetcore.rate_limiting.result             .   .   T.(n..  ..Z.aspne
+
+[rate_limit] @ 0x7fbf6e28031f
+  .<..aspnetcore.rate_limiting.policy             .   .   ..(n..  ...aspnetcore.rate_limiting.result             .   .   T.(n..  ..Z.aspnetcore.request.is_unhandled             .   .   ..(n..  . ..aspne
+
+[rate_limit] @ 0x7fbf6e28131f
+  ..$.aspnetcore.diagnostics.exceptions           .   (   ..(n..  .24xaspnetcore.rate_limiting.queued_requests    .   !   T.(n..  ..b.aspnetcore.rate_limiting.requests           .   !   ..(n..  .Ha.aspn
+
+[rate_limit] @ 0x7fbf6e28135f
+  .24xaspnetcore.rate_limiting.queued_requests    .   !   T.(n..  ..b.aspnetcore.rate_limiting.requests           .   !   ..(n..  .Ha.aspnetcore.routing.match_attempts           .   .   ..(n..  ....dotn
+
+[rate_limit] @ 0x7fbf6e2882df
+  Y....                                  .   .   .(n..  ..D.aspnetcore.rate_limiting.active_request_leases              .   .   $.(n..  .r".aspnetcore.rate_limiting.request.time_in_queue              .
+
+[rate_limit] @ 0x7fbf6e28832f
+  rate_limiting.active_request_leases              .   .   $.(n..  .r".aspnetcore.rate_limiting.request.time_in_queue              .   /   t.(n..  ..?.aspnetcore.rate_limiting.request_lease.duration    
+
+[rate_limit] @ 0x7fbf6e28837f
+  rate_limiting.request.time_in_queue              .   /   t.(n..  ..?.aspnetcore.rate_limiting.request_lease.duration             .   1   .(n..  ....dotnet.gc.last_collection.heap.fragmentation.size   
+
+[rate_limit] @ 0x7fbf71265334
+  .   .R&q..  ....manual      .   .   .S&q..  ...,logout      .   .   4S&q..  .s&vrate_limit  .   .   TS&q..  ....compacting  .   .   tS&q..  ....stream_event.   .   .S&q..  .[.hook_started.   .   .S&q.
+
+[rate_limit] @ 0x7fbf7143c6ba
+  P. ...  <.    ...   W   ..Cq..  .W..^(authentication_failed|billing_error|rate_limit|invalid_request|server_error|unknown)$                           t  D.q..        t .D.q..        . .H.q..        ..
+
+[rate_limit] @ 0x7fbf716c48e4
+  roundColor  .   .   .Hlq..  .i..memoryBackgroundColor       .   .   .Hlq..  .-..rate_limit_fill             .   .   .Ilq..  ...Crate_limit_empty            .   .   DIlq..  ...penguinShimmer           
+
+[rate_limit] @ 0x7fbf716c4914
+  Color       .   .   .Hlq..  .-..rate_limit_fill             .   .   .Ilq..  ...Crate_limit_empty            .   .   DIlq..  ...penguinShimmer              .   ..    ..W.  .   .....@....               
+
+[rate_limit] @ 0x7fbf771a9820
+  k;default:L=null;break}let I={subscriptionType:L,rateLimitTier:$?.organization?.rate_limit_tier??null,hasExtraUsageEnabled:$?.organization?.has_extra_usage_enabled??null,billingType:$?.organization?.b
+
+[rate_limit] @ 0x7fbf772db228
+  ganizationUuid;if(!H)return;if(!nL()){let $=await AeH();if(!$)return;let{uuid:A,rate_limit_tier:L}=$.organization,I={hasAccess:L==="auto_prepaid_tier_3"||L==="manual_tier_3",timestamp:Date.now()};AA((
+
+[rate_limit] @ 0x7fbf77338329
+  BackgroundColor:"rgb(250, 245, 250)",memoryBackgroundColor:"rgb(230, 245, 250)",rate_limit_fill:"rgb(87,105,247)",rate_limit_empty:"rgb(39,47,111)",penguin:"rgb(255,106,0)",penguinShimmer:"rgb(255,150
+
+[rate_limit] @ 0x7fbf7733834b
+  )",memoryBackgroundColor:"rgb(230, 245, 250)",rate_limit_fill:"rgb(87,105,247)",rate_limit_empty:"rgb(39,47,111)",penguin:"rgb(255,106,0)",penguinShimmer:"rgb(255,150,50)"},Nj0={autoAccept:"ansi:magen
+
+[rate_limit] @ 0x7fbf77338944
+  ashMessageBackgroundColor:"ansi:whiteBright",memoryBackgroundColor:"ansi:white",rate_limit_fill:"ansi:yellow",rate_limit_empty:"ansi:black",penguin:"ansi:red",penguinShimmer:"ansi:redBright"},Oj0={aut
+
+[rate_limit] @ 0x7fbf77338962
+  i:whiteBright",memoryBackgroundColor:"ansi:white",rate_limit_fill:"ansi:yellow",rate_limit_empty:"ansi:black",penguin:"ansi:red",penguinShimmer:"ansi:redBright"},Oj0={autoAccept:"ansi:magentaBright",b
+
+[rate_limit] @ 0x7fbf77338fc9
+  ashMessageBackgroundColor:"ansi:black",memoryBackgroundColor:"ansi:blackBright",rate_limit_fill:"ansi:yellow",rate_limit_empty:"ansi:white",penguin:"ansi:redBright",penguinShimmer:"ansi:redBright"},xj
+
+[rate_limit] @ 0x7fbf77338fe7
+  i:black",memoryBackgroundColor:"ansi:blackBright",rate_limit_fill:"ansi:yellow",rate_limit_empty:"ansi:white",penguin:"ansi:redBright",penguinShimmer:"ansi:redBright"},xj0={autoAccept:"rgb(135,0,255)"
+
+[rate_limit] @ 0x7fbf77339d0e
+  essageBackgroundColor:"rgb(65, 60, 65)",memoryBackgroundColor:"rgb(55, 65, 70)",rate_limit_fill:"rgb(177,185,249)",rate_limit_empty:"rgb(80,83,112)",penguin:"rgb(255,120,20)",penguinShimmer:"rgb(255,1
+
+[rate_limit] @ 0x7fbf77339d31
+  65)",memoryBackgroundColor:"rgb(55, 65, 70)",rate_limit_fill:"rgb(177,185,249)",rate_limit_empty:"rgb(80,83,112)",penguin:"rgb(255,120,20)",penguinShimmer:"rgb(255,165,70)"},jj0={autoAccept:"rgb(175,1
+
+[rate_limit] @ 0x7fbf77418a18
+  });if(H instanceof Error&&H.message.includes(dIH))return Yf({content:dIH,error:"rate_limit"});if(H instanceof KD&&H.status===429&&EJH(nL())){let L=H.headers?.get?.("anthropic-ratelimit-unified-represe
+
+[rate_limit] @ 0x7fbf77418cbd
+  ;if(E)D.overageDisabledReason=E;let M=jUA(D,$);if(M)return Yf({content:M,error:"rate_limit"});return Yf({content:cIH,error:"rate_limit"})}return Yf({content:`${z5}: Rate limit reached`,error:"rate_lim
+
+[rate_limit] @ 0x7fbf77418ce9
+  $);if(M)return Yf({content:M,error:"rate_limit"});return Yf({content:cIH,error:"rate_limit"})}return Yf({content:`${z5}: Rate limit reached`,error:"rate_limit"})}if(H instanceof Error&&H.message.toLow
+
+[rate_limit] @ 0x7fbf77418d2d
+  :cIH,error:"rate_limit"})}return Yf({content:`${z5}: Rate limit reached`,error:"rate_limit"})}if(H instanceof Error&&H.message.toLowerCase().includes("prompt is too long"))return Yf({content:Zg,error:
+
+[rate_limit] @ 0x7fbf77419ac9
+  udes(dIH))return"capacity_off_switch";if(H instanceof KD&&H.status===429)return"rate_limit";if(H instanceof KD&&(H.status===529||H.message?.includes('"type":"overloaded_error"')))return"server_overloa
+
+[rate_limit] @ 0x7fbf77657f26
+  e.diagnostics.handler.type";L$.ATTR_ASPNETCORE_RATE_LIMITING_POLICY="aspnetcore.rate_limiting.policy";L$.ATTR_ASPNETCORE_RATE_LIMITING_RESULT="aspnetcore.rate_limiting.result";L$.ASPNETCORE_RATE_LIMIT
+
+[rate_limit] @ 0x7fbf77657f70
+  tcore.rate_limiting.policy";L$.ATTR_ASPNETCORE_RATE_LIMITING_RESULT="aspnetcore.rate_limiting.result";L$.ASPNETCORE_RATE_LIMITING_RESULT_VALUE_ACQUIRED="acquired";L$.ASPNETCORE_RATE_LIMITING_RESULT_VA
+
+[rate_limit] @ 0x7fbf77659fd0
+  xceptions";xL.METRIC_ASPNETCORE_RATE_LIMITING_ACTIVE_REQUEST_LEASES="aspnetcore.rate_limiting.active_request_leases";xL.METRIC_ASPNETCORE_RATE_LIMITING_QUEUED_REQUESTS="aspnetcore.rate_limiting.queued
+
+[rate_limit] @ 0x7fbf7765a034
+  _request_leases";xL.METRIC_ASPNETCORE_RATE_LIMITING_QUEUED_REQUESTS="aspnetcore.rate_limiting.queued_requests";xL.METRIC_ASPNETCORE_RATE_LIMITING_REQUEST_TIME_IN_QUEUE="aspnetcore.rate_limiting.reques
+
+[rate_limit] @ 0x7fbf7765a098
+  _requests";xL.METRIC_ASPNETCORE_RATE_LIMITING_REQUEST_TIME_IN_QUEUE="aspnetcore.rate_limiting.request.time_in_queue";xL.METRIC_ASPNETCORE_RATE_LIMITING_REQUEST_LEASE_DURATION="aspnetcore.rate_limiting
+
+[rate_limit] @ 0x7fbf7765a103
+  in_queue";xL.METRIC_ASPNETCORE_RATE_LIMITING_REQUEST_LEASE_DURATION="aspnetcore.rate_limiting.request_lease.duration";xL.METRIC_ASPNETCORE_RATE_LIMITING_REQUESTS="aspnetcore.rate_limiting.requests";xL
+
+[rate_limit] @ 0x7fbf7765a161
+  request_lease.duration";xL.METRIC_ASPNETCORE_RATE_LIMITING_REQUESTS="aspnetcore.rate_limiting.requests";xL.METRIC_ASPNETCORE_ROUTING_MATCH_ATTEMPTS="aspnetcore.routing.match_attempts";xL.METRIC_DB_CLI
+
+[rate_limit] @ 0x7fbf77782043
+  S.string(),zFD=S.unknown(),fe9=S.enum(["authentication_failed","billing_error","rate_limit","invalid_request","server_error","unknown"]),Ee9=S.union([S.literal("compacting"),S.null()]),NFD=S.object({t
+
+[rate_limit] @ 0x7fbf77878b8c
+  rmissionContext.mode==="plan")return"plan_mode";if(d2.status!=="allowed")return"rate_limit";return null}async function IND(H){if(H.querySource!=="repl_main_thread")return;let $=await H.toolUseContext.
+
+[rate_limit] @ 0x7fbf778ea6ee
+  flexDirection:"row",gap:1},TI.createElement(GgH,{ratio:D/100,width:M,fillColor:"rate_limit_fill",emptyColor:"rate_limit_empty"}),TI.createElement(V,null,f)),E&&TI.createElement(V,{dimColor:!0},E));els
+
+[rate_limit] @ 0x7fbf778ea70b
+  .createElement(GgH,{ratio:D/100,width:M,fillColor:"rate_limit_fill",emptyColor:"rate_limit_empty"}),TI.createElement(V,null,f)),E&&TI.createElement(V,{dimColor:!0},E));else return TI.createElement(x,{
+
+[rate_limit] @ 0x7fbf778ea878
+  {dimColor:!0},"\xB7 ",E))),TI.createElement(GgH,{ratio:D/100,width:A,fillColor:"rate_limit_fill",emptyColor:"rate_limit_empty"}),TI.createElement(V,null,f))}function uyD(){let[H,$]=fVH.useState(null),
+
+[rate_limit] @ 0x7fbf778ea895
+  .createElement(GgH,{ratio:D/100,width:A,fillColor:"rate_limit_fill",emptyColor:"rate_limit_empty"}),TI.createElement(V,null,f))}function uyD(){let[H,$]=fVH.useState(null),[A,L]=fVH.useState(null),[I,D
+
+[rate_limit] @ 0x7fbf77989780
+  essToken);I=D?.organization?.organization_type==="claude_max"&&D?.organization?.rate_limit_tier==="default_claude_max_20x"}if(I)return setTimeout(()=>{H("You are already on the highest Max subscriptio
+
+[rate_limit] @ 0x7fbf77989ee7
+  eturn F},[M,G,f,I.overageStatus,I.overageDisabledReason]);function X(){c("tengu_rate_limit_options_menu_cancel",{}),H(void 0,{display:"skip"})}function J(F){if(F==="upgrade")c("tengu_rate_limit_option
+
+[rate_limit] @ 0x7fbf77989f4e
+  _cancel",{}),H(void 0,{display:"skip"})}function J(F){if(F==="upgrade")c("tengu_rate_limit_options_menu_select_upgrade",{}),ChA(H,$).then((Q)=>{if(Q)L(Q)});else if(F==="extra-usage")c("tengu_rate_limi
+
+[rate_limit] @ 0x7fbf77989fbd
+  upgrade",{}),ChA(H,$).then((Q)=>{if(Q)L(Q)});else if(F==="extra-usage")c("tengu_rate_limit_options_menu_select_extra_usage",{}),VwA(H,$).then((Q)=>{if(Q)L(Q)});else if(F==="cancel")X()}if(A)return A;r
+
+[showSpinner] @ 0x7fbf6e6fcbb4
+  .   .   ..on..  ...&mainLoopModelForSession     .   .   ..on..  ....showSpinnerTree             .   .   ..on..  ..^QshowTeammateMessagePreview  .   .   ..on..  ....selectedIPAgentIndex        .   .
+
+[showSpinner] @ 0x7fbf77841a3b
+  ENA.createElement(Q_$,null),shouldHidePromptInput:!1,shouldContinueAnimation:!0,showSpinner:!0});let HH=FH.next(),$H=s?await Promise.race([HH.then((KH)=>({type:"message",result:KH})),s.then(()=>({type
+
+[showSpinner] @ 0x7fbf77845095
+  .options.tools,verbose:!1}),shouldHidePromptInput:!1,shouldContinueAnimation:!0,showSpinner:!0})};P();try{for await(let Z of Lz({agentDefinition:M,promptMessages:G,toolUseContext:{...A,getAppState:E},
+
+[showSpinner] @ 0x7fbf7784605b
+  messages:[],shouldQuery:!1,command:E});return}A({jsx:U,shouldHidePromptInput:!0,showSpinner:!1,isLocalJSXCommand:!0})})});case"local":{let M=R$({content:NP({inputString:UuH(E,$),precedingInputBlocks:I
+
+[showSpinner] @ 0x7fbf778c2c20
+  bSA.createElement(Q_$,null),shouldHidePromptInput:!1,shouldContinueAnimation:!0,showSpinner:!0})}yield{type:"progress",fullOutput:U,output:X,elapsedTimeSeconds:p,totalLines:J,...f?{timeoutMs:G}:void 0
+
+[showSpinner] @ 0x7fbf77a33898
+  input:H,progress:J.data,verbose:L.options.verbose}),f),shouldHidePromptInput:!1,showSpinner:!1})})).data;if(!G)throw Error("No result received from bash command");let U=G.stderr,X=await L.getAppState(
+
+[showSpinner] @ 0x7fbf77a4d080
+  gG=zb.length>0&&zb.every((J$)=>J$.type==="tool_use"&&J$.name===ihA),L6=(!qL||qL.showSpinner===!0)&&p9.length===0&&(ZA||KB||_Z||gjI()>0)&&!s&&!gG,PH=p9.length>0||M9.length>0||OH.queue.length>0||YH.queu
+
+[showSpinner] @ 0x7fbf77a56ea6
+  ew==="tasks",L=H.expandedView==="teammates";if(M$().showExpandedTodos!==A||M$().showSpinnerTree!==L)AA((I)=>({...I,showExpandedTodos:A,showSpinnerTree:L}))}if($!==null&&H.todos!==$.todos)for(let A in 
+
+[showSpinner] @ 0x7fbf77a56edd
+  wExpandedTodos!==A||M$().showSpinnerTree!==L)AA((I)=>({...I,showExpandedTodos:A,showSpinnerTree:L}))}if($!==null&&H.todos!==$.todos)for(let A in H.todos)dDH(H.todos[A],A);if(H.verbose!==$.verbose&&M$(
+
+[showSpinner] @ 0x7fbf77a91206
+  $().verbose??!1,mainLoopModel:$I,mainLoopModelForSession:null,expandedView:M$().showSpinnerTree?"teammates":M$().showExpandedTodos?"tasks":"none",showTeammateMessagePreview:dL()?!1:void 0,selectedIPAg
+
+[showSpinner] @ 0x7fbfbb789ad4
+  .   ..x...  ....setIsLoading.   .   ..x...  ...oonInit.x..  .   .   .x...  .;K.showSpinner .   .   ..x...  ...Ureverify..  @   .   ..x...  ..psvimModex..  .   .   4.x...  ..L.isHelpOpen  .   .   T.x..
+
+Total unique hits: 213

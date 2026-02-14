@@ -1,6 +1,5 @@
 # Changelog for version 0.2.101
 
-Based on the diff analysis, here is the changelog for Claude Code version 0.2.101:
 
 ### New Features
 
@@ -26,6 +25,7 @@ Based on the diff analysis, here is the changelog for Claude Code version 0.2.10
 - **Relative time formatting**: New utility for displaying human-readable relative timestamps (e.g., "2 hours ago", "in 3 days")
 - **Enhanced permission context**: Improved tool permission handling system
 
+
 ### Technical Improvements
 
 #### Performance and Stability
@@ -37,20 +37,24 @@ Based on the diff analysis, here is the changelog for Claude Code version 0.2.10
 - **Structural similarity**: Maintained 92.7% structural similarity with previous version for stability
 - **Modernized codebase**: Removed legacy polyfills and outdated compatibility layers
 
+
 ### Bug Fixes
 - Fixed potential issues with Fast Refresh module reloading
 - Improved cache invalidation for selectors returning inconsistent values
 - Enhanced error handling for migration processes
+
 
 ### Developer Experience
 - **Better error messages**: More descriptive error messages for migration failures
 - **Issue reporting**: Direct links to GitHub issues (`https://github.com/anthropics/claude-code/issues`)
 - **Documentation**: Updated references to documentation at `https://docs.anthropic.com/s/claude-code`
 
+
 ### Breaking Changes
 - Removed legacy signal handling utilities (`$i0`, `Ui0`)
 - Removed deprecated React lifecycle methods and compatibility layers
 - Some internal APIs have been restructured (maintaining 92.7% compatibility)
+
 
 ### Usage Examples
 

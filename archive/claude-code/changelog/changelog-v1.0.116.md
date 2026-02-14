@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.116 introduces reverse search history (Ctrl+R) for the interactive prompt, refactors the sandbox system with a centralized manager and flexible security policies, and adds support for environment-specific OAuth credentials to prevent developers from accidentally overwriting production tokens.
 
+
 ### Reverse Search History (Ctrl+R)
 **What:** Interactive command history search similar to bash's reverse-i-search
 
@@ -20,6 +21,7 @@ Version 1.0.116 introduces reverse search history (Ctrl+R) for the interactive p
 - Searches through full command history including pasted content
 - Ctrl+C cancels and restores previous input
 - **Evidence**: `YNB() at line 429227`, `ZW5() at line 429311`
+
 
 ### Environment-Specific OAuth Credentials
 **What:** Separate OAuth credential storage for local development vs production
@@ -41,6 +43,7 @@ export USE_LOCAL_OAUTH=1
 - Infrastructure for staging environment included but not yet active
 - **Evidence**: `Uo1() at line 339682`, `KZ9() at line 339686`, `uJ() at line 339696`
 
+
 ### Network Permission Session Memory
 **What:** Remember network access decisions for the current session
 
@@ -58,6 +61,7 @@ export USE_LOCAL_OAUTH=1
 - Works with sandbox network restrictions
 - **Evidence**: `pNB() at line 431799`, `Bx6() at line 374794`
 
+
 ### Sessions API Integration (Feature-Flagged)
 **What:** New backend API for fetching session events and metadata
 
@@ -68,6 +72,7 @@ export USE_LOCAL_OAUTH=1
 - New data structure with `session_context.sources` and `session_context.outcomes`
 - Will enable enhanced teleport functionality when activated
 - **Evidence**: `P55() at line 413749`, `S55() at line 413999`, `j55() at line 413991`
+
 
 ### Refactored Sandbox System
 **What:** Complete architectural overhaul of the sandboxing implementation
@@ -86,6 +91,7 @@ export USE_LOCAL_OAUTH=1
 - New `includeRecommendedDefaults` option automatically allows access to common tools
 - Deny-by-default macOS profiles are more secure but may require configuration updates
 
+
 ### Enhanced Model Validation Errors
 **What:** More specific error messages when model validation fails
 
@@ -94,6 +100,7 @@ export USE_LOCAL_OAUTH=1
 - Provides actionable error messages instead of generic failures
 - Better parsing of API error responses
 - **Evidence**: `yJ5() at line 436574`
+
 
 ### Optimized Editor Selection
 **What:** Editor detection is now memoized for better performance
@@ -104,6 +111,7 @@ export USE_LOCAL_OAUTH=1
 - Result is cached to avoid repeated filesystem checks
 - **Evidence**: `Cf1 at line 404874` (previously `Jf1() at line 404673` in v1.0.115)
 
+
 ### Improved Session Resume Messages
 **What:** Better error handling for session resume operations
 
@@ -113,6 +121,7 @@ export USE_LOCAL_OAUTH=1
 - Uses formatted error messages when available
 - **Evidence**: `bzB() at line 413552` (previously `o65() at line 413908` in v1.0.115)
 
+
 ### Sandbox Configuration Deep Cloning
 **What:** Prevents mutation of original sandbox configuration
 
@@ -121,6 +130,7 @@ export USE_LOCAL_OAUTH=1
 - Prevents unexpected side effects when adding recommended defaults
 - **Evidence**: `EBB.cloneDeep(A) at line 374849` in `Zx6()`
 
+
 ### Renamed Functions and Variables
 - OAuth config selector: `D6()` → `L4()`
 - Config file path: `bJ()` → `uJ()`
@@ -128,10 +138,12 @@ export USE_LOCAL_OAUTH=1
 - Sandbox functions: `GBB()` → `wBB()`, `JBB()` → `Zx6()`, `FBB()` → `Ix6()`
 - Linux wrapper: `YBB()` → `zBB()`
 
+
 ### Refactored Session Memory
 - Session memory config: `bd5()` → `cp5 object`
 - Session memory processor: `_$3` → `E_3`
 - Now uses agent definition pattern for consistency
+
 
 ### OAuth Configuration Structure
 - Added `OAUTH_FILE_SUFFIX` field to all OAuth configs

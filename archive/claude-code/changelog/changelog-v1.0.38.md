@@ -1,6 +1,5 @@
 # Changelog for version 1.0.38
 
-Based on my analysis of the diff file, here is the changelog for Claude Code version 1.0.38:
 
 ### Major Features
 
@@ -29,6 +28,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Optimized for correct permissions and file access
 - Never invokes `grep` or `rg` as bash commands directly
 
+
 ### New Commands & Features
 
 #### Memory Management
@@ -44,6 +44,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 #### ️ IDE Detection
 - Automatic detection of JetBrains IDEs when launched from within them
 - Supports: PyCharm, IntelliJ, WebStorm, PhpStorm, RubyMine, CLion, GoLand, Rider, DataGrip, AppCode, DataSpell, Aqua, Gateway, Fleet
+
 
 ### Improvements
 
@@ -64,6 +65,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Improved diff view for file edits
 - Enhanced paste detection with visual feedback
 
+
 ### Technical Updates
 
 - Updated dependencies and imports
@@ -71,6 +73,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Better handling of multiline patterns in search
 - Enhanced abort signal propagation
 - Optimized memory usage for large file operations
+
 
 ### Bug Fixes
 
@@ -80,9 +83,11 @@ Based on my analysis of the diff file, here is the changelog for Claude Code ver
 - Fixed terminal focus detection issues
 - Resolved paste operation edge cases
 
+
 ### Breaking Changes
 
 None - This release maintains backward compatibility with existing configurations and workflows.
+
 
 ### Configuration
 

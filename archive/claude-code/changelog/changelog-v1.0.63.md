@@ -2,6 +2,7 @@
 
 # Claude Code v1.0.63 Changelog
 
+
 ### Output Mode Selection
 A new output mode system has been introduced that changes how Claude Code communicates with users. Users can now choose between different interaction styles:
 
@@ -11,6 +12,7 @@ A new output mode system has been introduced that changes how Claude Code commun
 
 To change the output mode, users can access the new mode selection interface which allows saving preferences either globally or per-project.
 
+
 ### Enhanced Debug Output
 New debug flag `--debug-to-stderr` has been added. When enabled, debug output will be written to stderr instead of stdout, allowing better separation of debug information from regular output.
 
@@ -18,10 +20,12 @@ New debug flag `--debug-to-stderr` has been added. When enabled, debug output wi
 claude --debug-to-stderr [command]
 ```
 
+
 ### Workspace Restoration in Message Selector
 The message selector (jump to previous message feature) now includes an option to restore the workspace state associated with a previous message when checkpointing is enabled. This allows users to not only jump to a previous conversation point but also restore the file system state from that moment.
 
 When selecting a previous message, users will see indicators showing whether workspace restoration is available for that checkpoint. Messages without restorable workspace states are marked with `[ ✗ Restore Workspace ]`.
+
 
 ### MCP Server Status Indicators
 New visual indicators for MCP (Model Context Protocol) server status have been added. The interface now shows:
@@ -31,39 +35,50 @@ New visual indicators for MCP (Model Context Protocol) server status have been a
 
 These indicators automatically disappear after 5 seconds to avoid cluttering the interface.
 
+
 ### Better Error Handling in Print Mode
 The `--print` mode now has improved error handling and exit codes. The exit code properly reflects whether an error occurred during execution, making it more reliable for scripting and automation.
+
 
 ### Enhanced Command Response Handling
 Local commands now include checkpoint information in their responses, ensuring that the conversation state is properly tracked even when using local slash commands.
 
+
 ### Cleaner Message Filtering
 The message selector now has improved filtering logic to exclude command output messages (stdout/stderr from local commands and bash commands) from the selectable message list, providing a cleaner interface for jumping between actual user messages.
+
 
 ### Removed Duplicate Imports
 Fixed issues with duplicate stream imports that were causing potential conflicts.
 
+
 ### Fixed Parallelization Configuration
 Removed the `parallelTasksCount` configuration option which was causing issues with task execution.
 
+
 ### IDE Auto-connection Improvements
 Enhanced the IDE auto-connection logic to better handle WebSocket and Server-Sent Events connections, with improved authentication token handling and Windows compatibility detection.
+
 
 ### Stream Processing Updates
 - Replaced direct stream imports with more specific imports from `node:stream`
 - Added `PassThrough` stream handling for better data flow control
 
+
 ### Debugging Infrastructure
 - Added lazy evaluation for debug flags using memoization
 - Introduced `qo0` function for writing debug output to stderr in chunks
+
 
 ### Message Processing
 - New `w$B` function for extracting control sequences from user messages
 - Added `B68` function for handling output mode metadata
 - Implemented `$Z1` for finding checkpoint IDs in message sequences
 
+
 ### Control Response Handling
 New `tH8` function handles initialization requests with improved error handling and command discovery for external integrations.
+
 
 ### Checkpoint Management
 - `Wx1`: Retrieves checkpoint attachments for a conversation

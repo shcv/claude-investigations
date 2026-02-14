@@ -2,6 +2,7 @@
 
 Based on my analysis of the diff between v0.2.35 and v0.2.36, here's the detailed changelog focusing on user-facing features:
 
+
 ### New Features
 
 #### Import MCP Servers from Claude Desktop
@@ -40,6 +41,7 @@ claude mcp add-json <name> <json>
 ```
 
 This allows you to quickly configure servers by passing their JSON configuration directly on the command line.
+
 
 ### Improvements
 
@@ -90,11 +92,13 @@ New environment detection capabilities:
 New configuration option added:
 - `autoCompactEnabled`: Control automatic conversation compacting (default: true)
 
+
 ### Bug Fixes
 
 - Fixed WebFetch tool to properly handle response body streaming and size limits
 - Improved error handling for aborted fetch requests
 - Better support for safe command execution with enhanced command validation
+
 
 ### Technical Improvements
 

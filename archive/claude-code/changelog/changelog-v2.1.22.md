@@ -24,7 +24,7 @@ There is one minor code change at lines 694-707 in the diff:
 // New: if (!HA || (e.length === 0 && !_A))
 ```
 
-**Evidence**: Query handler at approximately line 528104-528305 (API request streaming logic)
+Evidence: Query handler at approximately line 528104-528305 (API request streaming logic)
 
 This appears to be an internal state management fix related to the API query handling—specifically ensuring a variable `_A` is reset and checked during stream event processing. This is an internal implementation detail with no direct user-facing impact.
 

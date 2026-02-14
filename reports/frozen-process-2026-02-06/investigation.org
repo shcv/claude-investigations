@@ -1,0 +1,123 @@
+#+TITLE: Frozen Claude Code Process Investigation
+#+DATE: 2026-02-06
+
+* Summary
+
+Claude Code v2.1.33 (PID 28462) froze with "Inferring… (thinking)" displayed
+on screen, but the process had actually returned to the input loop. The Ink/React
+TUI failed to repaint after a large agent-team conversation completed.
+
+The conversation was never persisted to the session jsonl — the log ends at the
+previous turn before =/clear=.
+
+* Process Details
+
+| Field       | Value                                          |
+|-------------+------------------------------------------------|
+| PID         | 28462                                          |
+| Version     | 2.1.33 (v2.1.34 installed but session predated) |
+| Terminal    | pts/9                                          |
+| Session     | af1392e2-63db-46d0-854d-b12a2cfeab2e           |
+| Slug        | swirling-moseying-beacon                       |
+| Started     | 01:25 local (resumed with -r)                  |
+| Froze       | ~02:16 local (07:16 UTC)                       |
+| RSS         | 578 MB                                         |
+| Threads     | 19 (all sleeping)                              |
+| Open FDs    | 109                                            |
+
+* Diagnosis
+
+** strace snapshot (5 seconds, zero activity)
+
+All 19 threads parked:
+
+| Thread       | Blocked on                   | What                      |
+|--------------+------------------------------+---------------------------|
+| 28462 (main) | =read(83)= → =/dev/pts/9=   | Terminal input (stdin)     |
+| 28523        | =epoll_pwait2(14)=           | Event loop (empty)        |
+| 28650        | =read(19)= → inotify        | File watcher              |
+| 16 others    | =futex(0x667a9e4, WAIT)=     | Worker pool (same futex)  |
+
+Key finding: main thread is =read()=-ing from the terminal — the process thinks
+it's idle and waiting for user input. No thread is blocked on a socket or API call.
+
+** Network state
+
+- 8 sockets owned by the process — all Unix domain (local IPC to MCP servers)
+- No TCP socket visible in process fd table
+- API connection already closed/absent
+- =api.anthropic.com= resolves to 160.79.104.10 (not in system TCP table)
+
+* Memory Forensics
+
+Performed direct heap scanning via =/proc/28462/mem= with =/proc/28462/maps=
+to identify readable/writable regions. Searched for API request IDs, SSE stream
+markers, UI state strings, and error patterns.
+
+** Timeline reconstruction from heap
+
+1. *07:10 UTC* — Previous turn completes (writes =internals/feature-flags.org=), logged to session jsonl
+2. *~07:11* — User types =/clear=, pastes v2.1.33 changelog + 4-point task: "use a team of agents"
+3. *~07:12* — Opus responds (=msg_01F2mRBeDowqc3NfvstpULQp=), sends Glob + Grep ("Searching for 2 patterns")
+4. *07:12-07:16* — Opus spawns a team:
+   - =msg_01SXM3sdq7GXEANzprpbaK2g= (108 heap refs) — orchestrator with 12+ agent sub-messages
+   - =msg_01LVzvpQvpEiWWJrhW3h172G= (27 refs) — second orchestration with 10+ agent sub-messages
+   - ~15 Haiku subagents ran concurrently (timestamps 06:19-06:51 UTC)
+   - One subagent tried clipboard read via heredoc (got literal unexpanded string)
+5. *07:16 UTC* — =msg_01JKRaQe4tqSQiD6Epdmke1A= is the latest timestamped message
+6. At some point the conversation silently returned to the input loop
+7. The Ink renderer never repainted
+
+** Key findings
+
+- The API DID respond — =content_block_stop=, =redacted_thinking=, and =message_stop= events all present in heap
+- Tool calls executed (clipboard read, grep, glob, bash)
+- HTTP response headers present (=cf-cache-status=, =anthropic-organization-id=)
+- =querySource: "terminal_update_title"= — background title-update calls were the last API activity
+- NO error objects found matching the latest request IDs
+- Session jsonl has ZERO entries after =/clear= — nothing persisted
+
+** Telemetry from previous (successful) turn
+
+#+begin_example
+"requestId":"req_011CXrQRTfGXGDjjL7suGPqt"
+"stop_reason":"end_turn"
+"costUSD":0.000597
+"didFallBackToNonStreaming":false
+#+end_example
+
+* Root Cause
+
+*Ink/React TUI rendering failure* after agent-team completion.
+
+The conversation ran with 12+ concurrent subagents generating a high volume of
+React state updates and progress events. When the orchestration completed (or
+errored), the process state machine correctly transitioned to "awaiting input"
+(main thread → =read(pts/9)=), but the Ink renderer never repainted the screen.
+
+=showSpinner= remained =true=, the "Inferring… (thinking)" label was never
+cleared, and the prompt input was never shown.
+
+The process also ignored SIGTERM (Bun's signal handler was stuck in the same
+frozen event loop) and required SIGKILL.
+
+* Artifacts
+
+| File                          | Contents                             |
+|-------------------------------+--------------------------------------|
+| =01-ui-state-strings.txt=    | Strings search: spinner, progress    |
+| =02-heap-state-machine.txt=  | State machine, errors, API state     |
+| =03-request-ids-and-errors.txt= | All API request IDs with context  |
+| =04-message-ids.txt=         | All msg_ IDs, conversation flow      |
+| =05-unhandled-errors-search.txt= | Unhandled rejection/error search |
+| =06-tool-trace-and-final-state.txt= | Tool use IDs, clipboard, session |
+
+Note: The 16GB core dump (=gcore=) was captured but deleted before being saved.
+The =/proc/mem= scans above captured the essential data.
+
+* Reproduction hints
+
+- =/clear= followed by a complex team-of-agents task
+- High subagent count (12+) with concurrent tool calls
+- Likely a race condition in Ink's batch rendering during final cleanup of
+  multiple concurrent agent state streams

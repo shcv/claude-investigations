@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.93 introduces cross-platform network sandboxing with Linux support, MCP SDK server integration, and Git checkpointing for preserving work-in-progress. Security is enhanced with command validation to prevent shell injection attacks.
 
+
 ### Linux Network Sandboxing
 **What:** Network isolation now available on Linux using bubblewrap (bwrap)
 **How to use:**
@@ -15,6 +16,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Implements Unix domain socket proxy with socat for network isolation
 - TCP-to-Unix forwarding maintains connectivity while enforcing restrictions
 - **Evidence**: `zr2() at line 370283`, `Mq6() at line 370273`
+
 
 ### MCP SDK Server Support
 **What:** Claude Code can now connect to MCP servers via SDK transport
@@ -29,6 +31,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Seamless integration with existing MCP infrastructure
 - **Evidence**: `class _D0 at line 387347`, `uBB() at line 388121`, `sendMcpMessage() at line 430038`
 
+
 ### Git Checkpointing (Experimental)
 **What:** Automatically save work-in-progress to shadow Git repositories
 **How to use:**
@@ -41,6 +44,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Automatic cleanup of old shadow repos after one month
 - Tracks last access time for efficient storage management
 - **Evidence**: `ZmB() at line 419608`, `GmB() at line 419705`, `checkpointingShadowRepos at line 355280`
+
 
 ### Enhanced Command Security
 **What:** Protection against IFS-based shell injection attacks
@@ -55,6 +59,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Covers git, xargs, sed, sort, file, and other commands
 - **Evidence**: `gN6() at line 374933`, `F1B variable at line 379461`
 
+
 ### Image Paste Keybinding for Windows/Linux
 **What:** New keyboard shortcut for pasting images from clipboard
 **How to use:**
@@ -67,6 +72,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Consistent with system clipboard conventions
 - **Evidence**: `Eu variable at line 363750`
 
+
 ### Enhanced NO_PROXY Support
 **What:** Better proxy bypass logic for excluded hosts
 **Details:**
@@ -74,6 +80,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Intelligent URL matching against proxy bypass patterns
 - Supports wildcards, domain suffixes, and port-specific rules
 - **Evidence**: `VJ4() at line 354027`, `KJ4() at line 354030`
+
 
 ### Network Sandboxing Refactoring
 **What:** Unified cross-platform network isolation
@@ -83,6 +90,7 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Improved proxy port management with parameterized functions
 - **Evidence**: `Er2() at line 370309` replaces platform-specific `Bs2()`
 
+
 ### Permission Mode Persistence
 **What:** Fixed permission mode settings not persisting across sessions
 **Details:**
@@ -91,8 +99,10 @@ Version 1.0.93 introduces cross-platform network sandboxing with Linux support, 
 - Added helper function for cleaner source validation
 - **Evidence**: `setMode case at line 344856` now uses `defaultMode` consistently
 
+
 ### Simplified Timeout Messages
 Error messages for request timeouts no longer include technical hints about API_TIMEOUT_MS, providing cleaner user experience.
+
 
 ### Internal Refactoring
 - Feature flag checking system enhanced with dedicated function

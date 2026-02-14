@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.88 fixes a cache management issue that could cause stale authentication states and inconsistent feature access after login/logout operations. This maintenance release improves the reliability of account switching and feature flag updates.
 
+
 ### Fixed: Authentication cache inconsistency during login/logout
 - **Issue:** Beta feature flags were not being properly cleared during authentication changes, potentially causing users to see incorrect features after logging in/out or switching accounts
 - **Cause:** Only one of three related beta feature caches was being cleared, leaving stale data in the other two caches

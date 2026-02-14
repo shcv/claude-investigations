@@ -1,5 +1,6 @@
 # Changelog for version 1.0.33
 
+
 ### 🆕 New Features
 
 #### **Enhanced Installation Diagnostics**
@@ -23,6 +24,7 @@
 - Automatically checks common shell configs (.bashrc, .zshrc, etc.) for Claude aliases
 - Provides smart recommendations when PATH conflicts are detected
 
+
 ### Improvements
 
 #### **Better Installation Type Detection**
@@ -44,12 +46,14 @@
   - `"installed"` → `installMethod: "native"`
   - `"disabled"` → `autoUpdates: false`
 
+
 ### Bug Fixes
 
 #### **Input History Buffer with Debouncing**
 - Added new `Xk2` function that provides an input history buffer with debouncing
 - Prevents excessive history entries when typing quickly
 - Configurable buffer size and debounce delay
+
 
 ### Usage Examples
 
@@ -83,6 +87,7 @@ Warning: Insufficient permissions for auto-updates
 Fix: Run: sudo chown -R $USER:$(id -gn) $(npm -g config get prefix)
 or use `claude migrate-installer` to migrate to local installation
 ```
+
 
 ### Migration Notes
 

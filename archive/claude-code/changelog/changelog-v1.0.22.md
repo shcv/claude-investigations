@@ -2,6 +2,7 @@
 
 # Claude Code v1.0.22 Changelog
 
+
 ### MCP Resource Management Commands
 Two new commands have been added for working with MCP (Model Context Protocol) resources:
 
@@ -20,11 +21,13 @@ Two new commands have been added for working with MCP (Model Context Protocol) r
   claude readMcpResource --server myserver --uri my-resource-uri
   ```
 
+
 ### Enhanced Permission Modes
 - Added new permission mode: **`plan`** - Allows planning mode for complex operations
 - Added `defaultMode` configuration option in permissions settings
 - Added `disableBypassPermissionsMode` option to prevent bypassing permissions entirely
 - Permission modes now available: `acceptEdits`, `bypassPermissions`, `default`, `plan`
+
 
 ### XDG Base Directory Support
 Claude Code now follows the XDG Base Directory specification for better organization of files:
@@ -35,6 +38,7 @@ Claude Code now follows the XDG Base Directory specification for better organiza
 
 The application will automatically migrate existing files from the old location (`~/.claude/`) to the new XDG-compliant locations on first run.
 
+
 ### Jupyter Notebook Enhancements
 - **Cell ID Support**: Notebooks now support reading individual cells by their ID
   ```bash
@@ -44,10 +48,12 @@ The application will automatically migrate existing files from the old location 
 - Large cell outputs are now truncated with a helpful message indicating how to read the full output
 - Improved cell metadata handling with proper cell IDs
 
+
 ### Command History Navigation
 - Enhanced history navigation with better state management
 - History now properly tracks command length for improved user experience
 - More robust handling of empty commands and history state
+
 
 ### Session Management
 - Session message retrieval is now asynchronous for better performance

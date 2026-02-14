@@ -3,6 +3,7 @@
 ## Highlights
 Version 2.0.36 introduces session-scoped hooks for temporary automation, adds telemetry infrastructure for monitoring, and improves plugin reliability with duplicate hook detection. Pro and Max users gain quick access to usage settings via a new command.
 
+
 ### Extra Usage Command
 **What:** New command for Pro and Max subscribers to quickly access Claude AI usage settings
 **How to use:**
@@ -14,6 +15,7 @@ claude extra-usage
 - Only available for "pro" or "max" subscription tiers
 - Can be disabled by setting `DISABLE_EXTRA_USAGE_COMMAND` environment variable
 - **Evidence**: `RAI command definition at line 467420` in new function, `ha2 = RAI at line 467528`
+
 
 ### Session Hooks Infrastructure
 **What:** New architecture for temporary, session-scoped hooks that automatically clean up when sessions end
@@ -33,6 +35,7 @@ claude extra-usage
 - Designed for plugins, agents, and temporary automation without polluting user settings
 - **Evidence**: State initialization at `line 141240`, management functions at `lines 457341-457367`, integration in `nl2() at lines 457391-457413`
 
+
 ### Datadog Telemetry Integration
 **What:** New telemetry backend for event logging and monitoring
 **Details:**
@@ -42,6 +45,7 @@ claude extra-usage
 - Includes context tags: user type, version, model, session ID, platform details
 - Automatic flush on process exit
 - **Evidence**: `FBI constant at line 477632`, gate check `er2 at line 477899`, batching logic in `QB0() at line 477567` and `BB0() at line 477543`
+
 
 ### OpenTelemetry 1P Events
 **What:** First-party event logging using OpenTelemetry protocol
@@ -53,6 +57,7 @@ claude extra-usage
 - Controlled by feature gate `tengu_log_1p_events` (gate check in `rr2() at line 477755`)
 - Events include session context, environment details, and custom metadata
 - **Evidence**: `IB0 class at lines 477676-477751`, initialization `or2() at line 477773`, event emission `ZB0() at line 477761`
+
 
 ### Enhanced Plugin Hook Loading
 **What:** Plugin loading now detects and prevents duplicate hook file loading
@@ -70,6 +75,7 @@ claude extra-usage
 - Prevents common plugin authoring mistakes and duplicate hook registrations
 - **Evidence**: Function `BwQ() at line 275505`, duplicate detection at `lines 275689-275707`, Set tracking at `line 275637`
 
+
 ### Enhanced Session End Handling
 **What:** Session end processing now includes session hook cleanup and accepts additional configuration
 **Details:**
@@ -79,6 +85,7 @@ claude extra-usage
 - Prevents session hook accumulation across multiple sessions
 - **Evidence**: Old function `Hf1 at line 482867` (removed), new function `Tf1 at line 483476` (added), session hook clearing at `line 483506`
 
+
 ### Improved Continue Command Detection
 **What:** More robust detection of user "continue" commands
 **Details:**
@@ -86,6 +93,7 @@ claude extra-usage
 - Now trims input and checks for exact "continue" match: `if (B === "continue") return !0;`
 - Also matches phrase patterns "keep going" and "go on"
 - **Evidence**: Function `prQ() at line 347927`, exact match check at line 347929
+
 
 ### Enhanced GitHub Actions Workflow Template
 **What:** PR review workflow now triggers on more PR events
@@ -95,16 +103,19 @@ claude extra-usage
 - Ensures reviews run when draft PRs become ready for review and when closed PRs reopen
 - **Evidence**: Workflow template `yp2 at line 452368`, trigger definition at line 452314
 
+
 ### Query Handler Refactoring
 - Function identifier `iS2` repurposed: old agent definitions renderer moved to `Fy2() at line 437284`
 - New `iS2() at line 436183` is async query handler managing user input processing, checkpointing, message preparation, and queue processing
 - Not user-facing but improves code organization
+
 
 ### Hook Retrieval Function Update
 - Function renamed from `sl2()` to `Hi2()` with additional state parameter
 - Now merges session hooks with settings-based hooks
 - Updated to call `nl2(A)` which includes session hook integration
 - **Evidence**: Old function signature `sl2(A)` at diff line 1940, new signature `Hi2(A, B)` at diff line 1984
+
 
 ### Process Metrics Helper
 - New helper function `Hp2() at line 451872` formats telemetry metadata

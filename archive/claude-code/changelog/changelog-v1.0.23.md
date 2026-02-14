@@ -1,5 +1,6 @@
 # Changelog for version 1.0.23
 
+
 ### New Features
 
 #### 🆕 Add Directory Command (`/add-dir`)
@@ -34,6 +35,7 @@ The MCP (Model Context Protocol) server management interface has been completely
   - Re-authentication and clear authentication options
   - Better error handling and status feedback
 
+
 ### Improvements
 
 #### Native Binary Installation
@@ -52,6 +54,7 @@ The MCP (Model Context Protocol) server management interface has been completely
 - Improved hook matching and filtering capabilities
 - Better integration with MCP tool filtering
 
+
 ### Technical Changes
 
 - Added `fine-grained-tool-streaming-2025-05-14` feature flag
@@ -60,12 +63,14 @@ The MCP (Model Context Protocol) server management interface has been completely
 - Better error handling for architecture-specific installations
 - Removed legacy migration code for home directory configurations
 
+
 ### Bug Fixes
 
 - Fixed symlink creation issues with atomic operations to prevent corruption
 - Improved error handling for unsupported architectures
 - Better cleanup of temporary files during installation
 - Enhanced validation for directory operations
+
 
 ### Breaking Changes
 

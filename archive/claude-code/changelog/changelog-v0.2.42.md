@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.42 Changelog
 
+
 ### Batch Tool Execution (Call Tool)
 A powerful new tool that allows executing multiple tools in a single request for improved performance:
 
@@ -36,6 +37,7 @@ A powerful new tool that allows executing multiple tools in a single request for
   }
   ```
 
+
 ### MCP Server Timeout Configuration
 - **New Environment Variable**: `MCP_TIMEOUT` 
 - **Default**: 5000ms (5 seconds)
@@ -45,10 +47,12 @@ A powerful new tool that allows executing multiple tools in a single request for
   ```
 - **Benefit**: Allows users to adjust timeout for slower MCP servers
 
+
 ### Non-Blocking MCP Server Startup
 - MCP server initialization no longer blocks the application from starting
 - Improves startup time when MCP servers are slow to initialize
 - Application becomes responsive immediately while MCP servers load in background
+
 
 ### Enhanced Help Mode
 - New help display showing keyboard shortcuts when help is open
@@ -60,9 +64,11 @@ A powerful new tool that allows executing multiple tools in a single request for
     - Terminal supporting backslash: `\⏎ for newline`
     - Default: `Backslash (\) + Return (⏎) for newline`
 
+
 ### WebFetch Security Enhancement
 - Updated security requirement: URLs must be provided directly by the user (removed "in the current or a previous message" qualifier)
 - Strengthens security by requiring explicit user-provided URLs
+
 
 ### HTTP Request Handling
 - Switched from native `fetch` to axios for better control
@@ -70,10 +76,12 @@ A powerful new tool that allows executing multiple tools in a single request for
 - Improved error messages with HTTP status codes
 - Better content length limiting with `maxContentLength`
 
+
 ### Release Notes Update
 - Added v0.2.41 release notes documenting:
   - MCP server startup timeout configuration via MCP_TIMEOUT
   - Non-blocking MCP server startup behavior
+
 
 ### Code Organization
 - Renamed internal functions and variables for consistency

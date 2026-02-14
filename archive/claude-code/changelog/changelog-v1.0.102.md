@@ -3,6 +3,7 @@
 ## Highlights
 Enhanced background task management with improved architecture, better user interface terminology, and new structured input/output parsing for background tasks.
 
+
 ### Background Task Input/Output Parsing
 **What:** Added support for structured input/output in background tasks using XML-like tags
 **How to use:**
@@ -17,12 +18,14 @@ claude --some-command &
 - Improves integration between background processes and the main conversation
 - **Evidence**: `GA1() at line 410790` and `bbB() at line 410805` (new functions not present in v1.0.100)
 
+
 ### Task Creation Progress Feedback
 **What:** Added visual feedback when creating background tasks
 **Details:**
 - Shows "Creating background task…" message during task initialization
 - Provides better user awareness of task creation process
 - **Evidence**: New message at `line 429262` (not found in v1.0.100)
+
 
 ### Enhanced Task Management Architecture
 **What:** Improved background task system with better state management and filtering
@@ -33,6 +36,7 @@ claude --some-command &
 - More reliable task state tracking and updates
 - **Evidence**: `BV5(A) at line 395850` vs `zF5() at line 395605` in v1.0.100
 
+
 ### Refined User Interface Terminology
 **What:** Updated terminology from "bash shells" to "tasks" throughout the interface
 **Details:**
@@ -41,6 +45,7 @@ claude --some-command &
 - More inclusive language supporting different types of background operations
 - Consistent terminology across all user-facing messages
 - **Evidence**: `line 411750` vs `line 408227` in v1.0.100, `line 411633` vs `line 408178` in v1.0.100
+
 
 ### Improved Task Processing Functions
 **What:** Enhanced task processing with new filtering and state management functions

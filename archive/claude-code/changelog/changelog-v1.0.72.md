@@ -3,6 +3,7 @@
 ## Highlights
 Claude Code 1.0.72 introduces a new `/statusline` command for customizing your terminal status line, enhances security with improved path validation, and provides clearer visual indicators for different operational modes.
 
+
 ### Status Line Configuration Command
 **What:** New `/statusline` command for customizing Claude Code's status line UI
 **Why:** Allows users to personalize their terminal experience and display custom information in the status line
@@ -20,6 +21,7 @@ Claude Code 1.0.72 introduces a new `/statusline` command for customizing your t
 - Saves custom scripts to `~/.claude/statusline-command.sh` if needed
 - Updates settings in `~/.claude/settings.json`
 
+
 ### Enhanced Mode Display System
 **What:** Improved visual indicators for different Claude Code operational modes
 **Why:** Makes it clearer which mode Claude Code is operating in, improving user awareness and control
@@ -33,6 +35,7 @@ The mode display is automatic and shows in the interface with distinct icons and
 - Color-coded indicators (text, planMode, autoAccept, error)
 - Clear visual distinction between modes
 - Better integration with status line
+
 
 ### Improved Path Security Validation
 **What:** Enhanced validation for file system commands with clearer security messages
@@ -49,25 +52,31 @@ change directories to the allowed working directories for this session: [list]
 - Improved handling of relative paths with `..`
 - More specific error messages for each command type
 
+
 ### Agent File Validation
 **What changed:** Better error reporting for invalid agent configuration files
 **Impact:** Clearer error messages when agent files are missing required fields or have invalid configurations, making it easier to debug custom agents
+
 
 ### Token Usage Tracking
 **What changed:** More accurate calculation of token usage including cache tokens
 **Impact:** Better cost tracking with separate accounting for cached vs uncached tokens, providing more accurate usage reports
 
+
 ### Background Shell Display
 **What changed:** New component for displaying running background shells in the UI
 **Impact:** Better visibility of background processes with indicators showing shell count and status
+
 
 ### Fixed: Path validation edge cases
 - **Issue:** Certain path patterns with glob characters or parent directory references were not properly validated
 - **Resolution:** Improved regex patterns and path resolution logic to handle all edge cases correctly
 
+
 ### Fixed: Module import cleanup
 - **Issue:** Unused imports from crypto and stream modules were left in the codebase
 - **Resolution:** Removed unused imports and reorganized module dependencies for cleaner code
+
 
 ### Fixed: Agent frontmatter parsing
 - **Issue:** Missing or invalid frontmatter fields in agent files produced unclear error messages

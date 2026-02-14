@@ -1,0 +1,128 @@
+---
+version: 2.0.66
+extracted_at: 2025-12-11T16:21:34.881276
+total_prompts: 98
+---
+
+# Claude Code Prompts - v2.0.66
+
+Extracted: 2025-12-11 16:21
+
+## Categories
+
+### System (4)
+
+- [System Prompt (GaQ)](system/system-gaq.md)
+- [Main Interactive CLI Prompt](system/system-main-451997.md)
+- [Main Interactive CLI Prompt](system/system-main-452010.md)
+- [Main Interactive CLI Prompt](system/system-main-482023.md)
+
+### Agent (6)
+
+- [Agent: general-purpose](agent/agent-general-purpose.md)
+- [Agent: statusline-setup](agent/agent-statusline-setup.md)
+- [Agent: Plan](agent/agent-plan.md)
+- [Agent: magic-docs](agent/agent-magic-docs.md)
+- [Agent System Prompt (WH8)](agent/agent-prompt-wh8.md)
+- [Agent System Prompt (KH8)](agent/agent-prompt-kh8.md)
+
+### Tool (11)
+
+- [Tool: Read](tool/tool-read.md)
+- [Tool: Write](tool/tool-write.md)
+- [Tool: TodoWrite](tool/tool-todowrite.md)
+- [Tool: Edit](tool/tool-edit.md)
+- [Tool: AskUserQuestion](tool/tool-askuserquestion.md)
+- [Tool: EnterPlanMode](tool/tool-enterplanmode.md)
+- [Tool: ExitPlanMode](tool/tool-exitplanmode.md)
+- [Tool: Glob](tool/tool-glob.md)
+- [Tool: Grep](tool/tool-grep.md)
+- [Tool: Bash](tool/tool-bash.md)
+- [Tool Description (Unknown)](tool/tool-desc-231779.md)
+
+### Hook (12)
+
+- [Hook Description](hook/hook-desc-469139.md)
+- [Hook Description](hook/hook-desc-469147.md)
+- [Hook Description](hook/hook-desc-469155.md)
+- [Hook Description](hook/hook-desc-469163.md)
+- [Hook Description](hook/hook-desc-469178.md)
+- [Hook Description](hook/hook-desc-469185.md)
+- [Hook Description](hook/hook-desc-469196.md)
+- [Hook Description](hook/hook-desc-469202.md)
+- [Hook Description](hook/hook-desc-469211.md)
+- [Hook Description](hook/hook-desc-469217.md)
+- [Hook Description](hook/hook-desc-469228.md)
+- [Hook Description](hook/hook-desc-469238.md)
+
+### Style (2)
+
+- [Output Style: Explanatory](style/style-explanatory.md)
+- [Output Style: Learning](style/style-learning.md)
+
+### Message (63)
+
+- [Warning Message](message/msg-warning-18046.md)
+- [Warning Message](message/msg-warning-54228.md)
+- [Warning Message](message/msg-warning-55977.md)
+- [Warning Message](message/msg-warning-56800.md)
+- [Warning Message](message/msg-warning-63675.md)
+- [Warning Message](message/msg-warning-65999.md)
+- [Warning Message](message/msg-warning-66121.md)
+- [Warning Message](message/msg-warning-68583.md)
+- [Warning Message](message/msg-warning-68603.md)
+- [Warning Message](message/msg-warning-68662.md)
+- [Warning Message](message/msg-warning-71839.md)
+- [Warning Message](message/msg-warning-75753.md)
+- [Warning Message](message/msg-warning-90948.md)
+- [Warning Message](message/msg-warning-127727.md)
+- [Warning Message](message/msg-warning-132041.md)
+- [Warning Message](message/msg-warning-132092.md)
+- [Warning Message](message/msg-warning-178279.md)
+- [Warning Message](message/msg-warning-178370.md)
+- [Warning Message](message/msg-warning-178376.md)
+- [Warning Message](message/msg-warning-178473.md)
+- [Warning Message](message/msg-warning-178484.md)
+- [Warning Message](message/msg-warning-186461.md)
+- [Warning Message](message/msg-warning-186576.md)
+- [Warning Message](message/msg-warning-190680.md)
+- [Warning Message](message/msg-warning-191491.md)
+- [Warning Message](message/msg-warning-197840.md)
+- [Warning Message](message/msg-warning-197860.md)
+- [Warning Message](message/msg-warning-197919.md)
+- [Warning Message](message/msg-warning-223885.md)
+- [Warning Message](message/msg-warning-223904.md)
+- [Warning Message](message/msg-warning-223928.md)
+- [Warning Message](message/msg-warning-229981.md)
+- [Warning Message](message/msg-warning-229991.md)
+- [Warning Message](message/msg-warning-238566.md)
+- [Warning Message](message/msg-warning-243317.md)
+- [Warning Message](message/msg-warning-255528.md)
+- [Warning Message](message/msg-warning-258950.md)
+- [Warning Message](message/msg-warning-259483.md)
+- [Warning Message](message/msg-warning-284833.md)
+- [Warning Message](message/msg-warning-285926.md)
+- [Warning Message](message/msg-warning-302518.md)
+- [Warning Message](message/msg-warning-304644.md)
+- [Warning Message](message/msg-warning-329556.md)
+- [Warning Message](message/msg-warning-337540.md)
+- [Warning Message](message/msg-warning-342059.md)
+- [Warning Message](message/msg-warning-342179.md)
+- [Warning Message](message/msg-warning-342216.md)
+- [Warning Message](message/msg-warning-360795.md)
+- [Warning Message](message/msg-warning-398753.md)
+- [Warning Message](message/msg-warning-403853.md)
+- [Warning Message](message/msg-warning-406952.md)
+- [Warning Message](message/msg-warning-406976.md)
+- [Warning Message](message/msg-warning-406985.md)
+- [Warning Message](message/msg-warning-412525.md)
+- [Warning Message](message/msg-warning-425629.md)
+- [Warning Message](message/msg-warning-437325.md)
+- [Warning Message](message/msg-warning-447492.md)
+- [Warning Message](message/msg-warning-447500.md)
+- [Warning Message](message/msg-warning-460158.md)
+- [Warning Message](message/msg-warning-484517.md)
+- [Warning Message](message/msg-warning-492744.md)
+- [Warning Message](message/msg-warning-500693.md)
+- [Warning Message](message/msg-warning-502174.md)
+

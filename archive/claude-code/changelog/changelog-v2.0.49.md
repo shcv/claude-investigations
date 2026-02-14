@@ -4,6 +4,7 @@
 
 Version 2.0.49 introduces significant infrastructure improvements including a new GrowthBook feature flag system for dynamic feature control, unrestricted model access for Foundry users, and enhanced terminal rendering for emoji and Unicode characters.
 
+
 ### GrowthBook Feature Flag Integration
 **What:** Complete integration of GrowthBook SDK (v1.6.1) for remote feature management and A/B testing
 **How to use:**
@@ -20,6 +21,7 @@ claude
 - Features pause when browser tab is hidden to save resources
 - **Evidence**: `bn2()` at line 447290, `z31` class at line 448817, SDK key `CO0` at line 35311
 
+
 ### GitHub Repository Path Tracking
 **What:** New system to track which local directories correspond to which GitHub repositories
 **How to use:**
@@ -30,11 +32,13 @@ This feature works automatically when you work with GitHub repositories. It enab
 - Stored in `githubRepoPaths` field in user settings
 - **Evidence**: `lX9()` at line 507265, `iX9()` at line 507276
 
+
 ### Unrestricted Model Access for Foundry Users
 **What:** Foundry deployment users now have access to all Claude models without version restrictions
 **Details:**
 Previously, Foundry users had the same model restrictions as first-party users (excluding claude-3-* models). Now Foundry users can access all available models including legacy versions.
 - **Evidence**: `Ez4()` at line 86189 vs `dC4()` at line 86088 in v2.0.47
+
 
 ### Enhanced Terminal Text Rendering for Emoji and Unicode
 **What:** Significantly improved display width calculation for emoji, flag characters, and complex Unicode scripts
@@ -46,6 +50,7 @@ Previously, Foundry users had the same model restrictions as first-party users (
 - Prevents terminal misalignment issues with emoji-containing content
 - **Evidence**: `N94()` at line 61894, `q94()` at line 61905, `_g0()` at line 61921
 
+
 ### Improved HTTPS Proxy Compatibility
 **What:** Enhanced proxy agent with DNS address family normalization
 **Details:**
@@ -55,11 +60,13 @@ Previously, Foundry users had the same model restrictions as first-party users (
 - Maintains existing mTLS certificate support
 - **Evidence**: `WhQ()` at line 146672, `N$8()` at line 146623
 
+
 ### Enhanced Settings File Security Isolation
 **What:** Improved protection against accidental modification of parent workspace settings
 **Details:**
 When working in a subdirectory, Claude Code now denies write access to parent workspace `.claude/settings.json` and `.claude/settings.local.json` files. This prevents unintended configuration changes when working in nested directories.
 - **Evidence**: `oA2()` function sandbox configuration (diff line 5527-5531)
+
 
 ### Improved Tool Schema Validation
 **What:** VerifyResult tool now includes JSON Schema in addition to Zod schema
@@ -69,10 +76,12 @@ When working in a subdirectory, Claude Code now denies write access to parent wo
 - Supports both `inputSchema` (Zod) and `inputJSONSchema` (JSON Schema)
 - **Evidence**: `UM3()` at line 497621 vs `r$3()` at line 494892 in v2.0.47
 
+
 ### Code Organization
 - Refactored text segmentation functions for better emoji handling (`y44()` at line 76651, `k44()` at line 76643)
 - Consolidated import statements for better module organization
 - Updated internal function names for consistency (147 functions added, 22 removed)
+
 
 ### Infrastructure
 - Added support for dynamic feature rollouts via remote configuration

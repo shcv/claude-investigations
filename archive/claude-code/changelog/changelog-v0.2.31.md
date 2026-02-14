@@ -1,5 +1,6 @@
 # Changelog for version 0.2.31
 
+
 ### New Features
 
 #### Custom Slash Commands
@@ -32,11 +33,13 @@ claude --mcp-debug
 
 This helps troubleshoot MCP server configuration and connectivity issues.
 
+
 ### Internal Improvements
 
 - **Enhanced Error Logging**: MCP server errors are now logged with better formatting and optionally displayed to console when debug mode is enabled
 - **Version Update**: Updated to version 0.2.31
 - **Sentry Environment**: Error tracking now includes environment tag set to "external"
+
 
 ### Technical Changes
 

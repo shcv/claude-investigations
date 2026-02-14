@@ -1,6 +1,5 @@
 # Changelog for version 0.2.56
 
-Looking at this diff between Claude Code v0.2.55 and v0.2.56, here's the changelog:
 
 ### New Features
 
@@ -31,6 +30,7 @@ Looking at this diff between Claude Code v0.2.55 and v0.2.56, here's the changel
 - New `enableAllProjectMcpServers` configuration option
 - Allows enabling all MCP (Model Context Protocol) servers for a project at once
 
+
 ### Performance Improvements
 
 #### Intelligent Retry Backoff
@@ -40,6 +40,7 @@ Looking at this diff between Claude Code v0.2.55 and v0.2.56, here's the changel
 #### Host Validation Optimization
 - Added caching for CLAUDE.md host validation to reduce repeated lookups
 - Improves performance when checking URLs referenced in project documentation
+
 
 ### Technical Improvements
 
@@ -52,11 +53,13 @@ Looking at this diff between Claude Code v0.2.55 and v0.2.56, here's the changel
 - Updated stream handling to use proper Node.js stream imports
 - Added new `gk` function for consuming async iterators completely
 
+
 ### Bug Fixes
 
 - Fixed duplicate comment issue (as mentioned in recent commits)
 - Improved error handling in permission checking system
 - Better handling of aborted operations with proper cleanup
+
 
 ### Internal Changes
 
@@ -64,6 +67,7 @@ Looking at this diff between Claude Code v0.2.55 and v0.2.56, here's the changel
 - Updated tool configuration with new tools array structure
 - Constants for line limits now properly defined (`m91` and `j91` both set to 2000)
 - Better separation of concerns in the permission validation flow
+
 
 ### Breaking Changes
 

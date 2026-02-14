@@ -3,6 +3,7 @@
 ## Highlights
 Version 2.0.29 optimizes the trust validation system to respect the global bypass permissions setting, reducing unnecessary directory traversal when users have already accepted bypass permissions mode.
 
+
 ### Enhanced Trust Validation Logic
 **What:** The workspace trust check now respects the global bypass permissions setting more efficiently. When users have accepted bypass permissions mode (via `--dangerously-skip-permissions` or `--allow-dangerously-skip-permissions` flags), the trust validation immediately returns true without checking individual directory trust settings.
 
@@ -27,6 +28,7 @@ claude --allow-dangerously-skip-permissions
 - Added early-return check for `bypassPermissionsModeAccepted` flag before performing directory-specific trust validation
 - Reduces unnecessary computation when global bypass is enabled
 - No change to the security model—only optimization of the existing trust system
+
 
 ### Import Statement Refactoring
 Modernized Node.js module imports to use more specific named imports instead of default imports, improving code clarity and enabling better tree-shaking:

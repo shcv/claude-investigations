@@ -134,12 +134,12 @@ Lead with a semantic description and a searchable string literal. Optionally inc
 mangled function name for source-code verification, but never let it be the primary evidence.
 
 ```
-BAD:  **Evidence**: `$qB()` at line 285468
-BAD:  **Evidence**: `es2` at line 456160
+BAD:  Evidence: `$qB()` at line 285468
+BAD:  Evidence: `es2` at line 456160
 
-GOOD: **Evidence**: LSP server manager (search for `"textDocument/didOpen"`)
-GOOD: **Evidence**: Version lock cleanup (uses `tengu_pid_based_version_locking` flag)
-GOOD: **Evidence**: Extra usage handler — `Sz2()` at line ~425819 (contains `"/extra-usage"` command string)
+GOOD: Evidence: LSP server manager (search for `"textDocument/didOpen"`)
+GOOD: Evidence: Version lock cleanup (uses `tengu_pid_based_version_locking` flag)
+GOOD: Evidence: Extra usage handler — `Sz2()` at line ~425819 (contains `"/extra-usage"` command string)
 ```
 
 Format: Semantic description (search for `"searchable string"`) — optionally `mangledName()` at line ~N
@@ -467,19 +467,20 @@ Use this exact structure (no emoji in headers, no horizontal rules):
 ## New Features
 
 ### [Feature Name]
-**What**: One sentence description of the capability.
+What: One sentence description of the capability.
 
-**Usage**:
+Usage:
 ```bash
 claude [command or flag example]
 ```
 
-**Details**:
+Details:
 - How it works
 - Any options or variations
 - Limitations or requirements
 
-**Evidence**: Description of what this code does (search for `"searchable string"`)
+Evidence: Description of what this code does (search for `"searchable string"`)
+
 
 ### [Another Feature Name]
 ...
@@ -489,7 +490,7 @@ claude [command or flag example]
 ### [Improvement Name]
 [Description of what changed and why it matters to users]
 
-**Evidence**: Description (search for `"searchable string"`)
+Evidence: Description (search for `"searchable string"`)
 
 ## Bug Fixes
 
@@ -501,18 +502,18 @@ Features with infrastructure added but not yet enabled. These are shipped "dark"
 may become available in future versions.
 
 ### [Feature Name] [In Development]
-**What**: Description of the intended capability.
+What: Description of the intended capability.
 
-**Status**: [Stubbed/Feature-flagged/Dark-launched]
+Status: [Stubbed/Feature-flagged/Dark-launched]
 
-**Details**:
+Details:
 - What infrastructure exists
 - What's missing or disabled
 
-**Orphaned Tip**: ⚠️ Users may see: "[tip text]" - but the feature doesn't work yet.
+Orphaned Tip: ⚠️ Users may see: "[tip text]" - but the feature doesn't work yet.
 *(Include this field only if a tip exists for this disabled feature)*
 
-**Evidence**: Description (returns `!1` / gated by `tengu_flag_name`, search for `"searchable string"`)
+Evidence: Description (returns `!1` / gated by `tengu_flag_name`, search for `"searchable string"`)
 
 ## Notes
 
@@ -523,6 +524,8 @@ may become available in future versions.
 
 - Do NOT use emoji in section headers (##)
 - Do NOT use horizontal rules (`---`) — Discord doesn't render them properly
+- Do NOT bold field labels (What, Evidence, Details, Status, Usage) — bold labels compete visually with ### feature headings. Use plain text labels with a colon: `What:`, `Evidence:`, etc.
+- Use a double blank line before each `###` feature heading to visually separate features from each other
 - Emoji may be used sparingly in body text for emphasis if genuinely helpful
 - Prefer clear writing over decorative elements
 - Use blank lines between sections for visual separation instead of `---`

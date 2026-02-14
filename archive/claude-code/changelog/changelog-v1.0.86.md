@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.86 introduces a context usage visualization command, enhances file permission handling with intelligent suggestions and git config protection, and improves the trust dialog UI for better clarity and security awareness.
 
+
 ### Context Usage Visualization
 **What:** New `/context` command that displays current token usage as a colored grid
 **How to use:**
@@ -16,6 +17,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Displays detailed breakdowns including memory files, MCP tools, and custom agents
 - Grid size adapts based on model capacity (20x10 for ≥1M token models, 10x10 otherwise)
 - Helps identify what's consuming context and why you might hit limits
+
 
 ### Git Configuration File Protection
 **What:** Added security protection for `.git/config` and `.gitconfig` files
@@ -31,6 +33,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Protection covers both repository-level and global git configurations
 - Provides clear explanation about why permission is needed
 
+
 ### Intelligent Permission Suggestions
 **What:** Context-aware suggestions when Claude requests file permissions
 **How to use:**
@@ -45,6 +48,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Can suggest switching to "acceptEdits" mode for write operations
 - Provides rules that can be applied to efficiently grant permissions
 
+
 ### Enhanced Trust Dialog
 **What changed:** Simplified and consolidated the project trust dialog
 **Previous behavior:** Multiple separate warnings with complex dynamic options
@@ -55,6 +59,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Simplified to just "Yes, proceed" or "No, exit" options
 - Shows configuration sources in a more digestible format
 
+
 ### Todo List Persistence
 **What changed:** Todos are now saved to disk when modified
 **Previous behavior:** Todos only existed in memory during the session
@@ -63,6 +68,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Todo changes are saved for potential future recovery
 - TodoWrite tool now enforces keeping at least one task in_progress
 - Visual feedback simplified - completed tasks always show in green
+
 
 ### Todo List Feature Flag System
 **What changed:** TodoWrite tool now controlled by runtime feature flag instead of hardcoded visibility
@@ -76,6 +82,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Creates configurable task management system
 - Todos still persist to disk and function when enabled
 
+
 ### Smart Todo Display (Hidden Implementation)
 **What changed:** Improved todo list visualization with intelligent truncation (for internal use)
 **Previous behavior:** Simple list display without truncation
@@ -85,6 +92,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Displays "... +N done" for multiple completed tasks
 - Shows "... +N more" for remaining tasks
 - Would keep focus on active work while maintaining context (if visible)
+
 
 ### Permission Prompt Clarity
 **What changed:** Operation-specific permission messages
@@ -96,6 +104,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - Clearer about what permissions are being granted
 - Better session-based permission options
 
+
 ### Attachment Message Grouping
 **What changed:** Improved handling of file attachments in conversations
 **Previous behavior:** Attachments could be separated from their context
@@ -104,6 +113,7 @@ Version 1.0.86 introduces a context usage visualization command, enhances file p
 - File attachments stay with their relevant assistant or user messages
 - Prevents context loss when processing conversations with attachments
 - Better message organization for complex conversations
+
 
 ### Fixed: Spinner Words Configuration Structure
 - **Issue:** Spinner words were stored as a plain array limiting extensibility

@@ -4,6 +4,7 @@
 
 Version 2.0.11 introduces support for structured outputs (a new Claude API feature in beta), adds a new Explore agent for faster codebase navigation, and includes various internal improvements and bug fixes.
 
+
 ### Structured Outputs Support (Beta)
 
 **What:** Support for Claude's new structured outputs API feature via the beta header `structured-outputs-2025-09-17`
@@ -14,6 +15,7 @@ Version 2.0.11 introduces support for structured outputs (a new Claude API featu
 - Core tools (Bash, Read, Edit, Write) have been updated with `strict: true` for improved reliability
 - Automatically detected via model name containing `-structured-`
 - **Evidence**: New constant `Ey2 = "structured-outputs-2025-09-17"` at line 376349 and detection function `OV0()` at line 376356 in v2.0.11
+
 
 ### Explore Agent
 
@@ -34,6 +36,7 @@ Version 2.0.11 introduces support for structured outputs (a new Claude API featu
 - Tools available: Glob, Grep, Read, Bash
 - **Evidence**: New agent definition `Ds5` at line 428791 in v2.0.11 with `agentType: "Explore"`
 
+
 ### Enhanced Marketplace Operations
 
 **What:** Marketplace git operations now provide progress feedback during cloning and pulling
@@ -44,6 +47,7 @@ Version 2.0.11 introduces support for structured outputs (a new Claude API featu
 - Improved cleanup and error recovery when marketplace operations fail
 - More robust handling of corrupted marketplace cache directories
 - **Evidence**: Functions `ky2()` and `yr4()` at lines 377040 and 377088 in v2.0.11 now accept progress callback parameter `Q`
+
 
 ### File Timestamp Checking
 

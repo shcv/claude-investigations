@@ -1,6 +1,5 @@
 # Changelog for version 1.0.68
 
-Based on my analysis of the diff file, here's the changelog for Claude Code version 1.0.68:
 
 ### Major Changes
 
@@ -23,6 +22,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   - New `ipcInput` option to send initial data to subprocess on startup
   - Deadlock detection and prevention in IPC communications
 
+
 ### New Features
 
 #### Enhanced Terminal Output
@@ -42,6 +42,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   - Shows command duration and timing information
   - Better distinction between different types of failures (timeout, signal, graceful cancel)
   - Improved error messages for common issues like missing files or invalid options
+
 
 ### API Improvements
 
@@ -64,6 +65,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   - `full`: Detailed execution logs with timing
   - Custom function support for advanced logging
 
+
 ### Bug Fixes
 
 #### Removed Features
@@ -77,6 +79,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Better handling of zombie processes
 - Fixed memory leaks in long-running operations
 
+
 ### Developer Experience
 
 #### Better Debugging
@@ -88,6 +91,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Clearer error messages for common configuration mistakes
 - Better suggestions for fixing issues
 - More context in error stack traces
+
 
 ### Internal Improvements
 
@@ -101,6 +105,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - Better coverage for edge cases in command execution
 - Improved integration tests for IPC functionality
 
+
 ### Breaking Changes
 
 ⚠️ **Note**: While most changes are backward compatible, there are a few breaking changes:
@@ -108,6 +113,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 1. The `signal` option has been renamed to `cancelSignal` for clarity
 2. The `verbose: true/false` options have been replaced with string values (`'none'`, `'short'`, `'full'`)
 3. The separate NotebookRead tool no longer exists - use the standard Read tool instead
+
 
 ### Summary
 

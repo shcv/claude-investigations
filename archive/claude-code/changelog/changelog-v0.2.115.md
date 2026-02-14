@@ -1,5 +1,6 @@
 # Changelog for version 0.2.115
 
+
 ### New Features
 
 #### **Automatic Git Command Optimization**
@@ -24,6 +25,7 @@ You can now configure custom commands to run when Claude Code sends notification
 }
 ```
 
+
 ### Improvements
 
 #### **Enhanced Session Management**
@@ -37,6 +39,7 @@ You can now configure custom commands to run when Claude Code sends notification
 - Now properly handles "thinking" and "redacted_thinking" content blocks
 - More robust error messages when responses are malformed
 
+
 ### Performance Enhancements
 
 #### **Git Operations**
@@ -49,12 +52,14 @@ You can now configure custom commands to run when Claude Code sends notification
 - Reduced memory usage when handling multiple sessions
 - Faster startup time when loading previous conversations
 
+
 ### Technical Changes
 
 - Renamed internal model references from `slowAndCapableModel` to `mainLoopModel` for clarity
 - Improved command parsing logic for better handling of environment variables
 - Enhanced shell command preprocessing for git-specific optimizations
 - Updated to use ES module imports consistently
+
 
 ### Bug Fixes
 

@@ -2,10 +2,12 @@
 
 # Claude Code v1.0.37 Changelog
 
+
 ### Print Mode Support
 - Added support for `-p` / `--print` command-line flags and automatic detection of non-TTY output
 - When running `claude -p` or `claude --print`, or when output is piped/redirected, Claude will operate in print mode
 - This allows for better integration with scripts and command pipelines
+
 
 ### Enhanced Configuration Management
 
@@ -25,19 +27,24 @@
 - Added file locking mechanism for configuration updates to prevent concurrent write conflicts
 - If locking fails, the system gracefully falls back to non-locked saves with appropriate logging
 
+
 ### Cost Reporting Control
 - New environment variable `CLAUDE_CODE_DISABLE_COST_REPORTING` to disable cost reporting features
 - Usage: `export CLAUDE_CODE_DISABLE_COST_REPORTING=true`
+
 
 ### Agent Plan Rejection Handling
 - Added proper error messaging when an agent's proposed plan is rejected by the user
 - Provides clearer feedback in the interactive workflow
 
+
 ### Error Handling
 - Added new `AbortError` class for better error categorization and handling of aborted operations
 
+
 ### Stream Processing
 - Migrated from generic stream imports to more specific `PassThrough` stream for improved performance
+
 
 ### Tool Permission System
 - Added new permission request structure for tools, including:

@@ -3,6 +3,7 @@
 ## Highlights
 This release introduces npm plugin support, allowing users to install and use Claude plugins directly from npm packages. It also enhances file security by expanding protection to include IDE configurations and shell files beyond just Git files.
 
+
 ### npm Plugin Support
 **What:** Claude Code now supports loading plugins directly from npm packages using the `npm:` prefix in repository names
 
@@ -24,6 +25,7 @@ This release introduces npm plugin support, allowing users to install and use Cl
 - Validates plugin structure (requires `commands/`, `agents/`, `plugin.json`, or `hooks/` directories)
 - **Evidence**: `jF5() at line 395289`, `RF5() at line 395212`, `qS at line 395336`
 
+
 ### Enhanced File Security Protection
 **What:** Expanded file filtering now protects IDE configurations and shell files in addition to Git files
 
@@ -34,9 +36,11 @@ This release introduces npm plugin support, allowing users to install and use Cl
 - Consolidated security logic provides consistent protection across file types
 - **Evidence**: `UW9() at line 352933`
 
+
 ### Plugin Loading Architecture
 Refactored plugin discovery system with improved error handling and conflict detection. Plugin names must now be unique across all repositories, with clear error messages for conflicts.
 
+
 ### Todo Display Integration
 Added keyboard shortcut integration hook for todo toggle functionality, improving the user experience when managing todos during Claude sessions.
-**Evidence**: `ylB() at line 430535`
+Evidence: `ylB() at line 430535`

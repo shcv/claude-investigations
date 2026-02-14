@@ -1,0 +1,344 @@
+#+TITLE: Claude Code Steering Analysis: Corner-Cutting Behavior
+#+SUBTITLE: Prompts that encourage skipping process steps for "trivial" tasks
+#+DATE: 2026-01-29
+#+VERSION: 2.1.23
+
+* Executive Summary
+
+This document catalogs steering language in Claude Code v2.1.23 that explicitly
+instructs the model to skip organizational tools (task lists, planning mode)
+based on subjective assessments of task complexity.
+
+*Observed Problem:* Claude cutting corners on user-defined workflows, stating
+"I cut corners because the task was a small refactor."
+
+*Root Cause:* The base system prompts contain explicit instructions to bypass
+process steps when tasks are deemed "trivial," "straightforward," or "simple."
+This built-in behavior can override user-defined workflow requirements.
+
+* Key Terms Used to Trigger Skipping
+
+| Term           | Occurrences | Primary Effect                      |
+|----------------+-------------+-------------------------------------|
+| trivial        |           6 | Skip TodoWrite, bypass planning     |
+| straightforward |          5 | Skip TodoWrite, no planning needed  |
+| simple         |           4 | Skip EnterPlanMode                  |
+| small          |           2 | "few-line fixes, small tweaks"      |
+| obvious        |           2 | "obvious bugs, obvious implementation" |
+| single         |           5 | Single task = skip tracking         |
+
+* Prompt Sources and Analysis
+
+** TodoWrite Tool (Task List Management)
+
+*Source:* =archive/claude-code/prompts/v2.1.23/tool/tool-todowrite.md=
+*Source Line:* 160570
+*Source Variable:* =eH4=
+
+*** When NOT to Use This Tool (Lines 26-34)
+
+#+begin_quote
+Skip using this tool when:
+1. There is only a single, straightforward task
+2. The task is trivial and tracking it provides no organizational benefit
+3. The task can be completed in less than 3 trivial steps
+4. The task is purely conversational or informational
+
+NOTE that you should not use this tool if there is only one trivial task to do.
+In this case you are better off just doing the task directly.
+#+end_quote
+
+*Impact Assessment:*
+- HIGH IMPACT: Creates subjective threshold ("trivial," "straightforward")
+- Explicitly tells model to bypass task tracking for perceived simple work
+- The "3 trivial steps" threshold is arbitrary and encourages skipping
+- The phrase "better off just doing the task directly" reinforces bypassing
+
+*** Example Reasoning Reinforcement (Lines 117-118)
+
+#+begin_quote
+The assistant did not use the todo list because this is a single, trivial task
+that can be completed in one step. There's no need to track multiple tasks or
+steps for such a straightforward request.
+#+end_quote
+
+*Impact Assessment:*
+- MEDIUM IMPACT: Training examples that reinforce the skipping behavior
+- Demonstrates the desired "reasoning" for cutting corners
+- Makes the behavior seem normative and correct
+
+*** Additional Skip Examples (Lines 136-137, 152-153)
+
+#+begin_quote
+The assistant did not use the todo list because this is a single, straightforward
+task confined to one location in the code. Adding a comment doesn't require
+tracking multiple steps or systematic organization.
+#+end_quote
+
+#+begin_quote
+The assistant did not use the todo list because this is a single command execution
+with immediate results. There are no multiple steps to track or organize, making
+the todo list unnecessary for this straightforward task.
+#+end_quote
+
+*Impact Assessment:*
+- MEDIUM IMPACT: Multiple examples establish a pattern
+- Teaches model that location-confined tasks don't need tracking
+- "Immediate results" becomes justification for skipping process
+
+** EnterPlanMode Tool
+
+*Source:* =archive/claude-code/prompts/v2.1.23/tool/tool-enterplanmode.md=
+*Source Line:* 447441
+*Source Variable:* =eE2=
+
+*** Opening Framing (Line 12)
+
+#+begin_quote
+Use this tool proactively when you're about to start a non-trivial implementation task.
+#+end_quote
+
+*Impact Assessment:*
+- MEDIUM IMPACT: Frames planning as only for "non-trivial" tasks
+- Implicitly creates a category of tasks that don't need planning
+
+*** When to Use Qualifier (Line 16)
+
+#+begin_quote
+**Prefer using EnterPlanMode** for implementation tasks unless they're simple.
+#+end_quote
+
+*Impact Assessment:*
+- HIGH IMPACT: The "unless they're simple" clause is the key escape hatch
+- Model must make subjective judgment about "simple" vs "complex"
+
+*** When NOT to Use This Tool (Lines 46-52)
+
+#+begin_quote
+Only skip EnterPlanMode for simple tasks:
+- Single-line or few-line fixes (typos, obvious bugs, small tweaks)
+- Adding a single function with clear requirements
+- Tasks where the user has given very specific, detailed instructions
+- Pure research/exploration tasks (use the Task tool with explore agent instead)
+#+end_quote
+
+*Impact Assessment:*
+- HIGH IMPACT: Explicit list of when to skip planning
+- "obvious bugs" and "small tweaks" are subjective assessments
+- "Single function with clear requirements" opens wide interpretation
+- Model can classify many tasks as "clear requirements" to avoid planning
+
+*** BAD Examples (Lines 82-90)
+
+#+begin_quote
+### BAD - Don't use EnterPlanMode:
+User: "Fix the typo in the README"
+- Straightforward, no planning needed
+
+User: "Add a console.log to debug this function"
+- Simple, obvious implementation
+
+User: "What files handle routing?"
+- Research task, not implementation planning
+#+end_quote
+
+*Impact Assessment:*
+- MEDIUM IMPACT: Negative examples train what to avoid
+- Labels planning for simple tasks as "BAD" behavior
+- Reinforces that some tasks inherently don't need process
+
+*** Counterbalancing Example (Lines 76-77)
+
+#+begin_quote
+User: "Add a delete button to the user profile"
+- Seems simple but involves: where to place it, confirmation dialog, API call,
+  error handling, state updates
+#+end_quote
+
+*Impact Assessment:*
+- LOW POSITIVE: This is the only counterbalance found
+- Shows that "simple-seeming" tasks can be complex
+- However, this single example is outweighed by multiple skip-encouraging messages
+
+** Agent System Prompts
+
+*** General-Purpose Agent (Lines 11, 19-26)
+
+*Source:* =archive/claude-code/prompts/v2.1.23/agent/agent-general-purpose.md=
+
+#+begin_quote
+You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the
+user's message, you should use the tools available to complete the task. Do what
+has been asked; nothing more, nothing less.
+#+end_quote
+
+*Impact Assessment:*
+- MEDIUM IMPACT: "nothing more, nothing less" discourages extra steps
+- Could be interpreted as "don't do reviews unless explicitly asked"
+- Partially counterbalanced by "respond with a detailed writeup"
+
+*** File Search Agent (HzY) - Speed Emphasis (Lines 40-42)
+
+*Source:* =archive/claude-code/prompts/v2.1.23/agent/agent-prompt-hzy.md=
+
+#+begin_quote
+NOTE: You are meant to be a fast agent that returns output as quickly as possible.
+In order to achieve this you must:
+- Make efficient use of the tools that you have at your disposal: be smart about
+  how you search for files and implementations
+- Wherever possible you should try to spawn multiple parallel tool calls for
+  grepping and reading files
+#+end_quote
+
+*Impact Assessment:*
+- LOW-MEDIUM IMPACT: Emphasis on speed over thoroughness
+- "Fast" and "quickly as possible" could encourage shortcuts
+- However, this is scoped to file searches, not general behavior
+
+* Summary of Problematic Patterns
+
+** Pattern 1: Explicit Skip Instructions
+
+The prompts contain direct instructions like:
+- "Skip using this tool when..."
+- "Only skip X for simple tasks"
+- "NOTE that you should not use this tool if..."
+
+These create explicit permission to bypass processes.
+
+** Pattern 2: Subjective Complexity Assessment
+
+The model is asked to judge:
+- "trivial" vs "complex"
+- "straightforward" vs "complicated"
+- "simple" vs "non-trivial"
+- "obvious" vs "unclear"
+
+These are inherently subjective and model-dependent assessments.
+
+** Pattern 3: Reinforcement Through Examples
+
+Multiple examples demonstrate the "correct" reasoning for skipping:
+- "The assistant did not use the todo list because..."
+- Labeled "BAD" examples for using planning on simple tasks
+
+** Pattern 4: Efficiency Framing
+
+Language like:
+- "nothing more, nothing less"
+- "fast agent"
+- "as quickly as possible"
+- "better off just doing the task directly"
+
+Frames thoroughness as potentially wasteful.
+
+* Recommendations for Mitigation
+
+To override this built-in behavior in custom skills/workflows:
+
+** Explicit Counter-Instructions
+
+#+begin_src text
+IMPORTANT: Never skip process steps regardless of perceived task complexity.
+The "trivial task" exception does NOT apply to this workflow.
+Always complete ALL steps including reviews even for small changes.
+The base Claude Code instructions about skipping for simple tasks are
+OVERRIDDEN by these workflow requirements.
+#+end_src
+
+** Explicit Framing
+
+#+begin_src text
+In this workflow, there is no such thing as a "trivial" task that can skip
+reviews. Every task, regardless of size, must go through the full process.
+#+end_src
+
+** Acknowledgment Requirement
+
+#+begin_src text
+Before making any implementation decision, explicitly acknowledge:
+"Even though this may seem simple, I will follow the full process as required."
+#+end_src
+
+* Version History Analysis
+
+** Timeline of Skip-Encouraging Language Introduction
+
+| Version  | Change                                                              | Impact   |
+|----------+---------------------------------------------------------------------+----------|
+| v0.2.93  | "When NOT to Use" section added to TodoWrite                        | HIGH     |
+| v0.2.93  | "Examples of When NOT to Use" with reasoning blocks added           | MEDIUM   |
+| v2.0.51  | "BAD - Don't use EnterPlanMode" examples added                      | HIGH     |
+| v2.0.62  | EnterPlanMode wording changed from "err on side of implementation"  | IMPROVED |
+|          | to "err on the side of planning"                                    |          |
+| v2.1.16  | TaskCreate tool added with duplicate "When NOT to Use" section      | HIGH     |
+| v2.1.20  | Alternative EnterPlanMode variant added with MORE permissive skip   | HIGH     |
+|          | guidance ("just get started", "Skip plan mode when...")             |          |
+| v2.1.21  | No changes to skip language                                         | NONE     |
+| v2.1.22  | No changes to skip language                                         | NONE     |
+| v2.1.23  | No changes to skip language                                         | NONE     |
+
+** Quantitative Analysis: Skip Term Occurrences
+
+| Version  | trivial | straightforward | skip using | Total |
+|----------+---------+-----------------+------------+-------|
+| v2.0.70  |      10 |               5 |          1 |    23 |
+| v2.1.10  |      10 |               5 |          1 |    23 |
+| v2.1.15  |      10 |               5 |          1 |    23 |
+| v2.1.16  |      14 |               6 |          2 |    30 |
+| v2.1.20  |      14 |               7 |          2 |    31 |
+| v2.1.23  |      14 |               7 |          2 |    31 |
+
+*Key Finding:* The biggest increase (+30%) occurred in *v2.1.16* with the
+introduction of the TaskCreate tool system, which duplicated the skip-encouraging
+language in a second context.
+
+** Critical Change: v2.1.20 Alternative EnterPlanMode Variant
+
+Version 2.1.20 introduced a *second, more permissive* EnterPlanMode prompt variant:
+
+#+begin_quote
+Skip plan mode when you can reasonably infer the right approach:
+- The task is straightforward even if it touches multiple files
+- The user's request is specific enough that the implementation path is clear
+- You're adding a feature with an obvious implementation pattern (e.g., adding
+  a button, a new endpoint following existing conventions)
+- Bug fixes where the fix is clear once you understand the bug
+- The user says something like "can we work on X" or "let's do X" — just get started
+
+When in doubt, prefer starting work and using [AskUser tool] for specific
+questions over entering a full planning phase.
+#+end_quote
+
+*Critical observation:* "Add a delete button to the user profile" is in the
+*GOOD examples* (use planning) in the original prompt, but in the *BAD examples*
+(skip planning) in this new variant. This contradiction may cause inconsistent
+behavior.
+
+** Stability Since v2.1.20
+
+The skip-encouraging language has been *stable since v2.1.20* - versions 2.1.21,
+2.1.22, and 2.1.23 made no changes to this steering language. If behavior seems
+worse recently, it is likely due to:
+
+1. The cumulative effect of v2.1.16 + v2.1.20 changes
+2. Model-level changes (not prompt changes)
+3. Interaction between the two conflicting EnterPlanMode variants
+
+* Conclusion
+
+The corner-cutting behavior observed in Claude is not a bug or hallucination -
+it is *explicitly trained behavior* embedded in the tool descriptions. The
+prompts create a default heuristic where the model:
+
+1. Assesses task complexity subjectively
+2. Skips organizational tools for "simple" tasks
+3. Considers skipping to be the "correct" behavior in these cases
+
+This creates tension with user-defined workflows that require consistent process
+adherence regardless of task size. Users must actively override this default
+behavior with explicit counter-instructions.
+
+The language has been stable since v2.1.20, but the *cumulative additions* from
+v0.2.93 → v2.0.51 → v2.1.16 → v2.1.20 have progressively strengthened the
+model's tendency to skip steps for perceived "trivial" tasks.

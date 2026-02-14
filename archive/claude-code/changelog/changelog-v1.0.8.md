@@ -2,12 +2,14 @@
 
 # Claude Code v1.0.8 Changelog
 
+
 ### MCP OAuth Authentication
 - Added support for OAuth authentication with MCP (Model Context Protocol) servers
 - New `mcp-auth` command for authenticating with servers that require OAuth
 - Interactive authentication flow with browser-based login
 - Automatic token refresh when tokens expire
 - Secure credential storage in the configuration directory
+
 
 ### Enhanced Thinking Mode
 - Expanded multi-language support for thinking mode triggers
@@ -25,16 +27,19 @@
   - MIDDLE: 10,000 tokens (phrases like "think deeply", "megathink")
   - BASIC: 4,000 tokens (simple "think")
 
+
 ### Model Selection Improvements
 - Better support for Claude Max users with automatic model selection
 - Simplified model detection for Pro vs Max subscriptions
 - Improved fallback model descriptions based on usage limits
+
 
 ### Keyboard Shortcuts
 - New `Ctrl+E` shortcut in transcript mode to toggle a feature (context-dependent)
 - Updated newline hints:
   - Apple Terminal with Option as Meta: "option + ⏎ for newline"
   - Other terminals: "shift + ⏎ for newline" or "\\⏎ for newline"
+
 
 ### Edit Tool Improvements
 - Added `replace_all` parameter to the Edit tool
@@ -48,14 +53,17 @@ claude "Rename all instances of 'oldVariable' to 'newVariable' in my code"
 # Claude will use replace_all: true when appropriate
 ```
 
+
 ### Signal Handling
 - Improved process signal handling for SIGINT and SIGTERM
 - More graceful shutdown when interrupted
+
 
 ### Timeout Configuration
 - Configurable MCP timeouts via environment variables:
   - `MCP_TIMEOUT`: General MCP operation timeout (default: 30 seconds)
   - `MCP_TOOL_TIMEOUT`: MCP tool execution timeout (default: 100 seconds)
+
 
 ### Debug Logging
 - Enhanced MCP debug logging with `--mcp-debug` flag

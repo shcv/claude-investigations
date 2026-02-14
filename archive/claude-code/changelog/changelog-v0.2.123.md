@@ -2,6 +2,7 @@
 
 Based on my analysis of the diff file for version 0.2.123, here is the detailed changelog:
 
+
 ### 🆕 New Features
 
 #### Claude 3.7 Sonnet Model Support
@@ -46,6 +47,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - **Unified Rate Limit System**: New `unifiedRateLimitFallbackAvailable` flag for better rate limit management
 - **Quota Checking**: New `D65()` function to check API quota status
 
+
 ### Improvements
 
 #### Permission System Enhancements
@@ -65,6 +67,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - **Improved Error Messages**: New `RetryError` class provides better context for retry failures
 - **Enhanced Tooltips**: More descriptive tooltips for model selection and feature explanations
 
+
 ### Bug Fixes
 
 - Fixed duplicate imports and variable declarations
@@ -72,6 +75,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
 - Improved handling of MCP (Model Context Protocol) tool filtering
 - Better error handling for AWS Bedrock model discovery
 - Fixed issues with diagnostic file path matching
+
 
 ### Internal Changes
 
@@ -83,6 +87,7 @@ Based on my analysis of the diff file for version 0.2.123, here is the detailed 
   
 - **Improved Tool Filtering**: Enhanced logic for filtering available tools based on permissions and MCP capabilities
 - **Code Organization**: Better separation of concerns for model management, diagnostics, and permissions
+
 
 ### Notes for Developers
 

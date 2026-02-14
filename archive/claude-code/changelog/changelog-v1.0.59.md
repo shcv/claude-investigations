@@ -1,6 +1,5 @@
 # Changelog for version 1.0.59
 
-Based on my analysis of the diff file, here is the changelog for Claude Code version 1.0.59:
 
 ### New Features
 
@@ -12,13 +11,14 @@ Claude Code now automatically saves checkpoints of your work during sessions, pr
 - **Opt-out option**: Disable checkpointing by setting the environment variable `CLAUDE_CODE_DISABLE_CHECKPOINTING`
 - **Configuration**: New `checkpointingEnabled` setting (enabled by default)
 
-**Usage**: Checkpoints are created automatically in the background. No user action required.
+Usage: Checkpoints are created automatically in the background. No user action required.
 
 ```bash
 # To disable checkpointing:
 export CLAUDE_CODE_DISABLE_CHECKPOINTING=true
 claude
 ```
+
 
 ### Improvements
 
@@ -31,11 +31,13 @@ claude
 - Removed agent color index management system for a cleaner interface
 - Simplified how parallel agents are displayed
 
+
 ### Bug Fixes
 
 - Fixed internal error handling structures
 - Improved checkpoint initialization error recovery
 - Enhanced configuration validation
+
 
 ### Internal Changes
 
@@ -43,6 +45,7 @@ claude
 - Updated internal agent management functions
 - Refined memory usage tracking
 - Structural code improvements (98.7% similarity to previous version)
+
 
 ### Configuration
 
@@ -52,6 +55,7 @@ New configuration option added:
   "checkpointingEnabled": true  // Enable/disable checkpoint feature
 }
 ```
+
 
 ### Notes
 

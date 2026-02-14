@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.82 introduces real-time validation for Claude Code settings files, simplifies the permission system by removing complex shortcuts, and adds internal infrastructure for upcoming beta features. This is primarily a quality and stability release focused on preventing configuration errors.
 
+
 ### Settings File Validation
 **What:** Real-time validation when editing `.claude/settings.json` and `.claude/settings.local.json` files
 **How to use:**
@@ -20,17 +21,20 @@ claude edit .claude/settings.json
 - Provides the complete schema reference for troubleshooting
 - Prevents invalid configurations from being saved
 
+
 ### Simplified Permission System
 **What changed:** Removed complex permission shortcuts and modes
 **Previous behavior:** Had "accept-project" mode and shift+a keyboard shortcut for batch permissions
 **New behavior:** Streamlined to three clear options: accept-once, accept-session, or reject
 **Impact:** Clearer and more predictable permission handling without confusing shortcuts
 
+
 ### Beta Feature Infrastructure
 **What changed:** Added internal filtering for experimental features
 **Previous behavior:** All experimental features handled uniformly
 **New behavior:** Special handling for "interleaved-thinking-2025-05-14" and "context-1m-2025-08-07" features
 **Impact:** Prepares for controlled rollout of beta features (not yet user-accessible)
+
 
 ### Input Context Preservation
 **What changed:** Enhanced command processing to preserve preceding input blocks

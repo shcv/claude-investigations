@@ -1,5 +1,6 @@
 # Changelog for version 1.0.51
 
+
 ### New Features
 
 #### Setup Notes Display
@@ -9,6 +10,7 @@ A new component has been added to display setup notes and warnings to users duri
 - Clean formatting with proper indentation
 
 This helps users understand any special configuration or setup steps needed for their environment.
+
 
 ### Internal Changes
 
@@ -21,6 +23,7 @@ The internal memory threshold has been decreased from 80,000 to 70,000, which ma
 #### New Dependencies
 - Added `PassThrough` stream import for improved stream handling
 - Added `cwd` import from node:process for better working directory management
+
 
 ### Removed Features
 
@@ -35,6 +38,7 @@ This means users will now need to manually restart Claude Code after making chan
 
 #### Removed Dependencies
 Several file system and path-related imports have been removed as they were part of the now-removed file watching system.
+
 
 ### Summary
 This update focuses on simplifying the codebase by removing the automatic file watching system while adding better setup guidance for users. The removal of file watching may require users to be more mindful about restarting the application after configuration changes, but it reduces complexity and potential resource usage from continuous file monitoring.

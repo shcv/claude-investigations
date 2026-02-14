@@ -1,11 +1,11 @@
 # Changelog for version 1.0.35
 
-Based on my analysis of the diff file, here is the changelog for Claude Code v1.0.35:
 
 ### Bug Fixes & Improvements
 
 - **Fixed Function Permission Handling**: Removed the `oU5` function that was handling tool permission messages for allowed/denied tools and workspace access
 - **Updated Version References**: Updated internal version string from 1.0.34 to 1.0.35 across all configuration files
+
 
 ### Dependency Updates
 
@@ -18,6 +18,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code v1.
   - Improved MCP (Model Communication Protocol) authentication flow
   - Added better protocol version header handling (`mcp-protocol-version`)
   - Enhanced SSE (Server-Sent Events) client transport with authentication support
+
 
 ### Tool System Improvements
 
@@ -36,6 +37,7 @@ Based on my analysis of the diff file, here is the changelog for Claude Code v1.
   - Improved line number prefix handling in edit operations
   - Better guidance for preserving exact indentation
 
+
 ### Internal Architecture Changes
 
 - **URI Handling**: Added new URI parsing and manipulation library (`bo0` module) with comprehensive URL/URI support
@@ -43,11 +45,13 @@ Based on my analysis of the diff file, here is the changelog for Claude Code v1.
 - **Semver Support**: Added semantic versioning utilities for better version management
 - **Error Handling**: Improved error messages for various edge cases including invalid arguments and authentication failures
 
+
 ### User Experience Improvements
 
 - **Better Error Feedback**: More descriptive error messages for tool rejections and failures
 - **Enhanced Tool Documentation**: Clearer descriptions of when to use specific tools
 - **Improved Authentication Flow**: Better handling of 401 errors and authentication retries
+
 
 ### Technical Updates
 

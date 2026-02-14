@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.128 introduces a comprehensive plugin marketplace system enabling plugin discovery and installation from multiple sources (npm, GitHub, git repositories, and local paths). The release also enhances the notification system with priority-based queuing and adds Claude Agent SDK support to better track programmatic usage.
 
+
 ### Plugin Marketplace System
 **What:** A complete plugin distribution and installation infrastructure that enables discovering and installing plugins from centralized marketplaces.
 
@@ -25,6 +26,7 @@ claude settings --set enabledPlugins.formatter@official=true
 - Supports plugin versioning, categories, tags, and rich metadata
 - **Evidence**: `ba4()` marketplace loader at line 377017, `la4()` plugin cacher at line 377152, `aa4()` plugin loader at line 377392, marketplace schemas at lines 376680-376846
 
+
 ### Claude Agent SDK Integration
 **What:** Added support for tracking when Claude Code is invoked through the Claude Agent SDK, enabling better analytics and contextual identity.
 
@@ -37,6 +39,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Enables Anthropic to distinguish direct CLI usage from SDK-mediated usage
 - **Evidence**: `IM()` user agent function at line 368228, telemetry field at lines 140142-440144
 
+
 ### Adaptive System Prompt Identity
 **What:** Claude Code now uses different identity strings based on operational context (interactive CLI vs non-interactive SDK usage).
 
@@ -47,6 +50,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Vertex AI provider always uses the standard CLI identity
 - Enables context-aware behavior based on how Claude Code is being used
 - **Evidence**: Identity selection function `A$1()` at line 366028, identity strings at lines 366024-366027
+
 
 ### File Checkpointing Enablement
 **What:** Unlocked the file checkpointing ("Rewind") feature that allows reverting file changes to previous snapshots.
@@ -62,6 +66,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Still behind a feature flag for gradual rollout
 - **Evidence**: Activation function `u7()` at line 380874, UI controls at lines 400220-400237
 
+
 ### Enhanced Notification System
 **What:** Replaced simple single-notification system with a sophisticated priority-based queue.
 
@@ -76,6 +81,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Default 8000ms timeout (configurable via `timeoutMs`)
 - **Evidence**: Priority queue function `Qz()` at line 363067, priority sorting `F19()` at line 363140, priority mapping at line 363139
 
+
 ### Optimized Credential Storage
 **What:** Refactored credential storage from factory functions to singleton objects with memoized read operations.
 
@@ -87,6 +93,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Improved performance through reduced object allocation and I/O operations
 - No user-visible changes to behavior
 - **Evidence**: Keychain singleton at line 378779, plaintext singleton at line 378823, path memoization at line 378818
+
 
 ### Plugin Manifest Schema Enhancements
 **What:** Extended plugin manifest schema with richer metadata and flexible configuration options.
@@ -112,6 +119,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
 - Added helper functions for git operations, npm package installation, and directory copying
 - Improved error handling with specific error types like `cC` for invalid schemas
 
+
 ### Plugin Marketplace File Structure
 ```
 ~/.config/claude-code/plugins/
@@ -127,6 +135,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
         ├── agents/
         └── hooks/
 ```
+
 
 ### Marketplace Manifest Format
 ```json
@@ -144,6 +153,7 @@ When the `CLAUDE_AGENT_SDK_VERSION` environment variable is set, it's automatica
   ]
 }
 ```
+
 
 ### Breaking Changes
 None - all changes are backward compatible or additive.

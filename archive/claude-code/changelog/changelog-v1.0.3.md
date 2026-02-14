@@ -2,10 +2,12 @@
 
 # Changelog v1.0.3
 
+
 ### Enhanced Image Type Detection
 - Added automatic image format detection from base64 data (`JQ0` function)
 - Supports detection of PNG, JPEG, GIF, and WebP formats based on file signatures
 - Provides fallback to PNG format when detection fails
+
 
 ### GhostTTY Terminal Integration
 - New support for GhostTTY terminal configuration (`eL4` function)
@@ -14,6 +16,7 @@
 - Creates automatic backups of existing configurations before modification
 - Warns users about existing Shift+Enter bindings to prevent conflicts
 
+
 ### Improved Unicode Handling
 - Added robust Unicode sanitization (`Ff1` and `IL` functions)
 - Normalizes text using NFKC normalization
@@ -21,14 +24,17 @@
 - Prevents potential security issues from malformed Unicode input
 - Applies sanitization recursively to all string inputs in nested data structures
 
+
 ### Enhanced Shell Command Safety
 - Improved handling of file descriptor redirections (`>&0`, `>&1`, `>&2`)
 - Better parsing and validation of shell commands with output redirection
 - Prevents unsafe command patterns while allowing legitimate redirections
 
+
 ### Process Information
 - Enhanced user agent string now includes the entrypoint information via `CLAUDE_CODE_ENTRYPOINT` environment variable
 - Provides better debugging context for different execution environments
+
 
 ### Code Organization
 - Removed unused imports and variables for cleaner codebase

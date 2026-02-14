@@ -1,6 +1,5 @@
 # Changelog for version 1.0.7
 
-Now, based on the diff analysis, I can generate a comprehensive changelog for version 1.0.7:
 
 ### New Features
 
@@ -45,6 +44,7 @@ Now, based on the diff analysis, I can generate a comprehensive changelog for ve
   claude config add ignorePatterns "*.log"
   ```
 
+
 ### Tool Improvements
 
 #### Edit Tool Enhancement
@@ -59,17 +59,20 @@ Now, based on the diff analysis, I can generate a comprehensive changelog for ve
   - `find` properly handles "file not found" scenarios
   - Generic commands provide clearer error messages
 
+
 ### Performance Improvements
 
 - **Proxy support optimization**: Better handling of HTTP proxy configurations
   - Unified proxy handling across axios and undici HTTP clients
   - Improved `HTTPS_PROXY` environment variable support
 
+
 ### API Enhancements
 
 - **Subscription-aware cost calculation**: Model costs now reflect Development Partner Program discounts
 - **Enhanced retry logic**: Improved handling of context limit errors with automatic max_tokens adjustment
 - **Better error messages**: More informative error responses for rate limits and quota issues
+
 
 ### Bug Fixes
 
@@ -78,11 +81,13 @@ Now, based on the diff analysis, I can generate a comprehensive changelog for ve
 - Fixed multiline editing issues in string replacement operations
 - Improved file path resolution in various tools
 
+
 ### Developer Experience
 
 - **New telemetry events**: Added tracking for plan mode usage and subscription recommendations
 - **Better TypeScript support**: Improved type definitions for new features
 - **Enhanced debugging**: More detailed logging for troubleshooting tool operations
+
 
 ### Deprecated Features
 

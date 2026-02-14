@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.104 Changelog
 
+
 ### Web Search Integration
 - **New `/websearch` command**: Search the web directly from Claude Code
   - Domain filtering supported with `--allowed-domains` and `--blocked-domains` flags
@@ -15,6 +16,7 @@
   /websearch "Python async best practices" --allowed-domains=python.org,realpython.com
   ```
 
+
 ### ️ Enhanced IDE Integration
 - **New `/ide` command**: Manage IDE connections and integrations
   - Connect to VS Code, Cursor, or other supported IDEs with Claude Code extensions
@@ -26,10 +28,12 @@
   /ide  # Opens IDE selection interface
   ```
 
+
 ### Database Status Monitoring
 - Added database health checks to system diagnostics
 - Database availability now shown in status displays
 - Warning when database is unavailable (affects continue/resume features)
+
 
 ### Token Usage Tracking
 - Enhanced token counting with cache-aware metrics
@@ -38,11 +42,13 @@
   - Better cost estimation with unknown model handling
   - Last interaction time tracking
 
+
 ### Authentication Improvements
 - Improved token refresh mechanism with file locking
   - Prevents race conditions during concurrent refresh attempts
   - Automatic retry with exponential backoff
   - Better error handling for locked resources
+
 
 ### Memory Management
 - New memory size warnings:
@@ -50,6 +56,7 @@
   - Large file detection for memory items exceeding threshold
   - ULTRACLAUDE.md file size monitoring (warns if > 1000 chars)
   
+
 ### ️ System Status Display
 - Enhanced startup diagnostics showing:
   - Working directory information
@@ -57,11 +64,13 @@
   - IDE connection status
   - Database availability
 
+
 ### Dependencies
 - Added `graceful-fs` for improved file system operations
 - Added `proper-lockfile` for concurrent access control
 - Added `retry` for robust operation retries
 - Added `signal-exit` for better process cleanup
+
 
 ### Internal Improvements
 - Better error handling for file system operations

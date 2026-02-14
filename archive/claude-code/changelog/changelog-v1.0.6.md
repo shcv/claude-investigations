@@ -1,6 +1,5 @@
 # Changelog for version 1.0.6
 
-Based on my analysis of the diff file, here's the changelog for Claude Code version 1.0.6:
 
 ### New Features
 
@@ -10,6 +9,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   // New usage
   claude web-search "your query" --allowed-domains example.com --blocked-domains spam.com
   ```
+
 
 ### Bug Fixes
 
@@ -25,6 +25,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 #### Graceful Shutdown Handling
 - **Added explicit error handling for shutdown failures**: A new graceful shutdown wrapper ensures that if the shutdown process fails, the error is logged and the process exits cleanly with the appropriate exit code.
 
+
 ### Technical Improvements
 
 #### Import Optimizations
@@ -34,6 +35,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 #### Configuration Changes
 - **Removed `enableAllProjectMcpServers` flag**: This configuration option has been removed from the project settings structure, simplifying MCP server management
 
+
 ### Removed Features
 
 #### Easter Egg Removal
@@ -41,6 +43,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
   - ASCII art of the Claude logo
   - Quotes inspired by Lao Tzu and adapted by Rick Rubin
   - Could be accessed via the `vibe` command
+
 
 ### Summary
 

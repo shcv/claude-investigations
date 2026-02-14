@@ -3,6 +3,7 @@
 ## Highlights
 This is a maintenance release with internal code refactoring. No new features, improvements, or bug fixes affect user functionality.
 
+
 ### Code Refactoring
 This version contains only internal minification updates:
 - Renamed internal markdown parsing function from `nB1` to `nC1` 

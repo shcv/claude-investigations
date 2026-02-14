@@ -3,6 +3,7 @@
 ## Highlights
 This release focuses on architectural improvements to session persistence, removes the LS tool in favor of existing alternatives, and enhances UI component organization with better todo list management.
 
+
 ### Enhanced Session Persistence
 **What:** Complete rewrite of session persistence system to support remote server synchronization
 **How to use:**
@@ -18,6 +19,7 @@ claude --session-id my-session
 - Automatic conflict detection and resolution for concurrent session modifications
 - Improved error handling with detailed logging for session operations
 - **Evidence**: `VVA() at line 352480`, `KVA() at line 352534`, `$VA() at line 352860`, `MI9() at line 352437`
+
 
 ### Todo List UI Improvements
 **What:** Dedicated todo rendering component with expanded view capability
@@ -35,6 +37,7 @@ claude
 - Improved integration across different UI contexts
 - **Evidence**: `Pb1() at line 399903`, expanded todos feature at `line 400288`
 
+
 ### SlashCommand Tool Framework (Experimental)
 **What:** New tool that enables executing slash commands from within the conversation context
 **How to use:**
@@ -49,6 +52,7 @@ claude
 - Currently disabled (`isEnabled() returns false`) pending further development
 - **Evidence**: `ZA1 tool definition at line 414675`, `VuB() at line 414597`, `AL5() at line 414466`
 
+
 ### Enhanced Command Execution
 **What:** All slash command executions now include autocheckpoint support
 **Details:**
@@ -56,6 +60,7 @@ claude
 - Improved session state management across command boundaries
 - Better integration with conversation flow tracking
 - **Evidence**: `AL5() at line 414466` with autocheckpoint parameter
+
 
 ### Cross-Platform File Descriptor Support
 **What:** WebSocket authentication now works correctly on Darwin, FreeBSD, and Linux
@@ -65,6 +70,7 @@ claude
 - Improved error messages for invalid file descriptor configurations
 - **Evidence**: `MI9() at line 352437` with platform detection
 
+
 ### Atomic File Operations
 **What:** New secure file copying utility for configuration management
 **Details:**
@@ -72,6 +78,7 @@ claude
 - Atomic rename operations to prevent corruption
 - Proper cleanup on failure scenarios
 - **Evidence**: `qvB() at line 407217`
+
 
 ### LS Tool Removal
 **What:** The LS (directory listing) tool has been completely removed
@@ -97,6 +104,7 @@ Read("/path/to/specific/file.txt")
 - Glob tool offers superior pattern-matching for file discovery
 - **Evidence**: Removed `nU tool definition at line 391316`, `eb6() at line 391425`, related functions
 
+
 ### Removed Internal Functions
 **What:** Various internal functions removed as part of codebase cleanup
 **Details:**
@@ -105,9 +113,11 @@ Read("/path/to/specific/file.txt")
 - Eliminated redundant path processing functions
 - **Evidence**: Removed `TPB() at line 395476`, `RY1() at line 395486`, `gmB() at line 420941`
 
+
 ### Directory Listing Workflow
 **Impact:** Users who relied on the LS tool for directory exploration must adapt their workflow
 **Solution:** Use Bash tool with standard shell commands (`ls`, `find`, `tree`) or Glob tool for pattern matching
+
 
 ### Session Persistence Format
 **Impact:** Session data format may have changed due to remote persistence capabilities

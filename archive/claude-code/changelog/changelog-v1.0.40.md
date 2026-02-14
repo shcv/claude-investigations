@@ -2,10 +2,12 @@
 
 # Claude Code v1.0.40 Changelog
 
+
 ### Enhanced Web Search Date Awareness
 The WebSearch tool now includes improved guidance for handling date-sensitive queries. When searching for the latest documentation or time-sensitive content, the tool will now properly account for the current date provided in the environment context.
 
 **Example**: If the environment indicates "Today's date: 2025-07-01" and you request "the latest docs", the search will use 2025 in the query instead of defaulting to 2024.
+
 
 ### Improved SSL/TLS Certificate Handling
 The CLI now better supports Node.js's automatic certificate authority (CA) handling:
@@ -13,7 +15,7 @@ The CLI now better supports Node.js's automatic certificate authority (CA) handl
 - When `NODE_EXTRA_CA_CERTS` is set, Claude Code will display an informative message that Node.js will automatically append these certificates to the built-in CAs
 - The certificate configuration display has been simplified and clarified
 
-**Usage**:
+Usage:
 ```bash
 # Set additional CA certificates
 export NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.crt

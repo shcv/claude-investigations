@@ -4,6 +4,7 @@
 
 Version 2.0.9 introduces Skills support for the plugin system, allowing developers to create reusable AI behaviors. Additionally, post-tool-hook feedback is now properly surfaced to the AI model as user messages, improving context awareness and response quality.
 
+
 ### Skills Support for Plugins
 
 **What:** Plugins can now include "skills" - reusable AI behaviors defined in markdown files that can be loaded and executed by Claude Code.
@@ -28,6 +29,7 @@ Version 2.0.9 introduces Skills support for the plugin system, allowing develope
 - Skills are processed similarly to commands and agents but with `isSkillMode: true`
 - **Evidence**: `hMB() at line 422839`, `skillsPath property at line 377365`, `isSkillMode flag at line 422855`
 
+
 ### API Client Fetch Override
 
 **What:** Internal enhancement allowing custom fetch implementations to be injected into the API client for testing or custom network handling.
@@ -37,6 +39,7 @@ Version 2.0.9 introduces Skills support for the plugin system, allowing develope
 - Replaces previous hardcoded fetch selection logic
 - Primarily used internally but enables advanced customization scenarios
 - **Evidence**: `fF() at line 376120`, fetch override usage at lines 411360 and 432771
+
 
 ### Enhanced Post-Tool-Hook Feedback Handling
 
@@ -53,6 +56,7 @@ Version 2.0.9 introduces Skills support for the plugin system, allowing develope
 - Conversion happens in message processing pipeline via `AD5()` function
 - Includes dedicated UI rendering function `h2B()` for displaying feedback
 - **Evidence**: `fPB() at line 436505`, `eb1() at line 437160`, conversion logic at line 436513, `h2B() rendering at line 405844`
+
 
 ### Grove Notice Grace Period Enforcement
 

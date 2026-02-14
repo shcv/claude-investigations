@@ -1,5 +1,6 @@
 # Changelog for version 1.0.28
 
+
 ### New Features
 
 #### Model Selection Command Menu
@@ -20,6 +21,7 @@
 - Async loading with proper state management
 - Shows loading state while fetching conversations
 - Filters out sidechain conversations automatically
+
 
 ### Improvements
 
@@ -42,6 +44,7 @@
 - Ensures `replace_all` parameter defaults to `false` when not specified
 - Improves consistency in batch edit operations
 
+
 ### Technical Improvements
 
 #### Better Environment Variable Handling
@@ -60,12 +63,14 @@
 - Added terminal type tracking in metrics (`terminal.type` attribute)
 - Helps understand user environments for better support
 
+
 ### Bug Fixes
 
 - Fixed duplicate import issues with stream modules
 - Removed redundant process import
 - Improved native installation detection logic
 - Better handling of thinking tokens with configurable defaults
+
 
 ### Internal Changes
 

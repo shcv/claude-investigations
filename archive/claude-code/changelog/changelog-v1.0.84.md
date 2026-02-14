@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.84 introduces improved search performance with native ripgrep integration, enhanced file path completion with quoted path support, and refined UI components for better interactive selections.
 
+
 ### Native Ripgrep Integration
 **What:** Built-in support for using ripgrep as the search backend with automatic availability detection
 **How to use:**
@@ -18,6 +19,7 @@ claude --grep "search term"
 - Built-in ripgrep binary as fallback option
 - Performance telemetry for ripgrep availability
 - Configurable search modes (system vs built-in)
+
 
 ### Enhanced File Path Completion
 **What:** Support for quoted file paths in prompts, especially for paths with spaces
@@ -35,6 +37,7 @@ claude --grep "search term"
 - Better support for paths containing spaces and special characters
 - Works in both command line and interactive modes
 
+
 ### Improved UI Selection Components  
 **What:** New visual components for better feedback in interactive selections
 **How to use:**
@@ -49,11 +52,13 @@ claude --grep "search term"
 - Better color scheme using "suggestion" and "success" colors
 - Enhanced padding and spacing for improved readability
 
+
 ### Todo List Display Enhancement
 **What changed:** Condensed todo list view with configurable verbosity
 **Previous behavior:** All todos always displayed in full
 **New behavior:** Smart condensed view showing only changed items and summaries
 **Impact:** Cleaner output that focuses on what's currently relevant, with option for full verbosity when needed
+
 
 ### Ripgrep Status Reporting
 **What changed:** Added ripgrep configuration details to system diagnostics
@@ -61,21 +66,25 @@ claude --grep "search term"
 **New behavior:** Reports ripgrep mode, availability, and system path in diagnostics
 **Impact:** Easier troubleshooting of search-related issues and performance optimization
 
+
 ### Session History Management
 **What changed:** Removed bookmark persistence to simplify session tracking
 **Previous behavior:** Bookmarks were persisted across sessions
 **New behavior:** Session management focuses on messages and checkpoints only
 **Impact:** Simplified data model with more reliable session recovery
 
+
 ### Fixed: Code Signing for macOS Ripgrep Binary
 - **Issue:** Ripgrep binary on macOS could fail due to code signing requirements
 - **Cause:** macOS Gatekeeper blocking unsigned binaries
 - **Resolution:** Added proper code signing flow for built-in ripgrep on macOS
 
+
 ### Fixed: File Path Token Parsing
 - **Issue:** File paths with special characters or quotes could be incorrectly parsed
 - **Cause:** Regex patterns didn't account for quoted path formats
 - **Resolution:** Enhanced regex patterns to handle both quoted and unquoted paths
+
 
 ### Fixed: UI Component Color Consistency
 - **Issue:** Inconsistent color schemes across different selection components

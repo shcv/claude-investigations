@@ -4,6 +4,7 @@ Based on my comprehensive analysis of the diff file, here is the detailed change
 
 # Claude Code v1.0.69 Changelog
 
+
 ### 1. **Security Review Command** (New)
 A powerful new `/security-review` command that performs automated security analysis of code changes:
 
@@ -26,6 +27,7 @@ A powerful new `/security-review` command that performs automated security analy
 **Output:**
 Generates a detailed markdown report with severity levels (HIGH/MEDIUM/LOW), file locations, exploit scenarios, and specific fix recommendations.
 
+
 ### 2. **Enhanced Background Task Management**
 Improved handling of long-running processes with background execution:
 
@@ -47,11 +49,13 @@ BashOutput bash_1 "error|warning"
 - Regex filtering support for monitoring specific patterns
 - Exit code tracking and completion status
 
+
 ### 3. **Claude Opus 4.1 Model Support**
 Added support for the new Claude Opus 4.1 model:
 - Model identifier: `claude-opus-4-1-20250805`
 - Available across first-party, Bedrock, and Vertex AI platforms
 - Enhanced region support with `VERTEX_REGION_CLAUDE_4_1_OPUS` environment variable
+
 
 ### **Autocheckpointing Enhancements**
 - Better checkpoint management with improved state handling
@@ -59,15 +63,18 @@ Added support for the new Claude Opus 4.1 model:
 - Enhanced error recovery and status tracking
 - Support for automatic checkpointing on prompts and bash commands
 
+
 ### **File Search Improvements**
 - New `ZnB` function provides better file search with glob pattern support
 - Improved handling of special characters in search patterns
 - Better performance for file discovery operations
 
+
 ### **Shell Execution Enhancements**
 - Better cleanup of background processes on exit
 - Improved tracking of completed shells for attachment messages
 - Enhanced shell output management with proper cleanup
+
 
 ### **Tool Permission Handling**
 - Better handling of closed permission streams
@@ -81,6 +88,7 @@ Added support for the new Claude Opus 4.1 model:
 - Better handling of shell completion status notifications
 - Fixed race conditions in background task management
 
+
 ### **New Functions Added:**
 - `fnB` - Generate timestamped file names for prompts
 - `CP1` - Smart string truncation with ellipsis support
@@ -91,15 +99,18 @@ Added support for the new Claude Opus 4.1 model:
 - `nE8` - Check if command is safe to run in background
 - Various checkpoint management functions (`QiB`, `ZiB`, `AiB`, `DiB`)
 
+
 ### **Removed Functions:**
 - Removed legacy checkpointing class `_A1` in favor of new async implementation
 - Removed `BashOutput` tool implementation `ylB` (replaced with enhanced version)
 - Removed various obsolete utility functions
 
+
 ### **Modified Functions:**
 - Enhanced `hS0` class (previously `PS0`) with better stream closure handling
 - Updated model selection logic to support Opus 4.1
 - Improved shell management class `U01` with cleanup on exit
+
 
 ### Security Review:
 ```bash
@@ -107,6 +118,7 @@ Added support for the new Claude Opus 4.1 model:
 /security-review
 # Claude analyzes changes and provides detailed security report
 ```
+
 
 ### Background Tasks:
 ```bash
@@ -123,6 +135,7 @@ BashOutput bash_1
 # Filter for errors
 BashOutput bash_1 "error|failed"
 ```
+
 
 ### Model Selection:
 ```bash

@@ -3,6 +3,7 @@
 ## Highlights
 Claude Code now supports Sonnet 4 with 1-million token context windows, allowing for much longer conversations and the ability to work with significantly larger codebases without hitting context limits. This premium feature provides 5x more context than the standard 200,000 token limit.
 
+
 ### Sonnet 4 with 1M Context Support
 **What:** Added support for Claude Sonnet 4 model with 1-million token context window
 **How to use:**
@@ -20,9 +21,11 @@ Claude Code now supports Sonnet 4 with 1-million token context windows, allowing
 - Uses rate limits faster than standard Sonnet on long requests
 - Context warnings are intelligently adjusted to avoid premature alerts when you still have hundreds of thousands of tokens available
 
+
 ### Optimized Import Statements
 **What changed:** Refactored Node.js module imports to use named imports instead of default imports
 **Impact:** Reduces memory footprint and improves code clarity by explicitly importing only the required functions from crypto, stream, and process modules
+
 
 ### Smart Context Warning System
 **What changed:** Context warnings now adapt based on the model's maximum context size

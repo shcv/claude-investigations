@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.66 Changelog
 
+
 ### Todo List Management Tools
 Added comprehensive todo list functionality with two new tools:
 
@@ -23,30 +24,36 @@ Example usage:
 "Add a todo to implement dark mode"
 ```
 
+
 ### Enhanced Permission System
 - Improved permission handling for Bash commands with smarter rule suggestions
 - Better detection and handling of command injection attempts
 - More informative permission debug information display
 - Rule suggestions now based on actual command analysis
 
+
 ### Settings Enhancement
 - Added `stressTestingFraction` to user settings options
 - This appears to be for internal testing/debugging purposes
+
 
 ### User Experience
 - Better visual formatting for permission prompts
 - Clearer distinction between local and project settings descriptions
 - Enhanced permission decision reasoning display
 
+
 ### Architecture Changes
 - Improved file handling for external tool integrations
 - Better error handling in file save operations
 - More robust command prefix detection and validation
 
+
 ### New Dependencies
 - Added imports for `execSync`, `execFile`, and `spawn` from child_process
 - Added `PassThrough` from stream module
 - Added path and filesystem utilities (`extname`, `relative`, `existsSync`, `statSync`)
+
 
 ### Internal Improvements
 - Refactored permission checking logic for better maintainability

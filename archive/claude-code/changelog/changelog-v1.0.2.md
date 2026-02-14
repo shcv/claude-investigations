@@ -5,10 +5,12 @@
 ## Breaking Changes
 None
 
+
 ### Model Token Limit Updates
 - **Removed Opus model-specific token limit**: The function that determines token limits for different Claude models no longer includes a special case for Opus models. Previously, Opus models had a 4096 token limit, but now they will use the default 20,000 token limit.
   
   This means when using Claude Code with Opus models, you can now include much longer contexts in your requests - up to 20,000 tokens instead of the previous 4,096 token limit.
+
 
 ### Internal Improvements
 - **Optimized imports**: Refactored Node.js imports to be more specific:

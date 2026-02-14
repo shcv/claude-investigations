@@ -1,5 +1,6 @@
 # Changelog for version 0.2.116
 
+
 ### New Features
 
 #### Enhanced IDE Integration
@@ -21,6 +22,7 @@
 - **API Key Helper TTL**: New `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` environment variable to control API key caching duration
 - **Better Authentication Handling**: Improved handling of 401 authentication errors with automatic cache clearing
 
+
 ### Improvements
 
 #### Tool Enhancements
@@ -38,11 +40,13 @@
 - **Environment Detection**: Added functions to detect production vs development environments
 - **External vs Internal Classification**: New system to classify whether code is running externally or internally
 
+
 ### Bug Fixes
 
 - **Fixed GitHub Actions Workflow**: Updated workflow to properly handle issue titles containing @claude mentions
 - **Fixed IDE Connection Status**: More accurate reporting of IDE connection status in the UI
 - **Fixed Cleanup Logic**: Proper handling of empty directories during cleanup operations
+
 
 ### Technical Changes
 
@@ -50,9 +54,11 @@
 - **Streamlined Imports**: Consolidated and optimized module imports
 - **Code Organization**: Better separation of concerns with dedicated functions for environment detection and configuration management
 
+
 ### Breaking Changes
 
 None - This release maintains backward compatibility with existing configurations and workflows.
+
 
 ### Notes for Users
 

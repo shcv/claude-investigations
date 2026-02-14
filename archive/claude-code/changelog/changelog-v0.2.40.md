@@ -1,5 +1,6 @@
 # Changelog for version 0.2.40
 
+
 ### New Features
 
 #### Interactive Confirmation Prompts
@@ -23,6 +24,7 @@
 - Shows "Press [key] again to exit" hints for better UX
 - Improved escape key handling throughout the permission flows
 
+
 ### Security Enhancements
 
 #### URL Validation for WebFetch
@@ -34,6 +36,7 @@
 - New environment variable `ANTHROPIC_CUSTOM_HEADERS` for adding custom headers to API requests
 - Supports multi-line header definitions with `name: value` format
 - Useful for proxy authentication or custom API configurations
+
 
 ### UI/UX Improvements
 
@@ -47,6 +50,7 @@
 - Added tab-to-spaces conversion for better cross-editor compatibility
 - Improved file writing with proper encoding handling
 
+
 ### Bug Fixes
 
 - Fixed release notes history (removed duplicate entries for v0.2.27)
@@ -54,12 +58,14 @@
 - Enhanced error handling in file operations
 - Better support for environments without terminal resize events
 
+
 ### Technical Improvements
 
 - Added `PassThrough` stream support for better data handling
 - Improved MCP (Model Context Protocol) configuration parsing
 - Enhanced terminal rendering with proper OSC sequence support
 - Better memory management for long-running sessions
+
 
 ### Developer Notes
 

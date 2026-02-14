@@ -1,5 +1,6 @@
 # Changelog for version 0.2.64
 
+
 ### New Features
 
 #### Tool Call Counter
@@ -33,6 +34,7 @@ Permission debug info:
   ⎿ Default mode
 ```
 
+
 ### Improvements
 
 #### Enhanced Instruction System
@@ -42,6 +44,7 @@ Permission debug info:
 
 #### ️ Stream Processing Enhancement
 The stream event handler now includes an optional callback for tool use detection, allowing the UI to respond immediately when Claude begins using tools.
+
 
 ### Technical Changes
 
@@ -56,9 +59,11 @@ The stream event handler now includes an optional callback for tool use detectio
 - Updated process and OS imports to use modern Node.js module syntax
 - Better organization of platform-specific imports (`EOL`, `platform`, `homedir`)
 
+
 ### Bug Fixes
 - Fixed potential issues with instruction content injection by properly handling edge cases in message arrays
 - Improved error handling for EACCES permission errors with better telemetry
+
 
 ### Configuration
 New configuration option added to the animation settings:

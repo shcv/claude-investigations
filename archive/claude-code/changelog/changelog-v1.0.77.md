@@ -3,6 +3,7 @@
 ## Highlights
 Claude Code 1.0.77 introduces WebSocket support for real-time communication with Claude's SDK servers, enhanced permission explanations that show exactly why actions require confirmation, and improved security with sophisticated shell command escaping to prevent injection attacks.
 
+
 ### WebSocket Transport for SDK Communication
 **What:** Added support for persistent WebSocket connections as an alternative to stdin/stdout communication
 **How to use:**
@@ -19,6 +20,7 @@ claude --sdk-url=wss://api.claude.ai/sdk/v1/connect \
 - Request replay on reconnection to prevent message loss
 - Support for both `ws://` and `wss://` protocols with Bearer token authentication
 - Enables real-time bidirectional communication for streaming responses
+
 
 ### Permission Reasoning Display
 **What:** New UI components that explain exactly why Claude needs permission for specific actions
@@ -37,6 +39,7 @@ Accessing sensitive configuration files
 - Provides custom reasoning from hooks when available
 - Includes actionable guidance on how to modify permission settings
 - Consistent display across all tool types (Edit, Command, WebFetch, etc.)
+
 
 ### Advanced Shell Command Escaping
 **What:** Sophisticated detection and escaping of dangerous shell constructs like heredocs and multiline strings
@@ -59,6 +62,7 @@ line2'
 - Automatically adds stdin redirection (`< /dev/null`) to prevent interactive command exploitation
 - Protects against arithmetic expansion and nested command substitution attacks
 
+
 ### Token-Aware Conversation Summarization
 **What:** Intelligent conversation summarization that respects model token limits
 **How to use:**
@@ -73,27 +77,33 @@ Summarizing last 5 of 10 messages (~2500 tokens)
 - Uses efficient Haiku model with prompt caching for fast summarization
 - Generates concise 5-10 word titles for easy conversation browsing
 
+
 ### Server-Delivered Spinner Tips
 **What changed:** Spinner tips are now managed server-side instead of being fetched by the client
 **Impact:** Eliminates network latency for tip loading, provides more contextual and personalized tips with sophisticated rotation logic to prevent repetition
+
 
 ### Simplified Trust Model
 **What changed:** Removed separate trust dialogs for hooks and bash commands in favor of unified permission system
 **Impact:** Cleaner configuration with single trust mechanism, reducing complexity while maintaining security
 
+
 ### Enhanced Connection Resilience
 **What changed:** WebSocket transport includes automatic reconnection and message replay capabilities
 **Impact:** More reliable real-time communication that can survive temporary network disruptions without losing messages or state
+
 
 ### Fixed: Permission Requests Lacking Context
 - **Issue:** Users didn't understand why specific actions required permission
 - **Cause:** Permission system only showed generic confirmation prompts
 - **Resolution:** Added detailed reasoning display showing exact rules/hooks and custom explanations
 
+
 ### Fixed: Shell Command Injection Vulnerabilities
 - **Issue:** Complex shell constructs like heredocs could bypass escaping
 - **Cause:** Standard shell-quote libraries don't handle all edge cases
 - **Resolution:** Implemented custom pattern detection and multi-layer escaping strategy
+
 
 ### Fixed: Conversation Summarization Token Overflows
 - **Issue:** Long conversations could exceed model token limits during summarization

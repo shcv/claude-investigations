@@ -1,5 +1,6 @@
 # Changelog for version 1.0.70
 
+
 ### New Onboarding Experience
 Claude Code now features a comprehensive onboarding flow for first-time users:
 - **Interactive setup screens** guide you through initial configuration
@@ -12,17 +13,20 @@ When you first run Claude Code v1.0.70, you'll be greeted with setup screens tha
 - OAuth login or API key authentication  
 - Terminal-specific settings (e.g., Option+Enter for new lines in Apple Terminal)
 
+
 ### Enhanced Security Model
 - **Explicit permission dialogs** for MCP servers and hooks
 - **Trust management** for code execution permissions
 - **API key validation** with user confirmation for custom ANTHROPIC_API_KEY usage
 - Clear security notes displayed during onboarding about Claude's file system access
 
+
 ### Major Codebase Refactoring
 - **66.3% structural similarity** to v1.0.69 (significant reorganization)
 - **2,889 functions removed** and 2,257 new functions added
 - **Complete removal of Sentry telemetry** and error tracking for improved privacy
 - Reduced external dependencies and cleaner module structure
+
 
 ### Removed Telemetry
 All Sentry integration has been removed, including:
@@ -34,15 +38,18 @@ All Sentry integration has been removed, including:
 
 This means Claude Code no longer sends crash reports or usage data to external services, enhancing user privacy.
 
+
 ### Module System Updates
 - Added support for `createRequire` from Node.js native module system
 - Better CommonJS and ES module interoperability
 - Improved module loading and dependency resolution
 
+
 ### Process Handling
 - Reorganized Windows-specific ENOENT error handling
 - Maintained full cross-platform process spawning support
 - Better error messages for missing executables
+
 
 ### File System Operations
 Enhanced file system capabilities with new imports for:
@@ -50,15 +57,18 @@ Enhanced file system capabilities with new imports for:
 - Stream operations (`createReadStream`, `createWriteStream`)
 - Path handling for both POSIX and Windows systems
 
+
 ### Terminal Integration
 - Automatic detection and optimization for different terminal emulators
 - Custom key binding recommendations based on your terminal
 - Improved handling of iTerm2 settings restoration
 
+
 ### Authentication Flow
 - Clearer distinction between Claude AI subscription and Console API billing
 - Better handling of custom API keys with validation
 - Streamlined OAuth login process
+
 
 ### Export Structure
 The main module now exports three functions:
@@ -66,11 +76,13 @@ The main module now exports three functions:
 - `setup` - Main initialization function
 - `completeOnboarding` - Marks onboarding as complete
 
+
 ### Code Organization
 - Significant module restructuring for better maintainability
 - Removed monitoring and instrumentation code
 - Simplified export structure
 - Cleaner dependency graph
+
 
 ### Performance
 - Reduced bundle size due to removed dependencies

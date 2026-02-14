@@ -4,6 +4,7 @@
 
 Version 1.0.120 introduces persistent file history across session resumes, a redesigned filesystem permissions model with simplified configuration, enhanced MCP server support with dynamic header generation, and critical security improvements for symlink handling.
 
+
 ### File History Persistence Across Sessions
 
 **What:** File backup snapshots are now persisted to session logs and restored when resuming previous sessions, preserving the complete file modification history across Claude Code restarts.
@@ -21,7 +22,8 @@ Version 1.0.120 introduces persistent file history across session resumes, a red
 - Session log class now includes `fileHistorySnapshots` Map at line 438396
 - Backup files are stored per session in `~/.config/claude/file-history/<sessionId>/`
 
-**Evidence**: `insertFileHistorySnapshot()` at line 438449, `a_1()` at line 384641, `t11()` at line 384611, `n_1()` at line 384636, `fileHistorySnapshots` field at line 438396
+Evidence: `insertFileHistorySnapshot()` at line 438449, `a_1()` at line 384641, `t11()` at line 384611, `n_1()` at line 384636, `fileHistorySnapshots` field at line 438396
+
 
 ### MCP Dynamic Header Generation with headersHelper
 
@@ -53,7 +55,8 @@ Version 1.0.120 introduces persistent file history across session resumes, a red
 - Errors are logged with telemetry event `tengu_mcp_headersHelper_missing_trust`
 - Use cases: fetching tokens from credential managers, generating time-based auth, reading secrets from environment-specific sources
 
-**Evidence**: `Xo6()` function at line 393477, `uw0()` merge function at line 393531, schema definitions at lines 353050-353074
+Evidence: `Xo6()` function at line 393477, `uw0()` merge function at line 393531, schema definitions at lines 353050-353074
+
 
 ### Unix Domain Socket Support for Network Permissions
 
@@ -90,7 +93,8 @@ Or with specific paths:
 - Essential for Docker, SSH agents, and other development tools requiring local IPC
 - Type: `boolean | string[]`
 
-**Evidence**: Schema definition at lines 354206-354217, implementation at lines 374968-374975, parameter usage at line 375216
+Evidence: Schema definition at lines 354206-354217, implementation at lines 374968-374975, parameter usage at line 375216
+
 
 ### SlashCommand Tool Validation
 
@@ -104,7 +108,8 @@ Or with specific paths:
 - Ensures command is prompt-based with error code 5
 - Validation occurs before permission checks, improving error reporting
 
-**Evidence**: `validateInput()` method at lines 425333-425369 in `X21` tool definition
+Evidence: `validateInput()` method at lines 425333-425369 in `X21` tool definition
+
 
 ### Symlink Resolution in Permission Checks
 
@@ -123,7 +128,8 @@ Or with specific paths:
 - Integrated into working directory checks at `QE()` at line 438915
 - Gracefully handles non-existent files and resolution errors
 
-**Evidence**: `CD1()` at line 339792, `fW()` at line 339783, read permission integration at lines 439066-439084, edit permission integration at lines 439133-439154
+Evidence: `CD1()` at line 339792, `fW()` at line 339783, read permission integration at lines 439066-439084, edit permission integration at lines 439133-439154
+
 
 ### Enhanced Bash Command Analysis
 
@@ -135,7 +141,8 @@ Or with specific paths:
 - Prevents false positives in automatic file reading after bash execution
 - More conservative approach to file permission pre-approval
 
-**Evidence**: Variable expansion detection at lines 382407-382412 in `Ng6()` function
+Evidence: Variable expansion detection at lines 382407-382412 in `Ng6()` function
+
 
 ### Redesigned Filesystem Permissions Model
 
@@ -182,7 +189,8 @@ Or with specific paths:
 - **New feature**: `denyWithinAllow` allows exceptions within allowed write paths
 - **Breaking change**: Existing v1.0.119 configurations are incompatible
 
-**Evidence**: New schemas at lines 354053-354067 (`ew9` and `Aq9`), old schemas removed from lines 354007-354030 (`y10` and `k10`), new implementation at lines 374904-374938 (`ob6()` and `tb6()`)
+Evidence: New schemas at lines 354053-354067 (`ew9` and `Aq9`), old schemas removed from lines 354007-354030 (`y10` and `k10`), new implementation at lines 374904-374938 (`ob6()` and `tb6()`)
+
 
 ### Tool Output Schemas
 
@@ -198,7 +206,8 @@ Or with specific paths:
 - WebFetch tool: `outputSchema` at `bW5` at line 417012
 - SlashCommand tool: `outputSchema` at `XX5` at line 425324
 
-**Evidence**: Multiple schema definitions across tool implementations
+Evidence: Multiple schema definitions across tool implementations
+
 
 ### Documentation URL Updates
 
@@ -210,7 +219,8 @@ Or with specific paths:
 - Hooks documentation: `https://docs.claude.com/en/docs/claude-code/hooks`
 - Claude Code docs map: `https://docs.claude.com/en/docs/claude-code/claude_code_docs_map.md`
 
-**Evidence**: `Cq9` object at line 354656, `pQ5` variable at line 403791, version constants at line 371686
+Evidence: `Cq9` object at line 354656, `pQ5` variable at line 403791, version constants at line 371686
+
 
 ### Consumer Terms Update UI
 
@@ -222,7 +232,8 @@ Or with specific paths:
 - Includes information about model training opt-in and data retention changes
 - Provides links to updated terms, privacy policy, and announcement
 
-**Evidence**: `pW5()` at line 418651, `iW5()` at line 418738
+Evidence: `pW5()` at line 418651, `iW5()` at line 418738
+
 
 ### Session Log Transcript Format
 
@@ -239,7 +250,8 @@ Or with specific paths:
 }
 ```
 
-**Evidence**: `cRB()` function at line 438159, new parameter at line 438184
+Evidence: `cRB()` function at line 438159, new parameter at line 438184
+
 
 ### Removed Redundant Slash Command Execution Logic
 
@@ -250,7 +262,8 @@ Or with specific paths:
 - New code at line 1499: `Y(!0);` - executes directly without redundant check
 - No functional change, just cleaner code
 
-**Evidence**: Comparison of `lNB()` function structure at lines 424900-425196
+Evidence: Comparison of `lNB()` function structure at lines 424900-425196
+
 
 ### Stream Import Refactoring
 
@@ -262,7 +275,8 @@ Or with specific paths:
 - More explicit about what's being imported
 - Better tree-shaking support
 
-**Evidence**: Import statement change at line 443623
+Evidence: Import statement change at line 443623
+
 
 ### File History Cleanup on Session Expiry
 
@@ -275,7 +289,8 @@ Or with specific paths:
 - Integrated into session cleanup routine at `rQQ()` at line 442760
 - Empty directories are removed after cleanup
 
-**Evidence**: `yr5()` at line 442733, integration at line 442760 (previously `uQQ()`)
+Evidence: `yr5()` at line 442733, integration at line 442760 (previously `uQQ()`)
+
 
 ### Documentation Reference Updates
 
@@ -286,7 +301,8 @@ Or with specific paths:
 - README URL updated: `https://docs.claude.com/s/claude-code`
 - Issue reporting: `https://github.com/anthropics/claude-code/issues`
 
-**Evidence**: Version constants at `Gt()` and `RU()` at lines 371752-371755
+Evidence: Version constants at `Gt()` and `RU()` at lines 371752-371755
+
 
 ### Removed Internal Functions
 
@@ -300,7 +316,8 @@ Or with specific paths:
 
 **Reason:** Replaced by new permission model implementation with separate read/write functions.
 
-**Evidence**: Diff sections showing removed functions
+Evidence: Diff sections showing removed functions
+
 
 ### GitHub Actions Workflow Variables
 
@@ -311,7 +328,7 @@ Or with specific paths:
 - No functional changes to the workflows themselves
 - Both templates remain identical in content
 
-**Evidence**: Variables at lines 408499 and 408550
+Evidence: Variables at lines 408499 and 408550
 
 ## Verification Checklist
 

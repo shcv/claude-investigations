@@ -25,4 +25,4 @@ This release contains only internal refactoring:
 - **Code reorganization**: Internal function and variable names were updated (standard minification variance between builds)
 - **Build timestamp**: Updated from 2025-12-20T17:18:43Z to 2025-12-22T23:56:12Z
 
-**Evidence**: Structural diff shows 99.9% similarity with 8066 renames and only 17 additions (all import statements). Feature flag count (`tengu_*`), tip count (`cooldownSessions`), and error message count are all identical between versions.
+Evidence: Structural diff shows 99.9% similarity with 8066 renames and only 17 additions (all import statements). Feature flag count (`tengu_*`), tip count (`cooldownSessions`), and error message count are all identical between versions.

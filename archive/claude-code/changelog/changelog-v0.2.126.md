@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.126 Changelog
 
+
 ### Enhanced GitHub App Installation Workflow
 The GitHub app installation process has been significantly improved with better error handling and user guidance:
 
@@ -29,11 +30,13 @@ The GitHub app installation process has been significantly improved with better 
   2. Skip workflow update (configure secrets only)
   3. Exit without making changes
 
+
 ### Improved Exit Handling
 - **Graceful Shutdown**: A new cleanup mechanism ensures all pending operations complete before exit
   - Cleanup functions are registered and executed on exit
   - 2-second timeout prevents hanging on shutdown
   - Handles `process.exitCode` properly for clean exits
+
 
 ### OpenTelemetry Enhancements
 - **Configurable Timeout**: New environment variable `CLAUDE_CODE_OTEL_SHUTDOWN_TIMEOUT_MS` allows customizing the OpenTelemetry shutdown timeout (default: 1000ms)
@@ -47,18 +50,23 @@ The GitHub app installation process has been significantly improved with better 
   3. Disable OpenTelemetry by unsetting CLAUDE_CODE_ENABLE_TELEMETRY env var
   ```
 
+
 ### Code Editing Metrics
 - **New Telemetry**: Added metrics tracking for code editing tool permission decisions (accept/reject) for Edit, MultiEdit, Write, and NotebookEdit tools
+
 
 ### Sonnet Model Handling
 - Improved support for the "sonnet" model identifier
 - Better model selection logic that properly handles custom models and built-in model aliases
 
+
 ### Diff Generation Enhancement
 - The diff generation function now supports a `singleHunk` parameter for better control over diff output format
 
+
 ### Import Path Updates
 - Updated Node.js imports to use the `node:` prefix convention (e.g., `import { cwd } from "node:process"`)
+
 
 ### Error Code Expansion
 The GitHub app installation error codes have been expanded with new specific error types:

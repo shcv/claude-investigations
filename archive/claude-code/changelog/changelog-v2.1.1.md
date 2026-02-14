@@ -9,7 +9,7 @@ This is a patch release that fixes a potential crash when loading release notes 
 
 - Fixed crash when changelog cache file is corrupted or unreadable. The release notes loader (`de2()` at line 460474) now catches exceptions during changelog parsing and gracefully returns an empty result instead of crashing. This prevents startup failures when the `~/.claude/cache/changelog.md` file is malformed.
 
-**Evidence**: `de2()` at line 460474 (release notes loader, reads from `"cache", "changelog.md"`)
+Evidence: `de2()` at line 460474 (release notes loader, reads from `"cache", "changelog.md"`)
 
 **Before (v2.1.0)**:
 ```javascript

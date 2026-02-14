@@ -1,0 +1,231 @@
+#+TITLE: Claude Code Bug Reports
+#+DATE: 2026-02-04
+
+* Bug 1: Session labels show raw XML tags in --resume picker
+
+** Description
+
+When using =--resume= or =/resume=, session labels sometimes display raw XML content instead of clean, human-readable text. Examples include:
+
+- =<command-name>/clear</command-name> <command-message>clear</command-message> <command-args></command-args…=
+- =[Request interrupted by user for tool use]=
+
+** Steps to Reproduce
+
+1. Start a Claude Code session
+2. Run =/clear= (or have a tool use interrupted)
+3. Start a new session
+4. Run =claude --resume= or =/resume=
+5. Observe the session list - the previous session shows raw XML as its label
+
+** Expected Behavior
+
+Session labels should show clean, human-readable text describing the conversation, not internal XML markup or system messages.
+
+** Root Cause Analysis
+
+The issue stems from incomplete filtering at multiple code layers:
+
+*** 1. Command filtering in =Cf6= is incomplete (lines 518041-518066)
+
+The =Cf6= function extracts the first prompt for session labels. While v2.1.31 added filtering for built-in commands via =ys().has(H)= (line 518054), several issues remain:
+
+- *Sessions created with older versions* (pre-2.1.31) have command messages stored without filtering
+- *The filtering only applies to built-in commands* - custom slash commands still leak through
+- *Interrupt markers* like =[Request interrupted by user for tool use]= are not filtered
+
+*** 2. Display sanitization in =_i1= is incomplete (lines 5702-5703)
+
+#+begin_src javascript
+function _i1(A) {
+  return A.replace(shq, "").trim() || A;
+}
+#+end_src
+
+The =shq= regex only strips =<ide_opened_file>= and =<ide_selection>= tags. It does NOT strip:
+- =<command-name>=
+- =<command-message>=
+- =<command-args>=
+- =<local-command-caveat>=
+- =<local-command-stdout>=
+
+*** 3. The =K2q= regex (line 519065) doesn't filter interrupt markers
+
+#+begin_src javascript
+K2q = new RegExp(
+  `^(?:<local-command-stdout>|<session-start-hook>|<tick>|...)`
+)
+#+end_src
+
+This regex filters messages starting with certain tags but doesn't handle:
+- =[Request interrupted by user]=
+- =[Request interrupted by user for tool use]=
+- Messages starting with =<command-name>=
+
+** Suggested Fixes
+
+*** Option A: Expand =_i1= sanitization (display layer fix)
+
+Add more tag types to the =shq= regex:
+
+#+begin_src javascript
+ahq = ["ide_opened_file", "ide_selection", "command-name", "command-message", "command-args", "local-command-caveat", "local-command-stdout", "local-command-stderr"]
+#+end_src
+
+*** Option B: Filter interrupt markers in =Cf6=
+
+Add a check to skip messages containing interrupt markers:
+
+#+begin_src javascript
+if (Y.includes("[Request interrupted")) continue;
+#+end_src
+
+*** Option C: Strip all XML-like tags from labels
+
+Add a final sanitization step that strips any =<tag>...</tag>= patterns from session labels.
+
+** Environment
+
+- Claude Code version: 2.1.31
+- Affects versions: All versions (filtering issues), v2.1.31 added partial fix
+
+* Bug 2: =classifyHandoffIfNeeded is not defined= error crashes backgrounded agents
+
+** Description
+
+When a subagent (Task tool) is moved to the background during execution and then completes, it crashes with:
+
+#+begin_example
+classifyHandoffIfNeeded is not defined
+#+end_example
+
+This is a function that is called but never defined in the codebase.
+
+** Steps to Reproduce
+
+1. Start a Claude Code session
+2. Use the Task tool to launch a subagent (without =run_in_background: true=)
+3. While the agent is running, press =ctrl+b= to background it
+4. Wait for the agent to complete in the background
+5. The agent fails with "classifyHandoffIfNeeded is not defined"
+
+** Why This Bug Is Rare
+
+The bug only affects agents that are *moved to background mid-execution*. It does NOT affect:
+
+- Agents that run synchronously to completion
+- Agents started with =run_in_background: true= (explicit async path)
+
+The code has two separate async completion paths:
+
+1. *Explicit async path* (lines 421849-421909): Used when =run_in_background: true= is passed. Completion code does NOT call =classifyHandoffIfNeeded=.
+
+2. *Moved-to-background path* (lines 421966-422035): Used when user presses ctrl+b during execution. This path DOES call the undefined function.
+
+** Root Cause
+
+The function =classifyHandoffIfNeeded= is *called but never defined* in the codebase.
+
+At line 421994 (inside the moved-to-background completion handler):
+
+#+begin_src javascript
+E1 = await classifyHandoffIfNeeded({
+  agentMessages: q1,
+  toolPermissionContext: S1.toolPermissionContext,
+  abortSignal: D1.abortController.signal,
+  isNonInteractiveSession: J.options.isNonInteractiveSession,
+  subagentType: q,
+  totalToolUseCount: h1.totalToolUseCount,
+});
+#+end_src
+
+The function appears to have been intended to classify/tag agent output when completion happens in background, possibly to determine if a "handoff" notification to the user is needed.
+
+** Version History
+
+| Version | References to =classifyHandoff= |
+|---------+---------------------------------|
+| v2.1.25 |                               0 |
+| v2.1.26 |                               1 |
+| v2.1.27 |                               1 |
+| v2.1.28 |                               1 |
+| v2.1.30 |                               1 |
+| v2.1.31 |                               1 |
+
+** Control Flow Analysis
+
+The backgrounding mechanism works as follows:
+
+1. =q54= (line 296212): Creates task with =backgroundSignal= promise
+2. =K54= (line 296245): Called when user presses ctrl+b, sets =isBackgrounded: !0= and resolves promise
+3. =$$6= (line 296704): Backgrounds all eligible agents (called by ctrl+b handler)
+4. Main loop (line 421960-421968): =Promise.race= detects backgroundSignal resolution
+5. Line 421994: =classifyHandoffIfNeeded= called → crash
+
+** Impact
+
+- Agents backgrounded with ctrl+b will crash on completion
+- The agent's work may be lost or not properly returned
+- Error message is confusing ("is not defined" suggests code issue, not user action)
+
+** Suggested Fix
+
+Either:
+
+1. *Define the function* if it's meant to exist
+2. *Remove the call* if it was added by mistake
+3. *Add a fallback* to handle the missing function gracefully:
+
+#+begin_src javascript
+const E1 = typeof classifyHandoffIfNeeded === 'function'
+  ? await classifyHandoffIfNeeded({...})
+  : null;
+#+end_src
+
+** Environment
+
+- Claude Code version: 2.1.31
+- Introduced in: v2.1.26
+- Affects: Agents backgrounded with ctrl+b during execution
+
+* Investigation Notes
+
+** Key Source Locations (v2.1.31)
+
+*** Session Label Bug
+
+| Function/Variable | Line   | Purpose                              |
+|-------------------+--------+--------------------------------------|
+| =Cf6=             | 518041 | Extract first prompt from messages   |
+| =UbA=             | 518032 | Wrap Cf6, truncate to 200 chars      |
+| =_i1=             | 5702   | Sanitize display text (incomplete)   |
+| =dc=              | 5713   | Generate session display label       |
+| =K2q=             | 519065 | Regex for filtering message patterns |
+| =ys()=            | 511943 | Set of built-in command names        |
+
+*** classifyHandoffIfNeeded Bug
+
+| Function/Variable         | Line   | Purpose                                     |
+|---------------------------+--------+---------------------------------------------|
+| =classifyHandoffIfNeeded= | 421994 | Called but undefined (bug)                  |
+| =q54=                     | 296212 | Create task with backgroundSignal promise   |
+| =K54=                     | 296245 | Background agent: set flag + resolve signal |
+| =$$6=                     | 296704 | Background all eligible agents              |
+| =O54=                     | 296472 | Check if agent is main-session (excluded)   |
+| =J54=                     | 296697 | Check if backgroundable tasks exist         |
+| =w$6=                     | 296272 | Map storing background signal resolvers     |
+
+** Control Flow: Agent Backgrounding
+
+1. =q54= creates task with =isBackgrounded: !1= and stores resolver in =w$6= map
+2. User presses ctrl+b → =$$6= called → =K54= called for each agent
+3. =K54= sets =isBackgrounded: !0= and calls resolver from =w$6=
+4. Main agent loop has =Promise.race= between message stream and backgroundSignal
+5. When backgroundSignal wins, enters the buggy code path
+6. =classifyHandoffIfNeeded= called → crash
+
+** Timeline
+
+- Pre-2.1.26: No =classifyHandoffIfNeeded= reference
+- v2.1.26: =classifyHandoffIfNeeded= call added (function never defined)
+- v2.1.31: =ys().has(H)= filtering added to =Cf6= (partial fix for XML labels)

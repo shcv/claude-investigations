@@ -1,5 +1,6 @@
 # Changelog for version 0.2.19
 
+
 ### New Features
 
 #### Vim Mode Support
@@ -30,6 +31,7 @@
   - `C` - Change to end of line
   - `.` - Repeat last change
 
+
 ### Improvements
 
 #### Input Handling Refactoring
@@ -42,6 +44,7 @@
   - Combined imports from `node:process` (env, cwd)
   - Combined imports from `node:stream` (PassThrough)
   - Reduced redundant import statements
+
 
 ### Technical Changes
 
@@ -59,6 +62,7 @@
 #### Settings
 - New `editorMode` setting added to persistent configuration
 - Default mode is "emacs" for backward compatibility
+
 
 ### Usage Examples
 

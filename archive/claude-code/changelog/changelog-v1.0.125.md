@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.125 enhances sandbox security and usability with selective command exemptions, improved macOS compatibility for temp folder access, better npm installation detection, and real-time visibility into blocked operations.
 
+
 ### Sandbox Command Exemptions
 **What:** Configure specific commands to always bypass the sandbox, even when sandbox mode is enabled.
 
@@ -23,6 +24,7 @@ Add an `unsandboxedCommands` array to your sandbox configuration in `.clauderc`:
 - Bypasses sandbox restrictions while still enforcing permission checks
 - **Evidence**: `qu2()` at line 383844, schema at line 363385, integration in `Eu2()` at line 383855
 
+
 ### Resume Session at Specific Message
 **What:** Resume a conversation from a specific assistant message instead of from the end.
 
@@ -37,6 +39,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Returns error if the specified message ID is not found
 - Useful for branching conversations or exploring alternative response paths
 - **Evidence**: Validation at line 446036, message filtering at line 446470, configuration at line 448508
+
 
 ### Sandbox Violation Notifications
 **What:** Real-time status bar notifications when the sandbox blocks operations.
@@ -54,6 +57,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Uses existing sandbox violation store infrastructure (added in v1.0.122)
 - **Evidence**: `bMB()` component at line 428661, rendered at line 428869
 
+
 ### macOS Temp Folder Sandbox Support
 **What:** Automatic sandbox permissions for macOS system temp directories.
 
@@ -64,6 +68,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Enables seamless screenshot workflows where macOS saves screenshots to temp folders
 - No user configuration required - works automatically when `TMPDIR` environment variable is set
 - **Evidence**: `y19()` detection function at line 363940, integrated into `j19()` at line 363726
+
 
 ### Localhost Binding Control
 **What:** New sandbox configuration option to allow processes to bind to localhost network addresses.
@@ -89,6 +94,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Only affects localhost (`127.0.0.1`), not external network access
 - **Evidence**: Schema at line 363371, `getAllowLocalBinding()` export at line 364464, sandbox profile generation at line 363908
 
+
 ### Better npm Global Installation Detection
 **What:** Enhanced detection of npm global installations using `npm config get prefix`.
 
@@ -100,6 +106,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Improves accuracy of installation type reporting and upgrade suggestions
 - **Evidence**: `G$()` function at line 375878, specifically lines 375897-375898
 
+
 ### CLAUDE.md Flat Display Mode (Infrastructure)
 **What:** Alternative compact display format for CLAUDE.md sources.
 
@@ -110,6 +117,7 @@ claude --resume conversation.jsonl --resume-session-at msg_abc123
 - Infrastructure added but not yet activated in UI
 - Prepares for future compact display options in constrained spaces
 - **Evidence**: `n$0({ context, flat })` at line 402096, flat rendering at lines 402107-402123
+
 
 ### Removed Sandbox Bypass Shortcut
 **What:** Eliminated ability to bypass permission checks via sandbox flag.

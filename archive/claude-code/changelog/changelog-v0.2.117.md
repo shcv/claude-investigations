@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.117 Changelog
 
+
 ### Background Task Management 🚀
 A new `tasks` command has been added to list and manage background tasks. This allows you to:
 - View all running background tasks
@@ -20,6 +21,7 @@ The interface shows:
 - Live stderr output (last line)
 - Exit codes for completed tasks
 
+
 ### Long-Running Command Handling ⏱️
 When executing commands that take a long time, Claude Code now presents three options:
 1. **Continue waiting** - Keep waiting for the command to complete
@@ -27,6 +29,7 @@ When executing commands that take a long time, Claude Code now presents three op
 3. **Kill command** - Terminate the command
 
 This prevents the CLI from being blocked by long-running processes.
+
 
 ### Enhanced Print Mode (`--print`) 📄
 The print mode has been significantly improved with new options:
@@ -51,23 +54,28 @@ claude --print --resume 550e8400-e29b-41d4-a716-446655440000 "Let's continue"
 claude --print --system-prompt "You are a Python expert" "Write a sorting algorithm"
 ```
 
+
 ### Output Truncation
 Large command outputs are now intelligently truncated to prevent overwhelming the display:
 - Shows the first and last portions of output
 - Displays line count for truncated sections
 - Format: `[X lines truncated]` in the middle
 
+
 ### Stream Processing
 Added `PassThrough` stream support for better handling of streaming data in background tasks.
+
 
 ### Import Path Corrections
 - Fixed Node.js process import to use named imports (`import { cwd } from "node:process"`)
 - Properly scoped crypto imports for UUID generation
 
+
 ### Code Organization
 - Removed obsolete functions (`A50`, `FZ6`) related to model override handling
 - Consolidated message formatting utilities (`MR5`, `$Z6`)
 - Improved task output management with dedicated truncation logic
+
 
 ### Performance
 - More efficient handling of long-running processes

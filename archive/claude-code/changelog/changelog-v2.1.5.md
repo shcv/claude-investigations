@@ -25,7 +25,7 @@ This release refactors how Node.js built-in modules are imported throughout the 
 
 - **Affected modules**: `node:child_process`, `node:fs`, `node:os`, `node:path`, `node:process`, `node:util`, `crypto`, `https`, `stream`, `path`, `child_process`
 
-**Evidence**: The diff shows 15 removed import statements and 15 added import statements with restructured named imports. Structural similarity is 99.9% with 8,487 internal variable renames typical of minification differences.
+Evidence: The diff shows 15 removed import statements and 15 added import statements with restructured named imports. Structural similarity is 99.9% with 8,487 internal variable renames typical of minification differences.
 
 ## Notes
 

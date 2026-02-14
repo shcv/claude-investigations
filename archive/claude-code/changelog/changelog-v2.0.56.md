@@ -4,6 +4,7 @@
 
 Version 2.0.56 introduces proactive rate limit warnings that notify users before hitting limits, a new `/plan` command for viewing and editing plan files, and significant reliability improvements to the telemetry system. SDK users gain new capabilities to customize system prompts and define agents programmatically.
 
+
 ### Proactive Rate Limit Warnings
 **What:** Claude Code now warns you before you hit rate limits by monitoring your usage percentage in real-time, rather than only alerting when limits are reached.
 
@@ -17,6 +18,7 @@ Version 2.0.56 introduces proactive rate limit warnings that notify users before
 - New threshold configuration `eW5` at line 341262 defines warning triggers
 - Five-hour limit warnings were completely disabled in v2.0.55 (returned `null`), now active
 - **Evidence**: `BX5()` at line 341284, `AX5()` at line 341260, `tW5()` at line 341242
+
 
 ### New `/plan` Command
 **What:** View or edit your current session's plan file directly from the command line.
@@ -35,6 +37,7 @@ Version 2.0.56 introduces proactive rate limit warnings that notify users before
 - Displays "No plan found for current session" if no plan exists
 - **Evidence**: Command definition `Xj3` at line 495530-495591
 
+
 ### Plan Mode Attachment Throttling
 **What:** Plan mode instructions are now sent to Claude every 5 turns instead of every turn, reducing token usage while maintaining plan awareness.
 
@@ -44,6 +47,7 @@ Version 2.0.56 introduces proactive rate limit warnings that notify users before
 - Reduces repetitive context by ~80% in long planning sessions
 - **Evidence**: `pX5()` at line 343087, `cX5()` at line 343068
 
+
 ### Plan File Reference Attachment
 **What:** The transcript now shows "Plan file referenced (/path/to/plan)" when plan mode is active, providing visibility into which plan file is being used.
 
@@ -51,6 +55,7 @@ Version 2.0.56 introduces proactive rate limit warnings that notify users before
 - New function `o10()` at line 342568 creates the attachment
 - Helpful when resuming sessions to see which plan is active
 - **Evidence**: `o10()` at line 342568, rendering at line 468780
+
 
 ### Command-Based MCP Server Matching
 **What:** Enterprise admins can now allow or deny MCP servers by their exact command invocation, not just by name.
@@ -71,6 +76,7 @@ Version 2.0.56 introduces proactive rate limit warnings that notify users before
 - Backward compatible - name-based matching still works
 - New functions `TzA()` at line 509000 and `KiA()` at line 509003 for type checking
 - **Evidence**: `O8B()` at line 185472, `Tv1()` at line 185485, schema at line 509164-509190
+
 
 ### SDK Init Parameters for System Prompts and Agents
 **What:** SDK users can now customize system prompts and define agents programmatically during initialization.
@@ -97,6 +103,7 @@ await sdk.init({
 - `agents` - Define agents as JSON without file-based configuration
 - **Evidence**: `$v3()` at line 521902, new parameter handling at lines 521915-521920
 
+
 ### KillShell Tool
 **What:** New tool that allows terminating background shell processes by ID.
 
@@ -104,6 +111,7 @@ await sdk.init({
 - Variable `KI1 = "KillShell"` at line 480255
 - Complements the existing background shell functionality
 - **Evidence**: `KI1` at line 480255
+
 
 ### Telemetry Reliability Overhaul
 **What:** Failed telemetry events are now queued, batched, and retried with exponential backoff instead of being lost.
@@ -116,6 +124,7 @@ await sdk.init({
 - Default timeout increased from 5s to 10s
 - **Evidence**: Class `zm1` at line 234387, `queueFailedEvents()` at line 234542, `retryPreviousBatches()` at line 234448
 
+
 ### LSP Diagnostics Volume Limiting
 **What:** LSP diagnostics are now limited to 10 per file and 30 total, sorted by severity to preserve the most important issues.
 
@@ -126,6 +135,7 @@ await sdk.init({
 - Diagnostics cleared when file is modified via `H21()` at line 341024
 - **Evidence**: `SG2()` at line 340948, `rIA` tracking map at line 341032
 
+
 ### Enhanced Plan Mode Workflow
 **What:** The plan mode system prompt has been restructured for clearer phases and better guidance.
 
@@ -135,6 +145,7 @@ await sdk.init({
 - Clearer guidance on when to skip agents (trivial tasks only)
 - **Evidence**: `Pk3()` at line 510641
 
+
 ### Settings Change Auth Cache Clearing
 **What:** Authentication caches are now automatically cleared when settings change, preventing stale credential issues.
 
@@ -142,6 +153,7 @@ await sdk.init({
 - New code in `mg()` state handler at line 519860
 - Calls `npA()` and `apA()` to clear auth caches on settings changes
 - **Evidence**: `mg()` at line 519860, lines 519882-519887
+
 
 ### Heredoc Parsing Improvements
 **What:** Better handling of heredocs in bash commands, including comment detection and nested heredoc filtering.
@@ -152,6 +164,7 @@ await sdk.init({
 - Filters out nested heredocs that appear inside other heredocs
 - **Evidence**: `pF0()` at line 507843, `cS3()` at line 507823
 
+
 ### Plan Mode File Path Handling
 **What:** The file path checking for protected files now includes the plan file path.
 
@@ -159,6 +172,7 @@ await sdk.init({
 - Function `NX5()` (was `TF5`) at line 342574 now checks against `yU(Q)` (plan file path)
 - Prevents accidental modifications to the active plan file outside plan mode
 - **Evidence**: `NX5()` at line 342574
+
 
 ### Rate Limit UI State Management
 **What:** Rate limit warning notifications now properly track state to avoid duplicate notifications.
@@ -168,6 +182,7 @@ await sdk.init({
 - Uses `useState` for `isUsingOverage` tracking
 - Prevents "Now using extra usage" notification from appearing multiple times
 - **Evidence**: `VZ9()` at line 477794
+
 
 ### Escape Key Handling in Transcript Mode
 **What:** Fixed escape key behavior in transcript mode when operating in subagent context.

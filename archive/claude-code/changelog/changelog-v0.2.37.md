@@ -1,5 +1,6 @@
 # Changelog for version 0.2.37
 
+
 ### New Features
 
 #### `/release-notes` Command
@@ -34,6 +35,7 @@ claude config remove ignorePatterns "*.log" "*.tmp" "build/"
 claude config add --global mcpServers server1,server2,server3
 ```
 
+
 ### Improvements
 
 #### Kitty Terminal Notification Support
@@ -50,6 +52,7 @@ Improved terminal detection for Kitty:
 - Now checks `TERM` environment variable for "kitty" string earlier in the detection chain
 - More reliable Kitty terminal identification
 
+
 ### Technical Improvements
 
 #### Error Message Enhancement
@@ -60,11 +63,13 @@ Improved terminal detection for Kitty:
 - Removed the experimental "Architect" tool that was disabled in the previous version
 - Cleaned up related code and dependencies
 
+
 ### Bug Fixes
 
 - Fixed duplicate notification method tracking
 - Improved error handling for array-based configuration operations
 - Better validation for configuration keys
+
 
 ### Internal Changes
 

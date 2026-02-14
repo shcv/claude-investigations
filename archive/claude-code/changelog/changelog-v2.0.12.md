@@ -4,6 +4,7 @@
 
 Version 2.0.12 is a maintenance release focused on internal code reorganization and plugin system enhancements. The primary changes involve plugin command configuration improvements and minor UI refinements. Most of the 12,384-line increase is due to bundler regeneration with different variable names (~6,898 renames), not new functionality.
 
+
 ### Mode Commands System
 **What:** Commands can now be designated as "mode commands" for specialized, multi-phase workflows
 
@@ -22,6 +23,7 @@ Your command content here...
 - Show message "Your request appears to match a specialized workflow"
 - Intended for complex, multi-step tasks that benefit from structured guidance
 - **Evidence**: `isModeCommand: K` at line 440835 in `loadCommands()` function, mode command filtering in `V6Q()` function
+
 
 ### Inline Plugin Commands
 **What:** Plugin developers can now define commands directly in their manifest with inline markdown content
@@ -51,12 +53,14 @@ In your plugin's `marketplace-manifest.json`:
 - Old array-of-paths format still supported for backward compatibility
 - **Evidence**: Command schema with `content` field at lines 42750-42775 in schema definition, inline content processing in plugin loader at lines 48817-48850
 
+
 ### Enhanced Plugin Command Validation
 Better error handling when plugin manifests contain invalid command entries. The system now:
 - Validates that array-format commands contain only strings
 - Logs descriptive errors for malformed entries: `"Unexpected command format in marketplace entry for {plugin-name}"`
 - Skips invalid entries instead of crashing
 - **Evidence**: Type validation in plugin loader at lines 72627-72633 in `loadPluginsFromMarketplace()` function
+
 
 ### Cleaner Slash Command Permission UI
 The permission confirmation prompt for slash commands now displays more user-friendly information:
@@ -66,6 +70,7 @@ The permission confirmation prompt for slash commands now displays more user-fri
 - Includes command metadata for better context-aware routing
 - **Evidence**: UI component changes at lines 72425-72430 in permission confirmation renderer, metadata addition at line 65680
 
+
 ### Internal Code Organization
 Significant internal restructuring for improved maintainability:
 - Ripgrep module relocated from line ~335k to line ~3.8k for faster loading in `--ripgrep` mode
@@ -74,12 +79,14 @@ Significant internal restructuring for improved maintainability:
 - ~6,898 variable renames throughout codebase (no functional impact)
 - **Evidence**: Entry point refactoring at lines 461763-461773 in `az8()` function, ripgrep module relocation to lines 3856-3869
 
+
 ### Bundle Changes
 - File size increased from 449,389 to 461,773 lines (+2.7%)
 - Structural similarity: 75.0% (25% appears different due to variable renaming)
 - Declaration changes: 1,207 additions, 2,304 deletions, 102 modifications, 6,898 renames
 - No dependency version upgrades - all bundled libraries remain at same versions
 - Bundler regeneration caused most of the diff (not actual code changes)
+
 
 ### What This Release Does NOT Include
 - No new command-line flags or options

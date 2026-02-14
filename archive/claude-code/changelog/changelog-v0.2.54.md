@@ -1,8 +1,5 @@
 # Changelog for version 0.2.54
 
-Based on my analysis of the diff, here is the changelog for version 0.2.54:
-
-# Claude Code v0.2.54 Changelog
 
 ### Memory System
 - **New `/memory` command**: Edit and manage Claude's memory files
@@ -14,10 +11,12 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
   - Visual indicator shows loaded memory types (e.g., "project + user memory")
   - Memory files are created automatically when accessed for the first time
 
+
 ### API Response Streaming
 - **SSE (Server-Sent Events) support**: New streaming mode for API responses
   - Configuration option to choose between `stdio` (default) and `sse` modes
   - Enables real-time streaming of Claude's responses for better interactivity
+
 
 ### Terminal Enhancements
 - **Option as Meta key support**: Automatic configuration for macOS Terminal.app
@@ -25,21 +24,25 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
   - Automatically configures Terminal preferences on first run
   - Shows helpful status message when enabled
 
+
 ### WebFetch Improvements
 - **15-minute response cache**: Faster repeated access to the same URLs
   - Automatic cache cleanup for entries older than 15 minutes
   - Improves performance when working with web documentation
+
 
 ### Enhanced Domain Detection
 - **Improved URL parsing**: Better detection of domains mentioned in conversations
   - Supports multiple URL formats including bare domains
   - More intelligent domain extraction from user messages
 
+
 ### Visual Indicators
 - **Memory mode indicator**: Shows `# to memorize` hint when in memory mode
 - **Auto-accept mode indicator**: Shows `⏵⏵ auto-accept edits on` when file edits are auto-accepted
 - **Spinner customization**: New spinner styles and messages for different operation types
   - Separate configurations for thinking, responding, and tool use states
+
 
 ### Project Analysis
 - **File count estimation**: Shows rounded project file count in telemetry
@@ -51,6 +54,7 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
 - **Lodash integration**: Added Lodash (v4.17.21) for optimized utility functions
 - **Better resource cleanup**: Improved handling of memory and cache resources
 - **Streaming optimizations**: More efficient handling of large responses
+
 
 ### Configuration
 - **MCP server configuration**: Support for both `stdio` and `sse` type servers
@@ -64,6 +68,7 @@ Based on my analysis of the diff, here is the changelog for version 0.2.54:
     }
   }
   ```
+
 
 ### Error Handling
 - **Permission error tracking**: Better telemetry for file access issues

@@ -1,6 +1,5 @@
 # Changelog for version 0.2.32
 
-Based on the diff analysis, here's the changelog for version 0.2.32:
 
 ### New Features
 
@@ -24,9 +23,11 @@ Based on the diff analysis, here's the changelog for version 0.2.32:
 - Added `hasCompletedProjectOnboarding` flag to track whether users have completed the project-specific onboarding process
 - Automatically marks project onboarding as complete after first use
 
+
 ### Bug Fixes
 - Fixed issues with PersistentShell functionality
 - Improved error handling for MCP server configuration
+
 
 ### Internal Improvements
 - Added HTTP client dependencies for improved networking capabilities:
@@ -35,6 +36,7 @@ Based on the diff analysis, here's the changelog for version 0.2.32:
   - Added axios HTTP client with full feature support including interceptors and request/response transformations
 - Updated MIME type database with extensive application type definitions
 - Enhanced configuration storage with new `allowedTools` property in project settings
+
 
 ### Technical Changes
 - Removed unused command processing function `fY9` 

@@ -4,6 +4,7 @@
 
 Version 2.0.22 removes the Development Partner Program data sharing functionality, introduces comprehensive user configuration support for MCP servers with interactive setup, adds session environment hooks for shell customization, and implements enterprise allowlist/blocklist controls for MCP server management.
 
+
 ### MCP Server User Configuration Support
 **What:** Plugins can now request user-provided configuration values (API keys, paths, settings) through structured schemas defined in their manifest files.
 
@@ -87,6 +88,7 @@ claude mcp configure my-plugin server-name
 - Applies to both built-in and MCP tools
 - **Evidence**: `QwQ()` at line 436163
 
+
 ### SessionStart Hook Responses Now Visible
 **What:** SessionStart hook output is now displayed in interactive sessions, making it easier to see what environment setup is occurring.
 
@@ -125,6 +127,7 @@ claude mcp configure my-plugin server-name
 - Affects web fetch, conversation summarization, bug reporting, and command extraction
 - **Evidence**: `Zn6()` at line 295359, `lGQ()` at line 408663, `cSQ()` at line 466310
 
+
 ### Fixed Tool Permission Checking Edge Case
 **What:** Fixed potential crash when tools array is undefined during permission checking.
 
@@ -144,6 +147,7 @@ claude mcp configure my-plugin server-name
 - Prevents unintended session cancellation when closing search
 - **Evidence**: `mEQ()` at line 435476, `AwQ()` at line 436119
 
+
 ### Development Partner Program Data Sharing
 **What:** All functionality related to the Development Partner Program and automatic session data sharing with Anthropic has been removed.
 
@@ -159,4 +163,4 @@ claude mcp configure my-plugin server-name
 - Sessions are no longer automatically shared with Anthropic
 - API usage cost calculations no longer include data sharing discounts
 
-**Evidence**: Removed functions `Y7B()` at line 279890, `vd1()` at line 298392, `Ya6()` at line 298398, `Qn()` at line 298428, `Wa6()` at line 298432, `qFB()` at line 298438, `Ja6()` at line 298442, `EFB()` at line 298474, `Ia6()` at line 298488, `wFB()` at line 298512 in v2.0.21
+Evidence: Removed functions `Y7B()` at line 279890, `vd1()` at line 298392, `Ya6()` at line 298398, `Qn()` at line 298428, `Wa6()` at line 298432, `qFB()` at line 298438, `Ja6()` at line 298442, `EFB()` at line 298474, `Ia6()` at line 298488, `wFB()` at line 298512 in v2.0.21

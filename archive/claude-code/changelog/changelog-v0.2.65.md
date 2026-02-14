@@ -1,6 +1,5 @@
 # Changelog for version 0.2.65
 
-Based on the comprehensive diff analysis, here's the changelog for Claude Code version 0.2.65:
 
 ### New Features
 
@@ -27,6 +26,7 @@ Based on the comprehensive diff analysis, here's the changelog for Claude Code v
 - Falls back to offline changelog if network is unavailable
 - **Usage**: `claude release-notes`
 
+
 ### Improvements
 
 #### Performance Enhancements
@@ -44,6 +44,7 @@ Based on the comprehensive diff analysis, here's the changelog for Claude Code v
 - New `tipsHistory` setting to track displayed tips
 - Improved handling of API errors with clearer messaging
 
+
 ### Technical Improvements
 
 #### ️ Code Architecture
@@ -57,11 +58,13 @@ Based on the comprehensive diff analysis, here's the changelog for Claude Code v
 - Better documentation of which commands require write access vs read-only
 - Comprehensive lists of commands that should use sandbox mode
 
+
 ### Bug Fixes
 - Fixed Unicode normalization issues in text wrapping
 - Improved handling of incomplete escape sequences in terminal input
 - Better cleanup of temporary sandbox profiles
 - Fixed race conditions in process termination
+
 
 ### Developer Notes
 - Added `sandbox` parameter to Bash tool schema

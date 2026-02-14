@@ -18,6 +18,7 @@ The `/add-dir` command has been completely redesigned with an interactive UI and
 
 - **Persistent Storage**: When choosing "Yes, remember", the directory is saved to your local settings and will be available in future sessions
 
+
 ### 🆕 Agent Mentions with @-syntax
 You can now mention agents directly in your prompts using the `@agent-` syntax:
 
@@ -30,8 +31,10 @@ Please help me refactor this code @agent-refactoring-specialist
 
 The system will automatically detect and process agent mentions in your messages.
 
+
 ### 🆕 Session Start Hooks
 A new hook system that runs when starting a new session, allowing for automatic context injection and initialization tasks. This runs automatically on startup unless using `--continue`, `--resume`, or `--teleport` flags.
+
 
 ### 🆕 Directory Path Autocomplete (Internal Enhancement)
 Added intelligent directory path completion that:
@@ -39,6 +42,7 @@ Added intelligent directory path completion that:
 - Provides up to 10 directory suggestions
 - Filters hidden directories (starting with `.`)
 - Caches results for 5 minutes for better performance
+
 
 ### Tool Selection UI Enhancements
 The tool selection interface has been significantly improved:
@@ -56,10 +60,12 @@ The tool selection interface has been significantly improved:
 - **Better Navigation**: Header sections are now non-interactive and properly skipped during keyboard navigation
 - **Escape to Cancel**: Press `Esc` to cancel tool selection and use initial tools
 
+
 ### Ripgrep Integration Improvements
 - Centralized ripgrep path resolution with better quoting for paths containing spaces
 - More robust handling of bundled vs system ripgrep
 - Improved alias generation in shell snapshots with proper escaping
+
 
 ### Settings Watcher Optimization
 The settings file watcher has been streamlined:
@@ -68,10 +74,12 @@ The settings file watcher has been streamlined:
 - More efficient memory usage
 - Better event handling for file changes
 
+
 ### Performance Enhancements
 - Connection check interval increased to 30 seconds (from 1 second on non-Mac platforms)
 - Added caching for directory listing operations (5-minute TTL)
 - Optimized settings watcher to reduce memory footprint
+
 
 ### Code Quality
 - Better error handling for agent mentions
@@ -79,10 +87,12 @@ The settings file watcher has been streamlined:
 - More consistent path resolution across the codebase
 - Enhanced stream handling with proper PassThrough imports
 
+
 ### Fixed
 - Proper handling of spaces in ripgrep paths on all platforms
 - Correct escaping of quotes in shell snapshot generation
 - Better error messages for invalid session IDs in `--print` mode
+
 
 ### ️ Architecture
 - New `SessionStart` hook type added to the hook system

@@ -4,6 +4,7 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
 
 # Claude Code v1.0.31 Changelog
 
+
 ### Native Installation Command
 - **New `claude install` command**: Install Claude Code's native build directly from the CLI
   - Usage: `claude install [options]`
@@ -11,6 +12,7 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
   - Automatically cleans up old npm installations before installing the native build
   - Provides visual feedback during installation process with status updates
   - Shows shell integration setup notes after successful installation
+
 
 ### Enhanced Conversation Analytics
 - Added token usage tracking for conversations with detailed breakdowns:
@@ -21,16 +23,19 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
   - Local command output token tracking
   - Percentage breakdowns for all token categories
 
+
 ### Security Enhancements
 - New security-focused system prompt that emphasizes defensive security practices
 - Enhanced malicious code detection in file reading operations
 - Updated security instructions to refuse creating, modifying, or improving potentially malicious code
+
 
 ### ️ Shell Integration
 - Improved shell alias management with better conflict resolution
 - Enhanced detection and cleanup of existing claude aliases
 - Support for ZDOTDIR environment variable for zsh configurations
 - Automatic removal of old/conflicting claude aliases during setup
+
 
 ### Documentation Updates
 - Updated documentation URL structure with new sub-pages:
@@ -40,11 +45,13 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
   - `llm-gateway`, `devcontainer`, `iam`, `monitoring-usage`
   - Expanded coverage for Extended thinking, image pasting, and `--resume` flag
 
+
 ### ️ Session Management
 - Improved transcript loading with better summary handling
 - Enhanced session file organization by working directory
 - More efficient duplicate message detection
 - Better handling of sidechain conversations
+
 
 ### Auto-updater Improvements
 - Native installer now sets `autoUpdaterStatus` to "installed" after successful installation
@@ -52,9 +59,11 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
 - Enhanced cleanup of stale npm installations and symlinks
 - More robust directory creation for lock files
 
+
 ### Stop Signal Support
 - Added "Stop" to the list of supported signal types for MCP (Message Control Protocol)
 - Enables better control flow for long-running operations
+
 
 ### Theme Support
 - Added dark theme configuration option for error dialogs
@@ -74,6 +83,7 @@ Based on my analysis of the diff for Claude Code version 1.0.31, here's the deta
 - Enhanced token counting algorithms for more accurate usage metrics
 - Better separation of concerns for installation and setup logic
 
+
 ### Installing Claude Code
 ```bash
 # Install the latest native build
@@ -82,6 +92,7 @@ claude install
 # Force reinstall even if already installed
 claude install --force
 ```
+
 
 ### Shell Integration
 After installation, the tool will automatically:

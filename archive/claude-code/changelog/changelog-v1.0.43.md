@@ -2,6 +2,7 @@
 
 # Claude Code v1.0.43 Changelog
 
+
 ### New Theme Preview Feature
 Version 1.0.43 introduces a major enhancement to the theme management system with the ability to preview themes before applying them permanently.
 
@@ -29,11 +30,13 @@ Version 1.0.43 introduces a major enhancement to the theme management system wit
 - The `hB` hook now returns `currentTheme` instead of just the saved theme
 - This means components will automatically use preview themes when active
 
+
 ### User-Facing Benefits:
 
 1. **Try Before You Apply**: You can now preview how a theme looks before permanently switching to it
 2. **Easy Rollback**: If you don't like a preview theme, simply don't save it
 3. **Seamless Testing**: The UI updates immediately when previewing themes, giving instant feedback
+
 
 ### Usage Example:
 When using Claude Code, you might interact with themes like this:
@@ -41,10 +44,12 @@ When using Claude Code, you might interact with themes like this:
 - If you like it, save the preview to make it permanent
 - If not, the preview is discarded and your original theme remains
 
+
 ### Stream Handling Updates
 - Migrated from generic stream imports to more specific `PassThrough` imports
 - Added `PassThrough` imports from both `node:stream` and `stream` modules
 - This likely improves performance and reduces bundle size
+
 
 ### Process Module Import
 - Added specific import for `cwd` (current working directory) from `node:process`

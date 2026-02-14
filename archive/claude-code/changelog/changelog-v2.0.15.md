@@ -4,6 +4,7 @@
 
 Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to ask multiple-choice questions during execution, enhances async hook support with stderr capture, and improves marketplace plugin error handling with structured error tracking.
 
+
 ### AskUserQuestion Tool
 **What:** A new tool that enables Claude to ask users multiple-choice questions during task execution to gather preferences, clarify ambiguity, or make implementation decisions.
 
@@ -32,6 +33,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Questions have a header (max 12 characters) for display in the progress bar
 - **Evidence:** New tool definition at `T6Q = "AskUserQuestion"` at line 404665, tool implementation at line 405857 in function `Tn1()`
 
+
 ### Async Hook Stderr Capture
 **What:** Async hooks now capture and track stderr output separately from stdout, providing better visibility into hook errors and warnings.
 
@@ -41,6 +43,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Hook registration function `CwA()` at line 72298 initializes stderr field at line 72318
 - Stderr stream is now monitored alongside stdout for background hook processes
 - **Evidence:** Previously hooks only tracked `stdout`, now both `stdout` and `stderr` fields exist in hook state (line 72318)
+
 
 ### Marketplace Plugin Error Tracking
 **What:** Plugin loading now uses structured error tracking with specific error types and detailed context, making it easier to diagnose marketplace installation issues.
@@ -53,6 +56,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Provides actionable error messages like "Check that the marketplace entry has the correct path"
 - **Evidence:** v2.0.14 function `zV6()` at line 222943 only logged warnings; v2.0.15 function `AD6()` pushes structured error objects (lines 223537-543, 223567-573, 223593-599)
 
+
 ### Original Working Directory Protection
 **What:** File scanning now automatically excludes the original working directory when the process has changed directories, preventing unintended file access.
 
@@ -61,6 +65,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - If different, adds `originalCwd` to ignore paths list (lines 275873-276)
 - Prevents Claude Code from scanning the launch directory when operating in a different location
 - **Evidence:** v2.0.14 function `s3B()` at line 275176 had static ignore list; v2.0.15 adds dynamic `originalCwd` logic
+
 
 ### Write Tool File Caching
 **What:** The conversation context file cache now tracks Write tool results in addition to Read tool results, improving context awareness.
@@ -72,6 +77,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Path normalization now works for both read and write operations
 - **Evidence:** v2.0.14 function `yLQ()` at line 458431 only tracked Read tool (check at line 458451); v2.0.15 tracks both Read and Write tools (Write check added at lines 460014-460020)
 
+
 ### Improved Marketplace Status Messages
 **What:** Git operations during marketplace installation/update now show clearer progress messages.
 
@@ -81,6 +87,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - "Cloning repository: [url]" instead of "Running: git clone [url]"
 - "Clone complete, validating marketplace…" confirms successful completion
 - **Evidence:** Function `Df1()` at line 222621 uses `QT()` helper with improved messages (lines 222636, 222650, 222651)
+
 
 ### Select Component Enhancements
 **What:** The interactive select component now supports inline text input fields as options, enabling mixed multiple-choice and text input in a single selection UI.
@@ -93,6 +100,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Multi-select component `_GB` at line 282823 supports input options with checkboxes
 - **Evidence:** Function `TA()` at line 145236 now handles `type: "input"` options (checks at lines 145558, 145643, 145723)
 
+
 ### Command Flag Obfuscation Detection
 **What:** Fixed quote handling in command security checks to properly detect obfuscated flags with escaped characters.
 
@@ -104,6 +112,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Prevents false positives from legitimate quoted strings in command arguments
 - **Evidence:** v2.0.14 function `y_6()` at line 273725 had simpler quote detection; v2.0.15 adds stateful quote and escape tracking (lines 274389-274411)
 
+
 ### Hook Function Signature Improvements  
 **What:** Hook execution functions now use clearer parameter naming with object destructuring for better code maintainability.
 
@@ -112,6 +121,7 @@ Version 2.0.15 introduces a new **AskUserQuestion** tool that allows Claude to a
 - Function `r40()` at line 72973 uses named parameters: `{ hookInput, matchQuery, signal, timeoutMs }`
 - Replaces positional parameters with descriptive object properties
 - **Evidence:** v2.0.14 used positional parameters `HX9(A, B, Q, Z)` at line 73080 and `S40(A, B, Q, Z)` at line 72895
+
 
 ### Permission UI Component Refactoring
 **What:** Tool permission confirmation component optimized with React hooks for better performance.

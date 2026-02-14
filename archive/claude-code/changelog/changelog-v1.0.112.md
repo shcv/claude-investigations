@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.112 introduces skill.md file support for organizing commands hierarchically, adds enhanced network sandboxing with allow-lists, and removes unused internal network sandboxing code. Several improvements enhance command parsing, error tracking, and user configuration options.
 
+
 ### skill.md File Support
 **What:** Organize multiple commands in a directory under a single skill.md file
 **How to use:**
@@ -20,6 +21,7 @@ echo "command content" > my-commands/command1.md
 - Helps organize complex command structures hierarchically
 - **Evidence:** `uM0()` at line 424817 and `pZ5()` at line 424820 in v1.0.112
 
+
 ### Enhanced Network Sandboxing with Allow-Lists
 **What:** Fine-grained network access control for sandboxed bash commands
 **How to use:**
@@ -34,6 +36,7 @@ echo "command content" > my-commands/command1.md
 - Works with HTTP proxy for controlled network access
 - **Evidence:** `NetworkManager` implementation at line 373982-374129 in v1.0.112
 
+
 ### Automatic Feature Flag Updates
 **What:** Statsig feature flags now refresh automatically every 6 hours
 **Details:**
@@ -41,6 +44,7 @@ echo "command content" > my-commands/command1.md
 - Runs in background, transparent to users
 - Automatically disabled when using Bedrock/Vertex or when telemetry is disabled
 - **Evidence:** `xqB()` at line 428347 in v1.0.112
+
 
 ### Configurable Spinner Tips
 **What changed:** Added ability to disable spinner tips through configuration
@@ -51,6 +55,7 @@ echo "command content" > my-commands/command1.md
 ```
 **Evidence:** `NrB()` at line 437820
 
+
 ### Enhanced Command Parsing and Validation
 **What changed:** Better error handling and validation before command execution
 **Benefits:**
@@ -59,12 +64,14 @@ echo "command content" > my-commands/command1.md
 - More robust tokenization of complex commands with special characters
 - **Evidence:** `lAB()` at line 384563, `qz0()` at line 373516, `ut2()` at line 373524
 
+
 ### Better Error Tracking
 **What changed:** Error reports now include unique error IDs
 **Benefits:**
 - Easier to track and debug specific errors when reporting issues
 - Better correlation between user reports and backend logs
 - **Evidence:** `Rh1()` at line 428069 and `U1()` at line 428104
+
 
 ### Improved Native Installation Detection
 **What changed:** Prevents auto-migration prompts for users already on native installations
@@ -73,12 +80,14 @@ echo "command content" > my-commands/command1.md
 - Cleaner user experience for native install users
 - **Evidence:** `Lm1()` at line 435204
 
+
 ### Streamlined Terminal Output
 **What changed:** More consistent terminal output rendering
 **Benefits:**
 - Fewer visual glitches in terminal display
 - Better structured output handling
 - **Evidence:** `IC9` variable at line 361107
+
 
 ### Internal Network Sandboxing (macOS sandbox-exec)
 **What was removed:** Unused internal network sandboxing implementation

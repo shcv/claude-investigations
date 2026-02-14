@@ -6,6 +6,7 @@
 
 This release focuses on optimizing module imports for better performance and cleaner code structure.
 
+
 ### Changes
 
 #### **Improved Import Specificity**
@@ -25,11 +26,13 @@ The CLI now uses more targeted imports instead of importing entire modules:
   ```
   The `PassThrough` stream is used internally for piping data between different parts of the CLI without transformation.
 
+
 ### Technical Details
 
 - **Bundle Size**: These targeted imports help reduce the overall bundle size and improve startup performance
 - **No Functional Changes**: This update maintains 100% structural similarity with the previous version - all functionality remains identical
 - **Internal Refactoring**: 138 internal variable renames were performed as part of the build process (standard minification behavior)
+
 
 ### Summary
 

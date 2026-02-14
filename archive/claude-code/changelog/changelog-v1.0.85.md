@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.85 introduces comprehensive rate limit messaging with clear feedback about usage limits and spending caps, automatic session memory that maintains persistent notes about your work, and improved environment variable validation with helpful warnings when values are misconfigured.
 
+
 ### Rate Limit Status Messaging
 **What:** Complete system for communicating rate limits, usage limits, and spending caps with clear, actionable messages
 **How to use:**
@@ -20,6 +21,7 @@ Version 1.0.85 introduces comprehensive rate limit messaging with clear feedback
 - Special handling for team/enterprise accounts with admin contact guidance
 - Spending cap and overage status tracking
 
+
 ### Session Memory (Automatic Notes)
 **What:** Automatic background system that maintains structured notes about your ongoing development work
 **How to use:**
@@ -36,6 +38,7 @@ echo "Your prompt" > ~/.claude/session-memory/prompt.md
 - Updates transparently in the background without interrupting your work
 - Persists context across conversations for better continuity
 - Customizable template and update prompts for project-specific needs
+
 
 ### Environment Variable Validation Framework
 **What:** Structured validation system for environment variables with detailed feedback
@@ -55,6 +58,7 @@ export BASH_MAX_OUTPUT_LENGTH=100000   # Warning: Capped from 100000 to 50000
 - Non-fatal warnings for invalid or capped values
 - Clear feedback about what values are actually being used
 
+
 ### SessionEnd Hook Event
 **What:** New hook event that fires when Claude Code shuts down, enabling cleanup actions
 **How to use:**
@@ -68,11 +72,13 @@ export BASH_MAX_OUTPUT_LENGTH=100000   # Warning: Capped from 100000 to 50000
 - Allows external programs to perform cleanup
 - 2-second timeout ensures quick shutdown
 
+
 ### Enhanced Heredoc Security Validation
 **What changed:** More robust validation for heredoc patterns in bash command substitutions
 **Previous behavior:** Simple pattern matching could miss complex quoting scenarios
 **New behavior:** Multi-step validation ensures each heredoc is properly paired and safe
 **Impact:** Fewer false positives when using valid heredoc constructs with complex quoting patterns like `cat <<'EOF'` or `cat <<\EOF`
+
 
 ### Better Process Cleanup
 **What changed:** Improved handling of child processes during shutdown
@@ -80,17 +86,20 @@ export BASH_MAX_OUTPUT_LENGTH=100000   # Warning: Capped from 100000 to 50000
 **New behavior:** More thorough cleanup ensures all spawned processes terminate properly
 **Impact:** Cleaner system state after using Claude Code, no orphaned processes
 
+
 ### Fixed: Heredoc Delimiter Validation
 - **Issue:** Valid heredoc patterns with multiple quotes were incorrectly rejected
 - **Cause:** Regex pattern didn't account for all valid quoting variations
 - **Resolution:** New validation logic handles complex delimiter patterns correctly
 - **Affected versions:** v1.0.78 through v1.0.84
 
+
 ### Fixed: Environment Variable Error Handling
 - **Issue:** Invalid CLAUDE_CODE_MAX_OUTPUT_TOKENS values could crash the application
 - **Cause:** Direct error throwing without graceful fallback
 - **Resolution:** Invalid values now trigger warnings and use defaults
 - **Affected versions:** v1.0.80 through v1.0.84
+
 
 ### Fixed: Missing Cleanup on Graceful Shutdown
 - **Issue:** Some cleanup handlers weren't executing during normal shutdown

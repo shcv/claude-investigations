@@ -1,5 +1,6 @@
 # Changelog for version 0.2.85
 
+
 ### New Features
 
 #### Environment Variable Management
@@ -25,6 +26,7 @@
 #### Cost Tracking
 - **Improved unknown model cost handling**: When using models without known pricing information, the system now properly flags this with `hasUnknownModelCost = true` to alert users that cost calculations may be incomplete.
 
+
 ### Improvements
 
 #### Settings Management
@@ -40,6 +42,7 @@
 #### Developer Experience
 - **Better cost display**: The cost summary now handles cases where cost calculation might be unavailable, providing clearer feedback to users.
 
+
 ### Technical Changes
 
 - Bumped version from 0.37.0 to 0.40.0
@@ -47,6 +50,7 @@
 - Improved process imports to use named imports (`cwd`) for better tree-shaking
 - Added schema validation for package information using Zod
 - Removed git checkout special case handling from permission checks
+
 
 ### Bug Fixes
 

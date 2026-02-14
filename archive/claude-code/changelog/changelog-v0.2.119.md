@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.119 Changelog
 
+
 ### IDE Onboarding Experience
 A comprehensive onboarding screen has been added for first-time users installing Claude Code in their IDE. This feature:
 
@@ -15,6 +16,7 @@ A comprehensive onboarding screen has been added for first-time users installing
 - **Restart Reminder**: For plugin installations, reminds users to restart their IDE (may require multiple restarts)
 - **Exit Options**: Press the designated key again to exit the onboarding screen
 
+
 ### Enhanced IDE Detection
 The IDE detection functionality has been improved with an optional parameter:
 
@@ -25,9 +27,11 @@ The IDE detection functionality has been improved with an optional parameter:
 
 When `includeAll` is `true`, the function returns all detected IDE instances, not just those valid for the current workspace. This enables better IDE discovery and selection.
 
+
 ### Better Error Handling
 - **Tool Result Mapping**: The tool result mapping function now includes try-catch error handling, preventing crashes when tool results cannot be properly mapped
 - **Async Error Wrapper**: New `ZT` function provides a standardized way to handle async errors, returning empty arrays on failure instead of throwing
+
 
 ### Message Content Merging
 New functionality for intelligently merging message content:
@@ -36,17 +40,21 @@ New functionality for intelligently merging message content:
 - **Content Preservation**: Maintains proper formatting with double newlines between merged content sections
 - **Array Content Support**: Properly handles both string and array-based message content formats
 
+
 ### Import Updates
 - **Process Module**: Changed from default import to named import for better tree-shaking: `import { cwd as Rj0 } from "node:process"`
 - **Stream Module**: Added `PassThrough` import from the stream module for enhanced streaming capabilities
 - **URL Module**: Added `fileURLToPath` import for better file path handling
 
+
 ### Code Organization
 - **Memoization**: The MCP client initialization function `cs2` has been converted to a memoized variable `ss2` using the `k2` wrapper for better performance
 - **Permission Handling**: Simplified the permission mode function by removing intermediate parsing, now directly passes CLI arguments
 
+
 ### Tool Permission Configuration
 The permission configuration for allowed/disallowed tools has been simplified, removing unnecessary parsing that could cause issues with complex tool patterns.
+
 
 ### IDE Detection Reliability
 Fixed potential issues with IDE detection when multiple IDEs are running by improving the workspace folder matching logic and process ID validation.

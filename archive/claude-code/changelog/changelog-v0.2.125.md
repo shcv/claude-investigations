@@ -1,5 +1,6 @@
 # Changelog for version 0.2.125
 
+
 ### New Features
 
 #### 🆕 File System Change Notifications
@@ -25,6 +26,7 @@ Example of how external file changes appear:
 - **ReadableStream polyfill support**: Better handling of environments without native ReadableStream support
 - **Enhanced URL encoding**: Improved URL path encoding for special characters
 
+
 ### Internal Improvements
 
 #### ️ Architecture Changes
@@ -37,10 +39,12 @@ Example of how external file changes appear:
 - **Sanitized logging**: Added utilities to remove sensitive headers from logged requests
 - **Private class members**: Implemented proper private member access patterns using WeakMaps
 
+
 ### Bug Fixes
 - Fixed issues with file change detection race conditions
 - Improved handling of concurrent file modifications
 - Better error recovery for interrupted file operations
+
 
 ### Developer Experience
 - **Logging improvements**: Enhanced logging system with configurable log levels (off, error, warn, info, debug)

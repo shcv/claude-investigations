@@ -3,6 +3,7 @@
 ## Highlights
 Version 2.0.8 focuses on cleanup and simplification, removing experimental features and completing the migration period for the new permissions system. The beta GitHub Actions workflow template has been removed, the migration helper for legacy settings has been retired, and internal session handling has been streamlined.
 
+
 ### Migration Helper for Legacy Settings Removed
 **What:** The automatic migration from old-style `allowedTools` and `ignorePatterns` arrays to the new `.claude/settings.local.json` permissions format has been removed.
 
@@ -42,6 +43,7 @@ The `customNotifyCommand` configuration option was introduced in v0.2.115 but ne
 
 **Evidence:** Stub function `pb6() at line 406840` present in v2.0.5, removed completely in v2.0.8 (notification function `H01() at line 397504` no longer checks for customNotifyCommand)
 
+
 ### Session Persistence Deduplication Simplified
 **What:** Removed client-side duplicate checking before persisting session entries, relying entirely on server-side validation.
 
@@ -65,6 +67,7 @@ The function that gathers subscription information (`nC0() at line 397096` in v2
 **User impact:** None visible—this is purely for internal analytics.
 
 **Evidence:** Line 23953 in diff shows addition: `if (B?.organization?.billing_type !== void 0) G.billingType = B.organization.billing_type;`
+
 
 ### Updated GitHub Actions Documentation Links
 **What:** Documentation URLs in GitHub Actions workflow template comments now point to the dedicated CLI reference instead of the generic SDK page.

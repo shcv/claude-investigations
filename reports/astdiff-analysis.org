@@ -1,0 +1,229 @@
+#+TITLE: astdiff Performance Analysis & Improvement Report
+#+DATE: 2026-02-06
+
+* Executive Summary
+
+astdiff was crashing (exit code 101 — Rust panic) when comparing the prettified
+Claude Code CLI source files (v2.1.32 → v2.1.33). Each file is ~17MB / 570K
+lines. The tool extracts ~14,600 declarations per file, successfully completes
+all 4 matching stages, then panics during output formatting due to a Unicode
+string boundary error in =truncate_with_ellipsis()=.
+
+*Status: FIXED.* A 3-line patch to use =is_char_boundary()= resolves the crash.
+astdiff now completes in ~55 seconds with 3.8GB peak memory, producing 11.8MB
+(352K lines) of structured diff output.
+
+* The Crash: Unicode String Boundary Panic
+
+** Root Cause
+
+The crash was at =src/diff/mod.rs:257= in =truncate_with_ellipsis()=:
+
+#+begin_src rust
+// BEFORE (panics on multi-byte chars):
+fn truncate_with_ellipsis(s: &str, max_len: usize) -> String {
+    let cleaned: String = s.chars()
+        .map(|c| if c == '\n' { '↵' } else { c })  // '↵' is 3 bytes in UTF-8
+        .collect();
+    if cleaned.len() <= max_len {
+        cleaned
+    } else {
+        format!("{}...", &cleaned[..max_len])  // PANIC: byte index inside '↵'
+    }
+}
+#+end_src
+
+Line 251 replaces =\n= (1 byte) with =↵= (3 bytes UTF-8). Then line 257 slices
+at byte index =max_len=, which can land in the middle of the 3-byte =↵= character.
+
+** The Fix
+
+#+begin_src rust
+// AFTER (safe truncation):
+if cleaned.len() <= max_len {
+    cleaned
+} else {
+    let mut end = max_len;
+    while end > 0 && !cleaned.is_char_boundary(end) {
+        end -= 1;
+    }
+    format!("{}...", &cleaned[..end])
+}
+#+end_src
+
+Location: =src/diff/mod.rs:254-259=
+
+** Error Message
+
+#+begin_example
+thread 'main' panicked at src/diff/mod.rs:257:38:
+byte index 100 is not a char boundary; it is inside '↵' (bytes 98..101)
+of `${`# Claude Code Insights↵↵${J}↵...`
+#+end_example
+
+The panic specifically occurred on a Claude Code "Insights" template string
+containing multiple newlines that were converted to multi-byte =↵= markers.
+
+* Post-Fix Performance Profile
+
+| Time | RSS | Peak | Phase |
+|------+------+------+-------|
+| 0:00 | 5 MB | 16 MB | Parsing |
+| 0:10 | 1,299 MB | 1,299 MB | Candidate pairs + LSH |
+| 0:20 | 1,344 MB | 1,345 MB | LSH filtering |
+| 0:30 | 1,400 MB | 1,400 MB | Full similarity |
+| 0:40 | 2,887 MB | 3,805 MB | Full similarity (peak) |
+| 0:50 | 2,408 MB | 3,805 MB | Resolve + output |
+| ~0:55 | done | | |
+
+- *Peak memory*: 3.8 GB
+- *Runtime*: ~55 seconds
+- *Output*: 11.8 MB, 352K lines
+- *Stats*: 98.1% structural similarity, 14,534/14,605 matched declarations
+- *Changes*: 275 additions, 71 deletions, 260 modifications, 14,321 renames
+
+* Architecture
+
+astdiff uses a well-designed 4-stage pipeline:
+
+| Stage | Purpose | Complexity |
+|-------+---------+------------|
+| 1. Candidate Pairs | Size-based filtering (0.5x-1.5x range) | O(n₁ × log n₂) |
+| 2. LSH Filter | MinHash similarity ≥ 0.3 | O(candidates × 128) |
+| 3. Full Similarity | Jaccard of structural hash sets | O(candidates × avg_hashes) |
+| 4. Resolve Matches | Greedy one-to-one assignment | O(candidates × log) |
+
+Parser: tree-sitter-javascript 0.20 (handles 17MB files fine).
+
+Pipeline for v2.1.32 → v2.1.33:
+- 14,605 × 14,809 = 216M potential pairs
+- Stage 1 (size filter): → 28M candidate pairs
+- Stage 2 (LSH filter): → 7.8M candidates
+- Stage 3 (full similarity): 7.8M Jaccard calculations
+- Stage 4 (resolve): greedy one-to-one matching
+
+* Memory Hotspot: Materialized HashSet Intersections
+
+While the crash was a Unicode bug (not OOM), 3.8GB peak memory is still
+concerning. The biggest memory consumer is =calculate_declaration_similarity()=
+at =src/diff/mod.rs:1665-1666=:
+
+#+begin_src rust
+let intersection: HashSet<_> = decl1.structural_hashes
+    .intersection(&decl2.structural_hashes).cloned().collect();
+let union: HashSet<_> = decl1.structural_hashes
+    .union(&decl2.structural_hashes).cloned().collect();
+#+end_src
+
+For each of 7.8M candidate pairs, this materializes two temporary HashSets.
+With rayon parallel processing, many of these exist simultaneously.
+
+* Proposed Memory Improvements
+
+** Priority 1: Streaming Jaccard (eliminates ~50-70% of memory)
+
+Replace materialized HashSet intersection with counting-only iteration.
+No allocation needed — just count matching elements.
+
+#+begin_src rust
+fn jaccard_similarity(a: &HashSet<u64>, b: &HashSet<u64>) -> f64 {
+    let intersection_size = a.iter().filter(|h| b.contains(h)).count();
+    let union_size = a.len() + b.len() - intersection_size;
+    if union_size == 0 { return 0.0; }
+    intersection_size as f64 / union_size as f64
+}
+#+end_src
+
+Location: =src/diff/mod.rs:1665-1668=
+
+** Priority 2: Chunked Candidate Processing (bounds peak memory)
+
+Instead of feeding all ~7.8M candidates to rayon at once:
+
+#+begin_src rust
+fn parallel_full_similarity(...) -> Vec<SimilarityResult> {
+    let mut all_results = Vec::new();
+    for chunk in candidates.chunks(10_000) {
+        let chunk_results: Vec<_> = chunk.par_chunks(self.batch_size / 10)
+            .flat_map(|batch| { /* existing logic */ })
+            .collect();
+        all_results.extend(chunk_results);
+    }
+    all_results
+}
+#+end_src
+
+Location: =src/diff/parallel_matching_v2.rs:202=
+
+** Priority 3: Stricter LSH Threshold for Large Files
+
+When declaration count exceeds a threshold, increase the LSH filter
+from 0.3 to 0.5, dramatically reducing candidates entering Stage 3:
+
+#+begin_src rust
+let lsh_threshold = if decls1.len() + decls2.len() > 20_000 {
+    0.5  // Stricter for large files
+} else {
+    0.3  // Normal threshold
+};
+#+end_src
+
+Location: =src/diff/parallel_matching_v2.rs:149=
+
+** Priority 4: Use MinHash Directly (skip full Jaccard)
+
+MinHash signatures are already computed (128 u64 values per declaration).
+For large files, skip the expensive full Jaccard entirely and use MinHash
+similarity as the final score — it's an unbiased estimator of Jaccard.
+
+** Priority 5: Memory Limit Guard
+
+Add a configurable memory limit with graceful degradation.
+
+** Priority 6: Lazy Fingerprint Loading
+
+Currently all 29,200 declarations compute fingerprints upfront.
+Defer fingerprint extraction to only declarations that pass LSH threshold.
+
+* Key Source Locations
+
+| Issue | File | Lines | Function |
+|-------+------+-------+----------|
+| Unicode truncation (FIXED) | =src/diff/mod.rs= | 248-259 | =truncate_with_ellipsis= |
+| Temp HashSet allocation | =src/diff/mod.rs= | 1665-1666 | =calculate_declaration_similarity= |
+| Parallel batching | =src/diff/parallel_matching_v2.rs= | 187-257 | =parallel_full_similarity= |
+| Candidate pair building | =src/diff/parallel_matching_v2.rs= | 92-123 | =build_candidate_pairs= |
+| LSH threshold | =src/diff/parallel_matching_v2.rs= | ~149 | =parallel_lsh_filter= |
+| Fingerprint extraction | =src/diff/mod.rs= | 402-446 | =create_declaration= |
+
+* Impact on Changelog Pipeline
+
+With the Unicode fix, astdiff now works on Claude Code prettified files.
+Its output (11.8MB structured diff) captures:
+- New feature code (TeammateIdle hooks, allowedAgentTypes, agent memory)
+- Logic changes (thinking block handling, SSL error classification)
+- Code movement/refactoring (14,321 renames identified and filtered)
+- Structural similarity metrics (98.1% overall)
+
+This is significantly richer than =string_diff.js= output (6KB, strings only).
+The astdiff output captures behavioral changes that string extraction misses.
+
+However, 11.8MB is still too large for direct LLM consumption. Options:
+1. Post-process astdiff output to extract only =Added= and =Removed= sections
+2. Use astdiff's structured format to generate a focused summary
+3. Feed the Added/Removed/Modified sections selectively to the LLM agent
+
+The =string_diff.js= tool (Acorn-based string extraction) remains useful for
+quick string-level changes. The ideal pipeline would combine both:
+- string_diff.js for user-facing text changes (5-23KB)
+- astdiff summary for structural/behavioral changes (filtered to ~50-100KB)
+
+* Estimated Effort for Memory Improvements
+
+| Fix | Effort | Memory Reduction |
+|-----+--------+------------------|
+| Streaming Jaccard | 30 min | ~50-70% |
+| Chunked processing | 1 hour | Bounded peak |
+| Stricter LSH threshold | 15 min | ~40-60% fewer candidates |
+| Memory limit guard | 30 min | Graceful degradation |
+| Total | ~2 hours | 3.8GB → ~1-2GB estimated |

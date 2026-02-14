@@ -4,6 +4,7 @@ Based on my analysis of the diff file for version 1.0.68, here is the detailed c
 
 # Claude Code v1.0.68 Changelog
 
+
 ### Teleport - Resume Sessions Across Machines
 A powerful new `--teleport` feature allows you to resume Claude Code sessions from other machines or continue someone else's shared session.
 
@@ -27,6 +28,7 @@ claude --teleport https://claude.ai/chat/abc123def456
 - `TELEPORT_RESUME_URL`: Override the default URL for session resumption
 - `TELEPORT_HEADERS`: Pass custom headers as JSON (e.g., `export TELEPORT_HEADERS='{"Authorization": "Bearer token"}'`)
 
+
 ### Customizable Output Modes
 Configure how Claude Code communicates with you by selecting from different output modes.
 
@@ -37,6 +39,7 @@ Configure how Claude Code communicates with you by selecting from different outp
 - Dynamic loading with "Loading output modes..." indicator
 - Each mode includes a description to help you choose
 
+
 ### Enhanced Hooks Management
 New global control over Claude Code's hook system for better troubleshooting and control.
 
@@ -46,6 +49,7 @@ New global control over Claude Code's hook system for better troubleshooting and
   - Warning banner explaining hooks are disabled
   - Count of configured hooks that aren't running
   - Option to re-enable all hooks with one click
+
 
 ### Expanded Shell Command Support
 10 new commands added to the safe command whitelist, allowing execution without approval prompts:
@@ -61,11 +65,13 @@ New global control over Claude Code's hook system for better troubleshooting and
 - `base64` - Encode/decode base64 data
 - `file` - Determine file type
 
+
 ### ️ Better Error Handling
 - Improved shell execution with `shell: true` option for better compatibility
 - Enhanced error messages with clearer explanations
 - Try-catch blocks added to critical command execution paths
 - Better timeout and cancellation handling for long-running commands
+
 
 ### UI/UX Enhancements
 - Loading states with descriptive messages throughout the interface
@@ -73,9 +79,11 @@ New global control over Claude Code's hook system for better troubleshooting and
 - Clearer permission descriptions for tool access levels
 - Improved session selection UI when multiple sessions are available
 
+
 ### Removed Features
 - Removed `NotebookRead` tool and related Jupyter notebook reading functionality
 - Cleaned up unused imports for `node:stream`
+
 
 ### Command Execution Improvements
 - New command tracking infrastructure with unique command IDs

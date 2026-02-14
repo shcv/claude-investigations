@@ -4,6 +4,7 @@
 
 Version 2.0.0 introduces Claude Sonnet 4.5 as the new default model, completely redesigns the welcome screen with a new "Clawd" mascot and adaptive layout system, and adds a `/usage` command for subscription plan usage tracking. The thinking feature has been streamlined to use a simple "ultrathink" trigger, and the MultiEdit tool has been removed in favor of the existing Edit tool.
 
+
 ### Claude Sonnet 4.5 Model
 **What:** New default model `claude-sonnet-4-5-20250929` with improved performance for daily coding tasks
 
@@ -23,6 +24,7 @@ claude --model sonnet45
 - Supports 1M token context window variant: `claude-sonnet-4-5[1m]`
 - **Evidence**: `U10` at line 367516, `GM1()` at line 368315, model detection logic at line 340617 in v2.0.0
 
+
 ### /usage Command
 **What:** View your subscription plan usage limits and current consumption
 
@@ -39,6 +41,7 @@ claude --model sonnet45
 - Reset time countdown
 - Only available for subscription plans (API key users see informational message)
 - **Evidence**: `OXB` command definition at line 416198, usage API endpoint at line 402408, UI components `E3B()` and `WS6()` at lines 402479-402532 in v2.0.0
+
 
 ### Redesigned Welcome Screen
 **What:** Complete overhaul with adaptive layout, branded "Clawd" mascot, and dynamic content feeds
@@ -58,6 +61,7 @@ claude --model sonnet45
 - Displays latest changelog entries
 - Contextual tips based on project state
 - **Evidence**: Main welcome screen `iOB()` at line 429317, Clawd mascot `PK5()` at line 429231, feed system `gOB()` at line 429168, splash screen `Pc1()` at line 441300 in v2.0.0
+
 
 ### Extended Thinking Improvements
 **What:** Simplified thinking trigger system with new programmatic control
@@ -80,6 +84,7 @@ claude
 - Thinking state notifications show "Thinking on/off (tab to toggle)"
 - **Evidence**: Pattern at line 363628, functions `Y61()` at line 363667, `Y09()` at line 363644, `le1()` at line 363671, metadata handling at line 363649 in v2.0.0
 
+
 ### Enhanced Settings Dialog
 **What:** Tabbed interface combining status, configuration, and usage in one place
 
@@ -98,6 +103,7 @@ claude
 - Unified interface reduces command clutter
 - **Evidence**: Tabbed component `L01()` at line 394930, status dialog `h01()` at line 402533 in v2.0.0
 
+
 ### Session Persistence Improvements
 **What:** Enhanced session history deduplication and conflict detection
 
@@ -107,6 +113,7 @@ claude
 - Improved conflict resolution with UUID mismatch detection
 - Better error messages for concurrent modification scenarios
 - **Evidence**: Deduplication logic in `F8B()` at line 397200, UUID tracking with `Cv1` map in v2.0.0
+
 
 ### IDE Selection Indicator
 **What:** Shows currently active file or selected text from connected IDE
@@ -121,6 +128,7 @@ claude
 - Updates automatically as you switch files
 - **Evidence**: `aLB()` function at line 423498 in v2.0.0
 
+
 ### Notification System Enhancements
 **What:** Improved notification queue management with invalidation support
 
@@ -131,6 +139,7 @@ claude
 - Queue management ensures only relevant notifications are shown
 - **Evidence**: Enhanced `xG()` notification hook at line 363012 with `invalidates` support at lines 363225-363244 in v2.0.0
 
+
 ### Auto-compact Token Budget Display
 **What:** Context window display now shows reserved space for auto-compact and output tokens
 
@@ -140,6 +149,7 @@ claude
 - Helps users understand actual usable context space
 - More accurate free space calculations for subscription plans
 - **Evidence**: `L3B` and `CS6` variables at lines 402598 and 403199, calculation logic in `y3B()` at line 403320 in v2.0.0
+
 
 ### Thinking Time Display
 **What:** Visual feedback when Claude uses extended thinking
@@ -157,6 +167,7 @@ claude
 - Only appears when thinking is actually used
 - **Evidence**: `m3B()` function at line 404483 in v2.0.0
 
+
 ### Path Truncation Algorithm
 **What:** Improved file path display in narrow terminals
 
@@ -167,6 +178,7 @@ claude
 - Example: `/very/long/path/to/file.ts` → `/very/…/to/file.ts`
 - **Evidence**: `MI1()` function at line 405562 in v2.0.0
 
+
 ### Model Display Names
 **What:** Clearer model naming in UI
 
@@ -176,6 +188,7 @@ claude
 - Consistent capitalization and formatting
 - **Evidence**: `UeA()` function at line 368322, `JM()` at line 368327, `lJA()` at line 367531 in v2.0.0
 
+
 ### Restore Dialog File Display
 **What:** Better file information when restoring changes
 
@@ -184,6 +197,7 @@ claude
 - Lists up to 2 files by name, then "and N other files"
 - More informative change summaries
 - **Evidence**: `uf6()` function at line 414892 in v2.0.0
+
 
 ### Recent Activity Feed
 **What:** Welcome screen shows recent conversations with timestamps
@@ -196,6 +210,7 @@ claude
 - Quick context for resuming work
 - **Evidence**: `_GB()` function at line 405621, `iR0()` at line 429186 in v2.0.0
 
+
 ### Sonnet 4.5 Migration
 **What:** Automatic model upgrade for existing users
 
@@ -206,6 +221,7 @@ claude
 - Graceful handling of users who prefer other models
 - **Evidence**: `v4Q()` migration function at line 443290, notification in `NRB()` at line 430680 in v2.0.0
 
+
 ### Subscription Plan Notifications
 **What:** Prompts to activate Claude subscription if available
 
@@ -215,6 +231,7 @@ claude
 - Tracks notification count to avoid annoyance
 - Only shown to users with available subscriptions
 - **Evidence**: `MRB()` notification at line 430699, subscription check `sK5()` referenced in v2.0.0
+
 
 ### Extended Thinking Simplification
 **What:** Streamlined from multilingual multi-level system to single trigger
@@ -237,6 +254,7 @@ claude
 - Programmatic control via metadata for advanced use cases
 - **Evidence**: Removed `v19` patterns at line 363665 in v1.0.128, new simplified system with `NU1` at line 363628 and functions at lines 363644-363671 in v2.0.0
 
+
 ### Tool List Updates
 **What:** Removed MultiEdit from available tools array
 
@@ -246,6 +264,7 @@ claude
 - Edit tool handles all file editing use cases
 - Reduces complexity and potential confusion between Edit and MultiEdit
 - **Evidence**: Tool array `HK5` at line 428943 in v1.0.128 vs `IK5` at line 428118 in v2.0.0
+
 
 ### State Management Improvements
 **What:** Simplified state update logic removes redundant null checks
@@ -257,6 +276,7 @@ claude
 - Added thinking state persistence to user settings
 - **Evidence**: Function `Bp()` at line 443042 in v1.0.128 vs `df()` at line 443128 in v2.0.0
 
+
 ### Notification Color Scheme
 **What:** Reduced thinking notification color levels
 
@@ -266,6 +286,7 @@ claude
 - Matches simplified binary thinking system
 - **Evidence**: Variables `cT` and `aa` at lines 363617-363618 in v1.0.128 vs `LU1` and `$WA` at lines 363586-363587 in v2.0.0
 
+
 ### MultiEdit Tool
 **What:** The MultiEdit tool has been removed entirely
 
@@ -274,6 +295,7 @@ claude
 **Migration:** Use the Edit tool for all file modifications. For multiple edits to the same file, Claude will use Edit multiple times as needed.
 
 **Evidence:** Variable `sH = "MultiEdit"` at line 365916, tool registration in arrays at line 428943, prompts mentioning MultiEdit at lines 440925-440941 in v1.0.128 - all removed in v2.0.0
+
 
 ### Multilingual Extended Thinking Triggers
 **What:** Support for non-English thinking trigger phrases removed
@@ -291,6 +313,7 @@ claude
 
 **Evidence:** Variable `v19` with multilingual patterns at line 363665 in v1.0.128 - removed in v2.0.0, replaced with single English pattern `G09` at line 363628
 
+
 ### Legacy Welcome Screen Components
 **What:** Old ASCII banner and static welcome screen removed
 
@@ -303,6 +326,7 @@ claude
 
 **Evidence:** Functions `lGB()`, `DN0()`, `_A1()` in v1.0.128 completely replaced by new system in v2.0.0
 
+
 ### Opusplan Fallback Mode
 **What:** Removed "Opus Plan Mode" model fallback strategy
 
@@ -311,6 +335,7 @@ claude
 - This specific fallback configuration is no longer available
 - Standard model selection and rate limit fallback still work
 - **Evidence**: Variable `D31` at line 368627, function `U31()` at line 368577 in v1.0.128 - removed in v2.0.0
+
 
 ### Config Command Array Functions
 **What:** Removed several project-level config management functions
@@ -329,6 +354,7 @@ claude
 
 **Evidence:** Functions at lines 439101-439507 in v1.0.128 marked as removed in diff
 
+
 ### Post-Tool Hook Feedback Messages
 **What:** Removed dedicated function for creating post-tool feedback system messages
 
@@ -336,6 +362,7 @@ claude
 - Function `kv1(A, B)` removed - created system messages for tool hook feedback
 - Feedback mechanism still exists but implementation changed
 - **Evidence**: Function `kv1()` at line 397255 in v1.0.128 vs different implementation in v2.0.0
+
 
 ### Session Persistence Deduplication
 **What:** Fixed duplicate session log entries when fetching history
@@ -348,6 +375,7 @@ claude
 
 **Evidence:** New deduplication check at start of `F8B()` function at line 397200 in v2.0.0
 
+
 ### Terminal Width Calculation
 **What:** Improved responsive layout calculations for welcome screen
 
@@ -357,17 +385,20 @@ claude
 - More accurate column calculations for multi-panel layouts
 - **Evidence**: Layout functions `SGB()` at line 405537, `yGB()` at line 405541 in v2.0.0
 
+
 ### Breaking Changes
 1. **MultiEdit tool removed** - Extensions or scripts using MultiEdit must switch to Edit tool
 2. **Non-English thinking triggers removed** - Only "ultrathink" works now
 3. **Project config CLI commands removed** - Use settings.json instead
 4. **Opusplan mode removed** - Adjust model selection strategy if using this
 
+
 ### Migration Guide
 - **MultiEdit → Edit**: Simply use Edit tool; Claude will apply multiple edits as needed
 - **Multilingual thinking → ultrathink**: Replace language-specific triggers with "ultrathink"
 - **Config commands → settings.json**: Move `allowedTools`, `ignorePatterns` to `.claude/settings.json` permissions object
 - **Model selection**: Sonnet 4.5 is now default; explicit model selections are preserved
+
 
 ### Version Information
 - **Version:** 2.0.0

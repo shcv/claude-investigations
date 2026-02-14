@@ -1,6 +1,5 @@
 # Changelog for version 1.0.56
 
-Based on my analysis of the diff for version 1.0.56, here's the changelog:
 
 ### New Features and Improvements
 
@@ -47,14 +46,17 @@ Based on my analysis of the diff for version 1.0.56, here's the changelog:
 - **Aggregated client support**: Automatically generate convenience methods for all service operations
 - **Improved logging**: Better structured logging with sensitive data filtering
 
+
 ### Bug Fixes
 - Fixed duplicate comment issue in generated code
 - Improved URL validation for credential providers
 - Better handling of missing or invalid credentials
 
+
 ### Breaking Changes
 - Node.js 16.x deprecation warning: Support will end on January 6, 2025
 - Some internal functions have been removed or refactored
+
 
 ### Technical Improvements
 - Added support for endpoint URL resolution with proper protocol handling

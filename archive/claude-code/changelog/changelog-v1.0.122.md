@@ -4,6 +4,7 @@
 
 Version 1.0.122 significantly enhances security and configurability with hardened macOS sandbox policies based on Chrome's security model, a new `--setting-sources` flag for controlling which configuration files are loaded, and improved slash command management to optimize context window usage.
 
+
 ### Setting Sources Control
 
 **What:** Control which configuration sources Claude Code loads via a new `--setting-sources` command-line flag
@@ -26,6 +27,7 @@ claude --setting-sources=
 - Enables controlled environments where project settings should be ignored
 - Affects CLAUDE.md loading, MCP server configuration, and agent definitions
 - **Evidence**: `St5() at line 447294`, `N4A() at line 348834`, `pn0() at line 340374`, `Rg() at line 348856`
+
 
 ### Sandbox Violation Filtering
 
@@ -52,6 +54,7 @@ claude --setting-sources=
 - Each violation now includes the command, not just the filesystem path
 - **Evidence**: `Ec4 schema at line 370115`, `eR2() at line 370611`, `jc4() at line 370372`
 
+
 ### WebSocket Transport for MCP Servers
 
 **What:** Configure MCP servers to use WebSocket connections directly
@@ -76,6 +79,7 @@ claude --setting-sources=
 - Now supports custom headers and authentication
 - Complements existing stdio, SSE, and HTTP transports
 - **Evidence**: `F56 schema at line 388759`, transport enum updated at line 388727
+
 
 ### JSON Agent Definitions
 
@@ -102,6 +106,7 @@ claude --setting-sources=
 - Includes validation with clear error messages for invalid definitions
 - **Evidence**: `QRB schema at line 434547`, `GRB() at line 434642`, `$K5() at line 434622`
 
+
 ### Enhanced Sandbox Security (macOS)
 
 **What changed:** macOS sandbox policies rewritten based on Chrome's security model, replacing broad wildcards with explicit whitelists
@@ -120,6 +125,7 @@ claude --setting-sources=
 - Unix socket configuration changed: `allowUnixSockets` now only accepts array of paths (boolean values removed)
 - **Evidence**: `kc4() at line 370411` (new profile generator replacing `eb6() at line 374940` in v1.0.120)
 
+
 ### Dynamic Auto-Protection for Claude Directories
 
 **What changed:** Protected directories are now discovered dynamically instead of using a static list
@@ -135,6 +141,7 @@ claude --setting-sources=
 - No manual configuration needed
 - More reliable protection across different project layouts
 - **Evidence**: `iR2() at line 370172` (replaces static `ZQB() at line 374759` in v1.0.120)
+
 
 ### Slash Command Budget Management
 
@@ -152,6 +159,7 @@ claude --setting-sources=
 - Separate token tracking for slash command overhead
 - **Evidence**: `GM6() at line 402246`, `G4B() at line 402255`, `Y4B() at line 402266`
 
+
 ### Expanded Ultrathink Triggers
 
 **What changed:** Ultrathink mode now recognizes natural language variations
@@ -165,6 +173,7 @@ claude --setting-sources=
 - More discoverable and intuitive for users
 - Backward compatible with original trigger
 - **Evidence**: `DU1() at line 361856` (replaces `dw1() at line 366346` in v1.0.120)
+
 
 ### Account Display Names
 
@@ -181,6 +190,7 @@ claude --setting-sources=
 - Kept in sync with server changes
 - **Evidence**: `Dq0() at line 405124` returns `{ subscriptionType, displayName }` (previously `JB0() at line 371316` returned only subscription string)
 
+
 ### Improved Git Ignore for Checkpoints
 
 **What changed:** Checkpoint gitignore now prevents duplicate entries and has better error logging
@@ -196,6 +206,7 @@ claude --setting-sources=
 - Cleaner `.gitignore` files
 - Better error reporting and telemetry
 - **Evidence**: `yy6() at line 412545`, `aY1() at line 404121` (enhanced from `u35()` and `Z61()` in v1.0.120)
+
 
 ### Status Line Reorganization
 
@@ -217,6 +228,7 @@ claude --setting-sources=
 - Account information extraction refactored for reusability
 - **Evidence**: `Ey6() at line 411883` (new section), `My6() at line 411961` (refactored account display)
 
+
 ### Session Quality Classification
 
 **What:** Internal analytics to detect user frustration and PR creation requests
@@ -229,6 +241,7 @@ claude --setting-sources=
 - No user-visible changes
 - **Evidence**: `jr5() at line 442431`, `Pr5() at line 442426`
 
+
 ### OAuth Environment Mode Removed
 
 **What:** Removed `USE_LOCAL_OAUTH` environment variable support
@@ -238,6 +251,7 @@ claude --setting-sources=
 - Now hardcoded to "prod" mode only
 - Simplifies OAuth configuration
 - **Evidence**: `M9A() at line 346962` always returns "prod" (replaced `ao1() at line 339979` in v1.0.120)
+
 
 ### Agent System Refactoring
 
@@ -250,6 +264,7 @@ claude --setting-sources=
 - More modular code structure
 - No user-visible behavioral changes
 
+
 ### Thinking-Only Response Detection
 
 **What:** New helper to detect assistant responses containing only thinking blocks
@@ -258,6 +273,7 @@ claude --setting-sources=
 - `xQB() at line 396683` checks if response is all `<thinking>` content
 - Enables better handling of extended thinking responses
 - Internal optimization, no user-facing changes
+
 
 ### Breaking Changes
 
@@ -269,6 +285,7 @@ claude --setting-sources=
 2. **Stricter macOS sandbox policies:**
    - Commands requiring unrestricted Mach IPC, IOKit, or sysctl access may fail
    - Review sandbox violations and add to `ignoreViolations` if needed
+
 
 ### New Configuration Options
 
@@ -282,6 +299,7 @@ claude --setting-sources=
   }
 }
 ```
+
 
 ### Duplicate `.gitignore` Entries
 

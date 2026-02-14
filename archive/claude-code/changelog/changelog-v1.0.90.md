@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.90 is a maintenance release focused on internal code refactoring with no user-visible changes. The update reorganizes internal functions and variables while maintaining complete backward compatibility.
 
+
 ### Code Refactoring
 This version contains only internal code reorganization including:
 - Systematic renaming of internal functions and variables

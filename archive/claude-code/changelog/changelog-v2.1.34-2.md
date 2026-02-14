@@ -1,13 +1,5 @@
 # Changelog for version 2.1.34
 
-This confirms my analysis. The string diff shows:
-- **Same number of strings** (26,311 in both versions)
-- **Only 3 strings changed** - all are build artifacts (build paths and timestamps)
-- **No user-facing changes whatsoever**
-
-This is a **rebuild release** - the same code recompiled, likely for a CI/CD pipeline run or to pick up dependency updates in node_modules.
-
-# Changelog for version 2.1.34
 
 ## Summary
 

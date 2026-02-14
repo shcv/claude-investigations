@@ -2,6 +2,7 @@
 
 # Claude Code v1.0.1 Changelog
 
+
 ### Enhanced Model Support Detection
 - Added new function `vd9` for intelligent model availability checking based on deployment environment
 - The function determines which Claude models are available based on the current environment:
@@ -10,6 +11,7 @@
   - **Other deployments**: Access to Claude Opus 4 and Claude Sonnet 4 only
 
 This feature allows the CLI to dynamically adjust available model options based on the deployment context, ensuring users only see models they can actually access.
+
 
 ### Import Reorganization
 - Streamlined Node.js imports for better module organization:

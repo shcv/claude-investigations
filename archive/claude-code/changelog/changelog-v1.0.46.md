@@ -1,5 +1,6 @@
 # Changelog for version 1.0.46
 
+
 ### New Features
 
 #### Environment Variable Expansion in MCP Server Configuration
@@ -38,6 +39,7 @@
   - `toIDEPath()`: Converts WSL paths to Windows paths
 - Automatically detects and handles WSL distribution names in paths
 
+
 ### Performance Improvements
 
 #### Circular Buffer for Command Output
@@ -51,6 +53,7 @@
 - Preserves essential information while reducing verbosity
 - Example: `[Read /path/to/file.js, details compacted]` instead of full file contents
 
+
 ### Bug Fixes
 
 #### Installation Health Check Improvements
@@ -62,6 +65,7 @@
 - Added try-catch block around shell command spawning to handle execution failures gracefully
 - Returns proper error response with exit code 126 when shell command fails to start
 - Provides clear error messages in stderr when execution fails
+
 
 ### Technical Changes
 
@@ -83,6 +87,7 @@
 - Added `WS6 = 2000` for WebSearch result limits
 - Added `F$6 = 80000` for maximum tool output size
 - Added `zQA = 3` for retry attempts
+
 
 ### Developer Notes
 

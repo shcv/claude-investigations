@@ -1,5 +1,6 @@
 # Changelog for version 1.0.32
 
+
 ### New Features
 
 #### Plan Mode
@@ -15,6 +16,7 @@
 - New `exit_plan_mode` tool allows Claude to transition from planning to implementation
 - Supports markdown-formatted plans for better readability
 - Distinguishes between research tasks (no plan needed) and implementation tasks (plan recommended)
+
 
 ### Improvements
 
@@ -33,6 +35,7 @@
 - **Improved type conversion**: More robust handling of numeric type conversions with clearer error reporting
 - **Better JSON parsing errors**: More informative error messages for JSON parsing failures
 
+
 ### Technical Improvements
 - Removed several unused modules related to:
   - WebIDL type conversions (`KD2`, `wD2`)
@@ -40,9 +43,11 @@
 - Code cleanup and optimization resulting in a slightly smaller bundle size
 - Structural similarity with v1.0.31: 99.6%
 
+
 ### Bug Fixes
 - Various stability improvements in error handling paths
 - Better handling of edge cases in type conversions
+
 
 ### Summary
 Version 1.0.32 introduces Plan Mode as the major user-facing feature, allowing for better collaboration between users and Claude on complex coding tasks. The update also includes performance improvements, simplified configuration handling, and enhanced error reporting, making Claude Code more efficient and user-friendly.

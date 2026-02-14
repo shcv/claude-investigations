@@ -1,6 +1,5 @@
 # Changelog for version 1.0.60
 
-Based on my analysis of the diff file, here's the changelog for Claude Code v1.0.60:
 
 ### Major Features
 
@@ -27,6 +26,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code v1.0
   - Returns only new output since last check
   - Shows stdout, stderr, and shell status
   - Automatically truncates very long outputs
+
 
 ### Enhanced Features
 
@@ -55,6 +55,7 @@ Verbatim output: [key snippets preserved]
 - Tips are now fetched dynamically based on user preferences
 - Improved tip management system
 
+
 ### UI/UX Improvements
 
 #### Enhanced Dialog Components
@@ -67,6 +68,7 @@ Verbatim output: [key snippets preserved]
 - Better error handling with retry options
 - Visual improvements during the authentication process
 - Support for long-lived tokens (1 year expiry) for GitHub Actions
+
 
 ### Technical Improvements
 
@@ -91,6 +93,7 @@ Verbatim output: [key snippets preserved]
 - Improved permission handling for additional working directories
 - Better path resolution and validation
 
+
 ### Developer Experience
 
 #### Agent Creation Workflow
@@ -114,14 +117,17 @@ Verbatim output: [key snippets preserved]
 # Save the agent
 ```
 
+
 ### Bug Fixes and Cleanup
 - Removed unused OAuth error classes and related error handling code
 - Cleaned up shell snapshot cleanup functionality
 - Removed various deprecated functions and imports
 - Fixed issue with pasted text display (now shows "[Pasted text #X]" without "+0 lines")
 
+
 ### Breaking Changes
 - None identified in this release
+
 
 ### Notes for Users
 - Agents provide a powerful way to create specialized assistants for specific tasks

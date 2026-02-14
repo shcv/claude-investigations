@@ -2,14 +2,17 @@
 
 # Claude Code v1.0.25 Changelog
 
+
 ### Enhanced Terminal Support
 - **Improved Ghostty terminal compatibility**: Added specific spinner character set for Ghostty terminal (`TERM=xterm-ghostty`), providing better visual feedback during operations
+
 
 ### Workspace Permissions Tab
 - **New "Workspace" permissions tab**: Added alongside the existing "Allow" and "Deny" tabs in the permissions interface
   - Allows users to manage which directories Claude can access
   - Provides granular control over file system access permissions
   - Navigate between tabs using Tab or arrow keys
+
 
 ### ️ Directory Management in Permissions
 - **Add directories to workspace**: New interactive flow to add directories that Claude can read and edit
@@ -21,6 +24,7 @@
   - Visual confirmation dialog before removal
   - Shows which directory will be removed from Claude's access
 
+
 ### ️ Improved PATH Configuration
 - **Better PATH setup for ~/.local/bin**: Enhanced the installation process to properly configure PATH
   - Detects if ~/.local/bin is already in PATH
@@ -28,6 +32,7 @@
   - Removes old `alias claude` entries automatically
   - Provides clearer instructions for shell configuration
   - Example output: "Added ~/.local/bin to PATH in ~/.zshrc. You may need to restart your shell or run: source ~/.zshrc"
+
 
 ### Custom Command Enhancements
 - **Frontmatter parsing**: Custom commands now support YAML-style frontmatter in markdown files
@@ -44,23 +49,29 @@
   - Commands are validated and executed with proper permissions
   - Output is inserted directly into the rendered content
 
+
 ### Better Output Formatting
 - **Improved line wrapping**: Long lines in output are now properly wrapped at terminal width boundaries
 - **Enhanced truncation display**: When output is truncated, shows more accurate line counts
 
+
 ### Terminal Reset
 - Fixed incomplete terminal reset sequence by adding proper termination (`\x1B[0m\x1B(B`)
 
+
 ### Version Parsing
 - Added robust version string parsing to handle edge cases in version comparisons
+
 
 ### ️ Code Organization
 - Modularized color inversion logic for better theme support
 - Improved git repository root detection with fallback mechanisms
 - Enhanced custom command discovery to check both global and project-local directories
 
+
 ### Analytics
 - Added "command" to tracked context types for better usage insights
+
 
 ### Managing Workspace Directories
 ```bash
@@ -70,6 +81,7 @@
 # Enter: /home/user/my-project
 # Claude can now read and edit files in that directory
 ```
+
 
 ### Using Custom Commands with Bash Execution
 Create a custom command file with inline bash:

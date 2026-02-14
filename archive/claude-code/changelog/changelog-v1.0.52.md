@@ -1,6 +1,5 @@
 # Changelog for version 1.0.52
 
-Based on the diff analysis, here's the changelog for Claude Code v1.0.52:
 
 ### New Features
 
@@ -27,6 +26,7 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.52:
 - New `system-reminder` functionality for injecting context-aware guidance
 - Allows Claude to provide system-level hints and reminders during conversations
 
+
 ### Improvements
 
 #### Terminal Title Management
@@ -44,6 +44,7 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.52:
 - Better cleanup of temporary resources
 - Improved file locking mechanisms to prevent race conditions
 
+
 ### Technical Changes
 
 #### API Updates
@@ -55,16 +56,19 @@ Based on the diff analysis, here's the changelog for Claude Code v1.0.52:
 - Cleaned up unused imports and dependencies
 - Streamlined tool permission decision logic
 
+
 ### Bug Fixes
 - Fixed potential race conditions in shell snapshot creation
 - Improved cleanup of locked files on process termination
 - Better handling of missing or corrupted shell configuration files
+
 
 ### Configuration
 - New timeout configurations:
   - Shell snapshot creation: 10 seconds (configurable)
   - Metrics API check: 5 seconds
   - Cache refresh: 1 hour for metrics status
+
 
 ### Usage Examples
 

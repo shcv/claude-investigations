@@ -1,5 +1,6 @@
 # Changelog for version 0.2.100
 
+
 ### Database Availability Improvements
 
 **New database availability checking**
@@ -15,11 +16,13 @@
 
 This means if you have issues with the better-sqlite3 dependency, Claude Code will now gracefully degrade instead of crashing. Features like conversation history and continue/resume will be disabled, but the core functionality will still work.
 
+
 ### Permission System Updates
 
 **Local settings now trigger refresh**
 - When adding or deleting permission rules for local settings, the system now calls `Jt1()` to ensure changes are properly refreshed
 - This fixes potential issues where local permission changes weren't immediately reflected
+
 
 ### Code Cleanup
 
@@ -28,6 +31,7 @@ This means if you have issues with the better-sqlite3 dependency, Claude Code wi
 - Removed the `EC8()` function that performed automatic migration of old tool names in project settings
 - This suggests the tool naming migration from older versions is now complete
 
+
 ### Import Reorganization
 
 **Streamlined imports**
@@ -35,6 +39,7 @@ This means if you have issues with the better-sqlite3 dependency, Claude Code wi
 - Added `PassThrough` from stream module
 - Using `cwd` from `node:process` instead of importing the entire process module
 - Removed unused `exec` import from child_process
+
 
 ### Summary
 

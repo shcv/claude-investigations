@@ -1,5 +1,6 @@
 # Changelog for version 0.2.51
 
+
 ### New Features
 
 #### Local Installation Migration Tool
@@ -42,6 +43,7 @@ New security features for MCP (Model Context Protocol) servers detected in proje
 - Enter to confirm selections
 - Escape to reject all servers
 
+
 ### Improvements
 
 #### Enhanced URL Detection and Handling
@@ -54,6 +56,7 @@ New security features for MCP (Model Context Protocol) servers detected in proje
 - Added guidance to prefer MCP-provided web fetch tools when available
 - Updated security notes about URL validation
 - Improved error messages for domain restrictions
+
 
 ### Technical Changes
 
@@ -68,11 +71,13 @@ New security features for MCP (Model Context Protocol) servers detected in proje
 - Better domain validation for web fetching
 - Enhanced MCP server security with explicit user approval required
 
+
 ### Bug Fixes
 
 - Fixed memory type selection UI to use proper dropdown components instead of manual navigation
 - Improved error handling during local installation migration
 - Better cleanup of interrupted processes
+
 
 ### Internal Changes
 

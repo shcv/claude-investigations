@@ -2,8 +2,10 @@
 
 # Claude Code v1.0.29 Changelog
 
+
 ### Enhanced OAuth Security
 - **OAuth State Parameter**: Added CSRF protection to OAuth flows by implementing state parameter validation. The CLI now generates a secure random state value during OAuth authentication and validates it on callback to prevent cross-site request forgery attacks.
+
 
 ### Improved Spinner Messages
 - **Expanded Word List**: The loading spinner now includes many more delightful verb options (88 total, up from 56), including whimsical additions like:
@@ -22,11 +24,13 @@
   - Version control operations (branching, committing, merging)
   - Deployment terms (deploying, provisioning, scaling)
 
+
 ### Text Rendering Improvements
 - **Unicode Support**: Enhanced support for complex Unicode characters and emoji in terminal output
   - Added proper display width calculations for multi-byte characters
   - Improved text wrapping for languages with complex scripts
   - Better handling of grapheme clusters (e.g., emoji with modifiers)
+
 
 ### VS Code Extension Detection
 - **New Function**: Added ability to detect if Claude Code is running as a VS Code extension and retrieve its version number. This enables better integration when running within VS Code.

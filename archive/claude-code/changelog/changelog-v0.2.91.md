@@ -1,5 +1,6 @@
 # Changelog for version 0.2.91
 
+
 ### New Features
 
 #### 1. Conversation History Database Storage
@@ -44,6 +45,7 @@ The notification appears as:
 Your can now use your Claude Max subscription with Claude Code • /login to activate
 ```
 
+
 ### Improvements
 
 #### 1. Relative Time Formatting
@@ -61,12 +63,14 @@ Improved the tool permission dialog flow:
 - More consistent permission context management
 - Enhanced file operation permission requests
 
+
 ### API and Configuration Updates
 
 #### 1. New API Base URL Configuration
 Added `BASE_API_URL` to configuration for better API endpoint management:
 - Production: `https://api.anthropic.com`
 - Development: `http://localhost:3000`
+
 
 ### Technical Changes
 
@@ -83,12 +87,14 @@ Added `BASE_API_URL` to configuration for better API endpoint management:
 #### 3. Stream Processing
 Changed from using `Stream` to `PassThrough` for better stream handling compatibility.
 
+
 ### Bug Fixes
 
 - Fixed duplicate conversation display issues
 - Improved error handling for database operations
 - Better handling of malformed conversation files
 - Fixed permission dialog edge cases
+
 
 ### Internal Changes
 

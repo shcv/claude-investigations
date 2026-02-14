@@ -2,8 +2,10 @@
 
 # Claude Code v1.0.36 Changelog
 
+
 ### Web Search Enhancement
 - **Improved date awareness**: Web search now accounts for "Today's date" in the environment context, ensuring searches use current year information rather than outdated dates
+
 
 ### mTLS (Mutual TLS) Support
 - **Enterprise-grade security**: Added comprehensive support for mutual TLS authentication
@@ -15,12 +17,14 @@
 - **Automatic integration**: mTLS certificates are automatically configured for both HTTP clients and proxy connections
 - **Diagnostic support**: mTLS configuration is now visible in API configuration diagnostics
 
+
 ### Enhanced Update Command
 - **Improved diagnostics**: The `claude update` command now provides detailed installation health information
 - **Multiple installation detection**: Warns when multiple Claude Code installations are found
 - **Configuration validation**: Automatically detects and fixes mismatches between actual installation type and configuration
 - **Better error messages**: More informative warnings with specific fix instructions
 - **Visual improvements**: Color-coded output (yellow for warnings, green for success, red for errors)
+
 
 ### Installation Health Monitoring
 - **New health check system**: Detects and reports installation issues including:
@@ -29,17 +33,21 @@
   - Configuration mismatches
   - Global installation update limitations
 
+
 ### Token Usage Tracking
 - **Web search metrics**: Added `webSearchRequests` tracking to model usage statistics
 - **New helper function**: `w8A()` for retrieving web search request counts
+
 
 ### OAuth Discovery Enhancement
 - **Improved well-known endpoint discovery**: Now supports OAuth authorization server metadata at both standard and path-specific locations
 - **Better error handling**: Gracefully handles 404 responses when searching for OAuth metadata
 
+
 ### Security Improvements
 - **Enhanced directory traversal protection**: Updated `cd` command validation with clearer security messages
 - **Better path validation**: Improved checking for allowed working directories
+
 
 ### Code Editor Integration
 - **Text truncation**: Selected text from IDE is now truncated to 2000 characters to prevent overwhelming the context

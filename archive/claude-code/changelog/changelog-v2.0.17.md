@@ -4,6 +4,7 @@
 
 Version 2.0.17 introduces MCPB file format support for distributing packaged MCP servers, adds SOCKS5 proxy support for enhanced network sandboxing, includes support for the new Haiku 4.5 model, and enhances Windows path security validation.
 
+
 ### MCPB File Format Support
 
 **What:** Full support for loading MCP servers from MCPB (`.mcpb` or `.dxt`) archive files, which are secure ZIP-based packages containing manifest, configuration, and server code.
@@ -26,6 +27,7 @@ claude --mcp-config https://example.com/servers/tool.mcpb
 - Three structured error types for debugging: `mcpb-download-failed`, `mcpb-invalid-manifest`, `mcpb-extract-failed`
 - **Evidence**: `PO0() at line 279621`, `_8B() at line 279846`, `x8B() at line 279926`, `mg1() at line 279587` in v2.0.17 (completely absent from v2.0.15)
 
+
 ### SOCKS5 Proxy Support in Network Sandbox
 
 **What:** Complete SOCKS5 proxy server added alongside existing HTTP proxy for enhanced network sandboxing on Linux and macOS. Provides dual-proxy infrastructure on ports 1080 (SOCKS) and 3128 (HTTP).
@@ -44,6 +46,7 @@ ALL_PROXY=socks5h://localhost:1080
 - Function `QJ6()` wraps commands with dual proxy setup using socat
 - Parallel initialization of both proxy servers in `HJ6()`
 - **Evidence**: `QJ6() at line 207609`, `Bp2() at line 207346`, `KJ6()` and `HJ6() at line 207225` in v2.0.17 (SOCKS functionality completely absent from v2.0.15; only HTTP proxy existed)
+
 
 ### Haiku 4.5 Model Support
 
@@ -66,6 +69,7 @@ claude --model haiku45
 - Haiku 4.5 used in plan mode when model preference is set to "haiku"
 - **Evidence**: Model detection at `IOA() at line 83108`, platform mappings at lines 83142-83144, model selection logic at `x01() at line 144036` (model identifier "haiku-4-5" completely absent from v2.0.15)
 
+
 ### Windows Path Security Validation
 
 **What:** Enhanced security check that detects suspicious Windows-specific path patterns and requires manual approval before allowing file access.
@@ -83,8 +87,9 @@ Automatic protection when Claude attempts to access files with suspicious paths.
 - Applies to both read and write permission checks
 - **Evidence**: `ZMQ() at line 454449`, integrated into `b41() at line 454621` and `op() at line 454708` (function and security checks completely absent from v2.0.15)
 
+
 ### Enhanced Changelog Fetch Respects Traffic Control
 
 The changelog fetching functionality now respects the `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` environment variable. While the variable existed in v2.0.15, v2.0.17 adds this check to the changelog download function `Gb0()`, preventing unnecessary network requests in restricted environments.
 
-**Evidence**: `Gb0() at line 362735` adds the check (new location for this guard in v2.0.17)
+Evidence: `Gb0() at line 362735` adds the check (new location for this guard in v2.0.17)

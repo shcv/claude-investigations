@@ -3,6 +3,7 @@
 ## Highlights
 Version 1.0.91 is a targeted refinement release focused on security enhancements, developer experience improvements, and user interface polish. Key additions include command obfuscation detection, native grep/ripgrep support, GitHub Actions integration templates, and enhanced CLI animations.
 
+
 ### Native grep and ripgrep Support
 **What:** Added native support for `grep` and `rg` (ripgrep) commands within Claude's secure sandbox
 **How to use:**
@@ -16,6 +17,7 @@ rg "function.*async" --type js
 - Added to command descriptors and safe commands list
 - Integrates with existing path restriction framework
 - Eliminates need for shell execution for basic search operations
+
 
 ### Command Obfuscation Detection
 **What:** New security feature that detects attempts to hide malicious command flags using quotes
@@ -32,6 +34,7 @@ ls "-"la       # Obfuscated flag pattern detected
 - Echo command exempted from checks as inherently safe
 - Part of the enhanced command validation pipeline
 
+
 ### GitHub Actions Workflow Templates  
 **What:** Pre-configured workflow templates for Claude Code CI/CD integration
 **Implementation:** Two new templates added:
@@ -43,6 +46,7 @@ ls "-"la       # Obfuscated flag pattern detected
 - Includes proper permissions and trigger configurations
 - Supports both manual triggers and automatic code review
 
+
 ### Enhanced CLI Animations
 **What:** New shimmer and color interpolation animations for improved visual feedback
 **Implementation:** New animation functions `yN0`, `xN0`, `bN0`, `fN0` at `archive/pretty/pretty-v1.0.91.js:398709-398954`
@@ -51,6 +55,7 @@ ls "-"la       # Obfuscated flag pattern detected
 - Character-by-character glimmer effects  
 - Sine-wave opacity for natural pulsing animations
 - Enhanced visual feedback during tool operations
+
 
 ### TodoWrite activeForm UI Display
 **What:** Status spinner now displays the `activeForm` field from in-progress todos
@@ -64,6 +69,7 @@ ls "-"la       # Obfuscated flag pattern detected
 - Flag removal in v1.0.91 made the display unconditional
 - Completes the TodoWrite enhancement that began with schema changes in v1.0.89
 
+
 ### Node.js Warning Monitoring
 **What:** Automatic detection and reporting of Node.js runtime warnings
 **Implementation:** New `UN2` function and warning patterns at `archive/pretty/pretty-v1.0.91.js:356268`
@@ -73,6 +79,7 @@ ls "-"la       # Obfuscated flag pattern detected
 - Tracks occurrence counts for telemetry
 - Optional debug logging with `CLAUDE_DEBUG=true`
 
+
 ### OAuth Server Reliability
 **What:** Enhanced OAuth callback server with dynamic port allocation
 **Details:**
@@ -80,6 +87,7 @@ ls "-"la       # Obfuscated flag pattern detected
 - Now starts on port 0 for OS-assigned available ports
 - Prevents port conflicts during authentication flows
 - Improved error handling and cleanup with `removeAllListeners()`
+
 
 ### OAuth Error Handling
 **What:** Structured OAuth error classes and better error recovery
@@ -89,12 +97,14 @@ ls "-"la       # Obfuscated flag pattern detected
 - Better handling of various OAuth server implementations
 - More robust token exchange processes
 
+
 ### Command Argument Processing
 **What:** Fixed null pointer exception in command argument filtering
 **Details:**
 - Changed filter condition from `!B.startsWith("-")` to `!B?.startsWith("-")`
 - Prevents crashes when processing commands with null/undefined arguments
 - Improves robustness of command parsing pipeline
+
 
 ### Features NOT New in 1.0.91
 The following were already present in v1.0.90 and are not new features:

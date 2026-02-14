@@ -2,15 +2,18 @@
 
 # Claude Code v1.0.15 Changelog
 
+
 ### Removed Imports
 - **Removed direct `stream` import** - Previously imported the entire `stream` module
 - **Removed direct `node:process` import** - Previously imported the entire `node:process` module
+
 
 ### Added Imports
 - **Added named import from `node:process`** - Now imports only the `cwd` function as `bI0`
 - **Added named import from `stream`** - Now imports only the `PassThrough` class as `bK5`
 
 This change represents a shift from importing entire modules to importing only the specific functions/classes needed, which is a best practice for reducing bundle size and improving code clarity.
+
 
 ### Close All Diff Tabs Function
 A new function `Tr0` has been added that allows closing all diff tabs:

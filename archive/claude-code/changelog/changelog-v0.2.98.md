@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.98 Changelog
 
+
 ### Dynamic Model Configuration
 The CLI now provides enhanced model selection capabilities with runtime configuration support:
 
@@ -21,12 +22,14 @@ ANTHROPIC_MODEL=claude-3-opus-20240229 claude
 # The model will persist across sessions if set in config
 ```
 
+
 ### Settings UI Enhancements
 The settings panel now tracks configuration changes more comprehensively:
 
 - **Change Tracking**: All setting modifications are now logged with telemetry events
 - **Model Configuration**: Removed the separate model configuration UI in favor of environment-based settings
 - **Verbose Output**: The verbose setting is now properly persisted and tracked
+
 
 ### MCP Configuration File
 New support for `.mcp.json` configuration files in your project directory:
@@ -40,6 +43,7 @@ function saveMcpConfig(config) {
 
 This allows you to configure MCP servers and tools on a per-project basis.
 
+
 ### Parent Process Detection
 New utilities for detecting if Claude Code is running as a child of a specific process:
 
@@ -50,6 +54,7 @@ function isChildOfProcess(pid) {
   // Useful for IDE integration detection
 }
 ```
+
 
 ### IDE Name Resolution
 Enhanced IDE detection with friendly name mapping:
@@ -70,6 +75,7 @@ function getIDEDisplayName(ideId) {
 
 Supports detection of 20+ different IDEs including JetBrains suite, VS Code variants, and Android Studio.
 
+
 ### Enhanced Limit Status Tracking
 The rate limit status now includes time-based information:
 
@@ -85,6 +91,7 @@ The rate limit status now includes time-based information:
 ```
 
 This provides users with better visibility into when they can resume using the service.
+
 
 ### Conversation Path Resolution
 New functionality to resolve and track conversation paths across sessions:

@@ -5,6 +5,7 @@
 ## Summary
 Version 0.2.118 introduces minor refactoring changes focused on code organization and visual presentation. The main changes involve extracting attachment processing logic into a dedicated function and simplifying the thinking indicator UI.
 
+
 ### Code Organization Improvements
 
 #### New Attachment Processing Function
@@ -38,6 +39,7 @@ This refactoring improves code maintainability by:
 - Making the main message processing function (`Jw`) cleaner and more focused
 - Returning arrays of messages, allowing for more flexible message composition
 
+
 ### UI Improvements
 
 #### Simplified Thinking Indicator
@@ -55,6 +57,7 @@ The thinking indicator display has been simplified:
 
 This change makes the thinking indicator less visually intrusive while maintaining clarity.
 
+
 ### Bug Fixes
 
 #### System Reminder Formatting
@@ -64,6 +67,7 @@ Added proper closing tags for system reminders in edited file notifications:
 $6({ content: "</system-reminder>", isMeta: !0 })
 ```
 
+
 ### GitHub Action Update
 The GitHub Action reference has been updated from:
 - `anthropics/claude-code-pr-action@beta`
@@ -72,6 +76,7 @@ To:
 - `anthropics/claude-code-action@beta`
 
 This suggests a rename or consolidation of the GitHub Action.
+
 
 ### Technical Updates
 

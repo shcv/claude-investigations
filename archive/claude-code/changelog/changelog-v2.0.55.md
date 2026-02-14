@@ -4,6 +4,7 @@
 
 This release introduces enterprise policy controls for marketplace management, improved terminal compatibility with version-aware detection for Ghostty and iTerm, enhanced async agent monitoring with real-time progress tracking, and new telemetry for repository identification. Error handling is improved with specific detection for oversized images.
 
+
 ### Enterprise Marketplace Policy Controls
 **What:** Organizations can now restrict which external marketplaces users can install via the `strictKnownMarketplaces` policy setting.
 
@@ -17,6 +18,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Clear error messaging: `"Marketplace source 'X' is blocked by enterprise policy. Allowed sources: ..."`
 - **Evidence:** `pEA()` at line ~164954, `apA()` at line ~164985, `So()` at line ~165393 in v2.0.55
 
+
 ### Configurable Sandbox Search Depth
 **What:** New `mandatoryDenySearchDepth` setting controls how deep the sandbox scans for dangerous files and directories.
 
@@ -25,6 +27,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Configurable via policy settings
 - Improves performance in large repositories by limiting recursive scanning
 - **Evidence:** `Ye8()` at line ~188483, with default value of 3
+
 
 ### Repository Hash Telemetry
 **What:** Claude Code now generates an anonymized hash identifier for repositories to improve telemetry without exposing actual repository URLs.
@@ -39,6 +42,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Supports formats like `git@github.com:org/repo.git` and `https://github.com/org/repo`
 - **Evidence:** `pA6()` at line ~192113, `V7B()` at line ~192122
 
+
 ### Prompt Suggestion System (Experimental)
 **What:** A new system that predicts and suggests the user's next prompt based on conversation context.
 
@@ -48,6 +52,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Includes telemetry for suggestion display and acceptance tracking
 - **Evidence:** Functions at lines ~409868-409929, telemetry event `tengu_prompt_suggestion_shown`
 
+
 ### Image Too Large Error Handling
 **What:** Specific error detection and messaging when uploaded images exceed API size limits.
 
@@ -56,6 +61,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Returns dedicated `image_too_large` error type
 - User-friendly message: "Image was too large. Double press esc to go back and try again with a smaller image."
 - **Evidence:** Error detection at line ~345176, message constant `FF5` at line ~345069
+
 
 ### Enhanced Terminal Version Detection
 **What:** Improved compatibility checking for Ghostty and iTerm terminals using semantic versioning.
@@ -69,6 +75,7 @@ This release introduces enterprise policy controls for marketplace management, i
 
 **Details:**
 - **Evidence:** New function `e46()` at line ~222505 with semver checking via `mUA.gte()`
+
 
 ### Enhanced Async Agent Details Panel
 **What:** The async agent monitoring panel now shows significantly more information about running agents.
@@ -86,6 +93,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Displays token and tool counts in status line
 - **Evidence:** `O29()` at line ~468985 replaces older `PQ9()` function
 
+
 ### Enhanced sed Command Validation
 **What:** The `sed` command validator now supports explicit file write permission control.
 
@@ -98,6 +106,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Function signature changed to accept options object with `allowFileWrites`
 - **Evidence:** `h92()` at line ~314399 with parameter `G?.allowFileWrites`
 
+
 ### Improved Pipe Command Parsing
 **What:** Pipe segmentation for bash commands now uses tree-sitter parsing for more accurate command analysis.
 
@@ -107,6 +116,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Falls back to basic parsing if tree-sitter unavailable
 - **Evidence:** `R92()` at line ~313655 with `u01.parse()` integration
 
+
 ### New Telemetry Fields
 - `repository_id` and `repository_owner_id` for GitHub Actions metadata
 - `wsl_version` for Windows Subsystem for Linux environments
@@ -115,10 +125,12 @@ This release introduces enterprise policy controls for marketplace management, i
 - `queryChainId` and `queryDepth` for fork agent query tracking
 - Cache hit rate metrics for forked agent queries
 
+
 ### New Telemetry Events
 - `tengu_fork_agent_query`: Tracks forked agent query performance and token usage
 - `tengu_prompt_suggestion_shown`: When prompt suggestions are displayed
 - `tengu_prompt_suggestion_accepted`: When users accept suggested prompts
+
 
 ### Bash Permission Check Reordering
 **What:** Fixed the order of permission checks for bash commands to ensure dangerous file checks happen before subcommand evaluation.
@@ -127,6 +139,7 @@ This release introduces enterprise policy controls for marketplace management, i
 - Dangerous file check (`ct1`) now runs after subcommand parsing
 - Returns early if dangerous patterns detected, before proceeding to subcommand analysis
 - **Evidence:** Function `et1()` at line ~314794 with reordered checks
+
 
 ### Session Memory Agent Removal
 **What:** Removed the standalone `session-memory` agent type that was unused.

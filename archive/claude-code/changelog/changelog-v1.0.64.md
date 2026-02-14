@@ -1,6 +1,5 @@
 # Changelog for version 1.0.64
 
-Based on my analysis of the diff file, here's the changelog for Claude Code version 1.0.64:
 
 ### New Features
 
@@ -34,6 +33,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - **JSON-based status communication**: Status information can be passed to external commands via JSON
 - **Configurable timeout**: Status hook operations have a 5-second default timeout
 
+
 ### Improvements
 
 #### UI/UX Enhancements
@@ -49,6 +49,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 - **Fixed agent file path handling**: Improved path resolution for agent files across different locations
 - **Better error messages**: More descriptive error messages for invalid agent configurations
 
+
 ### Technical Changes
 
 #### ️ Architecture
@@ -59,6 +60,7 @@ Based on my analysis of the diff file, here's the changelog for Claude Code vers
 #### Compatibility
 - **Backward compatible**: Existing agents without model specifications default to Sonnet
 - **Survey system**: Added force display option via `CLAUDE_FORCE_DISPLAY_SURVEY` environment variable for testing
+
 
 ### Usage Examples
 

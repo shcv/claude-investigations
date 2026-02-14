@@ -1,5 +1,6 @@
 # Changelog for version 0.2.70
 
+
 ### New Features
 
 #### Enhanced Conversation Management
@@ -12,15 +13,18 @@
   - Deny rules take precedence over allow rules for enhanced security
   - Example: You could allow all `git` commands except `git push` by setting appropriate rules
 
+
 ### User Interface Improvements
 
 #### Settings Display Enhancement
 - The settings display function has been renamed and improved for better clarity. Settings descriptions now show more contextual information about their scope and effect.
 
+
 ### Performance Optimizations
 
 #### Reduced Notification Timeout
 - The timeout for "Claude is waiting for your input" notifications has been reduced from 5 minutes to 60 seconds (1 minute), providing more timely feedback when Claude is idle and waiting for user input.
+
 
 ### Architecture Changes
 
@@ -32,11 +36,13 @@
 - Consolidated stream handling by switching to a single PassThrough stream import
 - Removed the hardcoded list of restricted commands from the Bash tool description
 
+
 ### Bug Fixes
 
 - Fixed parameter ordering issues in the escape key handler
 - Improved command matching logic to handle both exact matches and prefix-based patterns more reliably
 - Enhanced error handling for conversation branching scenarios with better validation of message order
+
 
 ### Internal Improvements
 

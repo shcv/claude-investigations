@@ -2,6 +2,7 @@
 
 # Claude Code v0.2.73 Changelog
 
+
 ### Theme Command Alias
 The `/config` command now has a `/theme` alias, providing quick access to theme settings directly:
 ```bash
@@ -9,6 +10,7 @@ The `/config` command now has a `/theme` alias, providing quick access to theme 
 /config
 /theme
 ```
+
 
 ### Improved Theme Descriptions
 Theme options in the config panel now display clearer, more user-friendly descriptions:
@@ -19,11 +21,13 @@ Theme options in the config panel now display clearer, more user-friendly descri
 - **Light mode (ANSI colors only)** - Previously "Dark text (ANSI colors only)"
 - **Dark mode (ANSI colors only)** - Previously "Light text (ANSI colors only)"
 
+
 ### IDE Extension Detection
 Claude Code now detects if you have the Anthropic MCP extension installed in supported IDEs (VS Code, Cursor, Windsurf). When detected, a status indicator appears showing:
 ```
 ✓ Found [IDE name] extension • /config
 ```
+
 
 ### TodoRead Tool Enhancement
 The `TodoRead` tool now has clearer usage instructions, explicitly stating that no parameters should be provided:
@@ -34,12 +38,14 @@ Usage:
   LEAVE IT BLANK.
 ```
 
+
 ### Better Pipe Handling in Bash Commands
 Improved handling of piped commands in bash shells. The system now properly redirects stdin only for the first command in a pipeline, preventing issues with commands like:
 ```bash
 # This now works correctly
 echo "test" | grep "test" | wc -l
 ```
+
 
 ### Custom Shell Support
 Added support for specifying custom shells when executing bash commands, providing more flexibility for users with non-standard shell configurations.

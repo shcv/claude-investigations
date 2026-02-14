@@ -1,11 +1,8 @@
 # Changelog for version 0.2.89
 
-Based on the diff analysis, here's the changelog for Claude Code version 0.2.89:
-
-# Claude Code v0.2.89 Changelog
-
 ## Overview
 This update significantly restructures the internal codebase, removing 1,130 declarations and adding 176 new ones, resulting in a more streamlined implementation with 84.3% structural similarity to v0.2.86.
+
 
 ### AWS Credential Chain Management
 - **New `createCredentialChain()` function**: Provides enhanced credential chain management for AWS SDK operations
@@ -17,19 +14,23 @@ This update significantly restructures the internal codebase, removing 1,130 dec
       .expireAfter(600000); // Set 10-minute expiration
     ```
 
+
 ### Property Provider Chain
 - **New `propertyProviderChain()` function**: Implements a chain-of-responsibility pattern for property providers
   - Automatically tries next provider in chain if current provider fails with `tryNextLink` flag
   - Throws the last error if all providers fail
+
 
 ### Stream API Support
 - Enhanced stream transformation capabilities with better error handling
 - Added validation for `TransformStream` API availability
 - Improved Blob-to-stream conversion with React Native compatibility warnings
 
+
 ### Error Handling
 - Better error messages for unsupported APIs
 - Specific guidance for React Native users regarding fetch streaming limitations
+
 
 ### AWS Configuration Components
 The following AWS SDK configuration modules were removed in favor of the new credential chain system:
@@ -40,6 +41,7 @@ The following AWS SDK configuration modules were removed in favor of the new cre
 - Retry strategy implementations (StandardRetryStrategy, AdaptiveRetryStrategy)
 - Multiple AWS signing and authentication modules
 
+
 ### HTTP Protocol Components
 - HTTP request/response classes and utilities
 - Content length middleware
@@ -47,14 +49,17 @@ The following AWS SDK configuration modules were removed in favor of the new cre
 - Logger middleware
 - Recursion detection middleware
 
+
 ### UUID Generation
 - Removed UUID v1, v3, v4, v5 generation utilities
 - Removed UUID parsing and validation functions
+
 
 ### Code Organization
 - Consolidated credential provider functionality into new chain-based architecture
 - Simplified AWS SDK integration with fewer, more focused modules
 - Removed redundant tslib helper functions across multiple modules
+
 
 ### Performance
 - Reduced bundle size through removal of unused AWS SDK components
