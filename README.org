@@ -13,6 +13,7 @@ We analyze Claude Code's source code, features, and capabilities to understand i
 │   └── changelog/       # Generated changelogs for each version
 ├── tools/               # Archive management tools
 │   └── sync.py          # Automated sync tool for all operations
+├── docs/                # Guides and how-tos derived from experiments
 ├── features/            # User-facing features and capabilities
 │   ├── background-shells.org
 │   ├── github-actions.org
@@ -53,6 +54,15 @@ We analyze Claude Code's source code, features, and capabilities to understand i
 - [[./features/queued-prompts.org][Queued Prompts]] - Batch prompt execution
 - [[./features/environment-variables.org][Environment Variables]] - Configuration options
 - [[./features/spinner-words.org][Spinner Words]] - CLI animation customization
+
+** Guides and How-Tos (=docs/=)
+
+Practical techniques derived from experiments, with verified implementation details.
+
+- [[./docs/hook-subagent-detection.org][Hook Subagent Detection]] - Identify whether a hook is firing inside a subagent using transcript matching
+- [[./docs/best-practices.org][Best Practices]] - Lessons learned for designing and running experiments
+- [[./docs/evaluation-methods.org][Evaluation Methods]] - Approaches for measuring agent behavior
+- [[./docs/claude-agent-sdk-porting-guide.org][Agent SDK Porting Guide]] - Migrating between Claude SDK versions
 
 ** Technical Internals (=internals/=)
 - [[./internals/websocket-protocol.org][WebSocket Protocol]] - MCP communication layer

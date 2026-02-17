@@ -48,6 +48,28 @@ except ImportError:
 # Claude changelog generation uses the claude-agent-sdk package
 
 
+def _get_isolated_claude_config() -> Path:
+    """Return an isolated CLAUDE_CONFIG_DIR for SDK tasks.
+
+    Sessions are written to ~/.claude/projects/claude-investigations/projects/...
+    so ccusage finds them automatically (via **/*.jsonl) and groups them under
+    the project name "claude-investigations". They don't appear in --resume
+    because real project dirs start with '-' (hyphenated cwd paths); this dir
+    does not.
+    """
+    user_claude = Path.home() / ".claude"
+    claude_dir = user_claude / "projects" / "claude-investigations"
+    claude_dir.mkdir(parents=True, exist_ok=True)
+
+    for fname in (".credentials.json", "settings.json"):
+        src = user_claude / fname
+        dst = claude_dir / fname
+        if src.exists() and not dst.exists():
+            dst.symlink_to(src)
+
+    return claude_dir
+
+
 class ProjectConfig:
     """Configuration for a specific project/package"""
 
@@ -893,13 +915,19 @@ class ClaudeCodeSync:
             # Use astdiff only if project configuration enables it
             use_astdiff = False
             if self.project.use_astdiff:
-                astdiff_result = run(["which", "astdiff"], capture_output=True)
-                use_astdiff = astdiff_result.returncode == 0
+                astdiff_path = shutil.which("astdiff")
+                use_astdiff = astdiff_path is not None
+                if not use_astdiff:
+                    print_warning(
+                        "astdiff is enabled for this project but not found on PATH. "
+                        "Falling back to diff -u (output will be much larger). "
+                        "Ensure ~/.cargo/bin is on PATH."
+                    )
 
             if use_astdiff:
                 # Use astdiff for better JavaScript-aware diffing (for minified code)
                 result = run(
-                    ["astdiff", str(older_file), str(newer_file)],
+                    [astdiff_path, str(older_file), str(newer_file)],
                     capture_output=True,
                     text=True,
                 )
@@ -1322,6 +1350,7 @@ Use this to identify user-facing message changes, new settings, or renamed featu
                     allowed_tools=["Read", "Glob", "Grep"],
                     permission_mode="bypassPermissions",
                     cwd=str(self.base_dir),
+                    env={"CLAUDE_CONFIG_DIR": str(_get_isolated_claude_config())},
                 )
                 changelog_content = self._run_query(cli_prompt, options)
             except Exception as e:
