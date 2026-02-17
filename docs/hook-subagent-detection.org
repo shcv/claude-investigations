@@ -1,0 +1,118 @@
+#+TITLE: Detecting Subagent Context in Claude Code Hooks
+
+* Problem
+
+Claude Code hooks receive identical payloads whether they fire in the main agent
+or inside a subagent spawned via the Task tool. The ~session_id~ and
+~transcript_path~ fields are both shared across the parent and all its
+subagents, so there is no built-in way for a hook to know where it's running.
+
+* Key Discovery
+
+The subagent's conversation is written to its own JSONL transcript
+incrementally, *before* each hook fires. This means a ~PreToolUse~ or
+~PostToolUse~ hook can check whether the current ~tool_use_id~ already appears
+in a known subagent transcript — and if it does, the hook is running inside
+that subagent.
+
+Timing confirmed experimentally (Claude Code v2.1.45):
+- Assistant tool-use entry written to subagent JSONL → then ~PreToolUse~ fires
+- Tool result entry written to subagent JSONL → then ~PostToolUse~ fires
+
+* Subagent Transcript Location
+
+#+begin_example
+~/.claude/projects/<project-slug>/<session_id>/subagents/agent-<agent_id>.jsonl
+#+end_example
+
+The ~agent_id~ is only available from ~SubagentStart~ and ~SubagentStop~ events,
+which fire in the *parent* session.
+
+* Technique
+
+** 1. On SubagentStart — record the agent's transcript path
+
+#+begin_src bash
+if [ "$EVENT" = "SubagentStart" ]; then
+  AGENT_ID=$(read_field agent_id)
+  SESSION_ID=$(read_field session_id)
+  PROJECT_DIR=$(dirname "$(read_field transcript_path)")
+  AGENT_TRANSCRIPT="$PROJECT_DIR/$SESSION_ID/subagents/agent-$AGENT_ID.jsonl"
+  echo "$AGENT_ID $AGENT_TRANSCRIPT" >> /tmp/my-hook-state
+fi
+#+end_src
+
+** 2. On PreToolUse / PostToolUse — match tool_use_id against known transcripts
+
+#+begin_src bash
+if [ "$EVENT" = "PreToolUse" ] || [ "$EVENT" = "PostToolUse" ]; then
+  TOOL_USE_ID=$(read_field tool_use_id)
+  MATCHED_AGENT=""
+
+  if [ -f /tmp/my-hook-state ]; then
+    while IFS=' ' read -r AGENT_ID AGENT_TRANSCRIPT; do
+      if [ -f "$AGENT_TRANSCRIPT" ] && grep -qF "$TOOL_USE_ID" "$AGENT_TRANSCRIPT"; then
+        MATCHED_AGENT="$AGENT_ID"
+        break
+      fi
+    done < /tmp/my-hook-state
+  fi
+
+  if [ -n "$MATCHED_AGENT" ]; then
+    echo "Running inside subagent: $MATCHED_AGENT"
+  else
+    echo "Running in parent session"
+  fi
+fi
+#+end_src
+
+** 3. On SubagentStop — clean up state
+
+#+begin_src bash
+if [ "$EVENT" = "SubagentStop" ]; then
+  AGENT_ID=$(read_field agent_id)
+  grep -v "^$AGENT_ID " /tmp/my-hook-state > /tmp/my-hook-state.tmp \
+    && mv /tmp/my-hook-state.tmp /tmp/my-hook-state || true
+fi
+#+end_src
+
+* Event Ordering
+
+The full lifecycle for a Task tool call looks like this:
+
+#+begin_example
+PreToolUse(Task)      ← parent; SubagentStart not yet fired, so no state yet
+SubagentStart         ← state file updated
+  PreToolUse(Bash)    ← inside subagent; tool_use_id matched ✓
+  PostToolUse(Bash)   ← inside subagent; tool_use_id matched ✓
+SubagentStop          ← state file cleaned up
+PostToolUse(Task)     ← parent; agent already removed from state
+#+end_example
+
+The Task PreToolUse firing before SubagentStart is not a problem: you don't need
+subagent context for a parent-side Task hook anyway.
+
+* Properties
+
+- Works for multiple concurrent subagents (state file is append-only per agent)
+- Zero overhead when no subagents are running (state file absent → early exit)
+- ~grep -qF~ (fixed-string) is safe and fast on large JSONL files
+- State file should be cleared at session start to avoid cross-session pollution
+
+* What the Subagent Transcript Contains
+
+Each line is a JSON object. Relevant types:
+
+| ~type~      | Content                                              |
+|-------------+------------------------------------------------------|
+| ~user~      | Prompt sent to the subagent                          |
+| ~assistant~ | Model response, including tool_use calls with inputs |
+| ~user~      | Tool results fed back to the model                   |
+| ~progress~  | Hook execution events (~hook_progress~ data)         |
+
+The ~agentId~ field on every line identifies the owning subagent.
+The ~isSidechain: true~ field is always set on subagent transcripts.
+
+* Experiment Files
+
+The test harness used to verify this is in ~hooks-test/~ at the project root.
