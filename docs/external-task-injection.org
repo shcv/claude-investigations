@@ -1,0 +1,290 @@
+#+TITLE: External Task Injection into Claude Code
+#+DATE: 2026-02-19
+
+* Overview
+
+Claude Code's task list is stored as individual JSON files on disk under
+=~/.claude/tasks/{taskListId}/=. Because the agent reads from disk on every
+=TaskList= / =TaskGet= tool call, external programs can inject tasks by writing
+valid JSON files into this directory. The agent will pick them up the next time
+it checks.
+
+This is useful for:
+- Programmatically seeding a task list before starting an agent session
+- Injecting new work from a CI/CD pipeline, webhook, or orchestrator
+- Coordinating Claude with non-Claude processes in a hybrid workflow
+
+* Storage Layout
+
+#+BEGIN_EXAMPLE
+~/.claude/tasks/{taskListId}/
+    1.json
+    2.json
+    .highwatermark      ← plain integer string, e.g. "3"
+    .lock               ← lockfile managed by proper-lockfile
+#+END_EXAMPLE
+
+The =taskListId= is resolved in priority order:
+
+| Priority | Source                           | When it applies                         |
+|----------+----------------------------------+-----------------------------------------|
+| 1        | =$CLAUDE_CODE_TASK_LIST_ID= env  | Explicit override — best for scripting  |
+| 2        | AsyncLocalStorage team name      | In-process subagents                    |
+| 3        | Dynamic context team name        | Teammates in a team session             |
+| 4        | Value set by =TeamCreate= tool   | After team creation                     |
+| 5        | Session UUID                     | Fallback for standalone sessions        |
+
+For standalone sessions, the task list ID is the session UUID — visible in
+=~/.claude/tasks/= as the only (or most-recently-modified) directory.
+
+** Finding the Active Task Directory
+
+For scripting against a standalone session, the easiest approach is to use
+=$CLAUDE_CODE_TASK_LIST_ID= to set a known, stable name:
+
+#+BEGIN_SRC sh
+CLAUDE_CODE_TASK_LIST_ID=my-project claude
+#+END_SRC
+
+This creates =~/.claude/tasks/my-project/= and you can write to it predictably.
+
+To find the directory for an already-running session:
+
+#+BEGIN_SRC sh
+# Most recently modified task directory
+ls -dt ~/.claude/tasks/*/ | head -1
+#+END_SRC
+
+* Task JSON Format
+
+Each task is a single =.json= file. The filename must match the =id= field.
+
+** Required Fields
+
+#+BEGIN_SRC json
+{
+  "id": "5",
+  "subject": "Run regression tests",
+  "description": "Run the full test suite against the new auth module",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}
+#+END_SRC
+
+** All Fields
+
+| Field         | Type             | Required | Description                                      |
+|---------------+------------------+----------+--------------------------------------------------|
+| =id=          | string           | yes      | Must match filename (e.g. ="5"= → =5.json=)      |
+| =subject=     | string           | yes      | Short imperative title                           |
+| =description= | string           | yes      | Full details; can be multi-line                  |
+| =status=      | enum             | yes      | ="pending"=, ="in_progress"=, or ="completed"=   |
+| =blocks=      | string[]         | yes      | IDs of tasks that cannot start until this is done |
+| =blockedBy=   | string[]         | yes      | IDs of tasks that must complete before this one  |
+| =activeForm=  | string           | no       | Present-continuous label shown in spinner UI     |
+| =owner=       | string           | no       | Agent name currently assigned to this task       |
+| =metadata=    | object           | no       | Arbitrary key-value pairs                        |
+
+** Status Values
+
+- =pending= — available to be claimed
+- =in_progress= — currently being worked on (set =owner= too)
+- =completed= — done
+
+** Dependencies
+
+=blocks= and =blockedBy= are arrays of task ID strings. The agent treats tasks
+with unresolved =blockedBy= entries as unavailable. Both arrays must be kept
+consistent (if task 2 blocks task 3, then task 2's =blocks= should include ="3"=
+and task 3's =blockedBy= should include ="2"=).
+
+* Injecting Tasks
+
+** Simple Injection (no concurrent Claude writes)
+
+#+BEGIN_SRC sh
+TASK_DIR=~/.claude/tasks/my-project
+mkdir -p "$TASK_DIR"
+
+cat > "$TASK_DIR/1.json" << 'EOF'
+{
+  "id": "1",
+  "subject": "Analyse the auth module",
+  "description": "Read src/auth/ and identify any security issues",
+  "status": "pending",
+  "blocks": ["2"],
+  "blockedBy": []
+}
+EOF
+
+cat > "$TASK_DIR/2.json" << 'EOF'
+{
+  "id": "2",
+  "subject": "Write fix for auth vulnerability",
+  "description": "Apply the fix identified in task 1",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": ["1"]
+}
+EOF
+
+echo "2" > "$TASK_DIR/.highwatermark"
+#+END_SRC
+
+** With File Locking
+
+The CLI uses =proper-lockfile= (Node.js) during task creation. For concurrent
+safety when Claude may also be writing, acquire a lockfile before writing:
+
+#+BEGIN_SRC python
+import json
+import os
+import time
+
+def acquire_lock(lock_path, timeout=5.0, retry=0.05):
+    """Simple lock acquisition compatible with proper-lockfile."""
+    lock_file = lock_path + ".lock"  # proper-lockfile appends .lock
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            fd = os.open(lock_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            return lock_file
+        except FileExistsError:
+            time.sleep(retry)
+    raise TimeoutError(f"Could not acquire lock: {lock_file}")
+
+def release_lock(lock_file):
+    try:
+        os.unlink(lock_file)
+    except FileNotFoundError:
+        pass
+
+def inject_task(task_dir, task):
+    """Write a task JSON file safely."""
+    os.makedirs(task_dir, exist_ok=True)
+    lock = acquire_lock(os.path.join(task_dir, ".lock"))
+    try:
+        task_path = os.path.join(task_dir, f"{task['id']}.json")
+        with open(task_path, "w") as f:
+            json.dump(task, f, indent=2)
+        _update_highwatermark(task_dir, int(task["id"]))
+    finally:
+        release_lock(lock)
+
+def _update_highwatermark(task_dir, new_id):
+    hwm_path = os.path.join(task_dir, ".highwatermark")
+    current = 0
+    try:
+        current = int(open(hwm_path).read().strip())
+    except (FileNotFoundError, ValueError):
+        pass
+    if new_id > current:
+        with open(hwm_path, "w") as f:
+            f.write(str(new_id))
+#+END_SRC
+
+Note: =proper-lockfile= uses a =.lock= file adjacent to (not the same as) the
+lock target. The CLI locks on =.claude/tasks/{id}/.lock=, so the actual lockfile
+is =.claude/tasks/{id}/.lock.lock=.
+
+** Highwatermark Management
+
+The CLI computes the next task ID as:
+
+#+BEGIN_EXAMPLE
+next_id = max(highwatermark, max_existing_file_id) + 1
+#+END_EXAMPLE
+
+If you inject task =5.json= when the highwatermark says =3=, the next
+Claude-created task will still be =6= (correct). But if you don't update the
+highwatermark and inject out-of-order IDs, Claude could generate a duplicate ID
+that overwrites your task.
+
+Rule of thumb: after injecting, set =.highwatermark= to the highest ID you wrote.
+
+* When Does Claude See Injected Tasks?
+
+** The UI (task panel)
+
+Uses =fs.watch= on the task directory plus a 5-second polling fallback, with
+50ms debouncing. Injected files appear in the UI within ~50ms.
+
+** The Agent
+
+Has *no background polling*. Reads from disk on every tool call:
+
+- =TaskList= — =readdirSync= + reads all =*.json= files
+- =TaskGet= — reads single ={id}.json=
+- =TaskCreate= — acquires lock, computes next ID, writes file
+
+The agent only sees injected tasks the next time it explicitly calls =TaskList=
+or =TaskGet=. You cannot push tasks into an agent's awareness mid-turn.
+
+** Practical Implication
+
+If you want the agent to pick up injected tasks promptly, include a system
+prompt instruction like:
+
+#+BEGIN_EXAMPLE
+Check TaskList at the start of each turn before doing any other work.
+#+END_EXAMPLE
+
+Or inject tasks *before* starting the Claude session so the first =TaskList=
+call sees the full list.
+
+* Example: Pre-seeding a Session
+
+#+BEGIN_SRC sh
+#!/usr/bin/env bash
+# Seed tasks, then launch Claude
+
+TASK_LIST_ID="my-project-$(date +%Y%m%d)"
+TASK_DIR="$HOME/.claude/tasks/$TASK_LIST_ID"
+mkdir -p "$TASK_DIR"
+
+cat > "$TASK_DIR/1.json" << 'EOF'
+{
+  "id": "1",
+  "subject": "Audit dependencies",
+  "description": "Run npm audit and report any high/critical vulnerabilities",
+  "status": "pending",
+  "blocks": ["2"],
+  "blockedBy": []
+}
+EOF
+
+cat > "$TASK_DIR/2.json" << 'EOF'
+{
+  "id": "2",
+  "subject": "Update vulnerable packages",
+  "description": "Update packages flagged in task 1. Pin versions in package.json.",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": ["1"]
+}
+EOF
+
+echo "2" > "$TASK_DIR/.highwatermark"
+
+CLAUDE_CODE_TASK_LIST_ID="$TASK_LIST_ID" claude --print \
+  "You have a task list. Check TaskList and complete all pending tasks."
+#+END_SRC
+
+* Caveats
+
+- *Schema validation*: The CLI validates task files with Zod on read. Invalid
+  JSON or missing required fields cause the task to be silently skipped by
+  =TaskList=. Always include =id=, =subject=, =description=, =status=, =blocks=,
+  and =blockedBy=.
+
+- *ID type*: IDs are strings in the schema but the highwatermark logic parses
+  them as integers. Use sequential integers as strings (="1"=, ="2"=, etc.) to
+  avoid surprises.
+
+- *Sanitization*: The task list ID is sanitized by replacing =[^a-zA-Z0-9_-]=
+  with =-=. Keep IDs alphanumeric with hyphens/underscores.
+
+- *No push delivery*: There is no websocket, IPC, or signal mechanism to wake
+  an agent when tasks are injected. The agent polls on tool calls only.

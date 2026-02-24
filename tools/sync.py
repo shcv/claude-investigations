@@ -27,8 +27,10 @@ import json
 import os
 import re
 import shutil
+import signal
 import sys
 import tarfile
+import time
 from dataclasses import dataclass
 import tempfile
 from pathlib import Path
@@ -207,6 +209,7 @@ class ClaudeCodeSync:
         new_first: bool = False,
         redo: Optional[str] = None,
         dry_run: bool = False,
+        annotate: bool = False,
     ):
         self.base_dir = base_dir
         self.project = project
@@ -221,6 +224,7 @@ class ClaudeCodeSync:
         self.new_first = new_first
         self.redo = redo
         self.dry_run = dry_run
+        self.annotate = annotate
 
         # Directory structure - now project-specific
         self.archive_dir = base_dir / "archive" / project.name
@@ -925,19 +929,27 @@ class ClaudeCodeSync:
                     )
 
             if use_astdiff:
-                # Use astdiff for better JavaScript-aware diffing (for minified code)
-                result = run(
-                    [astdiff_path, str(older_file), str(newer_file)],
-                    capture_output=True,
-                    text=True,
+                result = self._run_astdiff(
+                    astdiff_path, older_file, newer_file
                 )
             else:
                 # Use regular diff (for open-source or when astdiff not available)
+                # diff returns 1 when files differ, which is normal
                 result = run(
                     ["diff", "-u", str(older_file), str(newer_file)],
                     capture_output=True,
                     text=True,
                 )
+                if result.returncode not in (0, 1):
+                    print_warning(
+                        f"diff failed for v{newer_version} "
+                        f"(exit {result.returncode}): {result.stderr.strip()}"
+                    )
+                    return False
+
+            if result is None:
+                # astdiff failed after retries
+                return False
 
             # Write diff output (even if empty - that means no changes)
             with open(diff_file, "w", encoding="utf-8") as f:
@@ -955,6 +967,38 @@ class ClaudeCodeSync:
             print_warning(f"Diff generation failed for v{newer_version}: {e}")
             diff_file.unlink(missing_ok=True)
             return False
+
+    def _run_astdiff(self, astdiff_path, older_file, newer_file, retries=1):
+        """Run astdiff with retry on OOM/crash. Returns CompletedProcess or None."""
+        for attempt in range(1 + retries):
+            result = run(
+                [astdiff_path, str(older_file), str(newer_file)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                return result
+
+            # Identify the failure type from return code
+            sig = -result.returncode if result.returncode < 0 else None
+            if sig in (signal.SIGABRT, signal.SIGKILL):
+                cause = "out of memory"
+            else:
+                cause = f"exit {result.returncode}"
+            stderr_tail = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else ""
+
+            if attempt < retries:
+                print_warning(
+                    f"astdiff failed ({cause}: {stderr_tail}), "
+                    f"retrying in 30s..."
+                )
+                time.sleep(30)
+            else:
+                print_warning(
+                    f"astdiff failed ({cause}: {stderr_tail}), "
+                    f"no retries left"
+                )
+        return None
 
     def generate_string_diff(self, version_str: str) -> Optional[str]:
         """
@@ -1259,6 +1303,374 @@ class ClaudeCodeSync:
             return asyncio.run(_with_timeout())
         return asyncio.run(_execute())
 
+    # ── Annotation pipeline (hybrid changelog mode) ───────────────────────────
+
+    _ANNOTATION_PROMPT = """\
+Analyze these changes to the Claude Code CLI source code and classify each one.
+Return a JSON array between <result></result> tags.
+
+CRITICAL — "removed" section semantics: Entries in the "removed" section mean those
+specific code bodies had NO close match in the new version. This does NOT mean the
+feature was deleted — it may have been reorganized, reimplemented, or renamed such
+that the diff tool couldn't match it. Only use change_type="removal" if the code
+content clearly indicates a capability is gone: e.g., a CLI flag literal removed,
+a tool name constant that disappears, or a user-facing error string no longer present.
+When uncertain, prefer change_type="refactor" over "removal".
+
+For each change, output an object with:
+- "name": identifier name (use the [name] from the diff header)
+- "summary": 1-2 sentence plain-English description of what this change does
+- "importance": integer 1-5:
+    1 = internal refactoring, no user impact
+    2 = minor internal change, unlikely visible to users
+    3 = notable improvement or infrastructure indirectly affecting users
+    4 = clear new user-facing feature or significant behavior change
+    5 = major feature, breaking change, or release-defining capability
+- "user_facing": true if change produces visible output, adds CLI flags/options,
+    new tools, or changes behavior users observe directly
+- "feature_flag": string name if gated by a tengu_* flag — look for calls like
+    r8("tengu_foo", !1). Use null if no feature flag.
+- "disabled": true ONLY if the flag default is explicitly !1 or false
+    (r8("tengu_foo", !1) → disabled=true; r8("tengu_foo", !0) → disabled=false)
+- "component": pick the MOST SPECIFIC category that applies:
+    - models: model capability fields (supportsAdaptiveThinking, effortLevels),
+               model version strings, thinking parameters, pricing
+    - sdk: ClaudeAgentOptions fields, query() params, SDK-exposed APIs,
+            promptSuggestions — things SDK callers configure
+    - tools: built-in tool definitions and their schemas/descriptions
+              (Bash, Read, Write, Grep, Glob, AskUserQuestion, Skill, TodoWrite,
+               CreateWorktree, ListMcpResources, TaskCreate, TaskUpdate, etc.)
+    - hooks: hook event types and handlers (PreToolUse, PostToolUse,
+              ConfigChange, TaskCompleted, SubagentStop, HttpHook)
+    - git: git integration, worktrees, commits, branches, diffs
+    - mcp: Model Context Protocol servers, tool results, auth, resources
+    - cli: command-line flags, REPL UI, startup flow, shell integration,
+            slash commands, session management
+    - auth: authentication, OAuth, API keys, login/logout flows
+    - config: settings schemas, CLAUDE.md loading/excludes, policy enforcement
+    - agent: agent coordination, task management, teams, background agents
+    - shell: shell execution, bash/powershell providers, shell detection
+    - transport: WebSocket, HTTP, SSE, network communication
+    - telemetry: logging, analytics, event tracking
+    - internal: refactoring with no user-visible effect (use as last resort)
+- "change_type": new_feature | enhancement | bug_fix | removal | refactor |
+    documentation | infrastructure
+- "evidence": 1-2 key code fragments supporting your classification
+
+Grouping: combine related sub-functions into one entry when clearly part of one feature.
+Structural changes often represent feature wiring — a new field or parameter being passed
+through usually enables a specific user-visible capability; identify what that is.
+Skip 100%-similarity entries (pure minifier renames with no content change).
+
+Section: {section}
+Batch {batch_id} of changes:
+
+{content}
+"""
+
+    _ANNOTATION_MODEL = "claude-haiku-4-5-20251001"
+    _ANNOTATION_SEMAPHORE = 4
+
+    def _run_annotation_pipeline(self, version_str: str) -> "str | None":
+        """Run the full Haiku annotation pipeline. Returns compact annotation summary string."""
+        import asyncio as _asyncio
+        import json as _json
+
+        version = f"v{version_str}"
+        changes_dir = self.changes_dir / version
+        batches_dir = changes_dir / "batches"
+
+        # Step 1: Slice changes into batches (if not already done)
+        if not batches_dir.exists() or not list(batches_dir.glob("batch-*.json")):
+            print_info("Slicing changes into annotation batches...")
+            # Find the filtered changes file (phase 5 output)
+            changes_file = None
+            for ext in (".md", ".diff"):
+                candidate = self.changes_dir / f"changes-v{version_str}{ext}"
+                if candidate.exists():
+                    changes_file = candidate
+                    break
+            if not changes_file:
+                print_warning(f"No changes file found for {version_str}; cannot slice")
+                return None
+            slice_script = Path(__file__).parent / "slice_changes.py"
+            result = run(
+                [sys.executable, str(slice_script), str(changes_file),
+                 "--out-dir", str(batches_dir)],
+                capture_output=True, text=True, cwd=str(self.base_dir),
+            )
+            if result.returncode != 0:
+                tail = result.stderr[-500:] if result.stderr else "(no stderr)"
+                print_warning(f"Slice step failed: {tail}")
+                return None
+            last_line = result.stdout.strip().splitlines()[-1] if result.stdout.strip() else ""
+            if last_line:
+                print_info(f"Slice: {last_line}")
+        else:
+            n = len(list(batches_dir.glob("batch-[0-9]*.json")))
+            print_info(f"Using {n} existing batches in {batches_dir.name}")
+
+        # Step 2: Annotate batches with Haiku (async, concurrent)
+        annotations = _asyncio.run(self._annotate_all_batches(batches_dir))
+        if not annotations:
+            return None
+
+        # Step 3: Verify all annotation claims against the new-version pretty source
+        if self.pretty_dir:
+            pretty_file = self.pretty_dir / f"pretty-v{version_str}.js"
+            if pretty_file.exists():
+                annotations = self._verify_annotation_claims(annotations, pretty_file)
+
+        # Step 4: Write summary JSON for inspection / resume
+        summary_path = changes_dir / f"annotations-{version}.json"
+        summary_path.write_text(_json.dumps(annotations, indent=2))
+        at2 = sum(1 for a in annotations if a.get("importance", 0) >= 2)
+        print_info(f"Annotation summary: {len(annotations)} total, {at2} at importance≥2 → {summary_path.name}")
+
+        # Step 5: Return compact tiered text for the changelog prompt
+        return self._format_annotation_summary(annotations, version)
+
+    async def _annotate_all_batches(self, batches_dir: Path) -> list:
+        """Annotate all un-annotated batch files in parallel with Haiku."""
+        import asyncio as _asyncio
+        import json as _json
+        import re as _re
+        from claude_agent_sdk import query as _query, ResultMessage as _RM, ClaudeAgentOptions as _Opts
+
+        batch_files = sorted(
+            f for f in batches_dir.glob("batch-*.json")
+            if "-annotations" not in f.name
+        )
+
+        to_annotate = []
+        skipped = 0
+        for f in batch_files:
+            out_path = f.parent / (f.stem + "-annotations.json")
+            if out_path.exists():
+                skipped += 1
+            else:
+                to_annotate.append((_json.loads(f.read_text()), out_path))
+
+        if skipped:
+            print_info(f"Skipping {skipped} already-annotated batches")
+        if to_annotate:
+            print_info(f"Annotating {len(to_annotate)} batches with {self._ANNOTATION_MODEL}...")
+
+        semaphore = _asyncio.Semaphore(self._ANNOTATION_SEMAPHORE)
+        base = self.base_dir
+
+        async def annotate_one(batch, out_path):
+            async with semaphore:
+                prompt = self._ANNOTATION_PROMPT.format(
+                    section=batch["section"],
+                    batch_id=batch["id"],
+                    content=batch["content"],
+                )
+                options = _Opts(
+                    model=self._ANNOTATION_MODEL,
+                    allowed_tools=[],
+                    permission_mode="bypassPermissions",
+                    cwd=str(base),
+                )
+                try:
+                    output = ""
+                    async for msg in _query(prompt=prompt, options=options):
+                        if isinstance(msg, _RM):
+                            if msg.is_error:
+                                raise RuntimeError(msg.result or "query failed")
+                            output = msg.result or ""
+                except Exception as e:
+                    print_warning(f"Batch {batch['id']:03d}: annotation error: {e}")
+                    return None
+
+                m = _re.search(r"<result>(.*?)</result>", output, _re.DOTALL)
+                if m:
+                    try:
+                        anns = _json.loads(m.group(1).strip())
+                    except _json.JSONDecodeError:
+                        anns = []
+                else:
+                    m2 = _re.search(r"\[\s*\{.*\}\s*\]", output, _re.DOTALL)
+                    anns = _json.loads(m2.group(0)) if m2 else []
+
+                out_path.write_text(_json.dumps({**batch, "annotations": anns}, indent=2))
+                return anns
+
+        if to_annotate:
+            tasks = [annotate_one(b, p) for b, p in to_annotate]
+            results = await _asyncio.gather(*tasks, return_exceptions=True)
+            errors = sum(1 for r in results if isinstance(r, Exception))
+            if errors:
+                print_warning(f"{errors} batch annotation error(s)")
+
+        # Collect all annotations from disk (including previously cached ones)
+        all_annotations = []
+        for ann_file in sorted(batches_dir.glob("batch-*-annotations.json")):
+            data = _json.loads(ann_file.read_text())
+            for ann in data.get("annotations", []):
+                ann["_batch_id"] = data["id"]
+                ann["_section"] = data["section"]
+                all_annotations.append(ann)
+
+        filtered = [a for a in all_annotations if a.get("importance", 0) >= 2]
+        print_info(f"Collected {len(all_annotations)} annotations; {len(filtered)} at importance≥2")
+        return filtered
+
+    _POSITIVE_CLAIM_TYPES = {"new_feature", "enhancement", "bug_fix", "infrastructure"}
+    _KNOWN_FEATURES = [
+        "AskUserQuestion", "TodoWrite", "Skill", "ListMcpResources",
+        "CreateWorktree", "TaskCreate", "TaskUpdate", "TaskList",
+        "ListMcpResourcesTool", "SubagentStop", "PreToolUse", "PostToolUse",
+        "mcp-cli", "ENABLE_EXPERIMENTAL_MCP_CLI", "--mcp-cli",
+        "ConfigChange", "TaskCompleted", "HttpHook", "--worktree", "--tmux",
+        "tengu_crystal_beam", "tengu_tool_input_aliasing",
+        "claudeMdExcludes", "disableAllHooks", "remoteControlAtStartup",
+        "replBridgeEnabled", "mcp-needs-auth-cache",
+    ]
+    _GENERIC_FLAGS = {
+        "--json", "--help", "--version", "--debug", "--verbose",
+        "--output", "--format", "--ignore", "--include", "--exclude",
+        "--timeout", "--host", "--port", "--path", "--config", "--log",
+    }
+
+    def _primary_evidence_term(self, ann: dict) -> "str | None":
+        """Extract the highest-priority verifiable term from an annotation."""
+        import re as _re
+        ev = ann.get("evidence", "") or ""
+        if isinstance(ev, list):
+            ev = " ".join(str(e) for e in ev)
+        combined = ev + " " + (ann.get("name") or "") + " " + (ann.get("summary") or "")
+        for n in self._KNOWN_FEATURES:
+            if n in combined:
+                return n
+        for v in _re.findall(r'\b([A-Z][A-Z0-9_]{7,})\b', combined)[:2]:
+            if v not in {"CRITICAL", "IMPORTANT", "DISABLED", "ENABLED", "DEFAULT"}:
+                return v
+        flags = [f for f in _re.findall(r'(--[\w-]{4,})', combined)
+                 if f not in self._GENERIC_FLAGS]
+        if flags:
+            return flags[0]
+        lq = _re.findall(r'"([^"]{10,})"', ev)
+        return lq[0] if lq else None
+
+    def _verify_annotation_claims(self, annotations: list, pretty_file: Path) -> list:
+        """Verify all annotation claims against the new-version source.
+
+        Removals: downgrade to 'refactor' if primary evidence term is still
+        present in the new source (feature wasn't actually removed).
+
+        Positive claims (new_feature / enhancement / bug_fix): flag as
+        low-confidence if primary evidence term is NOT in the new source
+        (annotator may have cited non-existent evidence).
+        """
+        mb = pretty_file.stat().st_size // 1024 // 1024
+        print_info(f"Verifying annotation claims against {pretty_file.name} ({mb}MB)...")
+        source = pretty_file.read_text(encoding="utf-8", errors="replace")
+
+        removal_fp = 0
+        positive_unverified = 0
+        updated = []
+
+        for ann in annotations:
+            ann_copy = dict(ann)
+            ct = ann.get("change_type", "")
+            imp = ann.get("importance", 0)
+
+            if ct == "removal" and imp >= 2:
+                term = self._primary_evidence_term(ann)
+                if term and term in source:
+                    ann_copy["change_type"] = "refactor"
+                    ann_copy["_removal_verified"] = False
+                    ann_copy["_removal_note"] = f"Feature still present: '{term}' found in source"
+                    removal_fp += 1
+                else:
+                    ann_copy["_removal_verified"] = True
+
+            elif ct in self._POSITIVE_CLAIM_TYPES and imp >= 3:
+                term = self._primary_evidence_term(ann)
+                if term is not None:
+                    if term in source:
+                        ann_copy["_evidence_verified"] = True
+                    else:
+                        ann_copy["_evidence_verified"] = False
+                        ann_copy["_evidence_note"] = f"Primary term '{term}' not found in source"
+                        positive_unverified += 1
+
+            updated.append(ann_copy)
+
+        removal_count = sum(1 for a in annotations if a.get("change_type") == "removal")
+        print_info(
+            f"Removals: {removal_count} claimed, {removal_fp} downgraded. "
+            f"Positive claims: {positive_unverified} flagged as unverified."
+        )
+        return updated
+
+    # Keep old name as alias for backward compat
+    def _verify_removal_claims(self, annotations: list, pretty_file: Path) -> list:
+        return self._verify_annotation_claims(annotations, pretty_file)
+
+    def _format_annotation_summary(self, annotations: list, version: str) -> str:
+        """Format annotations as compact tiered summary for the changelog prompt."""
+        tier1 = sorted(
+            [a for a in annotations if a.get("importance", 0) >= 4],
+            key=lambda a: (-a.get("importance", 0), not a.get("user_facing", False)),
+        )
+        tier2 = sorted(
+            [a for a in annotations if a.get("importance", 0) == 3],
+            key=lambda a: (not a.get("user_facing", False), a.get("component", "")),
+        )
+        tier3 = sorted(
+            [a for a in annotations if a.get("importance", 0) <= 2],
+            key=lambda a: a.get("component", ""),
+        )
+
+        def fmt(ann):
+            comp = ann.get("component", "?")
+            ct = (ann.get("change_type") or "?")[:8]
+            imp = ann.get("importance", "?")
+            name = ann.get("name", "?")
+            summary = ann.get("summary", "")
+            evidence = ann.get("evidence", "") or ""
+            if isinstance(evidence, list):
+                evidence = "; ".join(str(e) for e in evidence)
+            uf = "★" if ann.get("user_facing") else " "
+            flag = ann.get("feature_flag", "")
+            dis = ann.get("disabled", False)
+            flag_str = f" [{flag}{'!disabled' if dis else ''}]" if flag else ""
+            ev_short = evidence[:60].split("\n")[0] if evidence else ""
+            return f"  [{comp}/{ct}]{uf}i={imp} {name}: {summary[:80]} | {ev_short}{flag_str}"
+
+        lines = [
+            f"## Pre-analyzed Changes for {version}",
+            f"## Total: {len(annotations)} entries across 3 tiers",
+            "##",
+            "## Format: [component/type]★=user-facing i=importance | evidence [FLAG if gated]",
+            "## Tiers: HIGH=4-5 (lead features), NOTABLE=3 (improvements), LOW=1-2 (internal)",
+            "##",
+            "## IMPORTANT: These annotations may miss things — also read the diff files",
+            "## below for completeness. Annotations are a guide; diff files are the source of truth.",
+            "## - HIGH: include all user-facing (★); summarize patterns for non-★",
+            "## - NOTABLE: include if clearly user-visible, skip pure infrastructure",
+            "## - LOW: context only; may note patterns (e.g. 'several internal refactors')",
+            "## - [FLAG] items: if disabled=true, put in 'In Development' section",
+            "## - refactor change_type: code reorganized but feature still exists",
+            "",
+            f"### HIGH IMPORTANCE (i=4-5, {len(tier1)} items)",
+        ]
+        for ann in tier1:
+            lines.append(fmt(ann))
+        lines.append("")
+        lines.append(f"### NOTABLE (i=3, {len(tier2)} items)")
+        for ann in tier2:
+            lines.append(fmt(ann))
+        lines.append("")
+        lines.append(f"### LOW / INTERNAL (i=1-2, {len(tier3)} items — context only)")
+        for ann in tier3:
+            lines.append(fmt(ann))
+        return "\n".join(lines)
+
+    # ─────────────────────────────────────────────────────────────────────────
+
     def generate_changelog(self, version_str: str, iteration: int = 1) -> bool:
         """Generate changelog for a specific version. Returns True on success."""
         # Use the appropriate diff file based on iteration
@@ -1287,26 +1699,41 @@ class ClaudeCodeSync:
             return False
 
         try:
-            # Look for filtered astdiff output (from phase 5)
-            filtered_diff = None
+            # Look for filtered astdiff output (from phase 5) — keep path only,
+            # do NOT read content into memory (large diffs exceed ARG_MAX when
+            # passed as a CLI argument by the SDK).
+            filtered_diff_path = None
             for ext in (".md", ".diff"):
                 candidate = self.changes_dir / f"changes-v{version_str}{ext}"
                 if candidate.exists():
-                    with open(candidate, "r", encoding="utf-8") as f:
-                        filtered_diff = f.read()
+                    filtered_diff_path = candidate
                     break
 
-            # Generate string diff as supplementary input
+            # Generate string diff and persist it so the agent can Read it by path
+            string_diff_path = None
             string_diff_output = self.generate_string_diff(version_str)
             if string_diff_output:
                 print_info("Generated string diff for additional context")
+                string_diff_path = self.changes_dir / f"string-diff-v{version_str}.txt"
+                with open(string_diff_path, "w", encoding="utf-8") as f:
+                    f.write(string_diff_output)
 
-            if not filtered_diff and not string_diff_output:
+            if not filtered_diff_path and not string_diff_path:
                 print_warning(
                     f"No filtered diff or string diff available for {version_str}. "
                     "Skipping changelog generation."
                 )
                 return False
+
+            # Run Haiku annotation pre-pass if requested (hybrid mode)
+            annotation_summary = None
+            if self.annotate:
+                print_info("Running annotation pipeline (hybrid mode)...")
+                annotation_summary = self._run_annotation_pipeline(version_str)
+                if annotation_summary:
+                    print_info("Annotation summary ready; using hybrid changelog mode")
+                else:
+                    print_warning("Annotation pipeline produced no output; falling back to diff-only mode")
 
             # Ensure system prompt file exists and read it
             self.ensure_changelog_prompt()
@@ -1314,30 +1741,43 @@ class ClaudeCodeSync:
             with open(system_prompt_file, "r", encoding="utf-8") as f:
                 system_prompt = f.read()
 
-            # Build prompt — filtered astdiff is primary, string diff supplementary
+            # Build prompt using file references so the agent Reads them via tool
+            # use rather than receiving them as CLI arguments (avoids ARG_MAX limit).
             cli_prompt_parts = [f"Generate a changelog for version {version_str}."]
 
-            if filtered_diff:
+            if annotation_summary:
+                cli_prompt_parts.append(f"""
+
+## Pre-analyzed Change Annotations (Haiku Pre-pass)
+
+The following annotations were produced by a fast model analyzing each change in
+the diff. Use them as a prioritized guide — but also read the diff files below for
+completeness, as the annotations may miss some features.
+
+{annotation_summary}
+""")
+
+            if filtered_diff_path:
+                rel = filtered_diff_path.relative_to(self.base_dir)
                 cli_prompt_parts.append(f"""
 
 ## Code Changes (Filtered AST Diff)
 
-The following shows structural code changes between versions, with noise removed
-(version bumps, reformatting, build paths filtered out). Import changes are grouped
-by module. Focus on the structural changes for feature detection.
-
-{filtered_diff}
+Read the file `{rel}` to see structural code changes between versions.
+Noise has been removed (version bumps, reformatting, build paths filtered out).
+Import changes are grouped by module. Focus on the structural changes for
+feature detection. Use the Read tool with offset/limit if the file is large.
 """)
 
-            if string_diff_output:
+            if string_diff_path:
+                rel = string_diff_path.relative_to(self.base_dir)
                 cli_prompt_parts.append(f"""
 
 ## String Literal Changes (AST-Extracted)
 
-Added/removed string literals between versions (identifiers and code fragments filtered).
-Use this to identify user-facing message changes, new settings, or renamed features.
-
-{string_diff_output}
+Read the file `{rel}` to see added/removed string literals between versions
+(identifiers and code fragments filtered). Use this to identify user-facing
+message changes, new settings, or renamed features.
 """)
 
             cli_prompt = "".join(cli_prompt_parts)
@@ -2381,6 +2821,12 @@ Examples:
         help="Simulate posting without actually sending to Discord (only affects --post)",
     )
 
+    parser.add_argument(
+        "--annotate",
+        action="store_true",
+        help="Run Haiku pre-annotation pass before changelog generation (hybrid mode: annotations + diffs)",
+    )
+
     args = parser.parse_args()
 
     # Handle --all flag
@@ -2422,6 +2868,7 @@ Examples:
         new_first=args.new_first,
         redo=args.redo,
         dry_run=args.dry_run,
+        annotate=args.annotate,
     )
 
     # If --redo is specified, run the redo process instead
