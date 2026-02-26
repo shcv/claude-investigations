@@ -210,6 +210,7 @@ class ClaudeCodeSync:
         redo: Optional[str] = None,
         dry_run: bool = False,
         annotate: bool = False,
+        astdiff_threads: Optional[int] = None,
     ):
         self.base_dir = base_dir
         self.project = project
@@ -225,6 +226,7 @@ class ClaudeCodeSync:
         self.redo = redo
         self.dry_run = dry_run
         self.annotate = annotate
+        self.astdiff_threads = astdiff_threads
 
         # Directory structure - now project-specific
         self.archive_dir = base_dir / "archive" / project.name
@@ -970,11 +972,15 @@ class ClaudeCodeSync:
 
     def _run_astdiff(self, astdiff_path, older_file, newer_file, retries=1):
         """Run astdiff with retry on OOM/crash. Returns CompletedProcess or None."""
+        env = None
+        if self.astdiff_threads is not None:
+            env = {**os.environ, "RAYON_NUM_THREADS": str(self.astdiff_threads)}
         for attempt in range(1 + retries):
             result = run(
                 [astdiff_path, str(older_file), str(newer_file)],
                 capture_output=True,
                 text=True,
+                env=env,
             )
             if result.returncode == 0:
                 return result
@@ -2827,6 +2833,13 @@ Examples:
         help="Run Haiku pre-annotation pass before changelog generation (hybrid mode: annotations + diffs)",
     )
 
+    parser.add_argument(
+        "--astdiff-threads",
+        type=int,
+        default=None,
+        help="Limit astdiff parallelism (RAYON_NUM_THREADS). Default: half of available cores",
+    )
+
     args = parser.parse_args()
 
     # Handle --all flag
@@ -2869,6 +2882,7 @@ Examples:
         redo=args.redo,
         dry_run=args.dry_run,
         annotate=args.annotate,
+        astdiff_threads=args.astdiff_threads if args.astdiff_threads else os.cpu_count() // 2,
     )
 
     # If --redo is specified, run the redo process instead
