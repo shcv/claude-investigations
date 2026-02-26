@@ -1,0 +1,67 @@
+#+TITLE: Claude Code Slash Commands
+#+DATE: 2026-02-26
+
+* Overview
+
+Slash commands are triggered by typing =/= followed by the command name in the
+Claude Code prompt. They provide quick access to UI dialogs, workflows, and
+utilities without consuming a conversation turn.
+
+* Command Reference
+
+** Session & Navigation
+
+| Command | Description |
+|---------+-------------|
+| =/help= | Show available commands and keyboard shortcuts |
+| =/clear= | Clear conversation history |
+| =/exit= | Exit Claude Code |
+| =/resume= | Resume a previous session |
+
+** Inspection & Debugging
+
+| Command | Description | Doc |
+|---------+-------------+-----|
+| =/diff= | View uncommitted changes and per-turn file diffs | [[file:diff.org][diff.org]] |
+| =/agents= | List all configured agents by source and status | [[file:agents.org][agents.org]] |
+| =/status= | Show current session status |  |
+| =/model= | View or change the active model |  |
+
+** Memory & Context
+
+| Command | Description |
+|---------+-------------|
+| =/memory= | View and manage persistent memory files |
+| =/compact= | Manually trigger context compaction |
+
+** Git & Collaboration
+
+| Command | Description | Doc |
+|---------+-------------+-----|
+| =/commit-push-pr= | Create branch, commit, push, and open a PR in one step | [[file:commit-push-pr.org][commit-push-pr.org]] |
+
+** Configuration
+
+| Command | Description |
+|---------+-------------|
+| =/settings= | Open settings editor |
+| =/permissions= | View and edit tool permissions |
+
+** Agents & Tasks
+
+| Command | Description |
+|---------+-------------|
+| =/agents= | List all configured agents | [[file:agents.org][agents.org]] |
+
+* Documented Commands
+
+- [[file:diff.org][/diff]] — Interactive diff viewer with per-turn history
+- [[file:agents.org][/agents]] — Agent registry browser
+- [[file:commit-push-pr.org][/commit-push-pr]] — One-step git workflow with PR creation
+
+* Notes
+
+- Commands that open dialogs (=/diff=, =/agents=) can be dismissed with =Esc=
+- =/commit-push-pr= injects a detailed prompt and uses a restricted tool set
+- The =/agents= command shows shadowed agents when multiple sources define the
+  same agent name

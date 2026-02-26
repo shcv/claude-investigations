@@ -1,0 +1,199 @@
+#+TITLE: Worktree Isolation in Claude Code
+#+DATE: 2026-02-26
+
+* Overview
+
+Claude Code has a first-class worktree isolation system that lets agents work in
+isolated repository copies without interfering with the main working tree. The
+system has three interlocking parts: the =.worktreeinclude= config file, the
+=isolation: "worktree"= agent option, and the =WorktreeCreate=/=WorktreeRemove=
+hook events for non-git VCS support.
+
+Worktrees are stored under =.claude/worktrees/{name}= relative to the git root,
+and use git branches named =worktree-{name}=.
+
+* .worktreeinclude File
+
+** Purpose
+
+When git creates a worktree, gitignored files (=.env=, credentials, local
+configs) are not copied — they simply don't exist in the new checkout. This
+breaks agents that need those files to run tests or build the project.
+
+=.worktreeinclude= solves this by explicitly listing gitignored files that
+/should/ be copied into each new worktree.
+
+** Format
+
+Place =.worktreeinclude= in the git repository root. The format is line-based:
+
+#+begin_src text
+# Lines starting with # are comments
+# Each line is a path pattern (same format as .gitignore)
+.env
+.env.local
+secrets/
+config/local.yml
+#+end_src
+
+- Lines starting with =#= are comments and ignored
+- Empty lines are ignored
+- Both Unix (=\n=) and Windows (=\r\n=) line endings are supported (line 416412)
+- At least one non-empty, non-comment line must exist for the file to be
+  considered valid
+
+** How It Works
+
+The copy logic (=ja7= function, lines 416404–416458):
+
+1. Reads =.worktreeinclude= from the git root
+2. Runs =git ls-files --ignored --exclude-standard= to get all ignored files
+3. Runs =git ls-files --ignored --exclude-from=.worktreeinclude= to get ignored
+   files matching =.worktreeinclude= patterns
+4. The difference — files in the first set but not the second — are the files
+   to copy
+5. Each file is copied individually to the same relative path in the worktree
+
+Failed copies log a warning but do not block worktree creation (line 416452).
+
+Note: large directories like =node_modules/= are /symlinked/ rather than copied
+to avoid disk bloat (=GgY= function, lines 416306–416329). The =.worktreeinclude=
+files themselves are always copied, never symlinked.
+
+* Agent Worktree Isolation
+
+** Configuration
+
+Any agent definition or Task invocation can opt into worktree isolation:
+
+#+begin_src json
+{
+  "name": "my-agent",
+  "description": "An agent that works in isolation",
+  "isolation": "worktree"
+}
+#+end_src
+
+Or in the Task tool parameters:
+
+#+begin_src javascript
+Task({ isolation: "worktree", prompt: "..." })
+#+end_src
+
+The =isolation= field is an optional enum with only one value: ="worktree"=
+(schema defined at lines 292628, 417034–417038).
+
+** Lifecycle
+
+When an agent with =isolation: "worktree"= starts (lines 417297–417300):
+
+1. A worktree name is derived: =agent-{first-8-chars-of-agent-id}=
+2. =Mb8(name)= creates the worktree (hook-based or git-based depending on
+   whether =WorktreeCreate= hooks are configured)
+3. The agent runs inside the isolated worktree path
+4. On agent completion, =Pb8()= removes the worktree and its branch
+
+** Cleanup
+
+Cleanup (lines 416658–416675) runs the appropriate removal path:
+- Hook-based worktrees: calls =WorktreeRemove= hooks
+- Git-based worktrees: runs =git worktree remove --force=, then deletes the
+  branch with a 100ms delay
+
+Cleanup errors are logged as warnings but do not propagate.
+
+* WorktreeCreate and WorktreeRemove Hooks
+
+These hooks enable worktree isolation on non-git VCS (Mercurial, Perforce,
+SVN, etc.) and for custom git workflows.
+
+See [[file:hooks.org][Hooks]] for the general hooks system. These two events extend it for
+worktree lifecycle management.
+
+** When They Fire
+
+- =WorktreeCreate=: when =isolation: "worktree"= is triggered and either (a)
+  the user is not in a git repository, or (b) =WorktreeCreate= hooks are
+  configured (they take priority over the built-in git implementation)
+- =WorktreeRemove=: when cleaning up a hook-based worktree
+
+If no =WorktreeCreate= hooks are configured and the working directory is not a
+git repository, agent worktree isolation fails with the message:
+/"not in a git repository and no WorktreeCreate hooks are configured"/
+(lines 416554–416555, 416645).
+
+** WorktreeCreate Hook
+
+#+begin_src json
+{
+  "hook_event_name": "WorktreeCreate",
+  "name": "agent-a1b2c3d4",
+  "session_id": "...",
+  "transcript_path": "...",
+  "cwd": "..."
+}
+#+end_src
+
+- =name= is a suggested slug for the worktree (not mandatory to use)
+- The hook script must print the absolute path of the created worktree
+  directory to stdout and exit 0 on success
+- Any non-zero exit code is treated as failure (error shown to user)
+- Timeout: 600,000ms / 10 minutes (line 530637)
+
+** WorktreeRemove Hook
+
+#+begin_src json
+{
+  "hook_event_name": "WorktreeRemove",
+  "worktree_path": "/absolute/path/to/worktree",
+  "session_id": "...",
+  "transcript_path": "...",
+  "cwd": "..."
+}
+#+end_src
+
+- =worktree_path= is the absolute path returned by the corresponding
+  =WorktreeCreate= hook
+- Exit 0 for success; no output is needed
+- Non-zero exit codes: stderr is shown to user only (not a fatal error)
+
+** Hook Detection
+
+Claude Code checks for configured =WorktreeCreate= hooks using =XN1()= (line
+530590):
+
+#+begin_src javascript
+function XN1() {
+  let q = TL1()?.WorktreeCreate;
+  return !!q && q.length > 0;
+}
+#+end_src
+
+If hooks are found, they take precedence over the built-in git worktree
+implementation. Both =WorktreeCreate= and =WorktreeRemove= must be configured
+as a pair for this to work correctly.
+
+** Example: Mercurial Hook Scripts
+
+#+begin_src sh
+#!/bin/sh
+# WorktreeCreate for Mercurial
+NAME="$1"
+WORKTREE_PATH="$PWD/../worktrees/$NAME"
+hg share . "$WORKTREE_PATH"
+echo "$WORKTREE_PATH"
+#+end_src
+
+#+begin_src sh
+#!/bin/sh
+# WorktreeRemove for Mercurial
+WORKTREE_PATH=$(echo "$CLAUDE_TOOL_INPUT" | jq -r .worktree_path)
+rm -rf "$WORKTREE_PATH"
+#+end_src
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v2.1.50 | =WorktreeCreate= / =WorktreeRemove= hooks added; =isolation: "worktree"= for agents |
+| v2.1.51 | =.worktreeinclude= file support added |

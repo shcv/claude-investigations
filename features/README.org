@@ -40,11 +40,27 @@ This directory contains detailed technical investigations of Claude Code's featu
 - [[file:spinner-words.org][Spinner Words]] - Customizable loading spinner messages
 - [[file:thinking.org][Thinking]] - Claude's thinking process visualization
 
+** Worktrees
+
+- [[file:worktrees.org][Worktrees]] - Worktree isolation: =.worktreeinclude=, =isolation: "worktree"= agents, =WorktreeCreate=/=WorktreeRemove= hooks
+
+** Slash Commands
+
+- [[file:commands/index.org][Commands Index]] - Overview of all slash commands
+- [[file:commands/diff.org][/diff]] - Interactive diff viewer with per-turn change history
+- [[file:commands/agents.org][/agents]] - Agent registry browser grouped by source
+- [[file:commands/commit-push-pr.org][/commit-push-pr]] - One-step branch/commit/push/PR workflow
+
 ** Integration & Extensions
 
 - [[file:hooks.org][Hooks]] - Event-driven hook system for extending functionality
 - [[file:plugins.org][Plugins]] - Plugin system architecture and management
 - [[file:github-actions.org][GitHub Actions]] - GitHub integration and CI/CD workflows
+- [[file:remote-control.org][Remote Control]] - Access CLI sessions remotely via web or mobile app (=claude rc=)
+
+** Authentication & Deployment
+
+- [[file:headless-oauth.org][Headless OAuth]] - Non-interactive login via refresh token for CI/CD and containers
 
 ** Security & Analysis
 
@@ -65,5 +81,5 @@ Each feature document should include:
 * Source Reference
 
 All investigations use the latest prettified Claude Code source:
-- Version: v1.0.90
-- Location: =archive/pretty/pretty-v1.0.90.js=
+- Version: v2.1.59
+- Location: =archive/claude-code/pretty/pretty-v2.1.59.js=

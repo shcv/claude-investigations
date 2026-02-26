@@ -1,0 +1,169 @@
+#+TITLE: Headless OAuth Login
+#+DATE: 2026-02-26
+
+* Overview
+
+Claude Code supports non-interactive OAuth authentication via environment
+variables, designed for CI/CD pipelines, Docker containers, cron jobs, and any
+headless deployment where a browser-based login flow is impossible.
+
+The core mechanism: provide a previously-obtained OAuth refresh token via
+=CLAUDE_CODE_OAUTH_REFRESH_TOKEN= and Claude Code exchanges it for a live access
+token at startup, bypassing the browser entirely.
+
+* Required Environment Variables
+
+** CLAUDE_CODE_OAUTH_REFRESH_TOKEN
+
+An OAuth refresh token obtained from a prior interactive login.
+
+- Set this to enable headless login
+- Claude Code exchanges it for an access token via =POST /v1/oauth/token=
+- The refresh token itself may be rotated (a new one returned in the response)
+
+** CLAUDE_CODE_OAUTH_SCOPES
+
+Space-separated list of OAuth scopes. *Required* when
+=CLAUDE_CODE_OAUTH_REFRESH_TOKEN= is set (lines 393676–393682). Missing this
+causes an immediate =exit(1)= with a usage message.
+
+The standard scope set for full Claude Code functionality (lines 42629–42634):
+
+#+begin_src text
+user:profile user:inference user:sessions:claude_code user:mcp_servers
+#+end_src
+
+- =user:inference= is mandatory — without it, Claude API calls fail
+- =user:profile= provides account metadata
+- =user:sessions:claude_code= enables session management
+- =user:mcp_servers= enables MCP server management
+
+* Optional Environment Variables
+
+** CLAUDE_CODE_OAUTH_TOKEN
+
+A direct access token (not a refresh token). Simpler but no refresh capability:
+
+- Scopes default to =[\"user:inference\"]= only (line 536661–536669)
+- No automatic renewal when the token expires
+- Useful for short-lived CI jobs where token lifetime covers the run
+
+** CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR
+
+A Unix file descriptor number containing the access token. Allows secure token
+injection without exposing the value in environment variables:
+
+#+begin_src sh
+claude --print "summarize this" 3< /run/secrets/oauth_token \
+  CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3
+#+end_src
+
+- Format: numeric file descriptor (e.g., ="3"=)
+- Platform paths: =/proc/self/fd/{N}= (Linux), =/dev/fd/{N}= (macOS/BSD)
+- Errors (empty token, invalid FD, read failure) are logged to stderr; login
+  proceeds to fall through to other auth methods (lines 535802–535845)
+
+** CLAUDE_CODE_OAUTH_CLIENT_ID
+
+Override the OAuth client ID. Default: =9d1c250a-e61b-44d9-88ed-5944d1962f5e=
+(line 42649). Rarely needed outside of custom deployments.
+
+** CLAUDE_CODE_CUSTOM_OAUTH_URL
+
+Override the OAuth server endpoint. Must match an approved endpoints allowlist
+(line 42596). For enterprise or self-hosted deployments.
+
+* Token Exchange Flow
+
+Login entry point: =MxY()= (line 393672).
+
+When =CLAUDE_CODE_OAUTH_REFRESH_TOKEN= is set (lines 393684–393695):
+
+1. *Token exchange* — calls =Lx6(refreshToken, { scopes })= which POSTs to
+   =https://platform.claude.com/v1/oauth/token=:
+
+   #+begin_src json
+   {
+     "grant_type": "refresh_token",
+     "refresh_token": "<token>",
+     "client_id": "<client_id>",
+     "scope": "user:profile user:inference user:sessions:claude_code user:mcp_servers"
+   }
+   #+end_src
+
+2. *Response parsing* (lines 195969–196008) — extracts:
+   - =access_token= (used for all API calls)
+   - =refresh_token= (updated token, defaults to input if not rotated)
+   - =expires_in= (seconds until expiration)
+   - =scope= (granted scopes)
+   - =account= / =organization= (profile metadata)
+
+3. *Profile fetch* — immediately calls =/v1/oauth/profiles= to get subscription
+   type and rate limit tier
+
+4. *Token installation* — saves tokens, creates API key, fetches user roles,
+   sets =hasCompletedOnboarding: true=, emits =tengu_oauth_success= telemetry
+
+** Token Resolution Priority
+
+When determining which token to use (lines 536660–536680):
+
+1. =CLAUDE_CODE_OAUTH_TOKEN= (direct access token, highest priority)
+2. =CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR= (FD-based token)
+3. Stored =claudeAiOauth= from previous login session
+4. Null (not authenticated)
+
+** Automatic Refresh
+
+Tokens are refreshed proactively 5 minutes before expiration (=nm= function,
+lines 196068–196072). A file-based lock prevents concurrent refresh races,
+with up to 5 retries and 1–2 second backoff (lines 536368–536410).
+
+* Comparison with Interactive Login
+
+| Aspect | Interactive | Headless |
+|--------+-------------+---------|
+| User action | Browser approval | None |
+| Token source | Authorization code exchange | Pre-obtained refresh token |
+| Scopes | Prompted during browser flow | Explicit via env var |
+| Suitable for | Developer workstations | CI/CD, containers, automation |
+| Token storage | Written to =~/.claude.json= | Same, after exchange |
+
+* Error Conditions
+
+| Condition | Behavior |
+|-----------+----------|
+| =CLAUDE_CODE_OAUTH_SCOPES= missing | =exit(1)= with usage message |
+| HTTP non-200 from token endpoint | Error: =Token refresh failed: {statusText}= |
+| =access_token= missing from response | Error: =Token refresh failed: {statusText}= |
+| Profile fetch fails | Error: =Failed to fetch user roles: {statusText}= |
+| API key creation fails | Error: =Unable to create API key= |
+| Invalid FD number | Logged to stderr, falls through |
+| Empty token in FD | Logged: =File descriptor contained empty OAuth token= |
+
+* Telemetry Events
+
+| Event | Trigger |
+|-------+---------|
+| =tengu_login_from_refresh_token= | Headless flow started |
+| =tengu_oauth_token_refresh_success= | Token exchanged successfully |
+| =tengu_oauth_token_refresh_failure= | Exchange failed (includes error + response body) |
+| =tengu_oauth_profile_fetch_success= | Profile fetched |
+| =tengu_oauth_success= | Full login complete |
+| =tengu_oauth_tokens_saved= | Tokens persisted to storage |
+
+* Example: GitHub Actions
+
+#+begin_src yaml
+- name: Run Claude Code
+  env:
+    CLAUDE_CODE_OAUTH_REFRESH_TOKEN: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+    CLAUDE_CODE_OAUTH_SCOPES: "user:profile user:inference user:sessions:claude_code user:mcp_servers"
+  run: claude --print "Review the changes in this PR"
+#+end_src
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v2.1.59 | Headless login via refresh token added |

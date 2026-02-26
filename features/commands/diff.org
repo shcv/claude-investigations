@@ -1,0 +1,75 @@
+#+TITLE: /diff Command
+#+DATE: 2026-02-26
+
+* Overview
+
+The =/diff= command opens an interactive dialog showing file changes in two
+modes:
+
+- *Current changes*: uncommitted modifications in the working tree (like =git diff=)
+- *Per-turn changes*: which files each conversation turn modified
+
+This gives a live audit trail of what Claude has changed during a session.
+
+* Usage
+
+Type =/diff= in the Claude Code prompt to open the diff dialog. Press =Esc= to
+dismiss it.
+
+* Two View Modes
+
+The dialog has two axes of navigation: the *source* (which diff to show) and
+the *view* (how to show it).
+
+** Source: Current Changes
+
+Shows the current working tree uncommitted diff, fetched via =q5q()= (line
+461697). This is equivalent to =git diff= — all staged and unstaged changes
+relative to HEAD.
+
+** Source: Per-Turn Changes
+
+Shows file changes attributed to a specific conversation turn. Turn selection
+cycles through all turns that produced file modifications.
+
+Each =Turn= object (lines 461799–461853) contains:
+- =turnIndex=: sequential turn number
+- =userPromptPreview=: first 30 characters of the user message
+- =files=: map of file path → diff hunks and stats
+- =stats=: aggregate =filesChanged=, =linesAdded=, =linesRemoved=
+
+Turn data is extracted from the message history by =z5q= (lines
+461785–461860), which scans =toolUseResult= entries for file change records.
+Turns are returned in reverse order (most recent first).
+
+** View: List Mode
+
+Displays a summary list of all changed files with line counts (+/-).
+
+** View: Detail Mode
+
+Displays the full diff hunks for a single file within the selected source.
+
+* Navigation
+
+| Key | Action |
+|-----+--------|
+| =Esc= | Dismiss dialog |
+| Previous/Next source button | Cycle between current changes and per-turn diffs |
+| Previous/Next file button | Cycle through files within the current source |
+| Arrow keys | Scroll within hunk view |
+
+Navigation buttons appear at the bottom of the dialog (lines 462610–462620).
+
+* Implementation
+
+- Command definition: lines 462895–462903
+- =DiffDialog= component: lines 462463–462701
+- Current diff fetch: =q5q()= (line 461697)
+- Per-turn extraction: =z5q(messages)= (lines 461785–461860)
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v2.1.50 | =/diff= command introduced |

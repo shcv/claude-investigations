@@ -1,0 +1,180 @@
+#+TITLE: Remote Control (claude rc)
+#+DATE: 2026-02-26
+
+* Overview
+
+Remote Control lets you access an active Claude Code CLI session from the web
+(=claude.ai/code=) or the Claude mobile app on any device. You start the bridge
+on your local machine, scan a QR code (or visit the URL), and then continue
+the conversation remotely without interrupting the session.
+
+The feature is gated by the =tengu_ccr_bridge= feature flag, which defaults to
+false. It is only visible in the CLI once the flag is enabled for your account.
+
+* Usage
+
+#+begin_src sh
+claude remote-control   # or: claude rc
+#+end_src
+
+While in a session, type =/remote-control= to toggle the bridge on/off.
+
+Press spacebar at the bridge prompt to show or hide the QR code.
+
+** remoteControlAtStartup Setting
+
+To automatically enable Remote Control for every session:
+
+#+begin_src sh
+claude config set remoteControlAtStartup true
+#+end_src
+
+Setting definition (line 447633):
+#+begin_src javascript
+remoteControlAtStartup: {
+  source: "global",
+  type: "boolean",
+  description: "Enable Remote Control for all sessions"
+}
+#+end_src
+
+* Architecture
+
+** Bridge and Sessions
+
+The local CLI acts as a bridge server. When =claude rc= starts (=bridgeMain=,
+lines 538453–538745):
+
+1. *Poll loop starts* — polls the Anthropic bridge endpoint at configurable
+   intervals (default 1000ms, min 100ms) for incoming work
+2. *Work arrives* — a remote user initiates a session from the web/app
+3. *Child process spawned* — Claude Code spawns a new subprocess with
+   =CLAUDE_CODE_ENVIRONMENT_KIND=bridge= to handle that remote session
+4. *Session runs* — the remote user interacts with the subprocess; the local
+   bridge shuttles messages
+5. *Session ends* — cleanup; bridge returns to polling
+
+Multiple concurrent sessions are supported up to a configurable cap
+(shown in the UI as "Max concurrent sessions: N").
+
+** Token Flow
+
+Each remote session uses a JWT access token:
+
+- =CLAUDE_CODE_SESSION_ACCESS_TOKEN= — set per subprocess (line 537646)
+- =CLAUDE_CODE_POST_FOR_SESSION_INGRESS_V2=1= — enables ingress v2 protocol
+- Tokens are scheduled for refresh via =schedule(sessionId, ingressToken)=
+  (line 538648) and updated when new work items arrive (line 538598)
+
+Sessions can be identified by =CLAUDE_CODE_REMOTE_SESSION_ID= (set in
+subprocess environment) and =CLAUDE_CODE_ENTRYPOINT=remote=.
+
+** QR Code URLs
+
+Two URL formats are used (lines 537840–537844):
+
+- *Waiting (no active session)*:
+  =https://claude.ai/code?bridge={environmentId}=
+- *Active session*:
+  =https://claude.ai/code/{bridgeSessionId}?bridge={environmentId}=
+
+The QR code renders ASCII art via the =q3z= component (lines 490523–490659).
+Spacebar toggles between showing and hiding it.
+
+* Session States
+
+The bridge banner cycles through states (lines 537984–538090):
+
+| State | Display |
+|-------+---------|
+| Waiting | "Remote Control Ready" |
+| Remote device attached | "Remote Control Connected" |
+| User actively coding | "Remote Control active" |
+| Connection lost | "Remote Control reconnecting" |
+| Fatal error | "Remote Control failed" |
+
+Status line also exposes flags: =replBridgeEnabled=, =replBridgeConnected=,
+=replBridgeSessionActive=, =replBridgeReconnecting=, =replBridgeError=
+(lines 576597–576602).
+
+* Feature Gating
+
+** tengu_ccr_bridge Flag
+
+The entire feature is hidden behind a server-side feature flag (line 457232):
+
+#+begin_src javascript
+function PE() {
+  return KA("tengu_ccr_bridge", false);
+}
+#+end_src
+
+When the flag is off, the =remote-control= subcommand is hidden from =--help=
+output and produces an error if invoked:
+/"Remote Control is not enabled. Wait for the feature flag rollout."/
+(line 512604)
+
+** Prerequisites (lines 512603–512609)
+
+1. =tengu_ccr_bridge= flag must be enabled
+2. Minimum version check must pass (see below)
+3. Valid OAuth access token must be present
+
+** tengu_bridge_min_version
+
+Server-side minimum version enforcement (lines 457235–457256). If the installed
+CLI version is below the threshold:
+
+#+begin_src text
+Your version of Claude Code (2.1.59) is too old for Remote Control.
+Version X.Y.Z or higher is required. Run `claude update` to update.
+#+end_src
+
+Telemetry event: =tengu_bridge_repl_skipped= with reason =version_too_old=.
+
+The polling interval is also server-configurable via
+=tengu_bridge_poll_interval_ms= (default 1000ms, floor 100ms, 5-minute cache
+TTL) — see v2.1.58 changes.
+
+* Work Polling Loop
+
+The poll loop (lines 538540–538745) on each tick:
+
+1. Check capacity — skip if already at max concurrent sessions
+2. Fetch work item from bridge endpoint
+3. Deduplicate — skip if this work ID was already processed
+4. Decode JWT secret from work item
+5. Dispatch based on type:
+   - =healthcheck= — log and continue
+   - =session= — validate UUID, spawn subprocess, schedule token refresh
+6. On connection error — exponential backoff, detect system sleep/resume
+   (large time gaps reset the reconnection budget)
+
+* Environment Variables (Subprocess)
+
+When Remote Control spawns a session subprocess, it sets these env vars
+(lines 537639–537648):
+
+| Variable | Value | Purpose |
+|----------+-------+---------|
+| =CLAUDE_CODE_OAUTH_TOKEN= | unset | Prevents token inheritance |
+| =CLAUDE_CODE_ENVIRONMENT_KIND= | =bridge= | Marks session as bridge-spawned |
+| =CLAUDE_CODE_FORCE_SANDBOX= | =1= (if applicable) | Propagates sandbox mode |
+| =CLAUDE_CODE_SESSION_ACCESS_TOKEN= | JWT | Session-specific auth |
+| =CLAUDE_CODE_POST_FOR_SESSION_INGRESS_V2= | =1= | Ingress protocol version |
+| =CLAUDE_CODE_REMOTE_SESSION_ID= | UUID | Identifies the remote session |
+| =SESSION_INGRESS_URL= | URL | Bridge ingress endpoint |
+| =CLAUDE_CODE_ENTRYPOINT= | =remote= | Remote execution context |
+
+* Command Aliases
+
+The subcommand is registered under multiple aliases (line 595024):
+=remote-control=, =rc=, =remote=, =sync=, =bridge=
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v2.1.51 | Remote Control bridge overhauled; =tengu_ccr_bridge= replaces =tengu_worktree_mode=; QR code, OAuth refresh, =remoteControlAtStartup= setting |
+| v2.1.53 | QR code viewer in disconnect dialog; =claude remote-control= / =rc= formally registered as subcommand; minimum version enforcement |
+| v2.1.58 | Polling interval made server-configurable via =tengu_bridge_poll_interval_ms= |

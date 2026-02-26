@@ -1,0 +1,63 @@
+#+TITLE: /agents Command
+#+DATE: 2026-02-26
+
+* Overview
+
+The =/agents= command opens a dialog listing all configured agents, grouped by
+source. It's the primary way to inspect which agents are available, where they
+came from, and whether any are being shadowed by higher-priority definitions.
+
+* Usage
+
+Type =/agents= in the Claude Code prompt. Press =Esc= to dismiss.
+
+* What Is Shown
+
+** Grouping by Source
+
+Agents are grouped by their origin, in priority order (=RsY=, line 461360):
+
+| Priority | Source | Description |
+|----------+--------+-------------|
+| 1 (highest) | Project | =.claude/agents/= in the project directory |
+| 2 | User | =~/.claude/agents/= in user config |
+| 3 | Managed | Enterprise MDM / policy-pushed agents |
+| 4 | Plugin | Agents provided by installed plugins |
+| 5 (lowest) | Built-in | Agents shipped with Claude Code itself |
+
+Source labels are computed by =jj6= (lines 125433–125450), which maps internal
+source identifiers (=projectSettings=, =userSettings=, =policySettings=,
+=plugin=, =built-in=) to display names.
+
+** Per-Agent Information
+
+For each agent, the dialog shows:
+- Name
+- Source group
+- Token count (formatted number — the size of the agent's system prompt /
+  configuration context)
+
+** Shadowing
+
+If multiple agents share the same name, only the highest-priority source's
+version is active. Lower-priority definitions with the same name are
+/shadowed/ and shown with a visual indicator.
+
+Agents are grouped by =p3q= (lines 460805–460822):
+1. Groups by source
+2. Sorts within each source by token count (descending)
+3. Returns only sources that have at least one agent
+
+* Implementation
+
+- Command definition: lines 503804–503810
+- =kzq= dialog component: lines 480707+
+- Source mapping: =jj6= (lines 125433–125450)
+- Grouping/sorting: =p3q= (lines 460805–460822)
+- Source priority order: =RsY= (line 461360)
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v2.1.50 | =/agents= command introduced |

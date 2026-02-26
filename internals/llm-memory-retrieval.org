@@ -1,0 +1,122 @@
+#+TITLE: LLM-Based Memory Retrieval
+#+DATE: 2026-02-26
+
+* Overview
+
+Claude Code uses an LLM call to intelligently select which memory files are
+relevant to the current conversation, replacing an older grep-based approach.
+Instead of keyword-matching across memory file contents, the system provides
+Claude with the list of available memory filenames and descriptions, and asks it
+to choose the most useful ones.
+
+This applies to the auto-memory system (=MEMORY.md= and associated memory
+files). See [[file:../features/agent-memory.org][Agent Memory]] for how per-agent memory scopes work on top of this.
+
+* System Overview
+
+Memory retrieval fires before each turn to load context that might be relevant
+to the incoming user message. The full pipeline:
+
+1. *Discovery*: scan memory directories for =.md= files
+2. *LLM selection*: ask Claude which files are relevant to the user's query
+3. *Deduplication*: skip files already loaded in this session
+4. *Load*: read the selected files and inject into context
+
+* Implementation
+
+** Memory File Discovery
+
+=F1Y= function (line 286660): recursively scans =.md= files (excluding
+=MEMORY.md= itself) from configured agent memory directories. Returns up to
+200 most recently modified files (=hH7= constant, line 286741).
+
+** LLM Selection Call
+
+=p1Y= function (lines 286683–286747):
+
+- *Model*: =rN()= — the current configured model
+- *Max tokens*: 256 (line 286704)
+- *Timeout*: 5 seconds via AbortSignal (line 289301)
+- *System prompt* (=g1Y=, line 286742): instructs the LLM to select up to 5
+  memory files that are "clearly useful" for processing the user's query
+
+The message sent to the LLM lists available memories:
+
+#+begin_src text
+Available memory files:
+- debugging.md: Notes on debugging async issues in this codebase
+- patterns.md: Architectural patterns used in the project
+- test-setup.md: How to run the test suite
+
+User query: <current user message>
+
+Select the memory files most relevant to answering this query.
+#+end_src
+
+Response format uses structured JSON output with a =selected_memories= array
+(lines 286708–286713):
+
+#+begin_src json
+{
+  "selected_memories": ["debugging.md", "patterns.md"]
+}
+#+end_src
+
+** Deduplication
+
+=lAY= (line 289300): filters out files already loaded in the current session
+using a =readFileState= Set (line 289310):
+
+#+begin_src javascript
+.filter((file) => !readFileState.has(file))
+#+end_src
+
+This prevents re-injecting the same memory file on every turn once it has
+been loaded once.
+
+** Agent-Specific Memory Paths
+
+The retrieval is agent-aware (lines 289302–289305). It extracts agent types
+from the conversation history and maps them to agent-specific memory
+directories via =LW6(agentType, memory)=. Each named agent type gets its own
+scoped memory pool searched separately.
+
+* Comparison with Grep-Based Approach
+
+| Aspect | Old (grep) | New (LLM) |
+|--------+------------+-----------|
+| Selection method | Keyword match in file contents | LLM relevance judgment |
+| Context used | File contents scanned | Filenames + descriptions |
+| Max files returned | Uncapped | 5 per call |
+| Already-loaded files | Re-injected | Deduplicated |
+| Agent awareness | No | Yes (per-agent directories) |
+| Cost | Zero (local) | One API call per turn |
+| Latency | Milliseconds | ~1s (5s timeout) |
+
+The LLM approach trades a small per-turn cost for significantly better
+relevance — especially valuable when memory directories contain many files
+with varied purposes.
+
+* Key Functions
+
+| Function | Location | Purpose |
+|----------+----------+---------|
+| =F1Y= | Line 286660 | Discover up to 200 memory files |
+| =p1Y= | Line 286683 | LLM selection call |
+| =g1Y= | Line 286742 | Static system prompt for selection |
+| =lAY= | Line 289300 | Deduplication filter |
+| =LW6= | Line 289302 | Map agent type to memory directory |
+
+* Configuration
+
+Memory retrieval is part of the auto-memory system, gated by the =tengu_oboe=
+feature flag. See [[file:../features/auto-memory.org][Auto Memory]] for configuration details.
+
+The LLM call uses the same model as the main conversation. There is no way to
+configure a separate, cheaper model for memory retrieval.
+
+* Version History
+
+| Version | Change |
+|---------+--------|
+| v2.1.51 | LLM-based selection replaces grep; deduplication and agent-aware paths added |

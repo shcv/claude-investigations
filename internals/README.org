@@ -23,6 +23,10 @@ This directory contains detailed technical investigations of Claude Code's inter
 - [[file:recursion-stack.org][Recursion Stack]] - Call stack management and recursion handling
 - [[file:root-detection.org][Root Detection]] - System privilege detection and security measures
 
+** AI & Memory Systems
+
+- [[file:llm-memory-retrieval.org][LLM Memory Retrieval]] - How Claude selects relevant memory files using an LLM call
+
 * Documentation Standards
 
 Each internals document should include:
@@ -40,7 +44,7 @@ Each internals document should include:
 
 When investigating internals:
 
-1. Start with the latest prettified source (v1.0.90)
+1. Start with the latest prettified source (v2.1.59)
 2. Trace through the implementation from entry points
 3. Document all configuration options and environment variables
 4. Identify telemetry events and logging points
@@ -62,3 +66,9 @@ When adding new internal documentation:
 3. Provide code snippets for critical sections
 4. Document any related features that depend on this internal
 5. Update this README with a description of the new document
+
+* Source Reference
+
+All investigations use the latest prettified Claude Code source:
+- Version: v2.1.59
+- Location: =archive/claude-code/pretty/pretty-v2.1.59.js=
